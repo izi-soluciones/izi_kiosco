@@ -1,0 +1,543 @@
+{
+  "login": {
+    "title": "Ingresar",
+    "buttons": {
+      "login": "Ingresar"
+    },
+    "body": {
+      "noAccount": "¿No tienes una cuenta?"
+    },
+    "inputs": {
+      "user": {
+        "label": "Usuario",
+        "placeholder": "Ingresa tu usuario o correo electrónico",
+        "errors": {
+          "required": "Por favor ingresa tu email",
+          "invalid": "Formato de email no válido"
+        }
+      },
+      "password": {
+        "label": "Contraseña",
+        "placeholder": "Ingresa tu contraseña",
+        "errors": {
+          "required": "Por favor ingresa tu contraseña",
+          "invalid": "Formato de contraseña inválido"
+        }
+      }
+    },
+    "links":{
+      "passwordRecovery": "Recuperar contraseña",
+      "createAccount": "Crea una cuenta ahora"
+    },
+    "subtitles": {
+      "enterIzi": "Iniciar Sesión"
+    },
+    "messages": {
+      "waitingLogin": "Iniciando Sesión",
+      "successLogin": "Sesión iniciada",
+      "errorLogin": "Usuario o contraseña incorrectos"
+    }
+  },
+  "orderList": {
+    "drawer": "Todas las órdenes",
+    "title": "Todas las órdenes",
+    "buttons": {
+      "moreFilters": "Más filtros",
+      "print": "Imprimir",
+      "detail": "Detalle de cuenta",
+      "orderNumberDetail": "Orden N°{}",
+      "checkIn": "Facturar"
+    },
+    "body": {
+      "ended": "Finalizada",
+      "opened": "Abierta",
+      "annulled": "Anulada",
+      "orderHour": "Hora del pedido",
+      "orderType": "Tipo de pedido",
+      "client": "Cliente",
+      "orderNumber": "Orden: {}",
+      "prePayment": "Pago adelantado",
+      "orderDetail": "Detalle",
+      "invoiced": "Facturada",
+      "noInvoiced": "No Facturada"
+    },
+    "inputs": {
+      "search": {
+        "placeholder": "Buscar por orden, mesa o producto"
+      },
+      "status": {
+        "label": "Estado",
+        "placeholder": "Todos",
+        "options": {
+          "all": "Todos",
+          "opened": "Abierta",
+          "ended": "Finalizada",
+          "annulled": "Anulada",
+          "invoiced": "Facturada",
+          "noInvoiced": "Sin facturar"
+        }
+      },
+      "dateStart": {
+        "label": "Fecha de emisión",
+        "placeholder": "Elige fecha",
+        "prefix": "Desde:"
+      },
+      "dateEnd": {
+        "placeholder": "Elige fecha",
+        "prefix": "Hasta:"
+      }
+    },
+    "filters": {
+      "title": "Filtros avanzados",
+      "inputs": {
+        "status": {
+          "label": "Estado",
+          "placeholder": "Todos",
+          "options": {
+            "all": "Todos",
+            "opened": "Abierta",
+            "ended": "Finalizada",
+            "annulled": "Anulada",
+            "invoiced": "Facturada",
+            "noInvoiced": "No facturada"
+          }
+        },
+        "dateStart": {
+          "label": "Fecha de emisión",
+          "placeholder": "Elige fecha",
+          "prefix": "Desde:"
+        },
+        "dateEnd": {
+          "placeholder": "Elige fecha",
+          "prefix": "Hasta:"
+        }
+      },
+      "buttons": {
+        "apply": "Aplicar"
+      }
+    },
+    "messages": {
+      "errorMarkInternal": "No se pudo marcar como consumo interno",
+      "errorCancel": "No se pudo anular la orden",
+      "errorList": "No se pudo obtener las ordenes"
+    }
+  },
+  "orderDetails": {
+    "subtitles": {
+      "orderNumber": "Orden #{}",
+      "prePayment": "Pago adelantado",
+      "detail": "Detalle",
+      "areYouSureCancel": "Esta seguro que quiere anular este pedido"
+    },
+    "body": {
+      "orderNumber": "N° de orden:",
+      "orderDate": "Fecha de pedido:",
+      "orderHour": "Hora de pedido",
+      "additionalNotes": "Notas adicionales",
+      "annulled": "Anulada",
+      "invoiced": "Facturada",
+      "internal": "Consumo Interno",
+      "noInvoiced": "No facturada",
+      "subtotal": "Subtotal",
+      "discounts": "Descuento",
+      "total": "Total"
+    },
+    "labels": {
+      "quantity": "Cant.",
+      "item": "Item",
+      "price": "Precio U",
+      "total": "Total"
+    },
+    "buttons": {
+      "print": "Imprimir",
+      "pay": "Cerrar orden y pagar",
+      "more": "Más opciones",
+      "accountDetail": "Detalle de cuenta",
+      "orderNumberDetail": "Orden N°1",
+      "cancel": "Anular Pedido",
+      "modifyOrder": "Modificar Pedido",
+      "markAsInternal": "Marcar como consumo interno"
+    },
+    "warning": {
+      "areYouSure": "¿Estás seguro que quieres anular este pedido?",
+      "yes": "Si, Estoy seguro",
+      "cancel": "Cancelar"
+    },
+    "messages": {
+      "errorDownload": "No se pudo descargar el archivo"
+    }
+  },
+  "home": {
+    "title": "Inicio",
+    "drawer": "Inicio"
+  },
+  "user_information": {
+    "title": "Usuario",
+    "drawer": "Usuario",
+    "body": {
+      "user_label": "Usuario",
+      "email_label": "Correo electrónico"
+    },
+    "links": {
+      "change_password": "Cambiar contraseña",
+      "sign_out": "Cerrar sesión"
+    },
+    "buttons": {
+      "editData":"Editar Datos"
+    }
+  },
+
+  "payment_type_modal": {
+    "title": "Elige un medio de pago",
+    "subtitles": {
+      "amountToPay": "Monto a Pagar"
+    },
+    "buttons": {
+      "qr": "Pago con QR",
+      "card": "Pago con Tarjeta",
+      "cash": "Pago con Efectivo",
+      "transfer": "Transferencia",
+      "giftCard": "Gift Card",
+      "tapOnPhone": "Tap on Phone"
+    }
+  },
+  "payment": {
+    "titles": {
+      "resume": "Resumen de la orden",
+      "cash": "Efectivo",
+      "qr": "Código QR",
+      "card": "Tarjeta",
+      "split": "Dividir pago",
+      "tapOnPhone": "Tap on phone",
+      "checkIn": "Facturar"
+    },
+    "subtitles": {
+      "mustCharge": "Debes cobrar",
+      "invoiceData": "Datos de facturación",
+      "howDoPayment": "Indica cómo se hará el pago"
+    },
+    "body": {
+      "detail": "Detalle",
+      "subtotal": "Subtotal",
+      "discount": "Descuento",
+      "tip": "Propina (Opcional)",
+      "tipShort": "Propina",
+      "total": "Total",
+      "selectMethod": "Selecciona el medio de pago",
+      "change": "Cambio",
+      "totalSplit": "Total",
+      "totalPaymentSplit": "Total pagado",
+      "remaining": "Restante"
+    },
+    "buttons": {
+      "cash": "Efectivo",
+      "qr": "Código QR",
+      "card": "Tarjeta de crédito o Debito",
+      "others": "Otros",
+      "bankTransfer": "Transferencia Bancaria",
+      "giftCard": "Gift Card / Cupones",
+      "tapOnPhone": "Tap on Phone",
+      "splitPayment": "Dividir pago",
+      "pay": "Pagar",
+      "payAndGenerate": "Pagar y generar factura",
+      "changePaymentMethod": "Cambiar medio de pago",
+      "generateInvoice": "Generar factura",
+      "defaultPreInvoice": "Pre Factura",
+      "generateNoData": "Generar sin datos",
+      "morePayments": "Pagos",
+      "paymentType": "Tipo de Pago",
+      "remaining": "Restante: {} {}",
+      "addDiscount": "Agregar descuento",
+      "addTip": "Agregar propina",
+      "cashFull": "Exacto: {} {}",
+      "deletePayment": "Eliminar pago",
+      "markAsPaid": "Marcar como pagado"
+    },
+    "inputs": {
+
+      "percentage": {
+        "label": "Porcentaje",
+        "placeholder": "0"
+      },
+      "specificAmount": {
+        "label": "Monto específico",
+        "placeholder": "0.00"
+      },
+      "paymentType": {
+        "label": "Tipo de pago"
+      },
+      "amountReceived": {
+        "label": "Monto recibido",
+        "placeholder": "0.00",
+        "errors": {
+          "required": "El monto es requerido"
+        }
+      },
+      "payment": {
+        "label": "Pago {}",
+        "placeholder": "0.00"
+      },
+      "withException": {
+        "label": "Con excepción"
+      },
+      "documentType": {
+        "label": "Tipo documento*",
+        "errors": {
+          "required": "Requerido"
+        }
+      },
+      "complement": {
+        "label": "Complemento"
+      },
+      "cashRegister": {
+        "label": "Emitir factura en caja",
+        "placeholder": "Elegir caja",
+        "errors": {
+          "required": "La caja es requerida"
+        }
+      },
+      "documentNumber": {
+        "label": "Número de documento*",
+        "placeholder": "Ingresa el número de documento",
+        "errors": {
+          "required": "El número es requerido"
+        }
+      },
+      "businessName": {
+        "label": "Razón social*",
+        "placeholder": "Ingresa una Razón social",
+        "errors": {
+          "required": "La razón social es requerida"
+        }
+      },
+      "email": {
+        "label": "Correo electrónico",
+        "placeholder": "Ingresa el correo electrónico",
+        "errors": {
+          "invalid": "El correo no es válido"
+        }
+      },
+      "isManual": {
+        "label": "¿Es factura manual?"
+      },
+      "invoiceNumber": {
+        "label": "Numero de factura de contingencia",
+        "errors": {
+          "required": "El numero es requerido"
+        }
+      },
+      "authorization": {
+        "label": "Autorización de contingencia",
+        "errors": {
+          "required": "La autorización es requerida"
+        }
+      },
+      "firstDigits": {
+        "errors": {
+          "required": "El campo es requerido",
+          "invalid": "Número no válido"
+        }
+      },
+      "lastDigits": {
+        "errors": {
+          "required": "El campo es requerido",
+          "invalid": "Número no válido"
+        }
+      }
+    },
+    "labels": {
+      "amount": "Cant.",
+      "item": "Item",
+      "price": "Precio U",
+      "total": "Total",
+      "firstAndLast": "Primeros y últimos dígitos de la tarjeta",
+      "cardDetails": "Detalles de Tarjeta"
+    },
+    "messages": {
+      "errorGet": "Ocurrió un error al obtener la orden",
+      "successInvoice": "Factura emitida",
+      "successPreInvoiceCustom": "{} generado",
+      "successPayment": "Pago realizado correctamente",
+      "errorInvoiced": "Esta orden ya está facturada",
+      "errorAnnulled": "Esta orden esta anulada"
+
+    }
+  },
+  "tapOnPhone": {
+    "title": "Tap on Phone",
+    "body": {
+      "successPayment": "Pago Exitoso",
+      "errorPayment": "Hubo un error al procesar el pago",
+      "waitingPayment": "Procesando Pago",
+      "waitingActivate": "Activando terminal",
+      "noActiveTerminal": "Terminal inactiva"
+    },
+    "labels": {
+      "returning": "Volviendo a la pantalla de facturación"
+    },
+    "buttons": {
+      "activateTerminal": "Activar Terminal",
+      "retry": "Reintentar"
+    }
+  },
+  "configuration": {
+    "title": "Configuraciones"
+  },
+  "configurationPos": {
+    "drawer": "Configurar POS",
+    "title": "Configuración del POS",
+    "subtitles": {
+      "tapOnPhone": "Tap on Phone",
+      "environment": "Ambiente de trabajo",
+      "tapOnPhoneDescription": "Utiliza esta integración para poder realizar cobros de tarjetas de Crédito/Débito con tu dispositivo Android utilizando la tecnología NFC"
+    },
+    "body": {
+      "status": "Estado",
+      "noConfiguration": "Sin configuración",
+      "noConfigurationDescription": "No tienes registrada ninguna configuración válida para realizar Cobros por este medio",
+      "okConfiguration": "Configuración completada",
+      "okConfigurationDescription": "La configuración esta completa y revisada",
+      "reviewConfiguration": "Configuración en revisión",
+      "reviewConfigurationDescription": "Se esta realizando la revision manual de la configuración",
+      "whenActive": "Esta configuración se asociará a tu usuario y contribuyente-sucursal seleccionado",
+      "serviceUnavailable": "Su dispositivo no soporta este servicio"
+    },
+    "buttons": {
+      "activate": "Activar POS"
+    },
+    "inputs": {
+      "productionMode": {
+        "label": "Modo de producción",
+        "description": "Realiza cobros reales que sólo pueden ser pagados con tarjetas de crédito/débito reales y habilitadas. Las transacciones en este modo representan dinero real que será enviado a la cuenta bancaria registrada."
+      },
+      "testMode": {
+        "label": "Modo de prueba",
+        "description": "Realiza cobros de prueba, que pueden ser pagados con tarjetas ficticias. Los cobros generados en este modo no representan dinero real."
+      }
+    },
+    "messages": {
+      "errorActivate": "No se pudo activar la terminal",
+      "successActivate": "El POS fue activado correctamente",
+      "errorChangeEnvironment": "No se pudo cambiar el ambiente de trabajo",
+      "successChangeEnvironment": "El ambiente de trabajo fue cambiado"
+    }
+  },
+  "tables": {
+    "title": "Mesas",
+    "drawer": "Mesas",
+    "subtitles": {
+      "spaces": "Espacios",
+      "cashRegisters": "Cajas",
+      "dinersNumber": "Cantidad de comensales",
+      "areYouSureFreeTable": "¿Está seguro de liberar la mesa {}?"
+    },
+    "labels": {
+      "active": "Activa",
+      "close": "Cerrada"
+    },
+    "body": {
+      "available": "Disponible",
+      "reserved": "Reservada",
+      "fill": "Ocupada"
+    },
+    "buttons": {
+      "makeOrder": "Crear un pedido",
+      "tableStatus": "Estado de la mesa",
+      "continue": "Continuar",
+      "modifyOrder": "Modificar pedido",
+      "printOrderDetail": "Imprimir detalle de cuenta",
+      "completeOrderDetail": "Ver detalle completo",
+      "closeAndPay": "Cerrar mesa & pagar",
+      "orderToGo": "Pedido para llevar",
+      "closeTable": "Solo cerrar mesa"
+    },
+    "messages": {
+      "errorGet": "No se pudo obtener la lista de mesas",
+      "errorRooms": "No se tiene ningun espacio creado",
+      "errorGetOrder": "No se pudo obtener la comanda",
+      "errorCancelOrder": "No se pudo anular la orden",
+      "errorCancelTable": "No se pudo liberar la mesa",
+      "errorMarkInternal": "No se pudo marcar como consumo interno"
+    }
+  },
+
+  "makeOrder": {
+    "title": "Nueva orden",
+    "drawer": "Nueva orden",
+    "subtitles": {
+      "itemOptions": "Opciones de: {}",
+      "editTable": "Editar mesa",
+      "numberDinners": "Cantidad de comensales",
+      "discounts": "Descuentos",
+      "details": "Detalles",
+      "orderNumber": "Orden #{}"
+    },
+    "body":{
+      "addDishesOrDrinks": "Agrega platos o bebidas de la lista",
+      "quantity": "Cantidad",
+      "items": "Items ({})"
+    },
+    "buttons": {
+      "confirm": "Confirmar pedido",
+      "discount": "Descuento",
+      "editDiscount": "Editar Descuentos",
+      "accept": "Aceptar",
+      "save": "Guardar",
+      "add": "Añadir"
+    },
+    "inputs": {
+      "search": {
+        "placeholder": "Busca un producto"
+      },
+      "amountOrPercentage": {
+        "label": "Monto o porcentaje",
+        "placeholder": "0.00"
+      },
+      "table": {
+        "label": "Nombre de Mesa",
+        "placeholder": "Seleccione una mesa"
+      }
+    },
+    "labels": {
+      "count": "Cant.",
+      "item": "Item",
+      "discount": "Desc.",
+      "price": "Precio",
+      "subtotal": "Subtotal",
+      "total": "Total"
+    },
+    "messages": {
+      "errorEmit": "No se pudo guardar la orden",
+      "successEmit": "Órden emitida correctamente",
+      "successEdit": "Órden editada correctamente"
+    }
+  },
+  "general": {
+    "errors":{
+      "input": "Valor incorrecto"
+    },
+    "body": {
+      "sucursal": "Sucursal"
+    },
+    "buttons": {
+      "filters": "Filtros",
+      "moreFilters": "Más Filtros",
+      "yesSure": "Si estoy seguro",
+      "cancel": "Cancelar",
+      "accept": "Aceptar"
+    }
+  },
+
+  "warningCashRegisters": {
+    "title": "No se encuentra una caja abierta para poder realizar el pedido",
+    "description": "Utiliza la app de iZi administrador para abrir las cajas"
+  },
+  "warningRooms": {
+    "title": "No se encuentra ningun espacio disponible",
+    "description": "Utiliza la app de iZi administrador para configurar los espacios"
+  },
+  "warningPermissions": {
+    "title": "Sin permisos",
+    "description": "No tiene los permisos suficientes para ver este apartado"
+  }
+}
