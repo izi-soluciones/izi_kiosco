@@ -477,7 +477,13 @@ class PaymentBloc extends Cubit<PaymentState> {
 
     return true;
   }
-
+  @override
+  Future<void> close() async {
+    _socketRepository.closeQrListening();
+    qrStream?.cancel();
+    qrStream = null;
+    return super.close();
+  }
   _generateQR(num amount,AuthState authState,{bool partial = false}) async {
     try{
 
@@ -491,6 +497,9 @@ class PaymentBloc extends Cubit<PaymentState> {
 
       Charge charge = await _comandaRepository.generateQr(contribuyenteId: authState.currentContribuyente?.id??0, qr: qr);
 
+      if(isClosed){
+        return;
+      }
       if(qrStream !=null){
         _socketRepository.closeQrListening();
         qrStream?.cancel();
