@@ -29,4 +29,7 @@ class RoutesKeys{
 
   static const makeOrder="makeOrder";
   static const makeOrderLink="/makeOrder";
+
+  static const configBusiness="configBusiness";
+  static const configBusinessLink="/configBusinessLink";
 }

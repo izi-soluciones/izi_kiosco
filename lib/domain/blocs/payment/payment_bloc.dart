@@ -131,7 +131,8 @@ class PaymentBloc extends Cubit<PaymentState> {
           if (authState.currentContribuyente?.config?["aERestaurante"] ==
               null) {
             economicActivity = authState.currentContribuyente
-                    ?.actividadesEconomicas.firstOrNull?["id"] ??
+                ?.actividadesEconomicas is List? ((authState.currentContribuyente
+                ?.actividadesEconomicas as List).firstOrNull?["id"] ??"").toString() :
                 "";
           }
         }
@@ -478,51 +479,55 @@ class PaymentBloc extends Cubit<PaymentState> {
   }
 
   _generateQR(num amount,AuthState authState,{bool partial = false}) async {
-    QrDto qr = QrDto(
-        orderId: state.order?.id??0,
-        date: DateTime.now(),
-        monto: amount,
-        moneda: state.currentCurrency?.simbolo == "Bs"?"BOB":state.currentCurrency?.simbolo ?? "BOB",
-        monedaId: state.currentCurrency?.id ?? AppConstants.defaultCurrencyId
-    );
+    try{
 
-    Charge charge = await _comandaRepository.generateQr(contribuyenteId: authState.currentContribuyente?.id??0, qr: qr);
+      QrDto qr = QrDto(
+          orderId: state.order?.id??0,
+          date: DateTime.now(),
+          monto: amount,
+          moneda: state.currentCurrency?.simbolo == "Bs"?"BOB":state.currentCurrency?.simbolo ?? "BOB",
+          monedaId: state.currentCurrency?.id ?? AppConstants.defaultCurrencyId
+      );
 
-    if(qrStream !=null){
-      _socketRepository.closeQrListening();
-      qrStream?.cancel();
+      Charge charge = await _comandaRepository.generateQr(contribuyenteId: authState.currentContribuyente?.id??0, qr: qr);
+
+      if(qrStream !=null){
+        _socketRepository.closeQrListening();
+        qrStream?.cancel();
+      }
+      qrStream = _socketRepository.listenQr(charge: charge).listen((event) {
+        if(partial){
+          List<Payment> payments=List.of(state.payments);
+          PaymentMethod pm=state.paymentMethods.firstWhere((element) => element.id == AppConstants.idPaymentMethodQR);
+          payments[state.qrPaymentKey??0]=Payment(
+              id: charge.id,
+              fromCharge: true,
+              terminosPago: pm.nombre,
+              metodoPago: pm.id,
+              monto: amount
+          );
+          emit(state.copyWith(step: 4,payments: payments,qrCharge: ()=>null,qrAmount: 0,qrPaymentKey: -1));
+        }
+        else{
+          List<Payment> payments=List.of(state.payments);
+          PaymentMethod pm=state.paymentMethods.firstWhere((element) => element.id == AppConstants.idPaymentMethodQR);
+          payments[0]=Payment(
+              id: charge.id,
+              fromCharge: true,
+              terminosPago: pm.nombre,
+              metodoPago: pm.id,
+              monto: amount
+          );
+          payments.removeAt(1);
+          emit(state.copyWith(step:3,paymentType: PaymentType.qr,payments: payments),);
+        }
+        _socketRepository.closeQrListening();
+        qrStream?.cancel();
+        qrStream = null;
+      },);
+      emit(state.copyWith(qrCharge: ()=>charge));
     }
-    qrStream = _socketRepository.listenQr(charge: charge).listen((event) {
-      if(partial){
-        List<Payment> payments=List.of(state.payments);
-        PaymentMethod pm=state.paymentMethods.firstWhere((element) => element.id == AppConstants.idPaymentMethodQR);
-        payments[state.qrPaymentKey??0]=Payment(
-          id: charge.id,
-          fromCharge: true,
-          terminosPago: pm.nombre,
-          metodoPago: pm.id,
-          monto: amount
-        );
-        emit(state.copyWith(step: 4,payments: payments,qrCharge: ()=>null,qrAmount: 0,qrPaymentKey: -1));
-      }
-      else{
-        List<Payment> payments=List.of(state.payments);
-        PaymentMethod pm=state.paymentMethods.firstWhere((element) => element.id == AppConstants.idPaymentMethodQR);
-        payments[0]=Payment(
-            id: charge.id,
-            fromCharge: true,
-            terminosPago: pm.nombre,
-            metodoPago: pm.id,
-            monto: amount
-        );
-        payments.removeAt(1);
-      emit(state.copyWith(step:3,paymentType: PaymentType.qr,payments: payments),);
-      }
-      _socketRepository.closeQrListening();
-      qrStream?.cancel();
-      qrStream = null;
-    },);
-    emit(state.copyWith(qrCharge: ()=>charge));
+    catch(_){}
   }
 
 

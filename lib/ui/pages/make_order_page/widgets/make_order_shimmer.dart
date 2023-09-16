@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:izi_design_system/tokens/colors.dart';
 import 'package:izi_kiosco/domain/blocs/make_order/make_order_bloc.dart';
 import 'package:izi_kiosco/ui/pages/make_order_page/widgets/make_order_header_sm.dart';
+import 'package:izi_kiosco/ui/utils/column_container.dart';
 import 'package:izi_kiosco/ui/utils/responsive_utils.dart';
-import 'package:izi_kiosco/ui/utils/row_container.dart';
 import 'package:shimmer/shimmer.dart';
 
 class MakeOrderShimmer extends StatelessWidget {
@@ -23,47 +23,25 @@ class MakeOrderShimmer extends StatelessWidget {
               highlightColor: IziColors.lightGrey30,
               direction: ShimmerDirection.ltr,
               period: const Duration(seconds: 1),
-              child: Column(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-              if (ru.isXs())
-                Padding(
-                    padding:
-                        const EdgeInsets.only(left: 16, right: 16, top: 16),
-                    child: _shimmerBox(height: 48)),
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                padding:
-                    EdgeInsets.symmetric(horizontal: ru.isXs()?16:32, vertical: 16),
-                child: RowContainer(
-                  gap: 16,
-                  children: [
-                    if (ru.gtXs())
-                      Row(
-                        children: [
-                          SizedBox(width: 48, child: _shimmerBox(height: 48)),
-                          const SizedBox(
-                            width: 16,
-                          ),
-                          const SizedBox(
-                            height: 30,
-                            child: VerticalDivider(
-                              width: 1,
-                              color: IziColors.grey35,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ...List.generate(8, (index) {
-                      return SizedBox(
-                          width: ru.isXs() ? 150 : 213,
-                          child: _shimmerBox(height: 48));
-                    })
-                  ],
+              SizedBox(
+                width: 120,
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.vertical,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 32),
+                  child: ColumnContainer(
+                    gap: 16,
+                    children: [
+                      ...List.generate(8, (index) {
+                        return SizedBox(
+                            child: _shimmerBox(height: 88));
+                      })
+                    ],
+                  ),
                 ),
-              ),
-              const Divider(
-                color: IziColors.grey25,
-                height: 1,
               ),
               Expanded(
                 child: ru.isXs()
@@ -88,7 +66,7 @@ class MakeOrderShimmer extends StatelessWidget {
                                     ? 3
                                     : ru.isLg()
                                         ? 4
-                                        : 2,
+                                        : 3,
                             childAspectRatio: 1.4,
                             crossAxisSpacing: 12,
                             mainAxisSpacing: 18),

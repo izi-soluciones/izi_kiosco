@@ -29,7 +29,7 @@ class PaymentPageQr extends StatelessWidget {
             },
             currency:
             state.currentCurrency?.simbolo ?? AppConstants.defaultCurrency,
-            popText: ru.gtXs() ? LocaleKeys.payment_titles_card.tr() : null,
+            popText: ru.gtXs() ? LocaleKeys.payment_titles_qr.tr() : null,
             amount: (state.qrAmount ??0),
         ),
         Expanded(

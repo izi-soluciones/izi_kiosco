@@ -1,4 +1,28 @@
 {
+  "selectBusiness": {
+    "title": "Seleccionar contribuyente",
+    "buttons": {
+      "accept": "Guardar"
+    },
+    "inputs": {
+      "contribuyente": {
+        "label": "Contribuyente",
+        "placeholder": "Selecciona el contribuyente"
+      },
+      "sucursal": {
+        "label": "Sucursal",
+        "placeholder": "Selecciona la sucursal"
+      }
+    },
+    "subtitles": {
+      "select": "Definir sucursal"
+    },
+    "messages": {
+      "waitingLogin": "Iniciando Sesión",
+      "successLogin": "Sesión iniciada",
+      "errorLogin": "Usuario o contraseña incorrectos"
+    }
+  },
   "login": {
     "title": "Ingresar",
     "buttons": {

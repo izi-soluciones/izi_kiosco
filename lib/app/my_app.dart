@@ -13,6 +13,7 @@ import 'package:izi_kiosco/data/repositories/auth/auth_repository_http.dart';
 import 'package:izi_kiosco/data/repositories/business/business_repository_http.dart';
 import 'package:izi_kiosco/data/repositories/comanda/comanda_repository_http.dart';
 import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
+import 'package:izi_kiosco/domain/blocs/make_order/make_order_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/order_list/order_list_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/page_utils/page_utils_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/tables/tables_bloc.dart';
@@ -20,12 +21,11 @@ import 'package:izi_kiosco/ui/pages/splash_page/splash_page.dart';
 
 class MyApp extends StatelessWidget {
 
-  final GlobalKey<NavigatorState> _globalKeyNavigator= GlobalKey<NavigatorState>();
   late final route=GoRouter(
-      routes: Routes.routes(_globalKeyNavigator),
+      routes: Routes.routes(),
       initialLocation: RoutesKeys.homeLink,
-      navigatorKey: _globalKeyNavigator,
       refreshListenable: GoRouterRefreshStream(_auth.stream,_auth.state),
+
       redirect: (context,GoRouterState state){
         final location=state.fullPath;
         if(_auth.state.status==AuthStatus.okAuth && (
@@ -34,6 +34,21 @@ class MyApp extends StatelessWidget {
 
         )  {
           return RoutesKeys.homeLink;
+        }
+        if(_auth.state.status==AuthStatus.okAuth && (
+            location==RoutesKeys.configBusinessLink
+        )
+
+        )  {
+          return RoutesKeys.homeLink;
+        }
+
+        if(_auth.state.status==AuthStatus.firstContribuyente && (
+            location==RoutesKeys.loginLink
+        )
+
+        )  {
+          return RoutesKeys.configBusinessLink;
         }
         if(_auth.state.status==AuthStatus.noAuth &&
             location!=RoutesKeys.loginLink
@@ -64,7 +79,8 @@ class MyApp extends StatelessWidget {
         debugShowCheckedModeBanner: false,
         debugShowMaterialGrid: false,
         routerConfig: route,
-        title: "Izi POS",
+
+        title: "Izi Kiosco",
         theme: iziThemeData(),
         builder: (context,child){
           return BlocBuilder<AuthBloc,AuthState>(
@@ -87,6 +103,7 @@ class MyApp extends StatelessWidget {
                         providers: [
                           BlocProvider(create: (context) => OrderListBloc(ComandaRepositoryHttp())),
                           BlocProvider(create: (context) => TablesBloc(ComandaRepositoryHttp(),BusinessRepositoryHttp())),
+                          BlocProvider(create: (context) => MakeOrderBloc(ComandaRepositoryHttp(),BusinessRepositoryHttp())),
                         ], child: child??const Scaffold())
                 ),
               );

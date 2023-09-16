@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:izi_kiosco/data/local/local_storage_credentials.dart';
+import 'package:izi_kiosco/data/local/local_storage_first_configuration.dart';
 import 'package:izi_kiosco/data/utils/business_utils.dart';
 import 'package:izi_kiosco/data/utils/token_utils.dart';
 import 'package:izi_kiosco/data/utils/user_utils.dart';
@@ -83,13 +84,15 @@ class AuthBloc extends Cubit<AuthState> {
             List<Currency> currencies = await _businessRepository.getCurrencies(
                 contribuyenteId:contribuyente.id ?? 0);
 
+            bool firstConfiguration=await LocalStorageFirstConfiguration.getFirstConfiguration() ?? false;
             emit(state.copyWith(
-                status: AuthStatus.okAuth,
+                status: !firstConfiguration? AuthStatus.firstContribuyente:AuthStatus.okAuth,
                 contribuyentes: contribuyentes,
                 currentUser: user,
                 currencies: currencies,
                 currentSucursal: sucursal,
                 currentContribuyente: contribuyente));
+            await LocalStorageFirstConfiguration.saveFirstConfiguration(true);
           } else {
             emit(state.copyWith(
                 status: AuthStatus.noAuth, currentUser: user));

@@ -148,7 +148,7 @@ class _PaymentPageInvoiceState extends State<PaymentPageInvoice> {
                       .firstWhere((element) => element.id == value);
                   context
                       .read<PaymentBloc>()
-                      .changeInputs(businessName: business.razonSocial);
+                      .changeInputs(businessName: business.razonSocial,documentNumber: business.nit);
                   businessNameController.text = business.razonSocial ?? "";
                 },
                 onEditingComplete: () {

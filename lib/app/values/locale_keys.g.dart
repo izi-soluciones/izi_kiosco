@@ -1,6 +1,23 @@
 // DO NOT EDIT. This is code generated via package:easy_localization/generate.dart
 
 abstract class  LocaleKeys {
+  static const selectBusiness_title = 'selectBusiness.title';
+  static const selectBusiness_buttons_accept = 'selectBusiness.buttons.accept';
+  static const selectBusiness_buttons = 'selectBusiness.buttons';
+  static const selectBusiness_inputs_contribuyente_label = 'selectBusiness.inputs.contribuyente.label';
+  static const selectBusiness_inputs_contribuyente_placeholder = 'selectBusiness.inputs.contribuyente.placeholder';
+  static const selectBusiness_inputs_contribuyente = 'selectBusiness.inputs.contribuyente';
+  static const selectBusiness_inputs_sucursal_label = 'selectBusiness.inputs.sucursal.label';
+  static const selectBusiness_inputs_sucursal_placeholder = 'selectBusiness.inputs.sucursal.placeholder';
+  static const selectBusiness_inputs_sucursal = 'selectBusiness.inputs.sucursal';
+  static const selectBusiness_inputs = 'selectBusiness.inputs';
+  static const selectBusiness_subtitles_select = 'selectBusiness.subtitles.select';
+  static const selectBusiness_subtitles = 'selectBusiness.subtitles';
+  static const selectBusiness_messages_waitingLogin = 'selectBusiness.messages.waitingLogin';
+  static const selectBusiness_messages_successLogin = 'selectBusiness.messages.successLogin';
+  static const selectBusiness_messages_errorLogin = 'selectBusiness.messages.errorLogin';
+  static const selectBusiness_messages = 'selectBusiness.messages';
+  static const selectBusiness = 'selectBusiness';
   static const login_title = 'login.title';
   static const login_buttons_login = 'login.buttons.login';
   static const login_buttons = 'login.buttons';

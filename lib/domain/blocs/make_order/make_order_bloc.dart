@@ -30,13 +30,6 @@ class MakeOrderBloc extends Cubit<MakeOrderState> {
       if (indexCurrency != -1) {
         currentCurrency = authState.currencies.elementAtOrNull(indexCurrency);
       }
-      List<ConsumptionPoint>? consumptionPoints;
-      try {
-        consumptionPoints = await _comandaRepository.getConsumptionPoints(
-            authState.currentSucursal?.id ?? 0,
-            authState.currentContribuyente?.id ?? 0);
-        consumptionPoints.removeWhere((element) => (element.status==ConsumptionPointStatus.fill && element.id!=state.order?.mesa) ||  element.activo==false);
-      } catch (_) {}
       
       
 
@@ -70,7 +63,6 @@ class MakeOrderBloc extends Cubit<MakeOrderState> {
       if(!isClosed){
         emit(state.copyWith(
             status: MakeOrderStatus.successGet,
-            tables: consumptionPoints,
             categories: list,
             indexCategory: 0,
             cashRegisters: cashRegisters,
@@ -78,6 +70,7 @@ class MakeOrderBloc extends Cubit<MakeOrderState> {
       }
     } catch (e) {
       log(e.toString());
+
       emit(state.copyWith(status: MakeOrderStatus.errorGet));
       emit(state.copyWith(status: MakeOrderStatus.waitingGet));
     }
