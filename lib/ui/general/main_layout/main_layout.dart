@@ -38,6 +38,9 @@ class MainLayout extends StatelessWidget {
               builder: (context,state) {
               return WillPopScope(
                 onWillPop: ()async{
+                  if(onPop==null){
+                    return false;
+                  }
                   state.lock?null: onPop!=null?
                   GoRouter.of(context).goNamed(onPop!()):GoRouter.of(context).canPop()?GoRouter.of(context).pop():GoRouter.of(context).goNamed(RoutesKeys.home);
                   return false;
@@ -53,6 +56,7 @@ class MainLayout extends StatelessWidget {
                                         child: Stack(
                                           children: [
                                             Column(
+                                              crossAxisAlignment: CrossAxisAlignment.stretch,
                                               children: [
                                                 Expanded(
                                                     child: child

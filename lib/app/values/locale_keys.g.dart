@@ -136,6 +136,10 @@ abstract class  LocaleKeys {
   static const orderDetails = 'orderDetails';
   static const home_title = 'home.title';
   static const home_drawer = 'home.drawer';
+  static const home_subtitles_iziKiosk = 'home.subtitles.iziKiosk';
+  static const home_subtitles = 'home.subtitles';
+  static const home_body_description = 'home.body.description';
+  static const home_body = 'home.body';
   static const home = 'home';
   static const user_information_title = 'user_information.title';
   static const user_information_drawer = 'user_information.drawer';
@@ -182,6 +186,8 @@ abstract class  LocaleKeys {
   static const payment_body_totalSplit = 'payment.body.totalSplit';
   static const payment_body_totalPaymentSplit = 'payment.body.totalPaymentSplit';
   static const payment_body_remaining = 'payment.body.remaining';
+  static const payment_body_orderCompleted = 'payment.body.orderCompleted';
+  static const payment_body_orderCompletedDescription = 'payment.body.orderCompletedDescription';
   static const payment_body = 'payment.body';
   static const payment_buttons_cash = 'payment.buttons.cash';
   static const payment_buttons_qr = 'payment.buttons.qr';
@@ -205,6 +211,7 @@ abstract class  LocaleKeys {
   static const payment_buttons_cashFull = 'payment.buttons.cashFull';
   static const payment_buttons_deletePayment = 'payment.buttons.deletePayment';
   static const payment_buttons_markAsPaid = 'payment.buttons.markAsPaid';
+  static const payment_buttons_makeOrder = 'payment.buttons.makeOrder';
   static const payment_buttons = 'payment.buttons';
   static const payment_inputs_percentage_label = 'payment.inputs.percentage.label';
   static const payment_inputs_percentage_placeholder = 'payment.inputs.percentage.placeholder';
@@ -256,6 +263,12 @@ abstract class  LocaleKeys {
   static const payment_inputs_invoiceNumber_errors_required = 'payment.inputs.invoiceNumber.errors.required';
   static const payment_inputs_invoiceNumber_errors = 'payment.inputs.invoiceNumber.errors';
   static const payment_inputs_invoiceNumber = 'payment.inputs.invoiceNumber';
+  static const payment_inputs_phoneNumber_label = 'payment.inputs.phoneNumber.label';
+  static const payment_inputs_phoneNumber_description = 'payment.inputs.phoneNumber.description';
+  static const payment_inputs_phoneNumber_errors_required = 'payment.inputs.phoneNumber.errors.required';
+  static const payment_inputs_phoneNumber_errors_invalid = 'payment.inputs.phoneNumber.errors.invalid';
+  static const payment_inputs_phoneNumber_errors = 'payment.inputs.phoneNumber.errors';
+  static const payment_inputs_phoneNumber = 'payment.inputs.phoneNumber';
   static const payment_inputs_authorization_label = 'payment.inputs.authorization.label';
   static const payment_inputs_authorization_errors_required = 'payment.inputs.authorization.errors.required';
   static const payment_inputs_authorization_errors = 'payment.inputs.authorization.errors';
@@ -282,6 +295,8 @@ abstract class  LocaleKeys {
   static const payment_messages_successPayment = 'payment.messages.successPayment';
   static const payment_messages_errorInvoiced = 'payment.messages.errorInvoiced';
   static const payment_messages_errorAnnulled = 'payment.messages.errorAnnulled';
+  static const payment_messages_successOrder = 'payment.messages.successOrder';
+  static const payment_messages_errorOrder = 'payment.messages.errorOrder';
   static const payment_messages = 'payment.messages';
   static const payment = 'payment';
   static const tapOnPhone_title = 'tapOnPhone.title';
@@ -381,6 +396,7 @@ abstract class  LocaleKeys {
   static const makeOrder_buttons_accept = 'makeOrder.buttons.accept';
   static const makeOrder_buttons_save = 'makeOrder.buttons.save';
   static const makeOrder_buttons_add = 'makeOrder.buttons.add';
+  static const makeOrder_buttons_cancel = 'makeOrder.buttons.cancel';
   static const makeOrder_buttons = 'makeOrder.buttons';
   static const makeOrder_inputs_search_placeholder = 'makeOrder.inputs.search.placeholder';
   static const makeOrder_inputs_search = 'makeOrder.inputs.search';

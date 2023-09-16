@@ -15,6 +15,11 @@ class NewOrderDto {
   int sucursal;
   String tipoComanda;
   int? id;
+  bool anulada;
+
+  num total;
+
+  Map? custom;
 
   NewOrderDto(
       {required this.caja,
@@ -26,8 +31,10 @@ class NewOrderDto {
       required this.listaItems,
       required this.mesa,
       this.notaInterna,
+      this.anulada=false,
       required this.paraLlevar,
       required this.tipoComanda,
+      this.total=0,
       required this.sucursal});
 
   Map<String, dynamic> toJson() => {
@@ -50,24 +57,13 @@ class NewOrderDto {
         "paraLlevar": paraLlevar,
         "sucursal": sucursal,
         "tipoComanda": tipoComanda,
+        "anulada":anulada?1:0,
         "tipoMovimiento": "gasto-prod-venta"
       };
   Map<String, dynamic> toJsonEdit() => {
-    "caja": caja,
-    "custom": {
-      if (cantidadComensales != null)
-        "cantidadComensales": cantidadComensales,
-      if (nombreMesa != null) "nombreMesa": nombreMesa
-    },
-    "descuentos": descuentos,
+    "custom": custom,
     "fecha": fecha.dateFormat(DateFormatterType.dataWithHour),
-    "listaItems": listaItems.map(
-          (e) {
-        return e.toJson();
-      },
-    ).toList(),
-    "mesa": mesa,
-    if(notaInterna!=null)"notaInterna": notaInterna,
-    "paraLlevar": paraLlevar
+    "anulada":0,
   };
+
 }

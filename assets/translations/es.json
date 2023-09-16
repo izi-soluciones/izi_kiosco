@@ -169,7 +169,13 @@
   },
   "home": {
     "title": "Inicio",
-    "drawer": "Inicio"
+    "drawer": "Inicio",
+    "subtitles":{
+      "iziKiosk": "iZi Kiosco"
+    },
+    "body": {
+      "description": "Haz click para realizar tu pedido"
+    }
   },
   "user_information": {
     "title": "Usuario",
@@ -227,7 +233,9 @@
       "change": "Cambio",
       "totalSplit": "Total",
       "totalPaymentSplit": "Total pagado",
-      "remaining": "Restante"
+      "remaining": "Restante",
+      "orderCompleted": "Orden generada correctamente",
+      "orderCompletedDescription": "En unos momentos tu orden estará lista."
     },
     "buttons": {
       "cash": "Efectivo",
@@ -251,7 +259,8 @@
       "addTip": "Agregar propina",
       "cashFull": "Exacto: {} {}",
       "deletePayment": "Eliminar pago",
-      "markAsPaid": "Marcar como pagado"
+      "markAsPaid": "Marcar como pagado",
+      "makeOrder": "Generar pedido"
     },
     "inputs": {
 
@@ -304,8 +313,8 @@
         }
       },
       "businessName": {
-        "label": "Razón social*",
-        "placeholder": "Ingresa una Razón social",
+        "label": "Nombre*",
+        "placeholder": "Ingresa tu nombre o razon social",
         "errors": {
           "required": "La razón social es requerida"
         }
@@ -324,6 +333,14 @@
         "label": "Numero de factura de contingencia",
         "errors": {
           "required": "El numero es requerido"
+        }
+      },
+      "phoneNumber": {
+        "label": "Numero de teléfono",
+        "description": "A este número se notificará y enviará tu factura",
+        "errors": {
+          "required": "El numero es requerido",
+          "invalid": "El numero no es valido"
         }
       },
       "authorization": {
@@ -359,7 +376,9 @@
       "successPreInvoiceCustom": "{} generado",
       "successPayment": "Pago realizado correctamente",
       "errorInvoiced": "Esta orden ya está facturada",
-      "errorAnnulled": "Esta orden esta anulada"
+      "errorAnnulled": "Esta orden esta anulada",
+      "successOrder": "Orden generada correctamente",
+      "errorOrder": "No se pudo generar la orden intenta nuevamente"
 
     }
   },
@@ -483,7 +502,8 @@
       "editDiscount": "Editar Descuentos",
       "accept": "Aceptar",
       "save": "Guardar",
-      "add": "Añadir"
+      "add": "Añadir",
+      "cancel": "Cancelar"
     },
     "inputs": {
       "search": {

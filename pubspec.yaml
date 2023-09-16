@@ -100,6 +100,7 @@ flutter:
     - assets/icons/
     - assets/sounds/izi_sound.wav
     - assets/splash_screen.json
+    - assets/lottie_ok.json
 
   # To add assets to your application, add an assets section, like this:
   # assets:

@@ -1,10 +1,12 @@
 import 'dart:async';
+import 'dart:developer';
 
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:izi_kiosco/app/values/app_constants.dart';
 import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
 import 'package:izi_kiosco/domain/dto/invoice_dto.dart';
+import 'package:izi_kiosco/domain/dto/new_order_dto.dart';
 import 'package:izi_kiosco/domain/dto/qr_dto.dart';
 import 'package:izi_kiosco/domain/models/cash_register.dart';
 import 'package:izi_kiosco/domain/models/charge.dart';
@@ -55,10 +57,6 @@ class PaymentBloc extends Cubit<PaymentState> {
 
         if(defaultOrder.facturada==1){
           emit(state.copyWith(status: PaymentStatus.errorInvoiced));
-          return;
-        }
-        if(defaultOrder.anulada==1){
-          emit(state.copyWith(status: PaymentStatus.errorAnnulled));
           return;
         }
 
@@ -165,6 +163,7 @@ class PaymentBloc extends Cubit<PaymentState> {
         emit(state.copyWith(status: PaymentStatus.waitingGet));
       }
     } catch (error) {
+      log(error.toString());
       emit(state.copyWith(
           status: PaymentStatus.errorGet, errorDescription: error.toString()));
       emit(state.copyWith(status: PaymentStatus.waitingGet));
@@ -262,9 +261,13 @@ class PaymentBloc extends Cubit<PaymentState> {
         bool authorization = false,
       bool email = false,
         bool firstDigits = false,
-        bool lastDigits = false
+        bool lastDigits = false,
+        bool phoneNumber = false
       }) {
-
+    if(phoneNumber){
+      emit(state.copyWith(phoneNumber: state.phoneNumber.validateError()));
+      return state.phoneNumber.validateError().inputError==null;
+    }
     if(firstDigits){
       emit(state.copyWith(firstDigits: state.firstDigits.validateError()));
     }
@@ -303,8 +306,12 @@ class PaymentBloc extends Cubit<PaymentState> {
         String? invoiceNumber,
       String? email,
         String? firstDigits,
-        String? lastDigits
+        String? lastDigits,
+        String? phoneNumber
       }) {
+    if(phoneNumber !=null){
+      emit(state.copyWith(phoneNumber: state.phoneNumber.changeValue(phoneNumber)));
+    }
     if(firstDigits !=null){
       emit(state.copyWith(firstDigits: state.firstDigits.changeValue(firstDigits)));
     }
@@ -450,9 +457,7 @@ class PaymentBloc extends Cubit<PaymentState> {
         documentNumber: state.documentNumber.validateError(),
         businessName: state.businessName.validateError(),
       email: state.email.validateError(),
-
-      invoiceNumber:  state.isManual?state.invoiceNumber.validateError():null,
-      authorization:  state.isManual?state.authorization.validateError():null,
+      phoneNumber: state.phoneNumber.validateError()
 
     ));
 
@@ -465,14 +470,8 @@ class PaymentBloc extends Cubit<PaymentState> {
     if(state.email.inputError !=null){
       return false;
     }
-
-    if(state.isManual){
-      if(state.invoiceNumber.inputError !=null){
-        return false;
-      }
-      if(state.authorization.inputError !=null){
-        return false;
-      }
+    if(state.phoneNumber.inputError !=null){
+      return false;
     }
 
     return true;
@@ -528,9 +527,61 @@ class PaymentBloc extends Cubit<PaymentState> {
 
 
 
-  emitInvoice({bool prefactura = false, required AuthState authState,bool noData = false}) async {
+  Future<bool?> generateOrder({required AuthState authState,bool noData = false})async{
     try{
 
+      if((noData && validateInput(phoneNumber: true) == true) || !noData && _validateInputs()){
+        emit(state.copyWith(status: PaymentStatus.waitingInvoice));
+
+        var newOrderDto = NewOrderDto(
+            caja: state.order?.caja,
+            cantidadComensales: 0,
+            nombreMesa: "nombreMesa",
+            descuentos: 0,
+            emisor: state.order?.emisor??"",
+            fecha: DateTime.now(),
+            listaItems: [],
+            mesa: "mesa",
+            paraLlevar: true,
+
+            tipoComanda: AppConstants.restaurantEnv,
+            sucursal: state.order?.sucursal??0
+        );
+        Map custom ={};
+        if(state.order?.custom is Map){
+          custom=(state.order!.custom  as Map);
+        }
+        newOrderDto.id=state.order?.id;
+        custom["pagadorData"]={
+          "tipoDocumento": state.documentType?.codigoClasificador,
+          "nit":noData? "0":state.documentNumber.value,
+          "complemento":noData?"":state.complement.value,
+          "razonSocial":noData?"S/N":state.businessName.value,
+          "correoElectronico":noData?"":state.email.value,
+          "celular":noData?"":state.phoneNumber.value
+        };
+
+        newOrderDto.custom=custom;
+        await _comandaRepository.editOrder(newOrder: newOrderDto);
+        emit(state.copyWith(step: 8));
+        await Future.delayed(const Duration(seconds: 5));
+        emit(state.copyWith(status: PaymentStatus.successInvoice));
+        return true;
+      }
+      else{
+        return false;
+      }
+    }
+    catch(err){
+      log(err.toString());
+      emit(state.copyWith(
+          status: PaymentStatus.errorGet, errorDescription: err.toString()));
+      emit(state.copyWith(status: PaymentStatus.waitingGet));
+      return false;
+    }
+  }
+  emitInvoice({bool prefactura = false, required AuthState authState,bool noData = false}) async {
+    try{
 
       if(noData || _validateInputs()){
         emit(state.copyWith(status: prefactura?PaymentStatus.waitingPreInvoice:PaymentStatus.waitingInvoice));
@@ -680,6 +731,9 @@ class PaymentBloc extends Cubit<PaymentState> {
           await _comandaRepository.emit(invoice: invoice, orderId: state.order?.id ?? 0);
         }
         emit(state.copyWith(status: prefactura?PaymentStatus.successPreInvoice:PaymentStatus.successInvoice));
+      }
+      else{
+        return false;
       }
     }
     catch(error){

@@ -37,6 +37,7 @@ class PaymentState extends Equatable {
   final InputObj lastDigits;
   final InputObj invoiceNumber;
   final InputObj authorization;
+  final InputObj phoneNumber;
 
 
   //VARIABLES
@@ -92,6 +93,7 @@ class PaymentState extends Equatable {
       required this.invoiceNumber,
       required this.withException,
       required this.firstDigits,
+      required this.phoneNumber,
         this.qrAmount,
         this.qrCharge,
         this.qrPaymentKey,
@@ -125,6 +127,7 @@ class PaymentState extends Equatable {
       lastDigits: PaymentInputs.lastDigitsInput(),
       invoiceNumber: PaymentInputs.invoiceNumber(),
       authorization: PaymentInputs.authorization(),
+      phoneNumber: PaymentInputs.phoneNumberInput(),
       casaMatriz: null);
 
   copyWith(
@@ -156,6 +159,7 @@ class PaymentState extends Equatable {
       InputObj? lastDigits,
       InputObj? authorization,
       InputObj? invoiceNumber,
+        InputObj? phoneNumber,
         Charge? Function()? qrCharge,
         num? qrAmount,
         int? qrPaymentKey,
@@ -191,6 +195,7 @@ class PaymentState extends Equatable {
         invoiceNumber: invoiceNumber ?? this.invoiceNumber,
         isManual: isManual ?? this.isManual,
       qrAmount: qrAmount ?? this.qrAmount,
+      phoneNumber: phoneNumber ?? this.phoneNumber,
       qrCharge: qrCharge !=null?qrCharge() : this.qrCharge,
       qrPaymentKey: qrPaymentKey == -1?null: qrPaymentKey ?? this.qrPaymentKey
     );
@@ -220,6 +225,7 @@ class PaymentState extends Equatable {
         queryBusinessList,
         authorization,
         invoiceNumber,
+    phoneNumber,
     payments,
     qrCharge,
     qrAmount,

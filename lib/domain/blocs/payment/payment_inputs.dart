@@ -67,6 +67,20 @@ class PaymentInputs{
       },
     );
   }
+  static InputObj phoneNumberInput({String value =""}){
+    return InputObj(
+      value: value,
+      validator: (val) {
+        if(val.isEmpty){
+          return InputError.required;
+        }
+        if(num.tryParse(val)==null){
+          return InputError.invalid;
+        }
+        return null;
+      },
+    );
+  }
   static InputObj lastDigitsInput({String value =""}){
     return InputObj(
       value: value,

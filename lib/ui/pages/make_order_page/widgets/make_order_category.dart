@@ -13,29 +13,28 @@ class MakeOrderCategory extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onPressed,
-      child: OnHover(
-        builder: (isHovered) {
-          return Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16,vertical: 12),
-            decoration: BoxDecoration(
-              color: active? IziColors.dark:IziColors.grey25,
-              borderRadius: BorderRadius.circular(8)
-            ),
-            constraints: BoxConstraints(
-              minWidth: small?150:213
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                IziText.bodyBig(color: active?IziColors.white:IziColors.dark, text: title, fontWeight: FontWeight.w600),
-                const SizedBox(width: 16,),
-                IziText.bodyBig(color: active?IziColors.white:IziColors.dark, text: "($count)", fontWeight: FontWeight.w400),
-              ],
-            ),
-          );
-        },
+    return AspectRatio(
+      aspectRatio: 1,
+      child: InkWell(
+        onTap: onPressed,
+        child: OnHover(
+          builder: (isHovered) {
+            return Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16,vertical: 12),
+              decoration: BoxDecoration(
+                color: active? IziColors.dark:IziColors.grey25,
+                borderRadius: BorderRadius.circular(8)
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  IziText.bodySmall(color: active?IziColors.white:IziColors.dark,textAlign: TextAlign.center, text: title, fontWeight: FontWeight.w600,maxLines: 3),
+                ],
+              ),
+            );
+          },
+        ),
       ),
     );
   }

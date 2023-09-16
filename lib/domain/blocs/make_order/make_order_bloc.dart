@@ -231,6 +231,7 @@ class MakeOrderBloc extends Cubit<MakeOrderState> {
           fecha: DateTime.now(),
           listaItems: items,
           mesa: table?.id??"",
+          anulada: true,
           paraLlevar: false,
           tipoComanda: AppConstants.restaurantEnv,
           sucursal: authState.currentSucursal?.id??0);

@@ -1,5 +1,6 @@
 class AssetsKeys{
   static const String splashScreenJson="assets/splash_screen.json";
+  static const String okAnimationJson="assets/lottie_ok.json";
   static const String translations='assets/translations';
   static const String envProd="assets/.env.prod";
   static const String envDev="assets/.env.dev";
