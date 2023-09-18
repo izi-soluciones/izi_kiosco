@@ -572,7 +572,7 @@ class PaymentBloc extends Cubit<PaymentState> {
           "complemento":noData?"":state.complement.value,
           "razonSocial":noData?"S/N":state.businessName.value,
           "correoElectronico":noData?"":state.email.value,
-          "celular":noData?"":state.phoneNumber.value
+          "telefonoComprador":noData?"":state.phoneNumber.value
         };
 
         newOrderDto.custom=custom;

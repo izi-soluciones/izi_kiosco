@@ -195,10 +195,15 @@
     "title": "Inicio",
     "drawer": "Inicio",
     "subtitles":{
-      "iziKiosk": "iZi Kiosco"
+      "iziSlogan": "Es fácil, es iZi"
     },
     "body": {
-      "description": "Haz click para realizar tu pedido"
+      "order": "Ordena",
+      "and": "y",
+      "pay": "paga",
+      "here": "aqui",
+      "clickToInit": "Toca la pantalla para iniciar",
+      "anIziPlatform": "Una plataforma de"
     }
   },
   "user_information": {

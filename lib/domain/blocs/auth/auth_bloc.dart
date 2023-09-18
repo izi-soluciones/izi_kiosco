@@ -146,7 +146,7 @@ class AuthBloc extends Cubit<AuthState> {
 
     emit(state.copyWith(
       loadingContribuyente: false,
-      status: AuthStatus.okAuth,
+      status: AuthStatus.firstContribuyente,
         currentSucursal: sucursal,
         currentContribuyente: contribuyente));
   }

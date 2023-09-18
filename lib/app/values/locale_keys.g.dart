@@ -153,9 +153,14 @@ abstract class  LocaleKeys {
   static const orderDetails = 'orderDetails';
   static const home_title = 'home.title';
   static const home_drawer = 'home.drawer';
-  static const home_subtitles_iziKiosk = 'home.subtitles.iziKiosk';
+  static const home_subtitles_iziSlogan = 'home.subtitles.iziSlogan';
   static const home_subtitles = 'home.subtitles';
-  static const home_body_description = 'home.body.description';
+  static const home_body_order = 'home.body.order';
+  static const home_body_and = 'home.body.and';
+  static const home_body_pay = 'home.body.pay';
+  static const home_body_here = 'home.body.here';
+  static const home_body_clickToInit = 'home.body.clickToInit';
+  static const home_body_anIziPlatform = 'home.body.anIziPlatform';
   static const home_body = 'home.body';
   static const home = 'home';
   static const user_information_title = 'user_information.title';
