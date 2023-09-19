@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -72,12 +74,7 @@ class _PaymentPageQrState extends State<PaymentPageQr> {
                               ),
                               child: Center(
                                 child: widget.state.qrCharge!=null?
-                                kIsWeb?
-                                AspectRatio(
-                                    aspectRatio: 1,
-                                    child: WebImage(imageUrl: widget.state.qrCharge?.qrUrl??"")
-                                ):
-                                Image.network(widget.state.qrCharge?.qrUrl??"",fit: BoxFit.fitWidth,):
+                                    _qrWidget():
                                     widget.state.qrLoading?
                                 const SizedBox(
                                   height: 40,
@@ -137,6 +134,23 @@ class _PaymentPageQrState extends State<PaymentPageQr> {
         )*/
       ],
     );
+  }
+
+
+  Widget _qrWidget(){
+    if(widget.state.qrCharge?.qrUrl!=null){
+      return
+        kIsWeb?
+        AspectRatio(
+            aspectRatio: 1,
+            child: WebImage(imageUrl: widget.state.qrCharge!.qrUrl!)
+        ):
+        Image.network(widget.state.qrCharge!.qrUrl!,fit: BoxFit.fitWidth);
+    }
+    if(widget.state.qrCharge?.qrBase64!=null){
+      return Image.memory(const Base64Decoder().convert(widget.state.qrCharge!.qrBase64!),fit: BoxFit.fitWidth);
+    }
+    return const SizedBox.shrink();
   }
 
   Widget _invoiceForm(BuildContext context, ResponsiveUtils ru) {

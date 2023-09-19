@@ -19,7 +19,7 @@ class QrDto {
     "pedido": orderId,
     "titulo": "Cobro Solicitado",
     "fechaCreacion": date.dateFormat(DateFormatterType.data),
-    "pasarela": "QH-SIMPLE",
+    "pasarela": "LINKSER",
     "monto": monto,
     "moneda": moneda,
     "monedaId": monedaId,
