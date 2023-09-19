@@ -57,17 +57,6 @@ class Routes {
           );
         },
       ),
-            GoRoute(
-              name: RoutesKeys.home,
-              path: RoutesKeys.homeLink,
-              pageBuilder: (BuildContext context, GoRouterState state) {
-                return NoTransitionPage(child: MainLayout(
-                    currentLocation: state.fullPath ?? "",
-                    hideDrawer: true,
-                    hideBottomNav: true,
-                    onPop: null,child: const HomePage()));
-              },
-            ),
             ShellRoute(
               builder: (context, state, child) {
                 return MainLayout(
@@ -81,6 +70,17 @@ class Routes {
                 );
               },
               routes: [
+                GoRoute(
+                  name: RoutesKeys.home,
+                  path: RoutesKeys.homeLink,
+                  pageBuilder: (BuildContext context, GoRouterState state) {
+                    return NoTransitionPage(child: MainLayout(
+                        currentLocation: state.fullPath ?? "",
+                        hideDrawer: true,
+                        hideBottomNav: true,
+                        onPop: null,child: const HomePage()));
+                  },
+                ),
                 GoRoute(
                   name: RoutesKeys.makeOrder,
                   path: RoutesKeys.makeOrderLink,

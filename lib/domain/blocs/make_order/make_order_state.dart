@@ -31,11 +31,12 @@ class MakeOrderState extends Equatable{
   final List<ConsumptionPoint> tables;
   final int? numberDiners;
   final List<CashRegister> cashRegisters;
+  final bool review;
 
 
 
 
-  const MakeOrderState({required this.itemsFeatured,this.order,this.errorDescription,required this.cashRegisters,required this.tables,this.tableId,this.numberDiners,this.offsetDiscount,required this.discountAmount,required this.status,this.currentCurrency, required this.categories, required this.indexCategory,required this.itemsSelected});
+  const MakeOrderState({required this.review,required this.itemsFeatured,this.order,this.errorDescription,required this.cashRegisters,required this.tables,this.tableId,this.numberDiners,this.offsetDiscount,required this.discountAmount,required this.status,this.currentCurrency, required this.categories, required this.indexCategory,required this.itemsSelected});
 
   factory MakeOrderState.init(String? tableId,int? numberDiners,Comanda? order){
     List<CategoryOrder> initSelectItems=[];
@@ -82,7 +83,8 @@ class MakeOrderState extends Equatable{
         tables: const [],
         cashRegisters: const [],
         order: order,
-      itemsFeatured: const []
+      itemsFeatured: const [],
+      review:false,
     );
   }
 
@@ -99,7 +101,8 @@ class MakeOrderState extends Equatable{
     List<ConsumptionPoint>? tables,
     List<CashRegister>? cashRegisters,
     String? errorDescription,
-    List<Item>? itemsFeatured
+    List<Item>? itemsFeatured,
+    bool? review
 }){
     return MakeOrderState(
         status: status ?? this.status,
@@ -115,11 +118,12 @@ class MakeOrderState extends Equatable{
       cashRegisters: cashRegisters ?? this.cashRegisters,
       errorDescription: errorDescription ?? this.errorDescription,
       order: order,
-      itemsFeatured: itemsFeatured ?? this.itemsFeatured
+      itemsFeatured: itemsFeatured ?? this.itemsFeatured,
+      review: review ?? this.review
     );
   }
 
   @override
-  List<Object?> get props => [itemsFeatured,status,cashRegisters,tables,categories,errorDescription,indexCategory,itemsSelected,currentCurrency,discountAmount,offsetDiscount,tableId,numberDiners];
+  List<Object?> get props => [review,itemsFeatured,status,cashRegisters,tables,categories,errorDescription,indexCategory,itemsSelected,currentCurrency,discountAmount,offsetDiscount,tableId,numberDiners];
 
 }

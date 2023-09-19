@@ -79,6 +79,10 @@ class MakeOrderBloc extends Cubit<MakeOrderState> {
     }
   }
 
+  changeReviewStatus(bool review){
+    emit(state.copyWith(review:review));
+  }
+
   changeCategory(index) {
     emit(state.copyWith(indexCategory: index));
   }
@@ -205,9 +209,8 @@ class MakeOrderBloc extends Cubit<MakeOrderState> {
         cashRegister=state.cashRegisters[cajaUsuarioIndex];
       }
       else{
-        cashRegister=state.cashRegisters.firstOrNull;
+        cashRegister=state.cashRegisters.firstWhere((element) => element.abierta==true);
       }
-
       int tableIndex= state.tables.indexWhere((element) => element.id==state.tableId);
       ConsumptionPoint? table;
       if(tableIndex!=-1){
@@ -219,7 +222,7 @@ class MakeOrderBloc extends Cubit<MakeOrderState> {
       }
 
       NewOrderDto newOrderDto = NewOrderDto(
-          caja: cashRegister?.id,
+          caja: cashRegister.id,
           cantidadComensales: state.numberDiners,
           nombreMesa: table?.nombre,
           descuentos: state.discountAmount,

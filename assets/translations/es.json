@@ -523,16 +523,20 @@
     "body":{
       "addDishesOrDrinks": "Agrega platos o bebidas de la lista",
       "quantity": "Cantidad",
-      "items": "Items ({})"
+      "items": "Items ({})",
+      "confirmOrder": "Confirmación de la orden"
     },
     "buttons": {
+      "next": "Siguiente",
       "confirm": "Confirmar pedido",
       "discount": "Descuento",
       "editDiscount": "Editar Descuentos",
       "accept": "Aceptar",
       "save": "Guardar",
       "add": "Añadir",
-      "cancel": "Cancelar"
+      "cancel": "Cancelar",
+      "confirmAndPay": "Confirmar y pagar",
+      "addMore": "Agregar más"
     },
     "inputs": {
       "search": {

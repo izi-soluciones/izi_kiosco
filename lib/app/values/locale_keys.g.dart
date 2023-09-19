@@ -411,7 +411,9 @@ abstract class  LocaleKeys {
   static const makeOrder_body_addDishesOrDrinks = 'makeOrder.body.addDishesOrDrinks';
   static const makeOrder_body_quantity = 'makeOrder.body.quantity';
   static const makeOrder_body_items = 'makeOrder.body.items';
+  static const makeOrder_body_confirmOrder = 'makeOrder.body.confirmOrder';
   static const makeOrder_body = 'makeOrder.body';
+  static const makeOrder_buttons_next = 'makeOrder.buttons.next';
   static const makeOrder_buttons_confirm = 'makeOrder.buttons.confirm';
   static const makeOrder_buttons_discount = 'makeOrder.buttons.discount';
   static const makeOrder_buttons_editDiscount = 'makeOrder.buttons.editDiscount';
@@ -419,6 +421,8 @@ abstract class  LocaleKeys {
   static const makeOrder_buttons_save = 'makeOrder.buttons.save';
   static const makeOrder_buttons_add = 'makeOrder.buttons.add';
   static const makeOrder_buttons_cancel = 'makeOrder.buttons.cancel';
+  static const makeOrder_buttons_confirmAndPay = 'makeOrder.buttons.confirmAndPay';
+  static const makeOrder_buttons_addMore = 'makeOrder.buttons.addMore';
   static const makeOrder_buttons = 'makeOrder.buttons';
   static const makeOrder_inputs_search_placeholder = 'makeOrder.inputs.search.placeholder';
   static const makeOrder_inputs_search = 'makeOrder.inputs.search';

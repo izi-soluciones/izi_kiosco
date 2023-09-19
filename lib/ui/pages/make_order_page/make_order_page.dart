@@ -8,19 +8,36 @@ import 'package:izi_kiosco/app/values/routes_keys.dart';
 import 'package:izi_kiosco/domain/blocs/make_order/make_order_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/page_utils/page_utils_bloc.dart';
 import 'package:izi_kiosco/ui/modals/warning_config_modal.dart';
+import 'package:izi_kiosco/ui/pages/make_order_page/views/make_order_confirm.dart';
 import 'package:izi_kiosco/ui/pages/make_order_page/views/make_order_detail.dart';
 import 'package:izi_kiosco/ui/pages/make_order_page/views/make_order_select.dart';
 import 'package:izi_kiosco/ui/pages/make_order_page/widgets/make_order_shimmer.dart';
 import 'package:izi_kiosco/ui/utils/custom_alerts.dart';
 
-class MakeOrderPage extends StatelessWidget {
+class MakeOrderPage extends StatefulWidget {
   final bool fromTables;
   const MakeOrderPage({super.key,required this.fromTables});
 
   @override
+  State<MakeOrderPage> createState() => _MakeOrderPageState();
+}
+
+class _MakeOrderPageState extends State<MakeOrderPage> {
+  PageController pageController = PageController();
+  @override
   Widget build(BuildContext context) {
     return BlocConsumer<MakeOrderBloc, MakeOrderState>(
+      listenWhen: (previous, current) {
+        return previous.status!=current.status || previous.review != current.review;
+      },
         listener: (context, state) {
+
+          if(state.review && pageController.page!=1){
+            pageController.jumpToPage(1);
+          }
+          else if(!state.review && pageController.page!=0){
+            pageController.jumpToPage(0);
+          }
 
           if(state.status == MakeOrderStatus.errorCashRegisters){
             CustomAlerts.defaultAlert(context: context,dismissible: true, child: WarningConfigModal(
@@ -40,25 +57,30 @@ class MakeOrderPage extends StatelessWidget {
           }
         },
           builder: (context, state) {
-        return Column(
-            children: [
-              Expanded(
-                child: state.status == MakeOrderStatus.waitingGet
-                    ? MakeOrderShimmer(state: state,)
-                    : MakeOrderSelect(
+        return PageView(
+          controller: pageController,
+          physics: const NeverScrollableScrollPhysics(),
+          children: [
+            Column(
+                children: [
+                  Expanded(
+                    child: state.status == MakeOrderStatus.waitingGet
+                        ? MakeOrderShimmer(state: state,)
+                        : MakeOrderSelect(
                         makeOrderState: state,
-                  fromTables: fromTables
-                      ),
-              ),
-                SizedBox(
-                  height: 300,
-                  child: MakeOrderDetail(
-                    state: state
+                        fromTables: widget.fromTables
+                    ),
                   ),
-                ),
-            ]);
+                  SizedBox(
+                    height: 300,
+                    child: MakeOrderDetail(
+                        state: state
+                    ),
+                  ),
+                ]),
+            MakeOrderConfirm(state: state)
+          ],
+        );
       });
   }
-
-
 }

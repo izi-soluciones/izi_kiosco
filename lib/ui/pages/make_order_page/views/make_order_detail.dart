@@ -12,9 +12,7 @@ import 'package:izi_design_system/tokens/izi_icons.dart';
 import 'package:izi_design_system/tokens/types.dart';
 import 'package:izi_kiosco/app/values/locale_keys.g.dart';
 import 'package:izi_kiosco/app/values/routes_keys.dart';
-import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/make_order/make_order_bloc.dart';
-import 'package:izi_kiosco/domain/models/comanda.dart';
 import 'package:izi_kiosco/domain/models/item.dart';
 import 'package:izi_kiosco/ui/general/izi_scroll.dart';
 import 'package:izi_kiosco/ui/utils/money_formatter.dart';
@@ -127,7 +125,7 @@ class _MakeOrderDetailState extends State<MakeOrderDetail> {
                 child: IziBtn(
                     buttonText: LocaleKeys.makeOrder_buttons_cancel.tr(),
                     buttonType: ButtonType.terciary,
-                    buttonSize: ButtonSize.medium,
+                    buttonSize: ButtonSize.large,
                     buttonOnPressed: () {
                       GoRouter.of(context).goNamed(RoutesKeys.home);
                     }),
@@ -140,10 +138,10 @@ class _MakeOrderDetailState extends State<MakeOrderDetail> {
                 child: IziBtn(
                     buttonText: LocaleKeys.makeOrder_buttons_confirm.tr(),
                     buttonType: ButtonType.secondary,
-                    buttonSize: ButtonSize.medium,
+                    buttonSize: ButtonSize.large,
                     loading: loadingEmit,
                     buttonOnPressed: _getTotal() > 0
-                        ? (){_emitOrder();}
+                        ? (){_next(context);}
                         : null),
               )
             ],
@@ -156,24 +154,8 @@ class _MakeOrderDetailState extends State<MakeOrderDetail> {
     );
   }
 
-  _emitOrder()async {
-
-    setState(() {
-      loadingEmit = true;
-    });
-    await context
-        .read<MakeOrderBloc>()
-        .emitOrder(context.read<AuthBloc>().state)
-        .then(
-          (value) {
-            if(value is Comanda){
-              GoRouter.of(context).goNamed(RoutesKeys.payment,extra: value,pathParameters:{"id":value.id.toString()});
-            }
-      },
-    );
-    setState(() {
-      loadingEmit = false;
-    });
+  _next(BuildContext context){
+    context.read<MakeOrderBloc>().changeReviewStatus(true);
   }
 
   _item(Item item, TextEditingController? controller, int indexCategory,
