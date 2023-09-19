@@ -66,6 +66,7 @@ dependencies:
   multi_split_view: ^2.4.0
   intl: ^0.18.0
   encrypt: 5.0.1
+  carousel_slider: ^4.2.1
 
 dev_dependencies:
   flutter_test:

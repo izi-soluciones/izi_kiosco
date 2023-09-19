@@ -38,8 +38,10 @@ class MakeOrderBloc extends Cubit<MakeOrderState> {
           contribuyente: authState.currentSucursal?.id ?? 0);
       var indexAll = list.indexWhere((element) => element.nombre == " Todos");
       CategoryOrder? all;
+      List<Item> itemsFeatured=[];
       if (indexAll != -1) {
         all = list.removeAt(indexAll);
+        itemsFeatured=all.items.where((element) => element.customItem is Map && element.customItem?["kiosco"]?["destacado"]==true).toList();
       }
       list.sort(
         (a, b) {
@@ -65,6 +67,7 @@ class MakeOrderBloc extends Cubit<MakeOrderState> {
             status: MakeOrderStatus.successGet,
             categories: list,
             indexCategory: 0,
+            itemsFeatured: itemsFeatured,
             cashRegisters: cashRegisters,
             currentCurrency: currentCurrency));
       }

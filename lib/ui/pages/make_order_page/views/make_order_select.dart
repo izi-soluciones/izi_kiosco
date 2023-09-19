@@ -5,6 +5,7 @@ import 'package:izi_kiosco/domain/models/item.dart';
 import 'package:izi_kiosco/ui/general/izi_scroll.dart';
 import 'package:izi_kiosco/ui/pages/make_order_page/modals/item_options_modal.dart';
 import 'package:izi_kiosco/ui/pages/make_order_page/widgets/make_order_category.dart';
+import 'package:izi_kiosco/ui/pages/make_order_page/widgets/make_order_featured.dart';
 import 'package:izi_kiosco/ui/pages/make_order_page/widgets/make_order_item_lg.dart';
 import 'package:izi_kiosco/ui/utils/column_container.dart';
 import 'package:izi_kiosco/ui/utils/custom_alerts.dart';
@@ -29,11 +30,22 @@ class _MakeOrderSelectState extends State<MakeOrderSelect> {
   @override
   Widget build(BuildContext context) {
     final ru = ResponsiveUtils(context);
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return Column(
       children: [
-        SizedBox(width: 120,child: _headerLarge()),
-        Expanded(child: _itemsLg(ru)),
+        if(widget.makeOrderState.itemsFeatured.isNotEmpty)
+        SizedBox(
+          height: 250,
+          child: MakeOrderFeatured(state: widget.makeOrderState),
+        ),
+        Expanded(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(width: 120,child: _headerLarge()),
+              Expanded(child: _itemsLg(ru)),
+            ],
+          ),
+        ),
       ],
     );
   }

@@ -34,7 +34,7 @@ class HomePage extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     SizedBox(
-                      height: 300,
+                      height: 200,
                       child: state.currentContribuyente?.logo!=null?
                       CachedNetworkImage(
                         imageUrl: "${dotenv.env[EnvKeys.apiUrl]}/contribuyentes/${state.currentContribuyente?.id}/logo",
@@ -45,7 +45,7 @@ class HomePage extends StatelessWidget {
                         },
                       ):const SizedBox.shrink(),
                     ),
-                    const SizedBox(height: 16,),
+                    const SizedBox(height: 60,),
                     _textBig(LocaleKeys.home_body_order.tr()),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
