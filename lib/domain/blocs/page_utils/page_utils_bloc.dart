@@ -38,6 +38,13 @@ class PageUtilsBloc extends Cubit<PageUtilsState>{
     emit(state.copyWith(lock: false));
   }
 
+  showLoading(String title){
+    emit(state.copyWith(titleLoading: ()=>title));
+  }
+  closeLoading(){
+    emit(state.copyWith(titleLoading: ()=>null));
+  }
+
   void changeSubmenuStatus({
     bool? configuration
 }){

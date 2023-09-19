@@ -21,7 +21,6 @@ import 'package:izi_kiosco/domain/repositories/business_repository.dart';
 import 'package:izi_kiosco/domain/repositories/comanda_repository.dart';
 import 'package:izi_kiosco/domain/repositories/socket_repository.dart';
 import 'package:izi_kiosco/domain/utils/input_obj.dart';
-import 'package:izi_symbiotic/izi_symbiotic.dart';
 part 'payment_state.dart';
 part 'payment_inputs.dart';
 
@@ -33,8 +32,6 @@ class PaymentBloc extends Cubit<PaymentState> {
   PaymentBloc(this._comandaRepository, this._businessRepository,this._socketRepository)
       : super(PaymentState.init());
 
-
-  final IziSymbiotic iziSymbiotic= IziSymbiotic();
 
 
 
@@ -136,19 +133,12 @@ class PaymentBloc extends Cubit<PaymentState> {
                 "";
           }
         }
-        int step =0;
-        if(payments.isNotEmpty){
-          step = 4;
-        }
-        while(payments.length<2){
-          payments.add(Payment());
-        }
         emit(state.copyWith(
             status: PaymentStatus.successGet,
 
               casaMatriz:(casaMatrizIndex != -1)?(authState.currentContribuyente?.sucursales?[casaMatrizIndex]):null,
             order: defaultOrder,
-            step: step,
+            step: 1,
             economicActivity: economicActivity,
             payments: payments,
             usaSiat: usaSiat,
@@ -171,26 +161,6 @@ class PaymentBloc extends Cubit<PaymentState> {
     }
   }
 
-  bool _validateCard(){
-    emit(state.copyWith(
-      firstDigits: state.firstDigits.validateError(),
-      lastDigits: state.lastDigits.validateError()
-    ));
-
-    if(state.firstDigits.inputError !=null){
-      return false;
-    }
-    if(state.lastDigits.inputError !=null){
-      return false;
-    }
-
-    return true;
-  }
-  submitCard(){
-    if(_validateCard()){
-      emit(state.copyWith(step: 3));
-    }
-  }
   emitPaymentTotal(int idPaymentMethod,AuthState authState)async {
     try{
 
@@ -269,29 +239,13 @@ class PaymentBloc extends Cubit<PaymentState> {
       emit(state.copyWith(phoneNumber: state.phoneNumber.validateError()));
       return state.phoneNumber.validateError().inputError==null;
     }
-    if(firstDigits){
-      emit(state.copyWith(firstDigits: state.firstDigits.validateError()));
-    }
 
-    if(lastDigits){
-      emit(state.copyWith(lastDigits: state.lastDigits.validateError()));
-    }
-
-    if(invoiceNumber){
-      emit(state.copyWith(invoiceNumber: state.invoiceNumber.validateError()));
-    }
-    if(authorization){
-      emit(state.copyWith(authorization: state.authorization.validateError()));
-    }
     if (documentNumber) {
       emit(
-          state.copyWith(documentNumber: state.documentNumber.validateError()));
+          state.copyWith(documentNumber: state.documentNumber.validateError(valueRequired: state.businessName.value)));
     }
     if (businessName) {
-      emit(state.copyWith(businessName: state.businessName.validateError()));
-    }
-    if (email) {
-      emit(state.copyWith(email: state.email.validateError()));
+      emit(state.copyWith(businessName: state.businessName.validateError(valueRequired: state.documentNumber.value)));
     }
   }
 
@@ -312,18 +266,6 @@ class PaymentBloc extends Cubit<PaymentState> {
       }) {
     if(phoneNumber !=null){
       emit(state.copyWith(phoneNumber: state.phoneNumber.changeValue(phoneNumber)));
-    }
-    if(firstDigits !=null){
-      emit(state.copyWith(firstDigits: state.firstDigits.changeValue(firstDigits)));
-    }
-    if(lastDigits !=null){
-      emit(state.copyWith(lastDigits: state.lastDigits.changeValue(lastDigits)));
-    }
-    if(authorization !=null){
-      emit(state.copyWith(authorization: state.authorization.changeValue(authorization)));
-    }
-    if(invoiceNumber !=null){
-      emit(state.copyWith(invoiceNumber: state.invoiceNumber.changeValue(invoiceNumber)));
     }
     if (cashRegister != null) {
       emit(state.copyWith(
@@ -357,9 +299,6 @@ class PaymentBloc extends Cubit<PaymentState> {
       emit(state.copyWith(
           businessName: state.businessName.changeValue(businessName)));
     }
-    if (email != null) {
-      emit(state.copyWith(email: state.email.changeValue(email)));
-    }
   }
 
   changeCashAmount(num cash) {
@@ -382,49 +321,6 @@ class PaymentBloc extends Cubit<PaymentState> {
         step: 0, paymentType: PaymentType.others, cashAmount: 0, qrCharge: ()=>null,qrAmount: 0,qrPaymentKey: -1));
   }
 
-  selectPayment(PaymentType paymentType,AuthState authState) {
-    switch (paymentType) {
-      case PaymentType.cash:
-        if ((state.order?.monto ?? 0) - state.discountAmount == 0) {
-          emit(state.copyWith(step: 3, paymentType: paymentType));
-          break;
-        }
-        emit(state.copyWith(step: 2, paymentType: paymentType));
-        break;
-
-      case PaymentType.card:
-        if(state.usaSiat){
-          emit(state.copyWith(step: 6, paymentType: paymentType));
-          return;
-        }
-        emit(state.copyWith(step: 3, paymentType: paymentType));
-        break;
-
-      case PaymentType.qr:
-        if(authState.currentContribuyente?.configCobros?["QHANTUY"]?["appKey"]!=null){
-          emit(state.copyWith(step: 7, qrAmount: (state.order?.monto??0)-state.discountAmount,paymentType: paymentType,qrCharge: ()=>null,qrPaymentKey: -1));
-          _generateQR((state.order?.monto??0)-state.discountAmount,authState);
-          return;
-        }
-        emit(state.copyWith(step: 3, paymentType: paymentType));
-        break;
-
-      case PaymentType.gitCard:
-        emit(state.copyWith(step: 3, paymentType: paymentType));
-        break;
-
-      case PaymentType.bankTransfer:
-        emit(state.copyWith(step: 3, paymentType: paymentType));
-        break;
-
-      default:
-    }
-  }
-
-  generateQrPartial(num amount,int paymentKey,AuthState authState){
-    emit(state.copyWith(step: 7,qrCharge: ()=>null,qrAmount: amount,qrPaymentKey: paymentKey));
-    _generateQR(amount, authState,partial: true);
-  }
 
   markPaidQr(){
     emit(state.copyWith(step: 3, paymentType:PaymentType.qr));
@@ -455,9 +351,8 @@ class PaymentBloc extends Cubit<PaymentState> {
   }
   bool _validateInputs(){
     emit(state.copyWith(
-        documentNumber: state.documentNumber.validateError(),
-        businessName: state.businessName.validateError(),
-      email: state.email.validateError(),
+        documentNumber: state.documentNumber.validateError(valueRequired: state.businessName.value),
+        businessName: state.businessName.validateError(valueRequired: state.documentNumber.value),
       phoneNumber: state.phoneNumber.validateError()
 
     ));
@@ -466,9 +361,6 @@ class PaymentBloc extends Cubit<PaymentState> {
       return false;
     }
     if(state.businessName.inputError !=null){
-      return false;
-    }
-    if(state.email.inputError !=null){
       return false;
     }
     if(state.phoneNumber.inputError !=null){
@@ -484,67 +376,70 @@ class PaymentBloc extends Cubit<PaymentState> {
     qrStream = null;
     return super.close();
   }
-  _generateQR(num amount,AuthState authState,{bool partial = false}) async {
+  generateQR(AuthState authState) async {
     try{
+      if(_validateInputs()){
 
-      QrDto qr = QrDto(
-          orderId: state.order?.id??0,
-          date: DateTime.now(),
-          monto: amount,
-          moneda: state.currentCurrency?.simbolo == "Bs"?"BOB":state.currentCurrency?.simbolo ?? "BOB",
-          monedaId: state.currentCurrency?.id ?? AppConstants.defaultCurrencyId
-      );
+        emit(state.copyWith(qrLoading: true));
+        QrDto qr = QrDto(
+            orderId: state.order?.id??0,
+            date: DateTime.now(),
+            monto: state.order?.monto??0,
+            moneda: state.currentCurrency?.simbolo == "Bs"?"BOB":state.currentCurrency?.simbolo ?? "BOB",
+            monedaId: state.currentCurrency?.id ?? AppConstants.defaultCurrencyId
+        );
 
-      Charge charge = await _comandaRepository.generateQr(contribuyenteId: authState.currentContribuyente?.id??0, qr: qr);
+        Charge charge = await _comandaRepository.generateQr(contribuyenteId: authState.currentContribuyente?.id??0, qr: qr);
 
-      if(isClosed){
-        return;
-      }
-      if(qrStream !=null){
-        _socketRepository.closeQrListening();
-        qrStream?.cancel();
-      }
-      qrStream = _socketRepository.listenQr(charge: charge).listen((event) {
-        if(partial){
-          List<Payment> payments=List.of(state.payments);
-          PaymentMethod pm=state.paymentMethods.firstWhere((element) => element.id == AppConstants.idPaymentMethodQR);
-          payments[state.qrPaymentKey??0]=Payment(
-              id: charge.id,
-              fromCharge: true,
-              terminosPago: pm.nombre,
-              metodoPago: pm.id,
-              monto: amount
-          );
-          emit(state.copyWith(step: 4,payments: payments,qrCharge: ()=>null,qrAmount: 0,qrPaymentKey: -1));
+        if(isClosed){
+          return;
         }
-        else{
-          List<Payment> payments=List.of(state.payments);
-          PaymentMethod pm=state.paymentMethods.firstWhere((element) => element.id == AppConstants.idPaymentMethodQR);
-          payments[0]=Payment(
-              id: charge.id,
-              fromCharge: true,
-              terminosPago: pm.nombre,
-              metodoPago: pm.id,
-              monto: amount
-          );
-          payments.removeAt(1);
-          emit(state.copyWith(step:3,paymentType: PaymentType.qr,payments: payments),);
+        if(qrStream !=null){
+          _socketRepository.closeQrListening();
+          qrStream?.cancel();
         }
-        _socketRepository.closeQrListening();
-        qrStream?.cancel();
-        qrStream = null;
-      },);
-      emit(state.copyWith(qrCharge: ()=>charge));
+        qrStream = _socketRepository.listenQr(charge: charge).listen((event) async{
+          _socketRepository.closeQrListening();
+          qrStream?.cancel();
+          qrStream = null;
+          emit(state.copyWith(status: PaymentStatus.qrProcessing));
+          bool generateOrderResult = false;
+          for(int i=0;i<5;i++){
+            generateOrderResult=await generateOrder(authState: authState);
+            if(generateOrderResult){
+              break;
+            }
+          }
+          bool emitOrderResult = false;
+          for(int i=0;i<5;i++){
+            emitOrderResult=await emitInvoice(authState: authState);
+            if(emitOrderResult){
+              break;
+            }
+          }
+
+          if(!emitOrderResult || !generateOrderResult){
+            emit(state.copyWith(status: PaymentStatus.errorInvoice,step: 3));
+            return;
+          }
+            emit(state.copyWith(step:2,status: PaymentStatus.qrProcessed));
+          await Future.delayed(const Duration(seconds: 5));
+          emit(state.copyWith(status: PaymentStatus.successInvoice));
+        },);
+        emit(state.copyWith(qrCharge: ()=>charge));
+      }
     }
-    catch(_){}
+    catch(_){
+      emit(state.copyWith(qrLoading: false));
+    }
   }
 
 
 
-  Future<bool?> generateOrder({required AuthState authState,bool noData = false})async{
+  Future<bool> generateOrder({required AuthState authState})async{
     try{
 
-      if((noData && validateInput(phoneNumber: true) == true) || !noData && _validateInputs()){
+      if(_validateInputs()){
         emit(state.copyWith(status: PaymentStatus.waitingInvoice));
 
         var newOrderDto = NewOrderDto(
@@ -568,18 +463,14 @@ class PaymentBloc extends Cubit<PaymentState> {
         newOrderDto.id=state.order?.id;
         custom["pagadorData"]={
           "tipoDocumento": state.documentType?.codigoClasificador,
-          "nit":noData? "0":state.documentNumber.value,
-          "complemento":noData?"":state.complement.value,
-          "razonSocial":noData?"S/N":state.businessName.value,
-          "correoElectronico":noData?"":state.email.value,
-          "telefonoComprador":noData?"":state.phoneNumber.value
+          "nit":state.documentNumber.value.isEmpty? "0":state.documentNumber.value,
+          "complemento":state.complement.value,
+          "razonSocial":state.businessName.value.isEmpty?"S/N":state.businessName.value,
+          "telefonoComprador":state.phoneNumber.value
         };
 
         newOrderDto.custom=custom;
         await _comandaRepository.editOrder(newOrder: newOrderDto);
-        emit(state.copyWith(step: 8));
-        await Future.delayed(const Duration(seconds: 5));
-        emit(state.copyWith(status: PaymentStatus.successInvoice));
         return true;
       }
       else{
@@ -594,53 +485,18 @@ class PaymentBloc extends Cubit<PaymentState> {
       return false;
     }
   }
-  emitInvoice({bool prefactura = false, required AuthState authState,bool noData = false}) async {
+  emitInvoice({bool prefactura = false, required AuthState authState}) async {
     try{
 
-      if(noData || _validateInputs()){
+      if(_validateInputs()){
         emit(state.copyWith(status: prefactura?PaymentStatus.waitingPreInvoice:PaymentStatus.waitingInvoice));
 
         PaymentMethod? paymentMethod;
 
-        num? pagoEnEfectivo;
-        num? pagoEnTarjeta;
-
         if (state.paymentMethods.isNotEmpty) {
-          switch (state.paymentType) {
-            case PaymentType.cash:
-              pagoEnEfectivo = state.cashAmount;
-              paymentMethod = state.paymentMethods.firstWhere(
-                      (element) => element.id == AppConstants.idPaymentMethodCash,
-                  orElse: () => state.paymentMethods.first);
-              break;
-
-            case PaymentType.card:
-              pagoEnTarjeta = (state.order?.monto ?? 0) - state.discountAmount;
-              paymentMethod = state.paymentMethods.firstWhere(
-                      (element) => element.id == AppConstants.idPaymentMethodCard,
-                  orElse: () => state.paymentMethods.first);
-              break;
-            case PaymentType.qr:
               paymentMethod = state.paymentMethods.firstWhere(
                       (element) => element.id == AppConstants.idPaymentMethodQR,
                   orElse: () => state.paymentMethods.first);
-              break;
-            case PaymentType.gitCard:
-              paymentMethod = state.paymentMethods.firstWhere(
-                      (element) => element.id == AppConstants.idPaymentMethodGiftCard,
-                  orElse: () => state.paymentMethods.first);
-              break;
-            case PaymentType.bankTransfer:
-              paymentMethod = state.paymentMethods.firstWhere(
-                      (element) => element.id == AppConstants.idPaymentMethodTransfer,
-                  orElse: () => state.paymentMethods.first);
-              break;
-            default:
-              paymentMethod = state.paymentMethods.firstWhere(
-                      (element) => element.id == AppConstants.idPaymentMethodOthers,
-                  orElse: () => state.paymentMethods.first);
-              break;
-          }
         }
 
 
@@ -648,27 +504,24 @@ class PaymentBloc extends Cubit<PaymentState> {
         InvoiceDto invoice = InvoiceDto(
             actividadEconomica: state.economicActivity,
             caja: state.currentCashRegister?.id ?? 0,
-            comprador: state.documentNumber.value,
+            comprador: state.documentNumber.value.isEmpty?"0":state.documentNumber.value,
             moneda: state.currentCurrency,
             descuentos: state.discountAmount,
             customFactura: {},
             fecha: DateTime.now(),
             metodoPago: paymentMethod?.id ?? 1,
             prefactura: prefactura,
-            razonSocial: state.businessName.value,
+            razonSocial: state.businessName.value.isEmpty?"S/N":state.businessName.value,
             sucursalDireccion: authState.currentSucursal?.direccion ?? "",
-            terminosPago: paymentMethod?.nombre ?? "",
-            pagoEnTarjeta: pagoEnTarjeta,
-            pagoEnEfectivo: pagoEnEfectivo);
+            terminosPago: paymentMethod?.nombre ?? "",);
 
         if (state.usaSiat) {
           invoice.codigoMetodoPago = paymentMethod?.codigoSiat;
           invoice.customFactura?["siat"]={"actividadEconomica":state.economicActivity};
         }
 
-        if(state.email.value.isNotEmpty){
-          invoice.correoElectronicoComprador = state.email.value;
-        }
+        invoice.customFactura?["telefonoComprador"]=state.phoneNumber.value;
+
 
         if(state.documentType!=null){
           invoice.documentType =state.documentType;
@@ -677,74 +530,8 @@ class PaymentBloc extends Cubit<PaymentState> {
           invoice.customFactura?["codigoExcepcion"]=1;
         }
 
-        if (state.usaSiat
-            && (paymentMethod?.id== AppConstants.idPaymentMethodCard|| paymentMethod?.id==AppConstants.idPaymentMethodOthers)) {
-          if (state.firstDigits.value.isNotEmpty && state.lastDigits.value.isNotEmpty) {
-            invoice.customFactura?["numeroTarjeta"] = '${state.firstDigits.value}00000000${state.lastDigits.value}';
-          }
-          else {
-            invoice.customFactura?["numeroTarjeta"] =  "1234000000001234";
-          }
-        }
-
-
-        if ((paymentMethod?.id== AppConstants.idPaymentMethodCard || paymentMethod?.id== AppConstants.idPaymentMethodQR || paymentMethod?.id== AppConstants.idPaymentMethodTransfer)&&paymentMethod?.id!= AppConstants.idPaymentMethodOthers ) {
-          invoice.pagoEnTarjeta = (state.order?.monto??0) - state.discountAmount;
-        }
-
-        if(paymentMethod?.id== AppConstants.idPaymentMethodGiftCard){
-          invoice.giftCards=(state.order?.monto??0) - state.discountAmount;
-        }
-        else if(paymentMethod?.id!= AppConstants.idPaymentMethodOthers){
-          invoice.giftCards=null;
-        }
-        if(noData){
-          invoice.razonSocial="S/N";
-          invoice.comprador = "0";
-        }
-
-        if(state.payments.fold(0, (previousValue, element) => previousValue + (element.id!=null?1:0)) >=2){
-          invoice.pagoEnTarjeta = 0;
-          invoice.pagoEnEfectivo = 0;
-          invoice.giftCards = 0;
-
-          var idPaymentMethodSplit=state.payments.firstWhere((element) => element.id!=null,orElse: ()=>Payment()).metodoPago;
-
-
-          for(var p in state.payments){
-            if(p.id!=null){
-              if(idPaymentMethodSplit != p.metodoPago){
-                idPaymentMethodSplit = AppConstants.idPaymentMethodOthers;
-              }
-              invoice.pagoEnTarjeta = (invoice.pagoEnTarjeta??0)+(p.metodoPago==AppConstants.idPaymentMethodCard?(p.monto??0):0);
-              invoice.pagoEnEfectivo = (invoice.pagoEnEfectivo??0)+(p.metodoPago==AppConstants.idPaymentMethodCash?(p.monto??0):0);
-              invoice.giftCards = (invoice.giftCards??0)+(p.metodoPago==AppConstants.idPaymentMethodGiftCard?(p.monto??0):0);
-            }
-          }
-
-          paymentMethod = state.paymentMethods.firstWhere(
-                  (element) => element.id == (idPaymentMethodSplit ?? AppConstants.idPaymentMethodOthers),
-              orElse: () => state.paymentMethods.first);
-
-          invoice.metodoPago = paymentMethod.id;
-          invoice.terminosPago = paymentMethod.nombre;
-          if(state.usaSiat){
-            invoice.codigoMetodoPago = paymentMethod.codigoSiat;
-            if(invoice.giftCards != 0){
-              invoice.codigoMetodoPago = paymentMethod.custom?["siat"]?["codigoGiftCard"] ?? AppConstants.idPaymentMethodGiftCard;
-            }
-          }
-        }
-
-        if(state.isManual){
-          invoice.numero = state.invoiceNumber.value;
-          invoice.autorizacion = state.authorization.value;
-          await _comandaRepository.emitContingencia(invoice: invoice, orderId: state.order?.id ?? 0);
-        }
-        else{
-          await _comandaRepository.emit(invoice: invoice, orderId: state.order?.id ?? 0);
-        }
-        emit(state.copyWith(status: prefactura?PaymentStatus.successPreInvoice:PaymentStatus.successInvoice));
+        await _comandaRepository.emit(invoice: invoice, orderId: state.order?.id ?? 0);
+        return true;
       }
       else{
         return false;

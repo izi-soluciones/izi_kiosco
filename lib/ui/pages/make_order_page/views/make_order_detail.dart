@@ -229,26 +229,6 @@ class _MakeOrderDetailState extends State<MakeOrderDetail> {
                               ),
                             ],
                           ),
-                          const SizedBox(
-                            height: 16,
-                          ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            children: [
-                              IziText.bodyBig(
-                                  color: IziColors.grey,
-                                  text: LocaleKeys.makeOrder_labels_price.tr(),
-                                  fontWeight: FontWeight.w400),
-                              const SizedBox(width: 5),
-                              IziText.body(
-                                  textAlign: TextAlign.center,
-                                  color: IziColors.darkGrey,
-                                  text: (item.precioModificadores +
-                                          item.cantidad * item.precioUnitario)
-                                      .moneyFormat(),
-                                  fontWeight: FontWeight.w500),
-                            ],
-                          ),
                         ],
                       ),
                     ),

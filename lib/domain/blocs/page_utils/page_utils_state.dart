@@ -8,6 +8,7 @@ class PageUtilsState extends Equatable{
   final Timer timer;
   final String currentLocation;
   final bool lock;
+  final String? titleLoading;
 
   //SUBMENU STATUS
   final bool configurationMenuOpen;
@@ -20,10 +21,12 @@ class PageUtilsState extends Equatable{
         required this.timer,
         required this.currentLocation,
         required this.lock,
-        required this.configurationMenuOpen
+        required this.configurationMenuOpen,
+        this.titleLoading
     });
 
   PageUtilsState.defaultState():
+      titleLoading=null,
       timer=Timer(const Duration(seconds: 1), () {}),
         snackBarState=false,
         currentLocation="/",
@@ -56,6 +59,7 @@ class PageUtilsState extends Equatable{
     Timer? timer,
     bool? lock,
     bool? configurationMenuOpen,
+    String? Function()? titleLoading,
     String? currentLocation,}){
     return PageUtilsState(
         snackBarState: snackBarState??this.snackBarState,
@@ -63,7 +67,8 @@ class PageUtilsState extends Equatable{
         configurationMenuOpen: configurationMenuOpen?? this.configurationMenuOpen,
         lock: lock??this.lock,
         currentLocation: currentLocation??this.currentLocation,
-      timer: timer??this.timer
+      timer: timer??this.timer,
+      titleLoading: titleLoading !=null?titleLoading(): this.titleLoading
     );
   }
 
@@ -74,6 +79,7 @@ class PageUtilsState extends Equatable{
     lock,
     timer,
     currentLocation,
-    configurationMenuOpen
+    configurationMenuOpen,
+    titleLoading
   ];
 }

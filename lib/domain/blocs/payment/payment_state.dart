@@ -12,7 +12,9 @@ enum PaymentStatus {
   successPayment,
   errorInvoiced,
   errorAnnulled,
-  errorCashRegisters
+  errorCashRegisters,
+  qrProcessing,
+  qrProcessed
 }
 
 enum PaymentType { cash, card, qr, bankTransfer, gitCard, others }
@@ -32,11 +34,6 @@ class PaymentState extends Equatable {
   final InputObj documentNumber;
   final InputObj complement;
   final InputObj businessName;
-  final InputObj email;
-  final InputObj firstDigits;
-  final InputObj lastDigits;
-  final InputObj invoiceNumber;
-  final InputObj authorization;
   final InputObj phoneNumber;
 
 
@@ -44,6 +41,8 @@ class PaymentState extends Equatable {
   final num? qrAmount;
   final Charge? qrCharge;
   final int? qrPaymentKey;
+
+  final bool qrLoading;
   final num discountAmount;
   final num tipAmount;
   final num cashAmount;
@@ -84,20 +83,16 @@ class PaymentState extends Equatable {
       required this.paymentMethods,
       required this.discountAmount,
       required this.tipAmount,
-      required this.email,
       required this.businessName,
       required this.complement,
       required this.documentNumber,
       this.documentType,
-      required this.authorization,
-      required this.invoiceNumber,
       required this.withException,
-      required this.firstDigits,
       required this.phoneNumber,
+        required this.qrLoading,
         this.qrAmount,
         this.qrCharge,
-        this.qrPaymentKey,
-      required this.lastDigits});
+        this.qrPaymentKey});
 
   factory PaymentState.init() => PaymentState(
       status: PaymentStatus.waitingGet,
@@ -118,16 +113,12 @@ class PaymentState extends Equatable {
       step: 5,
       isManual: false,
       currentCurrency: null,
-      email: PaymentInputs.emailInput(),
       businessName: PaymentInputs.businessNameInput(),
       complement: PaymentInputs.complementInput(),
       documentNumber: PaymentInputs.documentNumberInput(),
       withException: false,
-      firstDigits: PaymentInputs.firstDigitsInput(),
-      lastDigits: PaymentInputs.lastDigitsInput(),
-      invoiceNumber: PaymentInputs.invoiceNumber(),
-      authorization: PaymentInputs.authorization(),
       phoneNumber: PaymentInputs.phoneNumberInput(),
+      qrLoading: false,
       casaMatriz: null);
 
   copyWith(
@@ -155,14 +146,11 @@ class PaymentState extends Equatable {
       InputObj? businessName,
       InputObj? email,
       String? economicActivity,
-      InputObj? firstDigits,
-      InputObj? lastDigits,
-      InputObj? authorization,
-      InputObj? invoiceNumber,
         InputObj? phoneNumber,
         Charge? Function()? qrCharge,
         num? qrAmount,
         int? qrPaymentKey,
+        bool? qrLoading,
       Sucursal? casaMatriz}) {
     return PaymentState(
         casaMatriz: casaMatriz ?? this.casaMatriz,
@@ -184,20 +172,16 @@ class PaymentState extends Equatable {
         discountAmount: discountAmount ?? this.discountAmount,
         tipAmount: tipAmount ?? this.tipAmount,
         withException: withException ?? this.withException,
-        email: email ?? this.email,
         businessName: businessName ?? this.businessName,
         complement: complement ?? this.complement,
         documentNumber: documentNumber ?? this.documentNumber,
         documentType: documentType ?? this.documentType,
-        lastDigits: lastDigits ?? this.lastDigits,
-        firstDigits: firstDigits ?? this.firstDigits,
-        authorization: authorization ?? this.authorization,
-        invoiceNumber: invoiceNumber ?? this.invoiceNumber,
         isManual: isManual ?? this.isManual,
       qrAmount: qrAmount ?? this.qrAmount,
       phoneNumber: phoneNumber ?? this.phoneNumber,
       qrCharge: qrCharge !=null?qrCharge() : this.qrCharge,
-      qrPaymentKey: qrPaymentKey == -1?null: qrPaymentKey ?? this.qrPaymentKey
+      qrPaymentKey: qrPaymentKey == -1?null: qrPaymentKey ?? this.qrPaymentKey,
+      qrLoading: qrLoading ?? this.qrLoading
     );
   }
 
@@ -214,21 +198,17 @@ class PaymentState extends Equatable {
         currentCashRegister,
         documentTypes,
         withException,
-        email,
         businessName,
         complement,
         documentNumber,
         documentType,
-        lastDigits,
-        firstDigits,
         isManual,
         queryBusinessList,
-        authorization,
-        invoiceNumber,
     phoneNumber,
     payments,
     qrCharge,
     qrAmount,
-    qrPaymentKey
+    qrPaymentKey,
+    qrLoading
       ];
 }

@@ -247,7 +247,7 @@
       "checkIn": "Facturar"
     },
     "subtitles": {
-      "mustCharge": "Debes cobrar",
+      "mustCharge": "Debes pagar",
       "invoiceData": "Datos de facturación",
       "howDoPayment": "Indica cómo se hará el pago"
     },
@@ -264,7 +264,8 @@
       "totalPaymentSplit": "Total pagado",
       "remaining": "Restante",
       "orderCompleted": "Orden generada correctamente",
-      "orderCompletedDescription": "En unos momentos tu orden estará lista."
+      "orderCompletedDescription": "En unos momentos tu orden estará lista.",
+      "processingOrder": "Procesando órden"
     },
     "buttons": {
       "cash": "Efectivo",
@@ -289,7 +290,8 @@
       "cashFull": "Exacto: {} {}",
       "deletePayment": "Eliminar pago",
       "markAsPaid": "Marcar como pagado",
-      "makeOrder": "Generar pedido"
+      "makeOrder": "Generar pedido",
+      "generateQr": "Generar QR"
     },
     "inputs": {
 
@@ -335,14 +337,14 @@
         }
       },
       "documentNumber": {
-        "label": "Número de documento*",
+        "label": "Número de documento (opcional)",
         "placeholder": "Ingresa el número de documento",
         "errors": {
           "required": "El número es requerido"
         }
       },
       "businessName": {
-        "label": "Nombre*",
+        "label": "Nombre (opcional)",
         "placeholder": "Ingresa tu nombre o razon social",
         "errors": {
           "required": "La razón social es requerida"
@@ -365,7 +367,7 @@
         }
       },
       "phoneNumber": {
-        "label": "Numero de teléfono",
+        "label": "Numero de teléfono*",
         "description": "A este número se notificará y enviará tu factura",
         "errors": {
           "required": "El numero es requerido",

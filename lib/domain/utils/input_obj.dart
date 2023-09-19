@@ -29,9 +29,9 @@ class InputObj extends Equatable{
     return InputObj(inputError: inputError,value: value,validator: validator,loading: loading ?? this.loading);
   }
 
-  InputObj validateError(){
+  InputObj validateError({String? valueRequired}){
     InputError? error;
-    error = validator(value);
+    error = valueRequired!=null && valueRequired.isEmpty?null:validator(value);
     return InputObj(inputError: error,value: value,validator: validator);
   }
 

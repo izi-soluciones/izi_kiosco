@@ -9,6 +9,7 @@ import 'package:izi_kiosco/app/values/routes_keys.dart';
 import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/order_list/order_list_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/page_utils/page_utils_bloc.dart';
+import 'package:izi_kiosco/ui/general/izi_loading.dart';
 import 'package:izi_kiosco/ui/utils/responsive_utils.dart';
 import 'package:izi_design_system/molecules/izi_snack_bar.dart';
 import 'package:izi_design_system/organisms/izi_side_nav.dart';
@@ -124,7 +125,9 @@ class MainLayout extends StatelessWidget {
                                     ),
                           ),
                           if(state.lock || authState.loadingContribuyente)
-                            Positioned.fill(child: Container(color: Colors.transparent,))
+                            Positioned.fill(child: Container(color: Colors.transparent,)),
+                          if(state.titleLoading!=null)
+                            Positioned.fill(child: IziLoading(title: state.titleLoading!))
                         ],
                       )
               );

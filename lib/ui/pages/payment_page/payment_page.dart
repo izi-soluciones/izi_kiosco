@@ -10,18 +10,13 @@ import 'package:izi_kiosco/app/values/routes_keys.dart';
 import 'package:izi_kiosco/domain/blocs/page_utils/page_utils_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/payment/payment_bloc.dart';
 import 'package:izi_kiosco/ui/modals/warning_config_modal.dart';
-import 'package:izi_kiosco/ui/pages/payment_page/views/payment_page_card.dart';
-import 'package:izi_kiosco/ui/pages/payment_page/views/payment_page_cash.dart';
-import 'package:izi_kiosco/ui/pages/payment_page/views/payment_page_invoice.dart';
 import 'package:izi_kiosco/ui/pages/payment_page/views/payment_page_order_complete.dart';
-import 'package:izi_kiosco/ui/pages/payment_page/views/payment_page_payment_method.dart';
 import 'package:izi_kiosco/ui/pages/payment_page/views/payment_page_qr.dart';
-import 'package:izi_kiosco/ui/pages/payment_page/views/payment_page_split_payment.dart';
 import 'package:izi_kiosco/ui/pages/payment_page/widgets/payment_shimmer_payment_method.dart';
 import 'package:izi_kiosco/ui/utils/custom_alerts.dart';
 
 class PaymentPage extends StatelessWidget {
-  final PageController _pageController = PageController(initialPage: 5);
+  final PageController _pageController = PageController(initialPage: 0);
   PaymentPage({super.key});
 
   @override
@@ -42,7 +37,7 @@ class PaymentPage extends StatelessWidget {
         }
 
 
-        if (state.status == PaymentStatus.errorGet || state.status == PaymentStatus.errorInvoice || state.status== PaymentStatus.errorInvoiced || state.status == PaymentStatus.errorAnnulled) {
+        if (state.status == PaymentStatus.errorGet || state.status== PaymentStatus.errorInvoiced || state.status == PaymentStatus.errorAnnulled) {
           log(state.status.toString());
           context.read<PageUtilsBloc>().unlockPage();
           if(GoRouter.of(context).canPop()){
@@ -61,9 +56,13 @@ class PaymentPage extends StatelessWidget {
                   snackBarType: SnackBarType.error));
 
         }
+        if(state.status == PaymentStatus.qrProcessing){
+          context.read<PageUtilsBloc>().showLoading(LocaleKeys.payment_body_processingOrder.tr());
+        }
+        if(state.status==PaymentStatus.errorInvoice || state.status == PaymentStatus.qrProcessed){
+          context.read<PageUtilsBloc>().closeLoading();
+        }
         if(state.status == PaymentStatus.successInvoice|| state.status == PaymentStatus.successPreInvoice){
-
-          context.read<PageUtilsBloc>().unlockPage();
           GoRouter.of(context).goNamed(RoutesKeys.home);
         }
         if(state.status == PaymentStatus.successPayment){
@@ -81,32 +80,12 @@ class PaymentPage extends StatelessWidget {
           controller: _pageController,
 
           children: [
-            //RESUME-SELECT PAYMENT = 0
-            PaymentPagePaymentMethod(state: state),
-            //SELECT PAYMENT = 1
-            PaymentPagePaymentMethod(state: state),
 
-            //CASH = 2
-            PaymentPageCash(state: state),
-
-            //INVOICE = 3
-            PaymentPageInvoice(state: state),
-
-            //SPLIT = 4
-            PaymentPageSplitPayment(state: state),
-
-            //SHIMMER = 5
             const PaymentShimmerPaymentMethod(),
-
-
-            //CARD DIGITS = 6
-            PaymentPageCard(state: state),
-
-            //QR PAGE = 7
             PaymentPageQr(state: state),
 
 
-            //SUCCESS PAGE = 8
+            //SUCCESS PAGE = 2
             const PaymentPageOrderComplete(),
           ],
         );
