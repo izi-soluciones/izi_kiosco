@@ -74,7 +74,7 @@ class _MakeOrderConfirmState extends State<MakeOrderConfirm> {
                           context.read<MakeOrderBloc>().changeReviewStatus(false);
                         },
                         child: const Padding(
-                          padding: EdgeInsets.all(24),
+                          padding: EdgeInsets.all(20),
                           child:
                               Icon(IziIcons.leftB, color: IziColors.darkGrey, size: 50),
                         ),
@@ -133,7 +133,7 @@ class _MakeOrderConfirmState extends State<MakeOrderConfirm> {
               (i) {
                 cIndex++;
                 return SizedBox(
-                    height: 110,
+                    height: 130,
                     child: _item(
                         i.value,
                         cIndex < controllers.length - 1
@@ -251,61 +251,80 @@ class _MakeOrderConfirmState extends State<MakeOrderConfirm> {
                 ),
                 Expanded(
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
-                    child: Column(
+                    padding: const EdgeInsets.symmetric(horizontal: 8,vertical: 8),
+                    child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.only(right: 16, top: 8),
-                              child: IziText.body(
-                                  color: IziColors.dark,
-                                  text: item.nombre,
-                                  fontWeight: FontWeight.w600,
-                                  maxLines: 2),
-                            ),
-                            ConstrainedBox(
-                              constraints: const BoxConstraints(maxWidth: 100),
-                              child: IziInput(
-                                autoSelect: true,
-                                textAlign: TextAlign.center,
-                                controller: controller,
-                                inputHintText: "0",
-                                inputType: InputType.incremental,
-                                minValue: 1,
-                                maxValue: 999999999,
-                                inputSize: InputSize.extraSmall,
-                                value: item.cantidad.toString(),
-                                onChanged: (value, valueRaw) {
-                                  item.cantidad = num.tryParse(value) ?? 1;
-                                  context.read<MakeOrderBloc>().reloadItems();
-                                },
+                        Expanded(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.only(right: 16),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                                  children: [
+                                    IziText.bodyBig(
+                                      textAlign: TextAlign.left,
+                                        color: IziColors.dark,
+                                        text: item.nombre,
+                                        fontWeight: FontWeight.w600,
+                                        maxLines: 1),
+                                    IziText.label(
+                                        textAlign: TextAlign.left,
+                                        color: IziColors.grey,
+                                        text: item.descripcion??"",
+                                        fontWeight: FontWeight.w400,
+                                        maxLines: 2),
+                                  ],
+                                )
                               ),
-                            ),
-                          ],
+                              ConstrainedBox(
+                                constraints: const BoxConstraints(maxWidth: 100),
+                                child: IziInput(
+                                  autoSelect: true,
+                                  textAlign: TextAlign.center,
+                                  controller: controller,
+                                  inputHintText: "0",
+                                  inputType: InputType.incremental,
+                                  minValue: 1,
+                                  maxValue: 999999999,
+                                  inputSize: InputSize.extraSmall,
+                                  value: item.cantidad.toString(),
+                                  onChanged: (value, valueRaw) {
+                                    item.cantidad = num.tryParse(value) ?? 1;
+                                    context.read<MakeOrderBloc>().reloadItems();
+                                  },
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                         const SizedBox(
                           height: 16,
                         ),
-                        Row(
+                        Column(
                           mainAxisAlignment: MainAxisAlignment.end,
                           children: [
-                            IziText.bodyBig(
-                                color: IziColors.grey,
-                                text: LocaleKeys.makeOrder_labels_price.tr(),
-                                fontWeight: FontWeight.w400),
-                            const SizedBox(width: 5),
-                            IziText.body(
-                                textAlign: TextAlign.center,
-                                color: IziColors.darkGrey,
-                                text: (item.precioModificadores +
+                            Row(
+                              children: [
+                                IziText.bodyBig(
+                                    color: IziColors.grey,
+                                    text: LocaleKeys.makeOrder_labels_price.tr(),
+                                    fontWeight: FontWeight.w400),
+                                const SizedBox(width: 5),
+                                IziText.body(
+                                    textAlign: TextAlign.center,
+                                    color: IziColors.darkGrey,
+                                    text: (item.precioModificadores +
                                         item.cantidad * item.precioUnitario)
-                                    .moneyFormat(),
-                                fontWeight: FontWeight.w500),
+                                        .moneyFormat(),
+                                    fontWeight: FontWeight.w500),
+                              ],
+                            )
                           ],
                         ),
                       ],

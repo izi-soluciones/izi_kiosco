@@ -44,8 +44,8 @@ class SocketRepositoryHttp extends SocketRepository{
 
   io.Socket? _socketQr;
   @override
-  Stream<Charge> listenQr({required Charge charge}) async*{
-    StreamController<Charge> streamController = StreamController();
+  Stream<dynamic> listenQr({required Charge charge}) async*{
+    StreamController<dynamic> streamController = StreamController();
     String path = "/payment_notification";
     _socketQr = io.io("${dotenv.env[EnvKeys.apiUrlNotifications]}$path",
         io.OptionBuilder().setTransports(['websocket','polling']).build() );
@@ -62,7 +62,7 @@ class SocketRepositoryHttp extends SocketRepository{
     _socketQr?.on('payment-notification', (data)
     {
       if(data?["status"]=="success" && data?["uuid"] == charge.uuid){
-        streamController.add(charge);
+        streamController.add(data);
       }
     }
     );

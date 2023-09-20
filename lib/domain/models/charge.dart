@@ -34,7 +34,7 @@ class Charge extends Equatable {
     String? qrUrl,
     String? uuid,
     int? id,
-    String? qrBase54
+    String? qrBase64
   }) {
     return Charge(
         qrUrl: qrUrl ?? this.qrUrl, uuid: uuid ?? this.uuid, id: id ?? this.id,qrBase64: qrBase64 ?? this.qrBase64);

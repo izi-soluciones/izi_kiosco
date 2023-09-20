@@ -48,10 +48,13 @@ class MakeOrderBloc extends Cubit<MakeOrderState> {
           return a.nombre.toLowerCase().compareTo(b.nombre.toLowerCase());
         },
       );
-      if (all != null) {
+      if(itemsFeatured.isNotEmpty){
+        list.insert(0, CategoryOrder(nombre: "", items: itemsFeatured));
+      }
+      /*if (all != null) {
         all.nombre = all.nombre.trim();
         list.insert(0, all);
-      }
+      }*/
       List<CashRegister> cashRegisters =
       await _businessRepository.getCashRegisters(
           contribuyenteId: authState.currentContribuyente?.id ?? 0,

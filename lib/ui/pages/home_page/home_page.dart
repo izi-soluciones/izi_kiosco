@@ -11,6 +11,7 @@ import 'package:izi_kiosco/app/values/env_keys.dart';
 import 'package:izi_kiosco/app/values/locale_keys.g.dart';
 import 'package:izi_kiosco/app/values/routes_keys.dart';
 import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
+import 'package:izi_kiosco/domain/blocs/page_utils/page_utils_bloc.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -23,6 +24,7 @@ class HomePage extends StatelessWidget {
           behavior: HitTestBehavior.opaque,
           onTap: (){
             GoRouter.of(context).goNamed(RoutesKeys.makeOrder);
+            context.read<PageUtilsBloc>().initScreenActive();
           },
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 32,horizontal: 32),

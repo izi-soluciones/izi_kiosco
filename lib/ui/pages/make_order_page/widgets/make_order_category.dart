@@ -9,32 +9,32 @@ class MakeOrderCategory extends StatelessWidget {
   final bool active;
   final VoidCallback onPressed;
   final bool small;
-  const MakeOrderCategory({super.key,this.small=false,required this.onPressed,required this.title,required this.count,required this.active});
+  final IconData icon;
+  const MakeOrderCategory({super.key,this.small=false,required this.onPressed,required this.title,required this.count,required this.active,required this.icon});
 
   @override
   Widget build(BuildContext context) {
-    return AspectRatio(
-      aspectRatio: 1,
-      child: InkWell(
-        onTap: onPressed,
-        child: OnHover(
-          builder: (isHovered) {
-            return Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16,vertical: 12),
-              decoration: BoxDecoration(
-                color: active? IziColors.dark:IziColors.grey25,
-                borderRadius: BorderRadius.circular(8)
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  IziText.bodySmall(color: active?IziColors.white:IziColors.dark,textAlign: TextAlign.center, text: title, fontWeight: FontWeight.w600,maxLines: 3),
-                ],
-              ),
-            );
-          },
-        ),
+    return InkWell(
+      onTap: onPressed,
+      child: OnHover(
+        builder: (isHovered) {
+          return Container(
+            padding: const EdgeInsets.fromLTRB(16,10,16,5),
+            decoration: BoxDecoration(
+              color: active? IziColors.dark:IziColors.grey25,
+              borderRadius: BorderRadius.circular(8)
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(icon,color: active?IziColors.white:IziColors.dark,size: 30,),
+                IziText.body(color: active?IziColors.white:IziColors.dark,textAlign: TextAlign.center, text: title, fontWeight: FontWeight.w600,maxLines: 3),
+              ],
+            ),
+          );
+        },
       ),
     );
   }

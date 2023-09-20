@@ -10,6 +10,7 @@ import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/order_list/order_list_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/page_utils/page_utils_bloc.dart';
 import 'package:izi_kiosco/ui/general/izi_loading.dart';
+import 'package:izi_kiosco/ui/general/izi_screen_inactive.dart';
 import 'package:izi_kiosco/ui/utils/responsive_utils.dart';
 import 'package:izi_design_system/molecules/izi_snack_bar.dart';
 import 'package:izi_design_system/organisms/izi_side_nav.dart';
@@ -33,109 +34,117 @@ class MainLayout extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ru=ResponsiveUtils(context);
-    return BlocBuilder<AuthBloc,AuthState>(
-      builder: (context,authState) {
-        return BlocBuilder<PageUtilsBloc,PageUtilsState>(
-              builder: (context,state) {
-              return WillPopScope(
-                onWillPop: ()async{
-                  if(onPop==null){
+    return GestureDetector(
+      behavior: HitTestBehavior.deferToChild,
+      onTapDown: (details){
+        context.read<PageUtilsBloc>().updateScreenActive();
+      },
+      child: BlocBuilder<AuthBloc,AuthState>(
+        builder: (context,authState) {
+          return BlocBuilder<PageUtilsBloc,PageUtilsState>(
+                builder: (context,state) {
+                return WillPopScope(
+                  onWillPop: ()async{
+                    if(onPop==null){
+                      return false;
+                    }
+                    state.lock?null: onPop!=null?
+                    GoRouter.of(context).goNamed(onPop!()):GoRouter.of(context).canPop()?GoRouter.of(context).pop():GoRouter.of(context).goNamed(RoutesKeys.home);
                     return false;
-                  }
-                  state.lock?null: onPop!=null?
-                  GoRouter.of(context).goNamed(onPop!()):GoRouter.of(context).canPop()?GoRouter.of(context).pop():GoRouter.of(context).goNamed(RoutesKeys.home);
-                  return false;
-                },
-                child: Stack(
-                        children: [
-                          Positioned.fill(
-                              child: Scaffold(
-                                key: _scaffoldKey,
-                                      resizeToAvoidBottomInset: resizeWhenForm,
-                                      backgroundColor: IziColors.lightGrey30,
-                                      body: SafeArea(
-                                        child: Stack(
-                                          children: [
-                                            Column(
-                                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                                              children: [
-                                                Expanded(
-                                                    child: child
-                                                ),
+                  },
+                  child: Stack(
+                          children: [
+                            Positioned.fill(
+                                child: Scaffold(
+                                  key: _scaffoldKey,
+                                        resizeToAvoidBottomInset: resizeWhenForm,
+                                        backgroundColor: IziColors.lightGrey30,
+                                        body: SafeArea(
+                                          child: Stack(
+                                            children: [
+                                              Column(
+                                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                                children: [
+                                                  Expanded(
+                                                      child: child
+                                                  ),
 
-                                                if(ru.isXs())
-                                                  AnimatedContainer(
-                                                    duration: const Duration(milliseconds: 200),
-                                                    height: state.snackBarState?50:0,
-                                                    child: AnimatedSwitcher(
+                                                  if(ru.isXs())
+                                                    AnimatedContainer(
                                                       duration: const Duration(milliseconds: 200),
-                                                      reverseDuration: const Duration(milliseconds:200),
-                                                      transitionBuilder: (child,animation)=>SlideTransition(
-                                                        position: Tween<Offset>(
-                                                          begin: const Offset(0, 1),
-                                                          end: const Offset(0, 0),
-                                                        ).animate(animation),
-                                                        child: child,
+                                                      height: state.snackBarState?50:0,
+                                                      child: AnimatedSwitcher(
+                                                        duration: const Duration(milliseconds: 200),
+                                                        reverseDuration: const Duration(milliseconds:200),
+                                                        transitionBuilder: (child,animation)=>SlideTransition(
+                                                          position: Tween<Offset>(
+                                                            begin: const Offset(0, 1),
+                                                            end: const Offset(0, 0),
+                                                          ).animate(animation),
+                                                          child: child,
+                                                        ),
+                                                        child: state.snackBarState?
+                                                            IziSnackBar(
+                                                              snackBarPosition: SnackBarPosition.bottom,
+                                                              snackBarInfo: state.snackBar,
+                                                              active:state.snackBarState,
+                                                              onClickClose: (){
+                                                                context.read<PageUtilsBloc>().hideSnackBar();
+                                                              },
+                                                            )
+                                                            :const SizedBox.shrink(),
                                                       ),
-                                                      child: state.snackBarState?
-                                                          IziSnackBar(
-                                                            snackBarPosition: SnackBarPosition.bottom,
-                                                            snackBarInfo: state.snackBar,
-                                                            active:state.snackBarState,
-                                                            onClickClose: (){
-                                                              context.read<PageUtilsBloc>().hideSnackBar();
-                                                            },
-                                                          )
-                                                          :const SizedBox.shrink(),
-                                                    ),
-                                                  )
+                                                    )
 
 
-                                              ],
-                                            ),
-                                            if(ru.gtXs())
-                                            Positioned(
-                                              top: 0,
-                                              left: 0,
-                                              right: 0,
-                                              child:AnimatedSwitcher(
-                                                duration: const Duration(milliseconds: 200),
-                                                reverseDuration: const Duration(milliseconds:200),
-                                                transitionBuilder: (child,animation)=>SlideTransition(
-                                                  position: Tween<Offset>(
-                                                    begin: const Offset(0, -1),
-                                                    end: const Offset(0, 0),
-                                                  ).animate(animation),
-                                                  child: child,
-                                                ),
-                                                child: state.snackBarState?
-                                                IziSnackBar(
-                                                  snackBarPosition: SnackBarPosition.bottom,
-                                                  snackBarInfo: state.snackBar,
-                                                  onClickClose: (){
-                                                    context.read<PageUtilsBloc>().hideSnackBar();
-                                                  },
-                                                  active:state.snackBarState,
-                                                ):const SizedBox.shrink(),
+                                                ],
                                               ),
-                                            )
-                                          ],
+                                              if(ru.gtXs())
+                                              Positioned(
+                                                top: 0,
+                                                left: 0,
+                                                right: 0,
+                                                child:AnimatedSwitcher(
+                                                  duration: const Duration(milliseconds: 200),
+                                                  reverseDuration: const Duration(milliseconds:200),
+                                                  transitionBuilder: (child,animation)=>SlideTransition(
+                                                    position: Tween<Offset>(
+                                                      begin: const Offset(0, -1),
+                                                      end: const Offset(0, 0),
+                                                    ).animate(animation),
+                                                    child: child,
+                                                  ),
+                                                  child: state.snackBarState?
+                                                  IziSnackBar(
+                                                    snackBarPosition: SnackBarPosition.bottom,
+                                                    snackBarInfo: state.snackBar,
+                                                    onClickClose: (){
+                                                      context.read<PageUtilsBloc>().hideSnackBar();
+                                                    },
+                                                    active:state.snackBarState,
+                                                  ):const SizedBox.shrink(),
+                                                ),
+                                              )
+                                            ],
+                                          ),
                                         ),
                                       ),
-                                    ),
-                          ),
-                          if(state.lock || authState.loadingContribuyente)
-                            Positioned.fill(child: Container(color: Colors.transparent,)),
-                          if(state.titleLoading!=null)
-                            Positioned.fill(child: IziLoading(title: state.titleLoading!))
-                        ],
-                      )
-              );
+                            ),
+                            if(state.lock || authState.loadingContribuyente)
+                              Positioned.fill(child: Container(color: Colors.transparent,)),
+                            if(state.titleLoading!=null)
+                              Positioned.fill(child: IziLoading(title: state.titleLoading!)),
+                            if(!state.screenActive)
+                              const Positioned.fill(child: IziScreenInactive())
+                          ],
+                        )
+                );
 
 
-            }
-        );
-      }
+              }
+          );
+        }
+      ),
     );
   }
 

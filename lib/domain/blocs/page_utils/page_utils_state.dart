@@ -13,6 +13,8 @@ class PageUtilsState extends Equatable{
   //SUBMENU STATUS
   final bool configurationMenuOpen;
 
+  final bool screenActive;
+
 
   const PageUtilsState(
       {
@@ -22,7 +24,8 @@ class PageUtilsState extends Equatable{
         required this.currentLocation,
         required this.lock,
         required this.configurationMenuOpen,
-        this.titleLoading
+        this.titleLoading,
+        required this.screenActive
     });
 
   PageUtilsState.defaultState():
@@ -31,6 +34,7 @@ class PageUtilsState extends Equatable{
         snackBarState=false,
         currentLocation="/",
         lock=false,
+  screenActive=true,
   configurationMenuOpen=false,
         snackBar=SnackBarInfo(
             text: "",
@@ -60,6 +64,7 @@ class PageUtilsState extends Equatable{
     bool? lock,
     bool? configurationMenuOpen,
     String? Function()? titleLoading,
+    bool? screenActive,
     String? currentLocation,}){
     return PageUtilsState(
         snackBarState: snackBarState??this.snackBarState,
@@ -68,7 +73,8 @@ class PageUtilsState extends Equatable{
         lock: lock??this.lock,
         currentLocation: currentLocation??this.currentLocation,
       timer: timer??this.timer,
-      titleLoading: titleLoading !=null?titleLoading(): this.titleLoading
+      titleLoading: titleLoading !=null?titleLoading(): this.titleLoading,
+      screenActive: screenActive ?? this.screenActive
     );
   }
 
@@ -80,6 +86,7 @@ class PageUtilsState extends Equatable{
     timer,
     currentLocation,
     configurationMenuOpen,
-    titleLoading
+    titleLoading,
+    screenActive
   ];
 }

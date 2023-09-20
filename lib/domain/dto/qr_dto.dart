@@ -24,7 +24,8 @@ class QrDto {
     "moneda": moneda,
     "monedaId": monedaId,
     "config": {
-      "notificarPagador":true
+      "notificarPagador":true,
+      "desdeKiosco":true
     }
   };
 }

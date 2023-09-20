@@ -526,7 +526,8 @@
       "addDishesOrDrinks": "Agrega platos o bebidas de la lista",
       "quantity": "Cantidad",
       "items": "Items ({})",
-      "confirmOrder": "Confirmación de la orden"
+      "confirmOrder": "Confirmación de la orden",
+      "featured": "Recomendados"
     },
     "buttons": {
       "next": "Siguiente",
@@ -572,14 +573,16 @@
       "input": "Valor incorrecto"
     },
     "body": {
-      "sucursal": "Sucursal"
+      "sucursal": "Sucursal",
+      "thisScreenClose": "Esta pantalla se cerrara si no se realiza ninguna accion"
     },
     "buttons": {
       "filters": "Filtros",
       "moreFilters": "Más Filtros",
       "yesSure": "Si estoy seguro",
       "cancel": "Cancelar",
-      "accept": "Aceptar"
+      "accept": "Aceptar",
+      "pressToContinue": "Presione la pantalla para seguir continuando"
     }
   },
 

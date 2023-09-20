@@ -390,7 +390,35 @@ class PaymentBloc extends Cubit<PaymentState> {
         );
 
         Charge charge = await _comandaRepository.generateQr(contribuyenteId: authState.currentContribuyente?.id??0, qr: qr);
+        var newOrderDto = NewOrderDto(
+            caja: state.order?.caja,
+            cantidadComensales: 0,
+            nombreMesa: "nombreMesa",
+            descuentos: 0,
+            emisor: state.order?.emisor??"",
+            fecha: DateTime.now(),
+            listaItems: [],
+            mesa: "mesa",
+            paraLlevar: true,
 
+            tipoComanda: AppConstants.restaurantEnv,
+            sucursal: state.order?.sucursal??0
+        );
+        Map custom ={};
+        if(state.order?.custom is Map){
+          custom=(state.order!.custom  as Map);
+        }
+        newOrderDto.id=state.order?.id;
+        custom["pagadorData"]={
+          "tipoDocumento": state.documentType,
+          "nit":state.documentNumber.value.isEmpty? "0":state.documentNumber.value,
+          "complemento":state.complement.value,
+          "razonSocial":state.businessName.value.isEmpty?"S/N":state.businessName.value,
+          "telefonoComprador":state.phoneNumber.value
+        };
+
+        newOrderDto.custom=custom;
+        await _comandaRepository.editOrder(newOrder: newOrderDto);
         if(isClosed){
           return;
         }
@@ -399,6 +427,15 @@ class PaymentBloc extends Cubit<PaymentState> {
           qrStream?.cancel();
         }
         qrStream = _socketRepository.listenQr(charge: charge).listen((event) async{
+          if(event is Map && event["statusVenta"]=="success"){
+            emit(state.copyWith(step:2,status: PaymentStatus.qrProcessed));
+            await Future.delayed(const Duration(seconds: 5));
+            emit(state.copyWith(status: PaymentStatus.successInvoice));
+          }
+          else{
+            emit(state.copyWith(status: PaymentStatus.qrProcessing));
+          }
+          /*
           _socketRepository.closeQrListening();
           qrStream?.cancel();
           qrStream = null;
@@ -424,7 +461,7 @@ class PaymentBloc extends Cubit<PaymentState> {
           }
             emit(state.copyWith(step:2,status: PaymentStatus.qrProcessed));
           await Future.delayed(const Duration(seconds: 5));
-          emit(state.copyWith(status: PaymentStatus.successInvoice));
+          emit(state.copyWith(status: PaymentStatus.successInvoice));*/
         },);
         emit(state.copyWith(qrCharge: ()=>charge));
       }
@@ -462,7 +499,7 @@ class PaymentBloc extends Cubit<PaymentState> {
         }
         newOrderDto.id=state.order?.id;
         custom["pagadorData"]={
-          "tipoDocumento": state.documentType?.codigoClasificador,
+          "tipoDocumento": state.documentType,
           "nit":state.documentNumber.value.isEmpty? "0":state.documentNumber.value,
           "complemento":state.complement.value,
           "razonSocial":state.businessName.value.isEmpty?"S/N":state.businessName.value,

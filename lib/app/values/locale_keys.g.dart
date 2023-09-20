@@ -414,6 +414,7 @@ abstract class  LocaleKeys {
   static const makeOrder_body_quantity = 'makeOrder.body.quantity';
   static const makeOrder_body_items = 'makeOrder.body.items';
   static const makeOrder_body_confirmOrder = 'makeOrder.body.confirmOrder';
+  static const makeOrder_body_featured = 'makeOrder.body.featured';
   static const makeOrder_body = 'makeOrder.body';
   static const makeOrder_buttons_next = 'makeOrder.buttons.next';
   static const makeOrder_buttons_confirm = 'makeOrder.buttons.confirm';
@@ -450,12 +451,14 @@ abstract class  LocaleKeys {
   static const general_errors_input = 'general.errors.input';
   static const general_errors = 'general.errors';
   static const general_body_sucursal = 'general.body.sucursal';
+  static const general_body_thisScreenClose = 'general.body.thisScreenClose';
   static const general_body = 'general.body';
   static const general_buttons_filters = 'general.buttons.filters';
   static const general_buttons_moreFilters = 'general.buttons.moreFilters';
   static const general_buttons_yesSure = 'general.buttons.yesSure';
   static const general_buttons_cancel = 'general.buttons.cancel';
   static const general_buttons_accept = 'general.buttons.accept';
+  static const general_buttons_pressToContinue = 'general.buttons.pressToContinue';
   static const general_buttons = 'general.buttons';
   static const general = 'general';
   static const warningCashRegisters_title = 'warningCashRegisters.title';

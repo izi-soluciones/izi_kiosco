@@ -62,8 +62,7 @@ class NewOrderDto {
       };
   Map<String, dynamic> toJsonEdit() => {
     "custom": custom,
-    "fecha": fecha.dateFormat(DateFormatterType.dataWithHour),
-    "anulada":0,
+    "fecha": fecha.dateFormat(DateFormatterType.dataWithHour)
   };
 
 }
