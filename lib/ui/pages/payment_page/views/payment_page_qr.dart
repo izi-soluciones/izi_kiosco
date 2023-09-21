@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:easy_localization/easy_localization.dart';
@@ -41,6 +42,17 @@ class _PaymentPageQrState extends State<PaymentPageQr> {
   TextEditingController phoneController = TextEditingController();
   bool phoneFocus=false;
 
+
+  int qrLock=0;
+  int qrRemaining=0;
+
+  @override
+  void dispose() {
+    timerLock?.cancel();
+    timerRemaining?.cancel();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final ru = ResponsiveUtils(context);
@@ -68,12 +80,16 @@ class _PaymentPageQrState extends State<PaymentPageQr> {
 
                           _invoiceForm(context, ru),
                           const SizedBox(height: 50,),
+                          if(widget.state.qrCharge!=null)
+                          IziText.titleSmall(color: IziColors.dark, text: LocaleKeys.payment_subtitles_scanQrToPay.tr(), fontWeight: FontWeight.w400),
+                          if(widget.state.qrCharge!=null)
+                          const SizedBox(height: 16,),
                           ConstrainedBox(
                               constraints:  const BoxConstraints(
                                   maxWidth: 400
                               ),
                               child: Center(
-                                child: widget.state.qrCharge!=null?
+                                child: widget.state.qrCharge!=null && !widget.state.qrLoading?
                                     _qrWidget():
                                     widget.state.qrLoading?
                                 const SizedBox(
@@ -85,7 +101,19 @@ class _PaymentPageQrState extends State<PaymentPageQr> {
                                 ):const SizedBox.shrink(),
                               )
                           ),
+                          if(widget.state.qrCharge!=null)
+                          const SizedBox(height: 10,),
+                          if(widget.state.qrCharge!=null)
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              IziText.body(color: IziColors.darkGrey, text: "Tiempo Restante: ", fontWeight: FontWeight.w400),
+                              IziText.body(color: IziColors.primary, text: "${qrRemaining}s", fontWeight: FontWeight.w400),
+                            ],
+                          ),
                           const SizedBox(height: 50,),
+                          if(widget.state.qrCharge!=null)
+                          IziText.body(color: IziColors.grey, text: LocaleKeys.payment_body_cantPayWithQR.tr(), fontWeight: FontWeight.w400),
                         ],
                       )
                   ),
@@ -136,6 +164,40 @@ class _PaymentPageQrState extends State<PaymentPageQr> {
     );
   }
 
+  Timer? timerRemaining;
+  _initTimeRemaining(){
+    setState(() {
+      qrRemaining=AppConstants.remainingQrTime;
+    });
+    timerRemaining?.cancel();
+    timerRemaining=Timer.periodic(const Duration(seconds: 1), (timer) {
+      if(qrRemaining<=0){
+        _initTimeRemaining();
+      }
+      else{
+        setState(() {
+          qrRemaining --;
+        });
+      }
+    });
+  }
+
+  Timer? timerLock;
+  _lockQr(){
+    setState(() {
+      qrLock=AppConstants.regenerateQrTime;
+    });
+    timerLock=Timer.periodic(const Duration(seconds: 1), (timer) {
+      if(qrLock<=0){
+        timer.cancel();
+      }
+      else{
+        setState(() {
+          qrLock --;
+        });
+      }
+    });
+  }
 
   Widget _qrWidget(){
     if(widget.state.qrCharge?.qrUrl!=null){
@@ -148,7 +210,7 @@ class _PaymentPageQrState extends State<PaymentPageQr> {
         Image.network(widget.state.qrCharge!.qrUrl!,fit: BoxFit.fitWidth);
     }
     if(widget.state.qrCharge?.qrBase64!=null){
-      return AspectRatio(aspectRatio: 1,child: Image.memory(const Base64Decoder().convert(widget.state.qrCharge!.qrBase64!),fit: BoxFit.fitWidth));
+      return AspectRatio(aspectRatio: 1,child: Image.memory(const Base64Decoder().convert(widget.state.qrCharge!.qrBase64!),fit: BoxFit.fitWidth,gaplessPlayback: true,));
     }
     return const SizedBox.shrink();
   }
@@ -326,7 +388,7 @@ class _PaymentPageQrState extends State<PaymentPageQr> {
               error: _getErrorsPhoneNumber(widget.state.phoneNumber.inputError),
               inputType: InputType.number,
             ),
-            IziText.label(color: IziColors.darkGrey, text: LocaleKeys.payment_inputs_phoneNumber_description.tr(), fontWeight: FontWeight.w500),
+            IziText.label(color: IziColors.darkGrey, text: LocaleKeys.payment_inputs_phoneNumber_description.tr(), fontWeight: FontWeight.w500,maxLines: 3),
           ],
         ),
         const SizedBox(
@@ -338,23 +400,31 @@ class _PaymentPageQrState extends State<PaymentPageQr> {
             if (ru.isXs())
               Flexible(
                 child: IziBtn(
-                    buttonText: LocaleKeys.payment_buttons_generateQr.tr(),
+                    buttonText: widget.state.qrCharge!=null?"${LocaleKeys.payment_buttons_regenerateQR.tr()} ${qrLock>0?qrLock:""}":LocaleKeys.payment_buttons_generateQr.tr(),
                     buttonType: ButtonType.secondary,
                     buttonSize:
                     ru.gtXs() ? ButtonSize.large : ButtonSize.medium,
                     loading: widget.state.status == PaymentStatus.waitingInvoice,
-                    buttonOnPressed: () {
-                      context.read<PaymentBloc>().generateQR(context.read<AuthBloc>().state);
+                    buttonOnPressed: qrLock>0 || widget.state.qrLoading?null:() async{
+                      var res=await context.read<PaymentBloc>().generateQR(context.read<AuthBloc>().state);
+                      if(res){
+                        _lockQr();
+                        _initTimeRemaining();
+                      }
                     }),
               ),
             if (ru.gtXs())
               IziBtn(
-                  buttonText: LocaleKeys.payment_buttons_generateQr.tr(),
+                  buttonText: widget.state.qrCharge!=null?"${LocaleKeys.payment_buttons_regenerateQR.tr()} ${qrLock>0?qrLock:""}":LocaleKeys.payment_buttons_generateQr.tr(),
                   buttonType: ButtonType.secondary,
                   buttonSize: ru.gtXs() ? ButtonSize.large : ButtonSize.medium,
                   loading: widget.state.status == PaymentStatus.waitingInvoice,
-                  buttonOnPressed: () {
-                    context.read<PaymentBloc>().generateQR(context.read<AuthBloc>().state);
+                  buttonOnPressed: qrLock>0 || widget.state.qrLoading?null:() async{
+                    var res=await context.read<PaymentBloc>().generateQR(context.read<AuthBloc>().state);
+                    if(res){
+                      _lockQr();
+                      _initTimeRemaining();
+                    }
                   }),
           ],
         ),

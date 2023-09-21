@@ -256,7 +256,7 @@ class _MakeOrderDetailState extends State<MakeOrderDetail> {
               ),
               child: const Icon(
                 IziIcons.close,
-                size: 25,
+                size: 22,
                 color: IziColors.white,
               ),
             ),
@@ -274,7 +274,7 @@ class _MakeOrderDetailState extends State<MakeOrderDetail> {
       child: SingleChildScrollView(
         controller: scrollController,
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(vertical: 16,horizontal: 8),
+        padding: const EdgeInsets.symmetric(vertical: 40,horizontal: 8),
         child: RowContainer(
           gap: 16,
           crossAxisAlignment: CrossAxisAlignment.stretch,

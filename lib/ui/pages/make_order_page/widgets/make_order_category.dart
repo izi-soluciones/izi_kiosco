@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:izi_design_system/atoms/izi_typography.dart';
-import 'package:izi_design_system/hoverStates/on_hover.dart';
 import 'package:izi_design_system/tokens/colors.dart';
 
 class MakeOrderCategory extends StatelessWidget {
@@ -16,25 +15,21 @@ class MakeOrderCategory extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onPressed,
-      child: OnHover(
-        builder: (isHovered) {
-          return Container(
-            padding: const EdgeInsets.fromLTRB(16,10,16,5),
-            decoration: BoxDecoration(
-              color: active? IziColors.dark:IziColors.grey25,
-              borderRadius: BorderRadius.circular(8)
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(icon,color: active?IziColors.white:IziColors.dark,size: 30,),
-                IziText.body(color: active?IziColors.white:IziColors.dark,textAlign: TextAlign.center, text: title, fontWeight: FontWeight.w600,maxLines: 3),
-              ],
-            ),
-          );
-        },
+      child: Ink(
+        padding: const EdgeInsets.fromLTRB(16,10,16,5),
+        decoration: BoxDecoration(
+          color: active? IziColors.dark:IziColors.grey25,
+          borderRadius: BorderRadius.circular(8)
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon,color: active?IziColors.white:IziColors.dark,size: 30,),
+            IziText.body(color: active?IziColors.white:IziColors.dark,textAlign: TextAlign.center, text: title, fontWeight: FontWeight.w600,maxLines: 3),
+          ],
+        ),
       ),
     );
   }

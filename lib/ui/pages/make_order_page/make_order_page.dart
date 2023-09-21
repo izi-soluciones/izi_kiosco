@@ -72,7 +72,7 @@ class _MakeOrderPageState extends State<MakeOrderPage> {
                     ),
                   ),
                   SizedBox(
-                    height: 300,
+                    height: 360,
                     child: MakeOrderDetail(
                         state: state
                     ),

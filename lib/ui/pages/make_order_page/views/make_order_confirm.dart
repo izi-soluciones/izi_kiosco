@@ -343,6 +343,9 @@ class _MakeOrderConfirmState extends State<MakeOrderConfirm> {
             radius: 20,
             onTap: () {
               context.read<MakeOrderBloc>().removeItem(indexCategory, indexItem);
+              if(widget.state.itemsSelected.length==1 &&widget.state.itemsSelected[0].items.length==1){
+                context.read<MakeOrderBloc>().changeReviewStatus(false);
+              }
             },
             child: Container(
               decoration: const BoxDecoration(

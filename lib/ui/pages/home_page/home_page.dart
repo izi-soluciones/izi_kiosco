@@ -12,6 +12,7 @@ import 'package:izi_kiosco/app/values/locale_keys.g.dart';
 import 'package:izi_kiosco/app/values/routes_keys.dart';
 import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/page_utils/page_utils_bloc.dart';
+import 'package:izi_kiosco/ui/general/custom_icons/kiosk_hand_icon.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -32,35 +33,62 @@ class HomePage extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 IziText.titleBig(color: IziColors.darkGrey, text: LocaleKeys.home_subtitles_iziSlogan.tr(),fontWeight: FontWeight.w400),
-                Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    SizedBox(
-                      height: 200,
-                      child: state.currentContribuyente?.logo!=null?
-                      CachedNetworkImage(
-                        imageUrl: "${dotenv.env[EnvKeys.apiUrl]}/contribuyentes/${state.currentContribuyente?.id}/logo",
-                        fit: BoxFit.fitHeight,
-                        placeholder: (context, url) => const Center(child: CircularProgressIndicator(strokeWidth: 2,color: IziColors.dark)),
-                        errorWidget: (context, url, error)  {
-                          return const SizedBox.shrink();
-                        },
-                      ):const SizedBox.shrink(),
+                Expanded(
+                  child: Center(
+                    child: SingleChildScrollView(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          SizedBox(
+                            height: 200,
+                            child: state.currentContribuyente?.logo!=null?
+                            CachedNetworkImage(
+                              imageUrl: "${dotenv.env[EnvKeys.apiUrl]}/contribuyentes/${state.currentContribuyente?.id}/logo",
+                              fit: BoxFit.fitHeight,
+                              placeholder: (context, url) => const Center(child: CircularProgressIndicator(strokeWidth: 2,color: IziColors.dark)),
+                              errorWidget: (context, url, error)  {
+                                return const SizedBox.shrink();
+                              },
+                            ):const SizedBox.shrink(),
+                          ),
+                          const SizedBox(height: 60,),
+                          Stack(
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 30,right: 30,left: 30),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    _textBig(LocaleKeys.home_body_order.tr()),
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        _textBig(LocaleKeys.home_body_and.tr(),fontWeight: FontWeight.w200),
+                                        const SizedBox(width:16,),
+                                        _textBig(LocaleKeys.home_body_pay.tr()),
+                                      ],
+                                    ),
+                                    _textBig(LocaleKeys.home_body_here.tr()),
+                                  ],
+                                ),
+                              ),
+                              const Positioned(
+                                right: 0,
+                                  bottom: 0,
+                                  child:Padding(
+                                    padding: EdgeInsets.only(),
+                                    child: KioskHandIcon(width:100),
+                                  )
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 40,),
+                          IziText.titleBig(color: IziColors.grey, text: LocaleKeys.home_body_clickToInit.tr(),fontWeight: FontWeight.w400),
+                        ],
+                      ),
                     ),
-                    const SizedBox(height: 60,),
-                    _textBig(LocaleKeys.home_body_order.tr()),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        _textBig(LocaleKeys.home_body_and.tr(),fontWeight: FontWeight.w200),
-                            const SizedBox(width:16,),
-                        _textBig(LocaleKeys.home_body_pay.tr()),
-                      ],
-                    ),
-                    _textBig(LocaleKeys.home_body_here.tr()),
-                    const SizedBox(height: 40,),
-                    IziText.titleBig(color: IziColors.grey, text: LocaleKeys.home_body_clickToInit.tr(),fontWeight: FontWeight.w400),
-                  ],
+                  ),
                 ),
 
                 Column(
