@@ -34,9 +34,8 @@ class MainLayout extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ru=ResponsiveUtils(context);
-    return GestureDetector(
-      behavior: HitTestBehavior.deferToChild,
-      onTapDown: (details){
+    return Listener(
+      onPointerDown: (e) {
         context.read<PageUtilsBloc>().updateScreenActive();
       },
       child: BlocBuilder<AuthBloc,AuthState>(

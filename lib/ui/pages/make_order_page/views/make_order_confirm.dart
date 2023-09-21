@@ -14,6 +14,7 @@ import 'package:izi_kiosco/app/values/locale_keys.g.dart';
 import 'package:izi_kiosco/app/values/routes_keys.dart';
 import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/make_order/make_order_bloc.dart';
+import 'package:izi_kiosco/domain/blocs/page_utils/page_utils_bloc.dart';
 import 'package:izi_kiosco/domain/models/comanda.dart';
 import 'package:izi_kiosco/domain/models/item.dart';
 import 'package:izi_kiosco/ui/general/izi_scroll.dart';
@@ -362,11 +363,18 @@ class _MakeOrderConfirmState extends State<MakeOrderConfirm> {
     setState(() {
       loadingEmit = true;
     });
+    context.read<PageUtilsBloc>().showLoading(LocaleKeys.makeOrder_buttons_confirmingOrder.tr());
+    context.read<PageUtilsBloc>().closeScreenActive();
     await context.read<MakeOrderBloc>().emitOrder(context.read<AuthBloc>().state).then(
       (value) {
+        context.read<PageUtilsBloc>().closeLoading();
         if (value is Comanda) {
+          context.read<PageUtilsBloc>().initScreenActiveInvoiced();
           GoRouter.of(this.context).goNamed(RoutesKeys.payment,
               extra: value, pathParameters: {"id": value.id.toString()});
+        }
+        else{
+          context.read<PageUtilsBloc>().initScreenActive();
         }
       },
     );

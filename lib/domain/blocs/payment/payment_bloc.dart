@@ -14,7 +14,6 @@ import 'package:izi_kiosco/domain/models/comanda.dart';
 import 'package:izi_kiosco/domain/models/contribuyente.dart';
 import 'package:izi_kiosco/domain/models/currency.dart';
 import 'package:izi_kiosco/domain/models/document_type.dart';
-import 'package:izi_kiosco/domain/models/economic_activity.dart';
 import 'package:izi_kiosco/domain/models/payment.dart';
 import 'package:izi_kiosco/domain/models/payment_method.dart';
 import 'package:izi_kiosco/domain/repositories/business_repository.dart';
@@ -58,13 +57,6 @@ class PaymentBloc extends Cubit<PaymentState> {
         }
 
 
-        int indexCurrency = authState.currencies.indexWhere((element) =>
-            element.id ==
-            authState.currentContribuyente?.config["monedaInventario"]);
-        Currency? currentCurrency;
-        if (indexCurrency != -1) {
-          currentCurrency = authState.currencies.elementAtOrNull(indexCurrency);
-        }
 
         List<CashRegister> cashRegisters =
             await _businessRepository.getCashRegisters(
@@ -89,49 +81,12 @@ class PaymentBloc extends Cubit<PaymentState> {
           currentCashRegister = cashRegisters.firstOrNull;
         }
 
-        List<PaymentMethod> paymentMethods =
-            await _businessRepository.getPaymentMethods();
-        List<Payment> payments =
-            await _businessRepository.getPayments(orderId: defaultOrder.id);
         List<DocumentType>? documentTypes;
         DocumentType? documentType;
-        String? economicActivity;
 
-        if (authState.currentContribuyente?.config?["aERestaurante"] != null) {
-          if(authState.currentContribuyente?.config?["aERestaurante"] is num){
-            economicActivity =
-            authState.currentContribuyente?.config?["aERestaurante"]?.toString();
-          }
-          else if(authState.currentContribuyente?.config?["aERestaurante"] is String){
-            economicActivity =
-            authState.currentContribuyente?.config?["aERestaurante"];
-          }
-          else if(authState.currentContribuyente?.config?["aERestaurante"] is Map &&
-              authState.currentContribuyente?.config?["aERestaurante"]?["codigoCaeb"] !=null){
-
-            economicActivity =authState.currentContribuyente?.config?["aERestaurante"]?["codigoCaeb"];
-          }
-        }
         if (usaSiat) {
           documentTypes = await _businessRepository.getDocumentTypes();
           documentType = documentTypes.firstOrNull;
-
-          if (authState.currentContribuyente?.config?["aERestaurante"] ==
-              null) {
-            List<EconomicActivity> activities =
-                await _businessRepository.getEconomicActivities(
-                    contribuyenteId: authState.currentContribuyente?.id ?? 0,
-                    sucursalId: authState.currentSucursal?.id ?? 0);
-            economicActivity = activities.firstOrNull?.codigoCaeb ?? "";
-          }
-        } else {
-          if (authState.currentContribuyente?.config?["aERestaurante"] ==
-              null) {
-            economicActivity = authState.currentContribuyente
-                ?.actividadesEconomicas is List? ((authState.currentContribuyente
-                ?.actividadesEconomicas as List).firstOrNull?["id"] ??"").toString() :
-                "";
-          }
         }
         emit(state.copyWith(
             status: PaymentStatus.successGet,
@@ -139,15 +94,11 @@ class PaymentBloc extends Cubit<PaymentState> {
               casaMatriz:(casaMatrizIndex != -1)?(authState.currentContribuyente?.sucursales?[casaMatrizIndex]):null,
             order: defaultOrder,
             step: 1,
-            economicActivity: economicActivity,
-            payments: payments,
             usaSiat: usaSiat,
             documentTypes: documentTypes,
             documentType: documentType,
-            paymentMethods: paymentMethods,
             discountAmount: defaultOrder.descuentos,
             cashRegisters: cashRegisters,
-            currentCurrency: currentCurrency,
             currentCashRegister: currentCashRegister));
       } else {
         emit(state.copyWith(status: PaymentStatus.errorGet));
@@ -426,13 +377,22 @@ class PaymentBloc extends Cubit<PaymentState> {
           _socketRepository.closeQrListening();
           qrStream?.cancel();
         }
+        Timer? timer;
         qrStream = _socketRepository.listenQr(charge: charge).listen((event) async{
           if(event is Map && event["statusVenta"]=="success"){
+            if(timer!=null){
+              timer!.cancel();
+            }
             emit(state.copyWith(step:2,status: PaymentStatus.qrProcessed));
             await Future.delayed(const Duration(seconds: 5));
             emit(state.copyWith(status: PaymentStatus.successInvoice));
           }
           else{
+            timer=Timer(const Duration(seconds: 60),() async{
+              emit(state.copyWith(step:2,status: PaymentStatus.qrProcessed));
+              await Future.delayed(const Duration(seconds: 5));
+              emit(state.copyWith(status: PaymentStatus.successInvoice));
+            },);
             emit(state.copyWith(status: PaymentStatus.qrProcessing));
           }
           /*

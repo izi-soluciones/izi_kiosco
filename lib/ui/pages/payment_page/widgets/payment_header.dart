@@ -1,9 +1,15 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:izi_design_system/atoms/izi_typography.dart';
+import 'package:izi_design_system/molecules/izi_btn.dart';
 import 'package:izi_design_system/tokens/colors.dart';
 import 'package:izi_design_system/tokens/izi_icons.dart';
+import 'package:izi_design_system/tokens/types.dart';
 import 'package:izi_kiosco/app/values/locale_keys.g.dart';
+import 'package:izi_kiosco/app/values/routes_keys.dart';
+import 'package:izi_kiosco/domain/blocs/page_utils/page_utils_bloc.dart';
 import 'package:izi_kiosco/ui/utils/money_formatter.dart';
 import 'package:izi_kiosco/ui/utils/row_container.dart';
 
@@ -63,6 +69,20 @@ class PaymentHeader extends StatelessWidget {
                   ),
                 ),
               ),
+
+            Positioned(
+              top: 10,
+              left: 10,
+              child: IziBtn(
+                buttonText: LocaleKeys.payment_buttons_cancelOrder.tr(),
+                buttonType: ButtonType.primary,
+                buttonOnPressed: (){
+                  GoRouter.of(context).goNamed(RoutesKeys.home);
+                  context.read<PageUtilsBloc>().closeScreenActive();
+                },
+                buttonSize: ButtonSize.small,
+              ),
+            )
           ],
         ));
   }

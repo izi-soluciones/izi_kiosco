@@ -13,6 +13,7 @@ import 'package:izi_design_system/tokens/types.dart';
 import 'package:izi_kiosco/app/values/locale_keys.g.dart';
 import 'package:izi_kiosco/app/values/routes_keys.dart';
 import 'package:izi_kiosco/domain/blocs/make_order/make_order_bloc.dart';
+import 'package:izi_kiosco/domain/blocs/page_utils/page_utils_bloc.dart';
 import 'package:izi_kiosco/domain/models/item.dart';
 import 'package:izi_kiosco/ui/general/izi_scroll.dart';
 import 'package:izi_kiosco/ui/utils/money_formatter.dart';
@@ -128,6 +129,7 @@ class _MakeOrderDetailState extends State<MakeOrderDetail> {
                     buttonSize: ButtonSize.large,
                     buttonOnPressed: () {
                       GoRouter.of(context).goNamed(RoutesKeys.home);
+                      context.read<PageUtilsBloc>().closeScreenActive();
                     }),
               ),
               const SizedBox(

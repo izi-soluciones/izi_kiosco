@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:developer';
 
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -32,21 +33,45 @@ class PageUtilsBloc extends Cubit<PageUtilsState>{
       timer!.cancel();
 
     }
+    timer=null;
     emit(state.copyWith(screenActive: true));
   }
+
+  var seconds = AppConstants.timerTimeSeconds;
   updateScreenActive(){
+    if(timer!=null) {
+      timer!.cancel();
+      emit(state.copyWith(screenActive: true));
+      timer = Timer(Duration(seconds: seconds), () {
+        emit(state.copyWith(screenActive: false));
+      });
+    }
+  }
+  initScreenActiveInvoiced(){
     if(timer!=null){
       timer!.cancel();
     }
     emit(state.copyWith(screenActive: true));
-    timer = Timer(Duration(seconds: AppConstants.timerTimeSeconds), () {
+    seconds = AppConstants.timerTimeSecondsInvoiced;
+    timer = Timer(Duration(seconds: AppConstants.timerTimeSecondsInvoiced), () {
       emit(state.copyWith(screenActive: false));
     });
   }
   initScreenActive(){
-    timer ??= Timer(Duration(seconds: AppConstants.timerTimeSeconds), () {
+    try{
+
+      if(timer!=null){
+        timer!.cancel();
+      }
+      seconds = AppConstants.timerTimeSeconds;
+      emit(state.copyWith(screenActive: true));
+      timer = Timer(Duration(seconds: AppConstants.timerTimeSeconds), () {
         emit(state.copyWith(screenActive: false));
       });
+    }
+    catch(err){
+      log(err.toString());
+    }
   }
 
   void hideSnackBar()async{

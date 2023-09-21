@@ -1,6 +1,7 @@
 class AppConstants{
   static num paginationSize = 15;
-  static int timerTimeSeconds=600;
+  static int timerTimeSeconds=5;
+  static int timerTimeSecondsInvoiced=60;
   static String defaultCurrency="Bs";
   static int defaultCurrencyId=150;
   static String restaurantEnv="restaurante";

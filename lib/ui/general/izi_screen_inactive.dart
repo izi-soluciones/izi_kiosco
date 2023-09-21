@@ -19,11 +19,10 @@ class IziScreenInactive extends StatefulWidget {
 }
 
 class _IziScreenInactiveState extends State<IziScreenInactive> {
-  int timerCount=5;
   late Timer timer;
   @override
   void initState() {
-    timer = Timer(const Duration(seconds: 6), () {
+    timer = Timer(const Duration(seconds: 12), () {
       context.read<PageUtilsBloc>().closeScreenActive();
       GoRouter.of(context).goNamed(RoutesKeys.home);
     });
@@ -54,19 +53,22 @@ class _IziScreenInactiveState extends State<IziScreenInactive> {
               ),
             ),
             Positioned.fill(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  IziText.title(color: IziColors.darkGrey, text: LocaleKeys.general_body_thisScreenClose.tr(),fontWeight: FontWeight.w400),
-                  const SizedBox(height: 8,),
-                  IziText.body(color: IziColors.darkGrey, text: LocaleKeys.general_buttons_pressToContinue.tr(),fontWeight: FontWeight.w600),
-                  const SizedBox(height: 8,),
-                  const SizedBox(
-                    width: 15,
-                    height: 15,
-                    child: CircularProgressIndicator(color: IziColors.primary,strokeWidth: 2),
-                  ),
-                ],
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    IziText.titleBig(textAlign: TextAlign.center,color: IziColors.dark, text: LocaleKeys.general_body_thisScreenClose.tr(),fontWeight: FontWeight.w600,maxLines: 2),
+                    const SizedBox(height: 8,),
+                    IziText.bodyBig(color: IziColors.darkGrey, text: LocaleKeys.general_buttons_pressToContinue.tr(),fontWeight: FontWeight.w600),
+                    const SizedBox(height: 8,),
+                    const SizedBox(
+                      width: 15,
+                      height: 15,
+                      child: CircularProgressIndicator(color: IziColors.primary,strokeWidth: 2),
+                    ),
+                  ],
+                ),
               ),
             )
 

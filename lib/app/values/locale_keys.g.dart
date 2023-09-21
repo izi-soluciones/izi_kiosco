@@ -236,6 +236,7 @@ abstract class  LocaleKeys {
   static const payment_buttons_markAsPaid = 'payment.buttons.markAsPaid';
   static const payment_buttons_makeOrder = 'payment.buttons.makeOrder';
   static const payment_buttons_generateQr = 'payment.buttons.generateQr';
+  static const payment_buttons_cancelOrder = 'payment.buttons.cancelOrder';
   static const payment_buttons = 'payment.buttons';
   static const payment_inputs_percentage_label = 'payment.inputs.percentage.label';
   static const payment_inputs_percentage_placeholder = 'payment.inputs.percentage.placeholder';
@@ -426,6 +427,7 @@ abstract class  LocaleKeys {
   static const makeOrder_buttons_cancel = 'makeOrder.buttons.cancel';
   static const makeOrder_buttons_confirmAndPay = 'makeOrder.buttons.confirmAndPay';
   static const makeOrder_buttons_addMore = 'makeOrder.buttons.addMore';
+  static const makeOrder_buttons_confirmingOrder = 'makeOrder.buttons.confirmingOrder';
   static const makeOrder_buttons = 'makeOrder.buttons';
   static const makeOrder_inputs_search_placeholder = 'makeOrder.inputs.search.placeholder';
   static const makeOrder_inputs_search = 'makeOrder.inputs.search';

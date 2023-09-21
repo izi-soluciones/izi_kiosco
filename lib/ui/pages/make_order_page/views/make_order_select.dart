@@ -3,12 +3,15 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:go_router/go_router.dart';
 import 'package:izi_design_system/tokens/colors.dart';
 import 'package:izi_design_system/tokens/izi_icons.dart';
 import 'package:izi_kiosco/app/values/env_keys.dart';
 import 'package:izi_kiosco/app/values/locale_keys.g.dart';
+import 'package:izi_kiosco/app/values/routes_keys.dart';
 import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/make_order/make_order_bloc.dart';
+import 'package:izi_kiosco/domain/blocs/page_utils/page_utils_bloc.dart';
 import 'package:izi_kiosco/domain/models/item.dart';
 import 'package:izi_kiosco/ui/general/izi_scroll.dart';
 import 'package:izi_kiosco/ui/pages/make_order_page/modals/item_options_modal.dart';
@@ -50,7 +53,8 @@ class _MakeOrderSelectState extends State<MakeOrderSelect> {
           children: [
             InkWell(
               onTap: () {
-                context.read<MakeOrderBloc>().changeReviewStatus(false);
+                GoRouter.of(context).goNamed(RoutesKeys.home);
+                context.read<PageUtilsBloc>().closeScreenActive();
               },
               child: const Padding(
                 padding: EdgeInsets.all(20),

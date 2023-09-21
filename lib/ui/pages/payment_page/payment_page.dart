@@ -27,6 +27,10 @@ class PaymentPage extends StatelessWidget {
           _pageController.jumpToPage(state.step);
         }
 
+        if(state.status == PaymentStatus.qrProcessing){
+          context.read<PageUtilsBloc>().closeScreenActive();
+        }
+
         if(state.status == PaymentStatus.errorCashRegisters){
           CustomAlerts.defaultAlert(context: context,dismissible: true, child: WarningConfigModal(
               title: LocaleKeys.warningCashRegisters_title.tr(),

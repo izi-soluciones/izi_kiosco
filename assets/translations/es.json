@@ -291,7 +291,8 @@
       "deletePayment": "Eliminar pago",
       "markAsPaid": "Marcar como pagado",
       "makeOrder": "Generar pedido",
-      "generateQr": "Generar QR"
+      "generateQr": "Generar QR",
+      "cancelOrder": "Cancelar orden"
     },
     "inputs": {
 
@@ -539,7 +540,8 @@
       "add": "Añadir",
       "cancel": "Cancelar",
       "confirmAndPay": "Confirmar y pagar",
-      "addMore": "Agregar más"
+      "addMore": "Agregar más",
+      "confirmingOrder": "Confirmando orden"
     },
     "inputs": {
       "search": {
@@ -574,7 +576,7 @@
     },
     "body": {
       "sucursal": "Sucursal",
-      "thisScreenClose": "Esta pantalla se cerrara si no se realiza ninguna accion"
+      "thisScreenClose": "¿NECESITAS MAS TIEMPO?\nEsta pantalla se cerrara en 10 segundos."
     },
     "buttons": {
       "filters": "Filtros",

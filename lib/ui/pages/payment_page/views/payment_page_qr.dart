@@ -148,7 +148,7 @@ class _PaymentPageQrState extends State<PaymentPageQr> {
         Image.network(widget.state.qrCharge!.qrUrl!,fit: BoxFit.fitWidth);
     }
     if(widget.state.qrCharge?.qrBase64!=null){
-      return Image.memory(const Base64Decoder().convert(widget.state.qrCharge!.qrBase64!),fit: BoxFit.fitWidth);
+      return AspectRatio(aspectRatio: 1,child: Image.memory(const Base64Decoder().convert(widget.state.qrCharge!.qrBase64!),fit: BoxFit.fitWidth));
     }
     return const SizedBox.shrink();
   }
