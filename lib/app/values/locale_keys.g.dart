@@ -435,6 +435,7 @@ abstract class  LocaleKeys {
   static const makeOrder_buttons_confirmAndPay = 'makeOrder.buttons.confirmAndPay';
   static const makeOrder_buttons_addMore = 'makeOrder.buttons.addMore';
   static const makeOrder_buttons_confirmingOrder = 'makeOrder.buttons.confirmingOrder';
+  static const makeOrder_buttons_initAgain = 'makeOrder.buttons.initAgain';
   static const makeOrder_buttons = 'makeOrder.buttons';
   static const makeOrder_inputs_search_placeholder = 'makeOrder.inputs.search.placeholder';
   static const makeOrder_inputs_search = 'makeOrder.inputs.search';

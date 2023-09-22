@@ -91,8 +91,8 @@ class _MakeOrderDetailState extends State<MakeOrderDetail> {
               Expanded(
                 flex: 5,
                 child: IziBtn(
-                    buttonText: LocaleKeys.makeOrder_buttons_cancel.tr(),
-                    buttonType: ButtonType.terciary,
+                    buttonText: LocaleKeys.makeOrder_buttons_initAgain.tr(),
+                    buttonType: ButtonType.outline,
                     buttonSize: ButtonSize.large,
                     buttonOnPressed: () {
                       GoRouter.of(context).goNamed(RoutesKeys.home);
@@ -188,7 +188,7 @@ class _MakeOrderDetailState extends State<MakeOrderDetail> {
               },
               child: Container(
                 decoration: const BoxDecoration(
-                    color: IziColors.dark, shape: BoxShape.circle),
+                    color: IziColors.red, shape: BoxShape.circle),
                 child: const Icon(
                   IziIcons.close,
                   size: 22,

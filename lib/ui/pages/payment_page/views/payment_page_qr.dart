@@ -365,7 +365,7 @@ class _PaymentPageQrState extends State<PaymentPageQr> {
             },
             selectOptions: {
               for (DocumentType type in widget.state.documentTypes)
-                type.codigoClasificador: type.descripcion
+                type.codigoClasificador: type.descripcion.split("-").firstOrNull??""
             },
           ),
         RowContainer(
@@ -390,7 +390,7 @@ class _PaymentPageQrState extends State<PaymentPageQr> {
                   },
                   selectOptions: {
                     for (DocumentType type in widget.state.documentTypes)
-                      type.codigoClasificador: type.descripcion
+                      type.codigoClasificador: type.descripcion.split("-").firstOrNull??""
                   },
                 ),
               ),
@@ -466,7 +466,7 @@ class _PaymentPageQrState extends State<PaymentPageQr> {
           children: [
             IziInput(
               labelInput: LocaleKeys.payment_inputs_phoneNumber_label.tr(),
-              inputHintText: "",
+              inputHintText: LocaleKeys.payment_inputs_phoneNumber_placeholder.tr(),
               bigLabel: true,
               key: phoneKey,
               controller: phoneController,
@@ -486,6 +486,7 @@ class _PaymentPageQrState extends State<PaymentPageQr> {
               error: _getErrorsPhoneNumber(widget.state.phoneNumber.inputError),
               inputType: InputType.number,
             ),
+            const SizedBox(height: 4),
             IziText.label(
                 color: IziColors.darkGrey,
                 text: LocaleKeys.payment_inputs_phoneNumber_description.tr(),

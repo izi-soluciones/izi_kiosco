@@ -548,7 +548,8 @@
       "cancel": "Cancelar",
       "confirmAndPay": "Confirmar y pagar",
       "addMore": "Agregar más",
-      "confirmingOrder": "Confirmando orden"
+      "confirmingOrder": "Confirmando orden",
+      "initAgain": "Empezar de nuevo"
     },
     "inputs": {
       "search": {

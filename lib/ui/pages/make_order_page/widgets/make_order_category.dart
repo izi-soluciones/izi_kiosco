@@ -16,7 +16,7 @@ class MakeOrderCategory extends StatelessWidget {
     return InkWell(
       onTap: onPressed,
       child: Ink(
-        padding: const EdgeInsets.fromLTRB(16,10,16,5),
+        padding: const EdgeInsets.fromLTRB(32,10,32,5),
         decoration: BoxDecoration(
           color: active? IziColors.dark:IziColors.grey25,
           borderRadius: BorderRadius.circular(8)
@@ -26,7 +26,7 @@ class MakeOrderCategory extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.center,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon,color: active?IziColors.white:IziColors.dark,size: 30,),
+            Icon(icon,color: active?IziColors.white:IziColors.dark,size: 40,),
             IziText.body(color: active?IziColors.white:IziColors.dark,textAlign: TextAlign.center, text: title, fontWeight: FontWeight.w600,maxLines: 3),
           ],
         ),

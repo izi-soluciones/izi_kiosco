@@ -1,9 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:izi_design_system/atoms/izi_typography.dart';
 import 'package:izi_design_system/molecules/izi_btn_icon.dart';
-import 'package:izi_design_system/molecules/izi_input.dart';
 import 'package:izi_design_system/tokens/colors.dart';
 import 'package:izi_design_system/tokens/izi_icons.dart';
 import 'package:izi_design_system/tokens/types.dart';
@@ -20,7 +18,6 @@ class MakeOrderItemLg extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final itemAdded=_itemAdded(item.id);
     return Material(
       elevation: 0,
       color: IziColors.white,
@@ -60,7 +57,7 @@ class MakeOrderItemLg extends StatelessWidget {
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 4,horizontal: 8),
+                  padding: const EdgeInsets.symmetric(vertical: 16,horizontal: 16),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -83,10 +80,9 @@ class MakeOrderItemLg extends StatelessWidget {
                           IziText.body(color: IziColors.grey, text: item.precioUnitario.moneyFormat(currency: state.currentCurrency?.simbolo), fontWeight: FontWeight.w400,textAlign: TextAlign.start),
                           const SizedBox(height: 10,),
                           Row(
-                            mainAxisAlignment: itemAdded!=null?MainAxisAlignment.spaceBetween:MainAxisAlignment.end,
+                            mainAxisAlignment: MainAxisAlignment.end,
                             children: [
-                              if(itemAdded!=null)
-                                ConstrainedBox(
+                                /*ConstrainedBox(
                                   constraints: const BoxConstraints(
                                       maxWidth: 100
                                   ),
@@ -115,17 +111,15 @@ class MakeOrderItemLg extends StatelessWidget {
                                     padding: EdgeInsets.all(2.5),
                                     child: Icon(IziIcons.close,size: 20,color: IziColors.darkGrey,),
                                   ),
-                                ),
-                              if(itemAdded==null)
+                                ),*/
                                 IziBtnIcon(
                                     buttonIcon: IziIcons.plusB,
                                     buttonType: ButtonType.secondary,
-                                    buttonSize: ButtonSize.small,
+                                    buttonSize: ButtonSize.medium,
                                     buttonOnPressed: onPressed
                                 ),
                             ],
                           ),
-                          const SizedBox(height: 4,),
                         ],
                       )
                     ],
@@ -135,26 +129,5 @@ class MakeOrderItemLg extends StatelessWidget {
             )
       ),
     );
-  }
-
-  _removeItem(int itemId,BuildContext context){
-    for(int ic=0;ic<state.itemsSelected.length;ic++){
-      var indexItem=state.itemsSelected[ic].items.indexWhere((element) => element.id==itemId);
-      if(indexItem!=-1){
-        context.read<MakeOrderBloc>().removeItem(ic, indexItem);
-      }
-    }{
-    }
-  }
-
-   Item? _itemAdded(int itemId){
-
-    for(var c in state.itemsSelected){
-      var indexItem=c.items.indexWhere((element) => element.id==itemId);
-      if(indexItem!=-1){
-        return c.items[indexItem];
-      }
-    }
-    return null;
   }
 }
