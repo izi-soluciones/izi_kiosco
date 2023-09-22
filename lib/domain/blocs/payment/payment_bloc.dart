@@ -101,7 +101,7 @@ class PaymentBloc extends Cubit<PaymentState> {
 
               casaMatriz:(casaMatrizIndex != -1)?(authState.currentContribuyente?.sucursales?[casaMatrizIndex]):null,
             order: defaultOrder,
-            step: 2,
+            step: 1,
             currentCurrency: currentCurrency,
             usaSiat: usaSiat,
             documentTypes: documentTypes,
