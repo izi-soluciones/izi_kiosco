@@ -38,8 +38,16 @@
   </script>
   <!-- This script adds the flutter initialization JS code -->
   <script src="flutter.js" defer></script>
+
 </head>
 <body>
+  <script type="text/javascript">
+    window.onload = function() {
+      document.addEventListener("contextmenu", function(e){
+        e.preventDefault();
+      }, false);
+    }
+  </script>
   <script>
     window.addEventListener('load', function(ev) {
       // Download main.dart.js

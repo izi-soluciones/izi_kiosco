@@ -21,96 +21,100 @@ class HomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<AuthBloc,AuthState>(
       builder: (context,state) {
-        return GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onTap: (){
-            GoRouter.of(context).goNamed(RoutesKeys.makeOrder);
-            context.read<PageUtilsBloc>().initScreenActive();
-          },
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 32,horizontal: 32),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                IziText.titleBig(color: IziColors.darkGrey, text: LocaleKeys.home_subtitles_iziSlogan.tr(),fontWeight: FontWeight.w400),
-                Expanded(
-                  child: Center(
-                    child: SingleChildScrollView(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          SizedBox(
-                            height: 200,
-                            child: state.currentContribuyente?.logo!=null?
-                            CachedNetworkImage(
-                              imageUrl: "${dotenv.env[EnvKeys.apiUrl]}/contribuyentes/${state.currentContribuyente?.id}/logo",
-                              fit: BoxFit.fitHeight,
-                              placeholder: (context, url) => const Center(child: CircularProgressIndicator(strokeWidth: 2,color: IziColors.dark)),
-                              errorWidget: (context, url, error)  {
-                                return const SizedBox.shrink();
-                              },
-                            ):const SizedBox.shrink(),
-                          ),
-                          const SizedBox(height: 60,),
-                          Stack(
+        return Stack(
+          children: [
+            GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: (){
+                GoRouter.of(context).goNamed(RoutesKeys.makeOrder);
+                context.read<PageUtilsBloc>().initScreenActive();
+              },
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 32,horizontal: 32),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    IziText.titleBig(color: IziColors.darkGrey, text: LocaleKeys.home_subtitles_iziSlogan.tr(),fontWeight: FontWeight.w400),
+                    Expanded(
+                      child: Center(
+                        child: SingleChildScrollView(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Padding(
-                                padding: const EdgeInsets.only(bottom: 30,right: 30,left: 30),
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    _textBig(LocaleKeys.home_body_order.tr()),
-                                    Row(
-                                      mainAxisAlignment: MainAxisAlignment.center,
+                              SizedBox(
+                                height: 200,
+                                child: state.currentContribuyente?.logo!=null?
+                                CachedNetworkImage(
+                                  imageUrl: "${dotenv.env[EnvKeys.apiUrl]}/contribuyentes/${state.currentContribuyente?.id}/logo",
+                                  fit: BoxFit.fitHeight,
+                                  placeholder: (context, url) => const Center(child: CircularProgressIndicator(strokeWidth: 2,color: IziColors.dark)),
+                                  errorWidget: (context, url, error)  {
+                                    return const SizedBox.shrink();
+                                  },
+                                ):const SizedBox.shrink(),
+                              ),
+                              const SizedBox(height: 60,),
+                              Stack(
+                                children: [
+                                  Padding(
+                                    padding: const EdgeInsets.only(bottom: 30,right: 30,left: 30),
+                                    child: Column(
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
-                                        _textBig(LocaleKeys.home_body_and.tr(),fontWeight: FontWeight.w200),
-                                        const SizedBox(width:16,),
-                                        _textBig(LocaleKeys.home_body_pay.tr()),
+                                        _textBig(LocaleKeys.home_body_order.tr()),
+                                        Row(
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            _textBig(LocaleKeys.home_body_and.tr(),fontWeight: FontWeight.w200),
+                                            const SizedBox(width:16,),
+                                            _textBig(LocaleKeys.home_body_pay.tr()),
+                                          ],
+                                        ),
+                                        _textBig(LocaleKeys.home_body_here.tr()),
                                       ],
                                     ),
-                                    _textBig(LocaleKeys.home_body_here.tr()),
-                                  ],
-                                ),
+                                  ),
+                                  const Positioned(
+                                    right: 0,
+                                      bottom: 0,
+                                      child:Padding(
+                                        padding: EdgeInsets.only(),
+                                        child: KioskHandIcon(width:100),
+                                      )
+                                  ),
+                                ],
                               ),
-                              const Positioned(
-                                right: 0,
-                                  bottom: 0,
-                                  child:Padding(
-                                    padding: EdgeInsets.only(),
-                                    child: KioskHandIcon(width:100),
-                                  )
-                              ),
+                              const SizedBox(height: 40,),
+                              IziText.titleBig(color: IziColors.grey, text: LocaleKeys.home_body_clickToInit.tr(),fontWeight: FontWeight.w400),
                             ],
                           ),
-                          const SizedBox(height: 40,),
-                          IziText.titleBig(color: IziColors.grey, text: LocaleKeys.home_body_clickToInit.tr(),fontWeight: FontWeight.w400),
-                        ],
+                        ),
                       ),
                     ),
-                  ),
-                ),
 
-                Column(
-                  children: [
-                    const Divider(color: IziColors.grey35,height: 50,thickness: 1,),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      mainAxisAlignment: MainAxisAlignment.center,
+                    Column(
                       children: [
-                        IziText.title(color: IziColors.darkGrey, text: LocaleKeys.home_body_anIziPlatform.tr(),fontWeight: FontWeight.w400),
-                        const Padding(
-                          padding: EdgeInsets.only(bottom: 2),
-                          child: Icon(IziIcons.izi,color: IziColors.primary,size: 40,),
-                        ),
-                        const SizedBox(height: 20,),
+                        const Divider(color: IziColors.grey35,height: 50,thickness: 1,),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            IziText.title(color: IziColors.darkGrey, text: LocaleKeys.home_body_anIziPlatform.tr(),fontWeight: FontWeight.w400),
+                            const Padding(
+                              padding: EdgeInsets.only(bottom: 2),
+                              child: Icon(IziIcons.izi,color: IziColors.primary,size: 40,),
+                            ),
+                            const SizedBox(height: 20,),
+                          ],
+                        )
                       ],
                     )
                   ],
-                )
-              ],
+                ),
+              ),
             ),
-          ),
+          ],
         );
       }
     );

@@ -14,9 +14,9 @@ import 'package:izi_kiosco/app/values/app_constants.dart';
 import 'package:izi_kiosco/app/values/locale_keys.g.dart';
 import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/payment/payment_bloc.dart';
-import 'package:izi_kiosco/domain/models/contribuyente.dart';
 import 'package:izi_kiosco/domain/models/document_type.dart';
 import 'package:izi_kiosco/domain/utils/input_obj.dart';
+import 'package:izi_kiosco/ui/general/kiosco_numeric_keyboard.dart';
 import 'package:izi_kiosco/ui/pages/payment_page/widgets/payment_header.dart';
 import 'package:izi_kiosco/ui/utils/column_container.dart';
 import 'package:izi_kiosco/ui/utils/responsive_utils.dart';
@@ -26,7 +26,7 @@ import 'package:izi_kiosco/ui/utils/web_image.dart';
 
 class PaymentPageQr extends StatefulWidget {
   final PaymentState state;
-  const PaymentPageQr({super.key,required this.state});
+  const PaymentPageQr({super.key, required this.state});
 
   @override
   State<PaymentPageQr> createState() => _PaymentPageQrState();
@@ -34,17 +34,16 @@ class PaymentPageQr extends StatefulWidget {
 
 class _PaymentPageQrState extends State<PaymentPageQr> {
   TextEditingController businessNameController = TextEditingController();
-  bool businessFocus=false;
   TextEditingController documentNumberController = TextEditingController();
-  bool documentNumberFocus=false;
+  bool documentNumberFocus = false;
+  GlobalKey documentNumberKey = GlobalKey();
   TextEditingController emailController = TextEditingController();
-  bool emailFocus=false;
   TextEditingController phoneController = TextEditingController();
-  bool phoneFocus=false;
+  bool phoneFocus = false;
+  GlobalKey phoneKey = GlobalKey();
 
-
-  int qrLock=0;
-  int qrRemaining=0;
+  int qrLock = 0;
+  int qrRemaining = 0;
 
   @override
   void dispose() {
@@ -62,14 +61,15 @@ class _PaymentPageQrState extends State<PaymentPageQr> {
           child: Column(
             children: [
               PaymentHeader(
-                currency:
-                widget.state.currentCurrency?.simbolo ?? AppConstants.defaultCurrency,
+                currency: widget.state.currentCurrency?.simbolo ??
+                    AppConstants.defaultCurrency,
                 popText: ru.gtXs() ? LocaleKeys.payment_titles_qr.tr() : null,
-                amount: (widget.state.order?.monto??0),
+                amount: (widget.state.order?.monto ?? 0),
               ),
               Expanded(
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
                   child: ConstrainedBox(
                       constraints: const BoxConstraints(
                         maxWidth: 600,
@@ -77,140 +77,195 @@ class _PaymentPageQrState extends State<PaymentPageQr> {
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-
                           _invoiceForm(context, ru),
-                          const SizedBox(height: 50,),
-                          if(widget.state.qrCharge!=null)
-                          IziText.titleSmall(color: IziColors.dark, text: LocaleKeys.payment_subtitles_scanQrToPay.tr(), fontWeight: FontWeight.w400),
-                          if(widget.state.qrCharge!=null)
-                          const SizedBox(height: 16,),
+                          const SizedBox(
+                            height: 50,
+                          ),
+                          if (widget.state.qrCharge != null)
+                            IziText.titleSmall(
+                                color: IziColors.dark,
+                                text: LocaleKeys.payment_subtitles_scanQrToPay
+                                    .tr(),
+                                fontWeight: FontWeight.w400),
+                          if (widget.state.qrCharge != null)
+                            const SizedBox(
+                              height: 16,
+                            ),
                           ConstrainedBox(
-                              constraints:  const BoxConstraints(
-                                  maxWidth: 400
-                              ),
+                              constraints: const BoxConstraints(maxWidth: 400),
                               child: Center(
-                                child: widget.state.qrCharge!=null && !widget.state.qrLoading?
-                                    _qrWidget():
-                                    widget.state.qrLoading?
-                                const SizedBox(
-                                  height: 40,
-                                  width: 40,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 3,
-                                  ),
-                                ):const SizedBox.shrink(),
-                              )
+                                child: widget.state.qrCharge != null &&
+                                        !widget.state.qrLoading
+                                    ? _qrWidget()
+                                    : widget.state.qrLoading
+                                        ? const SizedBox(
+                                            height: 40,
+                                            width: 40,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 3,
+                                            ),
+                                          )
+                                        : const SizedBox.shrink(),
+                              )),
+                          if (widget.state.qrCharge != null)
+                            const SizedBox(
+                              height: 10,
+                            ),
+                          if (widget.state.qrCharge != null)
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                IziText.body(
+                                    color: IziColors.darkGrey,
+                                    text: "Tiempo Restante: ",
+                                    fontWeight: FontWeight.w400),
+                                IziText.body(
+                                    color: IziColors.primary,
+                                    text: "${qrRemaining}s",
+                                    fontWeight: FontWeight.w400),
+                              ],
+                            ),
+                          const SizedBox(
+                            height: 50,
                           ),
-                          if(widget.state.qrCharge!=null)
-                          const SizedBox(height: 10,),
-                          if(widget.state.qrCharge!=null)
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              IziText.body(color: IziColors.darkGrey, text: "Tiempo Restante: ", fontWeight: FontWeight.w400),
-                              IziText.body(color: IziColors.primary, text: "${qrRemaining}s", fontWeight: FontWeight.w400),
-                            ],
-                          ),
-                          const SizedBox(height: 50,),
-                          if(widget.state.qrCharge!=null)
-                          IziText.body(color: IziColors.grey, text: LocaleKeys.payment_body_cantPayWithQR.tr(), fontWeight: FontWeight.w400),
+                          if (widget.state.qrCharge != null)
+                            IziText.body(
+                                color: IziColors.grey,
+                                text:
+                                    LocaleKeys.payment_body_cantPayWithQR.tr(),
+                                fontWeight: FontWeight.w400),
                         ],
-                      )
-                  ),
+                      )),
                 ),
               ),
             ],
           ),
         ),
-        /*if(businessFocus || phoneFocus || emailFocus|| documentNumberFocus)
-        Positioned.fill(
-          child: GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTap: (){
-              setState(() {
-                businessFocus=false;
-                phoneFocus=false;
-                emailFocus=false;
-                documentNumberFocus=false;
-              });
-            },
-            child: Container(
-              color: Colors.transparent,
+        if (phoneFocus || documentNumberFocus)
+          Positioned.fill(
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () {
+                if(phoneFocus){
+                  context
+                      .read<PaymentBloc>()
+                      .validateInput(phoneNumber: true);
+                }
+                else{
+                  context
+                      .read<PaymentBloc>()
+                      .validateInput(documentNumber: true, businessName: true);
+                }
+                setState(() {
+                  phoneFocus = false;
+                  documentNumberFocus = false;
+                });
+
+              },
+              child: Container(
+                color: Colors.transparent,
+              ),
             ),
           ),
-        ),
-        if(businessFocus || phoneFocus || emailFocus || documentNumberFocus)
+        if (phoneFocus || documentNumberFocus)
           Positioned(
-          top: 0,
-          child: Container(
-            color: IziColors.darkGrey,
-            child: VirtualKeyboard(
-                height: 300,
-                fontSize: 30,
-                alwaysCaps: true,
-                textColor: Colors.white,
-                textController:
-                businessFocus?businessNameController:
-                phoneFocus? phoneController:
-                emailFocus? emailController:
-                documentNumberController,
-                type: phoneFocus?VirtualKeyboardType.Numeric:VirtualKeyboardType.Alphanumeric,
-                onKeyPress: (value){
-
+            top: documentNumberFocus
+                ? _getWidgetOffset(documentNumberKey).dy
+                : _getWidgetOffset(phoneKey).dy,
+            left: documentNumberFocus
+                ? _getWidgetOffset(documentNumberKey).dx
+                : _getWidgetOffset(phoneKey).dx,
+            child: KioscoNumericKeyboard(
+                controller: documentNumberFocus
+                    ? documentNumberController
+                    : phoneController,
+                onChanged: () {
+                  if(documentNumberFocus){
+                    context.read<PaymentBloc>().changeInputs(
+                        documentNumber: documentNumberController.text);
+                  }
+                  else{
+                    context.read<PaymentBloc>().changeInputs(
+                        phoneNumber: phoneController.text);
+                  }
+                },
+                onDone: () {
+                  if(phoneFocus){
+                    context
+                        .read<PaymentBloc>()
+                        .validateInput(phoneNumber: true);
+                  }
+                  else{
+                    context
+                        .read<PaymentBloc>()
+                        .validateInput(documentNumber: true, businessName: true);
+                  }
+                  setState(() {
+                    phoneFocus = false;
+                    documentNumberFocus = false;
+                  });
                 }),
-          ),
-        )*/
+          )
       ],
     );
   }
 
+  Offset _getWidgetOffset(GlobalKey key) {
+    RenderBox renderBox = key.currentContext!.findRenderObject() as RenderBox;
+    var offsetDefault = renderBox.localToGlobal(Offset.zero);
+    return Offset(
+        offsetDefault.dx, offsetDefault.dy + renderBox.size.height + 4);
+  }
+
   Timer? timerRemaining;
-  _initTimeRemaining(){
+  _initTimeRemaining() {
     setState(() {
-      qrRemaining=AppConstants.remainingQrTime;
+      qrRemaining = AppConstants.remainingQrTime;
     });
     timerRemaining?.cancel();
-    timerRemaining=Timer.periodic(const Duration(seconds: 1), (timer) {
-      if(qrRemaining<=0){
+    timerRemaining = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (qrRemaining <= 0) {
         _initTimeRemaining();
-      }
-      else{
+      } else {
         setState(() {
-          qrRemaining --;
+          qrRemaining--;
         });
       }
     });
   }
 
   Timer? timerLock;
-  _lockQr(){
+  _lockQr() {
     setState(() {
-      qrLock=AppConstants.regenerateQrTime;
+      qrLock = AppConstants.regenerateQrTime;
     });
-    timerLock=Timer.periodic(const Duration(seconds: 1), (timer) {
-      if(qrLock<=0){
+    timerLock = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (qrLock <= 0) {
         timer.cancel();
-      }
-      else{
+      } else {
         setState(() {
-          qrLock --;
+          qrLock--;
         });
       }
     });
   }
 
-  Widget _qrWidget(){
-    if(widget.state.qrCharge?.qrUrl!=null){
-      return
-        kIsWeb?
-        AspectRatio(
-            aspectRatio: 1,
-            child: WebImage(imageUrl: widget.state.qrCharge!.qrUrl!)
-        ):
-        Image.network(widget.state.qrCharge!.qrUrl!,fit: BoxFit.fitWidth);
+  Widget _qrWidget() {
+    if (widget.state.qrCharge?.qrUrl != null) {
+      return kIsWeb
+          ? AspectRatio(
+              aspectRatio: 1,
+              child: WebImage(imageUrl: widget.state.qrCharge!.qrUrl!))
+          : Image.network(widget.state.qrCharge!.qrUrl!, fit: BoxFit.fitWidth);
     }
-    if(widget.state.qrCharge?.qrBase64!=null){
-      return AspectRatio(aspectRatio: 1,child: Image.memory(const Base64Decoder().convert(widget.state.qrCharge!.qrBase64!),fit: BoxFit.fitWidth,gaplessPlayback: true,));
+    if (widget.state.qrCharge?.qrBase64 != null) {
+      return AspectRatio(
+          aspectRatio: 1,
+          child: Image.memory(
+            const Base64Decoder().convert(widget.state.qrCharge!.qrBase64!),
+            fit: BoxFit.fitWidth,
+            gaplessPlayback: true,
+          ));
     }
     return const SizedBox.shrink();
   }
@@ -227,11 +282,9 @@ class _PaymentPageQrState extends State<PaymentPageQr> {
             value: widget.state.documentType?.codigoClasificador,
             inputType: InputType.select,
             inputSize: InputSize.big,
-            readOnly: widget.state.qrCharge!=null,
+            readOnly: widget.state.qrCharge != null,
             onSelected: (value) {
-              context
-                  .read<PaymentBloc>()
-                  .changeInputs(documentType: value);
+              context.read<PaymentBloc>().changeInputs(documentType: value);
             },
             selectOptions: {
               for (DocumentType type in widget.state.documentTypes)
@@ -252,7 +305,7 @@ class _PaymentPageQrState extends State<PaymentPageQr> {
                   value: widget.state.documentType?.codigoClasificador,
                   inputType: InputType.select,
                   inputSize: InputSize.big,
-                  readOnly: widget.state.qrCharge!=null,
+                  readOnly: widget.state.qrCharge != null,
                   onSelected: (value) {
                     context
                         .read<PaymentBloc>()
@@ -267,52 +320,31 @@ class _PaymentPageQrState extends State<PaymentPageQr> {
             Expanded(
               flex: 2,
               child: IziInput(
+                key: documentNumberKey,
                 labelInput: LocaleKeys.payment_inputs_documentNumber_label.tr(),
                 bigLabel: true,
                 inputSize: InputSize.big,
-                readOnly: widget.state.qrCharge!=null,
+                readOnly: true,
                 onChanged: (value, valueRaw) {
                   context
                       .read<PaymentBloc>()
                       .changeInputs(documentNumber: value);
-                  if (value.length >= 3) {
-                    context.read<PaymentBloc>().queryBusiness(
-                        authState: context.read<AuthBloc>().state,
-                        query: value);
-                  }
                 },
-                onClick: (){
-                  setState(() {
-                    businessFocus=false;
-                    documentNumberFocus=true;
-                    emailFocus=false;
-                    phoneFocus=false;
-                  });
-                },
+                onClick: widget.state.qrCharge == null
+                    ? () {
+                        setState(() {
+                          documentNumberFocus = true;
+                          phoneFocus = false;
+                        });
+                      }
+                    : null,
                 controller: documentNumberController,
                 loadingAutoComplete: widget.state.documentNumber.loading,
-                onSelected: (value) {
-                  var business = widget.state.queryBusinessList
-                      .firstWhere((element) => element.id == value);
-                  context
-                      .read<PaymentBloc>()
-                      .changeInputs(businessName: business.razonSocial,documentNumber: business.nit);
-                  businessNameController.text = business.razonSocial ?? "";
-                },
-                onEditingComplete: () {
-                  context
-                      .read<PaymentBloc>()
-                      .validateInput(documentNumber: true,businessName: true);
-                },
-                selectOptions: {
-                  for (Contribuyente c in widget.state.queryBusinessList)
-                    c.id: "${c.nit} - ${c.razonSocial}"
-                },
                 error: _getErrorsDocumentNumber(
                     widget.state.documentNumber.inputError),
                 inputHintText:
-                LocaleKeys.payment_inputs_documentNumber_placeholder.tr(),
-                inputType: InputType.autocomplete,
+                    LocaleKeys.payment_inputs_documentNumber_placeholder.tr(),
+                inputType: InputType.number,
               ),
             ),
             if (widget.state.usaSiat)
@@ -321,7 +353,7 @@ class _PaymentPageQrState extends State<PaymentPageQr> {
                 child: IziInput(
                   labelInput: LocaleKeys.payment_inputs_complement_label.tr(),
                   inputHintText: "",
-                  readOnly: widget.state.qrCharge!=null,
+                  readOnly: widget.state.qrCharge != null,
                   onChanged: (value, valueRaw) {
                     context.read<PaymentBloc>().changeInputs(complement: value);
                   },
@@ -335,26 +367,17 @@ class _PaymentPageQrState extends State<PaymentPageQr> {
         IziInput(
           labelInput: LocaleKeys.payment_inputs_businessName_label.tr(),
           inputHintText:
-          LocaleKeys.payment_inputs_businessName_placeholder.tr(),
+              LocaleKeys.payment_inputs_businessName_placeholder.tr(),
           bigLabel: true,
-          readOnly: widget.state.qrCharge!=null,
+          readOnly: widget.state.qrCharge != null,
           inputSize: InputSize.big,
-
           onChanged: (value, valueRaw) {
             context.read<PaymentBloc>().changeInputs(businessName: value);
           },
           onEditingComplete: () {
             context
                 .read<PaymentBloc>()
-                .validateInput(documentNumber: true,businessName: true);
-          },
-          onClick: (){
-            setState(() {
-              businessFocus=true;
-              documentNumberFocus=false;
-              emailFocus=false;
-              phoneFocus=false;
-            });
+                .validateInput(documentNumber: true, businessName: true);
           },
           controller: businessNameController,
           value: widget.state.businessName.value,
@@ -368,27 +391,29 @@ class _PaymentPageQrState extends State<PaymentPageQr> {
               labelInput: LocaleKeys.payment_inputs_phoneNumber_label.tr(),
               inputHintText: "",
               bigLabel: true,
+              key: phoneKey,
               controller: phoneController,
-              readOnly: widget.state.qrCharge!=null,
+              readOnly: true,
               inputSize: InputSize.big,
-              onChanged: (value, valueRaw) {
-                context.read<PaymentBloc>().changeInputs(phoneNumber: value);
-              },
-              onClick: (){
-                setState(() {
-                  businessFocus=false;
-                  documentNumberFocus=false;
-                  emailFocus=false;
-                  phoneFocus=true;
-                });
-              },
+              onClick: widget.state.qrCharge == null
+                  ? () {
+                      setState(() {
+                        documentNumberFocus = false;
+                        phoneFocus = true;
+                      });
+                    }
+                  : null,
               onEditingComplete: () {
                 context.read<PaymentBloc>().validateInput(phoneNumber: true);
               },
               error: _getErrorsPhoneNumber(widget.state.phoneNumber.inputError),
               inputType: InputType.number,
             ),
-            IziText.label(color: IziColors.darkGrey, text: LocaleKeys.payment_inputs_phoneNumber_description.tr(), fontWeight: FontWeight.w500,maxLines: 3),
+            IziText.label(
+                color: IziColors.darkGrey,
+                text: LocaleKeys.payment_inputs_phoneNumber_description.tr(),
+                fontWeight: FontWeight.w500,
+                maxLines: 3),
           ],
         ),
         const SizedBox(
@@ -400,37 +425,51 @@ class _PaymentPageQrState extends State<PaymentPageQr> {
             if (ru.isXs())
               Flexible(
                 child: IziBtn(
-                    buttonText: widget.state.qrCharge!=null?"${LocaleKeys.payment_buttons_regenerateQR.tr()} ${qrLock>0?qrLock:""}":LocaleKeys.payment_buttons_generateQr.tr(),
+                    buttonText: widget.state.qrCharge != null
+                        ? "${LocaleKeys.payment_buttons_regenerateQR.tr()} ${qrLock > 0 ? qrLock : ""}"
+                        : LocaleKeys.payment_buttons_generateQr.tr(),
                     buttonType: ButtonType.secondary,
                     buttonSize:
-                    ru.gtXs() ? ButtonSize.large : ButtonSize.medium,
-                    loading: widget.state.status == PaymentStatus.waitingInvoice,
-                    buttonOnPressed: qrLock>0 || widget.state.qrLoading?null:() async{
-                      var res=await context.read<PaymentBloc>().generateQR(context.read<AuthBloc>().state);
-                      if(res){
-                        _lockQr();
-                        _initTimeRemaining();
-                      }
-                    }),
+                        ru.gtXs() ? ButtonSize.large : ButtonSize.medium,
+                    loading:
+                        widget.state.status == PaymentStatus.waitingInvoice,
+                    buttonOnPressed: qrLock > 0 || widget.state.qrLoading
+                        ? null
+                        : () async {
+                            var res = await context
+                                .read<PaymentBloc>()
+                                .generateQR(context.read<AuthBloc>().state);
+                            if (res) {
+                              _lockQr();
+                              _initTimeRemaining();
+                            }
+                          }),
               ),
             if (ru.gtXs())
               IziBtn(
-                  buttonText: widget.state.qrCharge!=null?"${LocaleKeys.payment_buttons_regenerateQR.tr()} ${qrLock>0?qrLock:""}":LocaleKeys.payment_buttons_generateQr.tr(),
+                  buttonText: widget.state.qrCharge != null
+                      ? "${LocaleKeys.payment_buttons_regenerateQR.tr()} ${qrLock > 0 ? qrLock : ""}"
+                      : LocaleKeys.payment_buttons_generateQr.tr(),
                   buttonType: ButtonType.secondary,
                   buttonSize: ru.gtXs() ? ButtonSize.large : ButtonSize.medium,
                   loading: widget.state.status == PaymentStatus.waitingInvoice,
-                  buttonOnPressed: qrLock>0 || widget.state.qrLoading?null:() async{
-                    var res=await context.read<PaymentBloc>().generateQR(context.read<AuthBloc>().state);
-                    if(res){
-                      _lockQr();
-                      _initTimeRemaining();
-                    }
-                  }),
+                  buttonOnPressed: qrLock > 0 || widget.state.qrLoading
+                      ? null
+                      : () async {
+                          var res = await context
+                              .read<PaymentBloc>()
+                              .generateQR(context.read<AuthBloc>().state);
+                          if (res) {
+                            _lockQr();
+                            _initTimeRemaining();
+                          }
+                        }),
           ],
         ),
       ],
     );
   }
+
   String? _getErrorsDocumentNumber(InputError? inputError) {
     switch (inputError) {
       case InputError.required:
@@ -448,6 +487,7 @@ class _PaymentPageQrState extends State<PaymentPageQr> {
         return null;
     }
   }
+
   String? _getErrorsPhoneNumber(InputError? inputError) {
     switch (inputError) {
       case InputError.required:
@@ -458,5 +498,4 @@ class _PaymentPageQrState extends State<PaymentPageQr> {
         return null;
     }
   }
-
 }
