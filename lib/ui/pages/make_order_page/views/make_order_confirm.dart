@@ -18,6 +18,7 @@ import 'package:izi_kiosco/domain/blocs/page_utils/page_utils_bloc.dart';
 import 'package:izi_kiosco/domain/models/comanda.dart';
 import 'package:izi_kiosco/domain/models/item.dart';
 import 'package:izi_kiosco/ui/general/izi_scroll.dart';
+import 'package:izi_kiosco/ui/pages/make_order_page/widgets/make_order_amount_btn.dart';
 import 'package:izi_kiosco/ui/utils/column_container.dart';
 import 'package:izi_kiosco/ui/utils/money_formatter.dart';
 
@@ -197,16 +198,19 @@ class _MakeOrderConfirmState extends State<MakeOrderConfirm> {
               ),
               Expanded(
                 flex: 8,
-                child: IziBtn(
-                    buttonText: LocaleKeys.makeOrder_buttons_confirmAndPay.tr(),
-                    buttonType: ButtonType.secondary,
-                    buttonSize: ButtonSize.large,
-                    loading: loadingEmit,
-                    buttonOnPressed: _getTotal(state) > 0
+                child: MakeOrderAmountBtn(
+                    onPressed: _getTotal(state) > 0
                         ? () {
-                            _emitOrder(context);
-                          }
-                        : null),
+                      _emitOrder(context);
+                    }
+                        : null,
+                    text: LocaleKeys.makeOrder_buttons_confirmAndPay.tr(),
+                    amount:
+                    (_getTotal(state) - state.discountAmount)
+                        .moneyFormat(
+                        currency: state
+                            .currentCurrency?.simbolo)
+                )
               )
             ],
           ),

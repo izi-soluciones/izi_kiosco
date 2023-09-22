@@ -1,23 +1,29 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:go_router/go_router.dart';
 import 'package:izi_design_system/atoms/izi_typography.dart';
 import 'package:izi_design_system/molecules/izi_btn.dart';
 import 'package:izi_design_system/molecules/izi_input.dart';
 import 'package:izi_design_system/tokens/colors.dart';
+import 'package:izi_design_system/tokens/izi_icons.dart';
 import 'package:izi_design_system/tokens/types.dart';
 import 'package:izi_kiosco/app/values/app_constants.dart';
+import 'package:izi_kiosco/app/values/env_keys.dart';
 import 'package:izi_kiosco/app/values/locale_keys.g.dart';
+import 'package:izi_kiosco/app/values/routes_keys.dart';
 import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
+import 'package:izi_kiosco/domain/blocs/page_utils/page_utils_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/payment/payment_bloc.dart';
 import 'package:izi_kiosco/domain/models/document_type.dart';
 import 'package:izi_kiosco/domain/utils/input_obj.dart';
 import 'package:izi_kiosco/ui/general/kiosco_numeric_keyboard.dart';
-import 'package:izi_kiosco/ui/pages/payment_page/widgets/payment_header.dart';
 import 'package:izi_kiosco/ui/utils/column_container.dart';
 import 'package:izi_kiosco/ui/utils/responsive_utils.dart';
 import 'package:izi_kiosco/ui/utils/row_container.dart';
@@ -60,11 +66,57 @@ class _PaymentPageQrState extends State<PaymentPageQr> {
         Positioned.fill(
           child: Column(
             children: [
-              PaymentHeader(
+              /*PaymentHeader(
                 currency: widget.state.currentCurrency?.simbolo ??
                     AppConstants.defaultCurrency,
                 popText: ru.gtXs() ? LocaleKeys.payment_titles_qr.tr() : null,
                 amount: (widget.state.order?.monto ?? 0),
+              ),*/
+              SizedBox(
+                height: 140,
+                child: Stack(
+                  children: [
+                    Positioned(
+                      left: 0,
+                      child: InkWell(
+                        onTap: () {
+                          GoRouter.of(context).goNamed(RoutesKeys.home);
+                          context.read<PageUtilsBloc>().closeScreenActive();
+                        },
+                        child: const Padding(
+                          padding: EdgeInsets.all(20),
+                          child: Icon(IziIcons.leftB, color: IziColors.grey, size: 50),
+                        ),
+                      ),
+                    ),
+
+                    Positioned(
+                      right: 0,
+                      left: 0,
+                      bottom: 0,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          context.read<AuthBloc>().state.currentContribuyente?.logo != null
+                              ? SizedBox(
+                              height: 100,
+                              child: CachedNetworkImage(
+                                imageUrl:
+                                "${dotenv.env[EnvKeys.apiUrl]}/contribuyentes/${context.read<AuthBloc>().state.currentContribuyente?.id}/logo",
+                                fit: BoxFit.fitHeight,
+                                placeholder: (context, url) => const Center(
+                                    child: CircularProgressIndicator(
+                                        strokeWidth: 2, color: IziColors.dark)),
+                                errorWidget: (context, url, error) {
+                                  return const SizedBox.shrink();
+                                },
+                              ))
+                              : const SizedBox.shrink(),
+                        ],
+                      ),
+                    )
+                  ],
+                ),
               ),
               Expanded(
                 child: SingleChildScrollView(
@@ -77,6 +129,22 @@ class _PaymentPageQrState extends State<PaymentPageQr> {
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
+                          Row(
+                            children: [
+                              IziText.titleMedium(color: IziColors.dark, text: LocaleKeys.payment_subtitles_payAndInvoiced.tr()),
+                            ],
+                          ),
+                          const SizedBox(
+                            height: 8,
+                          ),
+                          Row(
+                            children: [
+                              IziText.body(color: IziColors.dark, text: "${LocaleKeys.payment_body_beforePayment.tr()}:", fontWeight: FontWeight.w500),
+                            ],
+                          ),
+                          const SizedBox(
+                            height: 32,
+                          ),
                           _invoiceForm(context, ru),
                           const SizedBox(
                             height: 50,
@@ -343,7 +411,7 @@ class _PaymentPageQrState extends State<PaymentPageQr> {
                 error: _getErrorsDocumentNumber(
                     widget.state.documentNumber.inputError),
                 inputHintText:
-                    LocaleKeys.payment_inputs_documentNumber_placeholder.tr(),
+                    LocaleKeys.payment_inputs_documentNumber_placeholder.tr(args: [(widget.state.documentType?.descripcion??"").split("-").firstOrNull.toString()]),
                 inputType: InputType.number,
               ),
             ),

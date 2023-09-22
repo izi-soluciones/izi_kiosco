@@ -140,9 +140,9 @@ class _MakeOrderSelectState extends State<MakeOrderSelect> {
                                   ? 2
                                   : 1,
               childAspectRatio: layout.maxWidth > 700
-                  ? 1
+                  ?0.7
                   : layout.maxWidth > 450
-                      ? 1
+                      ? 0.7
                       : 1.5,
               crossAxisSpacing: 12,
               mainAxisSpacing: 18),

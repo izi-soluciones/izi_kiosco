@@ -198,6 +198,7 @@ abstract class  LocaleKeys {
   static const payment_subtitles_howDoPayment = 'payment.subtitles.howDoPayment';
   static const payment_subtitles_scanQrToPay = 'payment.subtitles.scanQrToPay';
   static const payment_subtitles_areYOurSureCancel = 'payment.subtitles.areYOurSureCancel';
+  static const payment_subtitles_payAndInvoiced = 'payment.subtitles.payAndInvoiced';
   static const payment_subtitles = 'payment.subtitles';
   static const payment_body_detail = 'payment.body.detail';
   static const payment_body_subtotal = 'payment.body.subtotal';
@@ -214,6 +215,7 @@ abstract class  LocaleKeys {
   static const payment_body_orderCompletedDescription = 'payment.body.orderCompletedDescription';
   static const payment_body_processingOrder = 'payment.body.processingOrder';
   static const payment_body_cantPayWithQR = 'payment.body.cantPayWithQR';
+  static const payment_body_beforePayment = 'payment.body.beforePayment';
   static const payment_body = 'payment.body';
   static const payment_buttons_cash = 'payment.buttons.cash';
   static const payment_buttons_qr = 'payment.buttons.qr';
@@ -293,6 +295,7 @@ abstract class  LocaleKeys {
   static const payment_inputs_invoiceNumber_errors = 'payment.inputs.invoiceNumber.errors';
   static const payment_inputs_invoiceNumber = 'payment.inputs.invoiceNumber';
   static const payment_inputs_phoneNumber_label = 'payment.inputs.phoneNumber.label';
+  static const payment_inputs_phoneNumber_placeholder = 'payment.inputs.phoneNumber.placeholder';
   static const payment_inputs_phoneNumber_description = 'payment.inputs.phoneNumber.description';
   static const payment_inputs_phoneNumber_errors_required = 'payment.inputs.phoneNumber.errors.required';
   static const payment_inputs_phoneNumber_errors_invalid = 'payment.inputs.phoneNumber.errors.invalid';

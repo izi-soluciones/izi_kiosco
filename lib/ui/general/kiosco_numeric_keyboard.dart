@@ -97,7 +97,7 @@ class KioscoNumericKeyboard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(8),
             ),
             child: const Padding(
-                padding: const EdgeInsets.all(16),
+                padding: EdgeInsets.all(16),
                 child: FittedBox(
                   fit: BoxFit.fitWidth,
                   child: Icon(Icons.subdirectory_arrow_left,color: IziColors.white,),

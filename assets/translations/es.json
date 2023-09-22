@@ -251,7 +251,8 @@
       "invoiceData": "Datos de facturación",
       "howDoPayment": "Indica cómo se hará el pago",
       "scanQrToPay": "Escanea el código QR para proceder con el pago",
-      "areYOurSureCancel": "¿Estas seguro que deseas cancelar tu order?"
+      "areYOurSureCancel": "¿Estas seguro que deseas cancelar tu order?",
+      "payAndInvoiced": "Pago y facturación"
     },
     "body": {
       "detail": "Detalle",
@@ -268,7 +269,8 @@
       "orderCompleted": "Orden generada correctamente",
       "orderCompletedDescription": "En unos momentos tu orden estará lista.",
       "processingOrder": "Procesando órden",
-      "cantPayWithQR": "¿No puedes pagar con QR? Acércate a cajas."
+      "cantPayWithQR": "¿No puedes pagar con QR? Acércate a cajas.",
+      "beforePayment": "Antes de proceder al pago necesitamos los siguientes datos"
     },
     "buttons": {
       "cash": "Efectivo",
@@ -343,7 +345,7 @@
       },
       "documentNumber": {
         "label": "Número de documento (opcional)",
-        "placeholder": "Ingresa el número de documento",
+        "placeholder": "Ingresa el {}",
         "errors": {
           "required": "El número es requerido"
         }
@@ -373,6 +375,7 @@
       },
       "phoneNumber": {
         "label": "Numero de teléfono*",
+        "placeholder": "Ingresa tu número de teléfono",
         "description": "Te enviaremos un mensaje por Whatsapp con la confirmación de tu pedido y la factura.",
         "errors": {
           "required": "El numero es requerido",
