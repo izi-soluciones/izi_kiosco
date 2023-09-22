@@ -45,7 +45,7 @@ class MakeOrderBloc extends Cubit<MakeOrderState> {
       }
       list.sort(
         (a, b) {
-          return a.nombre.toLowerCase().compareTo(b.nombre.toLowerCase());
+          return b.nombre.toLowerCase().compareTo(a.nombre.toLowerCase());
         },
       );
       if(itemsFeatured.isNotEmpty){
@@ -163,6 +163,11 @@ class MakeOrderBloc extends Cubit<MakeOrderState> {
       }
     }
     emit(state.copyWith(itemsSelected: categories));
+  }
+
+  resetItems(){
+    List<CategoryOrder> categories = [];
+    emit(state.copyWith(itemsSelected: categories,indexCategory: 0));
   }
 
   reloadItems() {

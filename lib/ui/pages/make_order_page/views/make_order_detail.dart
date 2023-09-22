@@ -1,7 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
 import 'package:izi_design_system/atoms/izi_card.dart';
 import 'package:izi_design_system/atoms/izi_typography.dart';
 import 'package:izi_design_system/molecules/izi_btn.dart';
@@ -10,9 +9,7 @@ import 'package:izi_design_system/tokens/colors.dart';
 import 'package:izi_design_system/tokens/izi_icons.dart';
 import 'package:izi_design_system/tokens/types.dart';
 import 'package:izi_kiosco/app/values/locale_keys.g.dart';
-import 'package:izi_kiosco/app/values/routes_keys.dart';
 import 'package:izi_kiosco/domain/blocs/make_order/make_order_bloc.dart';
-import 'package:izi_kiosco/domain/blocs/page_utils/page_utils_bloc.dart';
 import 'package:izi_kiosco/domain/models/item.dart';
 import 'package:izi_kiosco/ui/general/izi_scroll.dart';
 import 'package:izi_kiosco/ui/pages/make_order_page/widgets/make_order_amount_btn.dart';
@@ -95,8 +92,7 @@ class _MakeOrderDetailState extends State<MakeOrderDetail> {
                     buttonType: ButtonType.outline,
                     buttonSize: ButtonSize.large,
                     buttonOnPressed: () {
-                      GoRouter.of(context).goNamed(RoutesKeys.home);
-                      context.read<PageUtilsBloc>().closeScreenActive();
+                      context.read<MakeOrderBloc>().resetItems();
                     }),
               ),
               const SizedBox(
