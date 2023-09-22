@@ -8,8 +8,8 @@ import 'package:izi_kiosco/app/values/env_keys.dart';
 import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
 
 class MakeOrderHeaderLg extends StatelessWidget {
-  final VoidCallback onPop;
-  const MakeOrderHeaderLg({super.key,required this.onPop});
+  final VoidCallback? onPop;
+  const MakeOrderHeaderLg({super.key,this.onPop});
 
   @override
   Widget build(BuildContext context) {
@@ -17,6 +17,7 @@ class MakeOrderHeaderLg extends StatelessWidget {
       height: 140,
       child: Stack(
         children: [
+          if(onPop!=null)
           Positioned(
             left: 0,
             child: InkWell(

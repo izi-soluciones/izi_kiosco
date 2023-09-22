@@ -252,7 +252,8 @@
       "howDoPayment": "Indica cómo se hará el pago",
       "scanQrToPay": "Escanea el código QR para proceder con el pago",
       "areYOurSureCancel": "¿Estas seguro que deseas cancelar tu order?",
-      "payAndInvoiced": "Pago y facturación"
+      "payAndInvoiced": "Pago y facturación",
+      "successPayment": "¡Pago exitoso!"
     },
     "body": {
       "detail": "Detalle",
@@ -270,7 +271,9 @@
       "orderCompletedDescription": "En unos momentos tu orden estará lista.",
       "processingOrder": "Procesando órden",
       "cantPayWithQR": "¿No puedes pagar con QR? Acércate a cajas.",
-      "beforePayment": "Antes de proceder al pago necesitamos los siguientes datos"
+      "beforePayment": "Antes de proceder al pago necesitamos los siguientes datos",
+      "weNotifyWhatsapp": "Te avisaremos por Whatsapp cuando tu orden esté lista.",
+      "waitingTime": "Tiempo de espera estimado: 10 minutos."
     },
     "buttons": {
       "cash": "Efectivo",
@@ -298,7 +301,8 @@
       "makeOrder": "Generar pedido",
       "generateQr": "Generar QR",
       "cancelOrder": "Cancelar orden",
-      "regenerateQR": "Regenerar QR"
+      "regenerateQR": "Regenerar QR",
+      "makeAnother": "Realizar otra orden"
     },
     "inputs": {
 

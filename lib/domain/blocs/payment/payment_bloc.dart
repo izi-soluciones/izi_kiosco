@@ -101,7 +101,7 @@ class PaymentBloc extends Cubit<PaymentState> {
 
               casaMatriz:(casaMatrizIndex != -1)?(authState.currentContribuyente?.sucursales?[casaMatrizIndex]):null,
             order: defaultOrder,
-            step: 1,
+            step: 2,
             currentCurrency: currentCurrency,
             usaSiat: usaSiat,
             documentTypes: documentTypes,
@@ -334,8 +334,11 @@ class PaymentBloc extends Cubit<PaymentState> {
     _socketRepository.closeQrListening();
     qrStream?.cancel();
     qrStream = null;
+    timerSuccess?.cancel();
     return super.close();
   }
+
+  Timer? timerSuccess;
   Future<bool> generateQR(AuthState authState) async {
     try{
       if(_validateInputs()){
@@ -402,14 +405,16 @@ class PaymentBloc extends Cubit<PaymentState> {
               qrStream?.cancel();
             }
             emit(state.copyWith(step:2,status: PaymentStatus.qrProcessed));
-            await Future.delayed(const Duration(seconds: 5));
-            emit(state.copyWith(status: PaymentStatus.successInvoice));
+            timerSuccess=Timer(const Duration(seconds: 10),() async{
+              emit(state.copyWith(status: PaymentStatus.successInvoice));
+            },);
           }
           else{
             timer=Timer(const Duration(seconds: 60),() async{
               emit(state.copyWith(step:2,status: PaymentStatus.qrProcessed));
-              await Future.delayed(const Duration(seconds: 10));
-              emit(state.copyWith(status: PaymentStatus.successInvoice));
+              timerSuccess=Timer(const Duration(seconds: 10),() async{
+                emit(state.copyWith(status: PaymentStatus.successInvoice));
+              },);
             },);
             emit(state.copyWith(status: PaymentStatus.qrProcessing));
           }

@@ -34,7 +34,7 @@ class HomePage extends StatelessWidget {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    IziText.titleBig(color: IziColors.darkGrey, text: LocaleKeys.home_subtitles_iziSlogan.tr(),fontWeight: FontWeight.w400),
+                    IziText.titleBig(color: IziColors.primary, text: LocaleKeys.home_subtitles_iziSlogan.tr(),fontWeight: FontWeight.w400),
                     Expanded(
                       child: Center(
                         child: SingleChildScrollView(
