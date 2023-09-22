@@ -88,12 +88,21 @@ class PaymentBloc extends Cubit<PaymentState> {
           documentTypes = await _businessRepository.getDocumentTypes();
           documentType = documentTypes.lastOrNull;
         }
+        int indexCurrency = authState.currencies.indexWhere((element) =>
+        element.id ==
+            authState.currentContribuyente?.config["monedaInventario"]);
+        Currency? currentCurrency;
+        if (indexCurrency != -1) {
+          currentCurrency = authState.currencies.elementAtOrNull(indexCurrency);
+        }
+
         emit(state.copyWith(
             status: PaymentStatus.successGet,
 
               casaMatriz:(casaMatrizIndex != -1)?(authState.currentContribuyente?.sucursales?[casaMatrizIndex]):null,
             order: defaultOrder,
             step: 1,
+            currentCurrency: currentCurrency,
             usaSiat: usaSiat,
             documentTypes: documentTypes,
             documentType: documentType,

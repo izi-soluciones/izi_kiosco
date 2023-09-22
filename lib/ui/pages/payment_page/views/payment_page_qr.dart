@@ -25,6 +25,7 @@ import 'package:izi_kiosco/domain/models/document_type.dart';
 import 'package:izi_kiosco/domain/utils/input_obj.dart';
 import 'package:izi_kiosco/ui/general/kiosco_numeric_keyboard.dart';
 import 'package:izi_kiosco/ui/utils/column_container.dart';
+import 'package:izi_kiosco/ui/utils/money_formatter.dart';
 import 'package:izi_kiosco/ui/utils/responsive_utils.dart';
 import 'package:izi_kiosco/ui/utils/row_container.dart';
 
@@ -166,19 +167,23 @@ class _PaymentPageQrState extends State<PaymentPageQr> {
                                         !widget.state.qrLoading
                                     ? _qrWidget()
                                     : widget.state.qrLoading
-                                        ? const SizedBox(
-                                            height: 40,
-                                            width: 40,
-                                            child: CircularProgressIndicator(
-                                              strokeWidth: 3,
+                                        ? const Padding(
+                                          padding: EdgeInsets.only(bottom: 30),
+                                          child: SizedBox(
+                                              height: 40,
+                                              width: 40,
+                                              child: CircularProgressIndicator(
+                                                strokeWidth: 3,
+                                              ),
                                             ),
-                                          )
+                                        )
                                         : const SizedBox.shrink(),
                               )),
                           if (widget.state.qrCharge != null)
                             const SizedBox(
                               height: 10,
                             ),
+
                           if (widget.state.qrCharge != null)
                             Row(
                               mainAxisAlignment: MainAxisAlignment.center,
@@ -193,6 +198,10 @@ class _PaymentPageQrState extends State<PaymentPageQr> {
                                     fontWeight: FontWeight.w400),
                               ],
                             ),
+                          const SizedBox(
+                            height: 8,
+                          ),
+                          IziText.titleMedium(color: IziColors.darkGrey, text: "${ LocaleKeys.payment_body_total.tr()}: ${(widget.state.order?.monto ?? 0).moneyFormat(currency: widget.state.currentCurrency?.simbolo)}",fontWeight: FontWeight.w600),
                           const SizedBox(
                             height: 50,
                           ),
@@ -350,7 +359,7 @@ class _PaymentPageQrState extends State<PaymentPageQr> {
             value: widget.state.documentType?.codigoClasificador,
             inputType: InputType.select,
             inputSize: InputSize.big,
-            readOnly: widget.state.qrCharge != null,
+            readOnly: widget.state.qrCharge != null || widget.state.qrLoading==true,
             onSelected: (value) {
               context.read<PaymentBloc>().changeInputs(documentType: value);
             },
@@ -373,7 +382,7 @@ class _PaymentPageQrState extends State<PaymentPageQr> {
                   value: widget.state.documentType?.codigoClasificador,
                   inputType: InputType.select,
                   inputSize: InputSize.big,
-                  readOnly: widget.state.qrCharge != null,
+                  readOnly: widget.state.qrCharge != null || widget.state.qrLoading==true,
                   onSelected: (value) {
                     context
                         .read<PaymentBloc>()
@@ -398,7 +407,7 @@ class _PaymentPageQrState extends State<PaymentPageQr> {
                       .read<PaymentBloc>()
                       .changeInputs(documentNumber: value);
                 },
-                onClick: widget.state.qrCharge == null
+                onClick: widget.state.qrCharge == null && widget.state.qrLoading==false
                     ? () {
                         setState(() {
                           documentNumberFocus = true;
@@ -421,7 +430,7 @@ class _PaymentPageQrState extends State<PaymentPageQr> {
                 child: IziInput(
                   labelInput: LocaleKeys.payment_inputs_complement_label.tr(),
                   inputHintText: "",
-                  readOnly: widget.state.qrCharge != null,
+                  readOnly: widget.state.qrCharge != null || widget.state.qrLoading==true,
                   onChanged: (value, valueRaw) {
                     context.read<PaymentBloc>().changeInputs(complement: value);
                   },
@@ -437,7 +446,7 @@ class _PaymentPageQrState extends State<PaymentPageQr> {
           inputHintText:
               LocaleKeys.payment_inputs_businessName_placeholder.tr(),
           bigLabel: true,
-          readOnly: widget.state.qrCharge != null,
+          readOnly: widget.state.qrCharge != null || widget.state.qrLoading==true,
           inputSize: InputSize.big,
           onChanged: (value, valueRaw) {
             context.read<PaymentBloc>().changeInputs(businessName: value);
@@ -463,7 +472,7 @@ class _PaymentPageQrState extends State<PaymentPageQr> {
               controller: phoneController,
               readOnly: true,
               inputSize: InputSize.big,
-              onClick: widget.state.qrCharge == null
+              onClick: widget.state.qrCharge == null && widget.state.qrLoading==false
                   ? () {
                       setState(() {
                         documentNumberFocus = false;
