@@ -16,11 +16,11 @@ class Charge extends Equatable {
     String? qrUrl;
     String? qrBase64;
     if(json["qr"] is String){
-      if((json["qr"] as String).startsWith("data:")){
-        qrBase64=(json["qr"] as String).split(",").lastOrNull;
+      if(Uri.parse(json["qr"]).isAbsolute){
+        qrUrl=json["qr"];
       }
       else{
-        qrUrl=json["qr"];
+        qrBase64=(json["qr"] as String).split(",").lastOrNull;
       }
     }
     return Charge(
