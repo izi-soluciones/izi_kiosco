@@ -588,7 +588,7 @@
     },
     "body": {
       "sucursal": "Sucursal",
-      "thisScreenClose": "¿NECESITAS MAS TIEMPO?\nEsta pantalla se cerrara en 10 segundos."
+      "thisScreenClose": "¿NECESITAS MÁS TIEMPO?\nEsta pantalla se cerrará en 10 segundos."
     },
     "buttons": {
       "filters": "Filtros",
