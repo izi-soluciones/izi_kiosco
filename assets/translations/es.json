@@ -273,7 +273,7 @@
       "cantPayWithQR": "¿No puedes pagar con QR? Acércate a cajas.",
       "beforePayment": "Antes de proceder al pago necesitamos los siguientes datos",
       "weNotifyWhatsapp": "Te avisaremos por Whatsapp cuando tu orden esté lista.",
-      "waitingTime": "Tiempo de espera estimado: 10 minutos."
+      "waitingTime": "Tiempo de espera estimado: 5 minutos."
     },
     "buttons": {
       "cash": "Efectivo",
