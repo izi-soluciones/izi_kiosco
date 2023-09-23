@@ -148,7 +148,7 @@ class _PaymentPageQrState extends State<PaymentPageQr> {
                           ),
                           _invoiceForm(context, ru),
                           const SizedBox(
-                            height: 50,
+                            height: 30,
                           ),
                           if (widget.state.qrCharge != null)
                             IziText.titleSmall(
@@ -495,7 +495,7 @@ class _PaymentPageQrState extends State<PaymentPageQr> {
           ],
         ),
         const SizedBox(
-          height: 30,
+          height: 20,
         ),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,

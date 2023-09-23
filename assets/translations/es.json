@@ -201,7 +201,7 @@
       "order": "Ordena",
       "and": "y",
       "pay": "paga",
-      "here": "aqui",
+      "here": "aquí",
       "clickToInit": "Toca la pantalla para iniciar",
       "anIziPlatform": "Una plataforma de"
     }
@@ -596,7 +596,7 @@
       "yesSure": "Si estoy seguro",
       "cancel": "Cancelar",
       "accept": "Aceptar",
-      "pressToContinue": "Presione la pantalla para seguir continuando"
+      "pressToContinue": "Presiona la pantalla para continuar"
     }
   },
 

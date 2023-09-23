@@ -82,7 +82,7 @@ class _MakeOrderSelectState extends State<MakeOrderSelect> {
           padding:
               const EdgeInsets.only(top: 16, right: 32, left: 32, bottom: 63),
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: layout.maxWidth > 1500
+              crossAxisCount: widget.makeOrderState.indexCategory==0?2:layout.maxWidth > 1500
                   ? 6
                   : layout.maxWidth > 1250
                       ? 5
@@ -93,10 +93,10 @@ class _MakeOrderSelectState extends State<MakeOrderSelect> {
                               : layout.maxWidth > 450
                                   ? 2
                                   : 1,
-              childAspectRatio: layout.maxWidth > 700
-                  ? 0.6
+              childAspectRatio: widget.makeOrderState.indexCategory==0?0.9:layout.maxWidth > 700
+                  ? 0.5
                   : layout.maxWidth > 450
-                      ? 0.6
+                      ? 0.5
                       : 1.5,
               crossAxisSpacing: 12,
               mainAxisSpacing: 18),

@@ -97,17 +97,17 @@ class HomePage extends StatelessWidget {
                       children: [
                         const Divider(color: IziColors.grey35,height: 50,thickness: 1,),
                         Row(
-                          crossAxisAlignment: CrossAxisAlignment.end,
+                          crossAxisAlignment: CrossAxisAlignment.center,
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            IziText.title(color: IziColors.darkGrey, text: LocaleKeys.home_body_anIziPlatform.tr(),fontWeight: FontWeight.w400),
+                            IziText.titleMedium(color: IziColors.darkGrey, text: LocaleKeys.home_body_anIziPlatform.tr(),fontWeight: FontWeight.w400),
                             const Padding(
-                              padding: EdgeInsets.only(bottom: 2),
+                              padding: EdgeInsets.only(left: 4,bottom: 8),
                               child: Icon(IziIcons.izi,color: IziColors.primary,size: 40,),
                             ),
-                            const SizedBox(height: 20,),
                           ],
-                        )
+                        ),
+                        const SizedBox(height: 40,),
                       ],
                     )
                   ],
