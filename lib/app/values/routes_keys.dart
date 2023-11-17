@@ -32,4 +32,7 @@ class RoutesKeys{
 
   static const configBusiness="configBusiness";
   static const configBusinessLink="/configBusinessLink";
+
+  static const errorPayments = "errorPayments";
+  static const errorPaymentsLik = "/errorPayments";
 }

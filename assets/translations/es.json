@@ -273,7 +273,11 @@
       "cantPayWithQR": "¿No puedes pagar con QR? Acércate a cajas.",
       "beforePayment": "Antes de proceder al pago necesitamos los siguientes datos",
       "weNotifyWhatsapp": "Te avisaremos por Whatsapp cuando tu orden esté lista.",
-      "waitingTime": "Tiempo de espera estimado: 5 minutos."
+      "waitingTime": "Tiempo de espera estimado: 5 minutos.",
+      "processingCard": "Esperando pago en el lector de tarjetas",
+      "cardSuccess": "Pago relaizado correctamente",
+      "cardError": "No se pudo completrar el pago"
+
     },
     "buttons": {
       "cash": "Efectivo",
@@ -302,7 +306,8 @@
       "generateQr": "Generar QR",
       "cancelOrder": "Cancelar orden",
       "regenerateQR": "Regenerar QR",
-      "makeAnother": "Realizar otra orden"
+      "makeAnother": "Realizar otra orden",
+      "paymentWithCardPOs": "Pagar con tarjeta"
     },
     "inputs": {
 
@@ -421,7 +426,9 @@
       "errorInvoiced": "Esta orden ya está facturada",
       "errorAnnulled": "Esta orden esta anulada",
       "successOrder": "Orden generada correctamente",
-      "errorOrder": "No se pudo generar la orden intenta nuevamente"
+      "errorOrder": "No se pudo generar la orden intenta nuevamente",
+      "errorPayment": "Ocurrio un error al completar la orden",
+      "errorPaymentDescription": "Acercate a una de nuestras cajas para informar el problema"
 
     }
   },
@@ -603,6 +610,10 @@
   "warningCashRegisters": {
     "title": "No se encuentra una caja abierta para poder realizar el pedido",
     "description": "Utiliza la app de iZi administrador para abrir las cajas"
+  },
+  "warningActivity": {
+    "title": "No se tiene una actividad economica para procesar el pedido",
+    "description": "Utiliza la app de iZi administrador para configurarla"
   },
   "warningRooms": {
     "title": "No se encuentra ningun espacio disponible",

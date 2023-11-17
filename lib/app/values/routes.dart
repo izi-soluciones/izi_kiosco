@@ -11,6 +11,7 @@ import 'package:izi_kiosco/domain/blocs/make_order/make_order_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/payment/payment_bloc.dart';
 import 'package:izi_kiosco/domain/models/comanda.dart';
 import 'package:izi_kiosco/ui/general/main_layout/main_layout.dart';
+import 'package:izi_kiosco/ui/pages/error_payment_page/error_payment_page.dart';
 import 'package:izi_kiosco/ui/pages/home_page/home_page.dart';
 import 'package:izi_kiosco/ui/pages/login_page/login_page.dart';
 import 'package:izi_kiosco/ui/pages/make_order_page/make_order_page.dart';
@@ -79,6 +80,17 @@ class Routes {
                         hideDrawer: true,
                         hideBottomNav: true,
                         onPop: null,child: const HomePage()));
+                  },
+                ),
+                GoRoute(
+                  name: RoutesKeys.errorPayments,
+                  path: RoutesKeys.errorPaymentsLik,
+                  pageBuilder: (BuildContext context, GoRouterState state) {
+                    return NoTransitionPage(child: MainLayout(
+                        currentLocation: state.fullPath ?? "",
+                        hideDrawer: true,
+                        hideBottomNav: true,
+                        onPop: null,child: const ErrorPaymentPage()));
                   },
                 ),
                 GoRoute(

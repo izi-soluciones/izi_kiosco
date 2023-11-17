@@ -31,7 +31,7 @@ dependencies:
   flutter:
     sdk: flutter
   izi_design_system:
-    path: "C:/Users/Alvin/Documents/Proyectos/izi-design-system-flutter"
+    path: "/Users/macbookm2pro/Documents/izi/izi-design-system-flutter"
     #git:
     #  url: https://gitlab+deploy-token-1371400:a4wYzpszM7JdhUmfup8T@gitlab.com/noujau/izi-design-system-flutter.git
 
@@ -57,15 +57,11 @@ dependencies:
   universal_html: ^2.2.3
   open_file: ^3.3.2
   socket_io_client: ^1.0.1
-  fastor_app_ui_widget: ^1.0.238
   auto_size_text: ^3.0.0
-  dotted_line: ^3.2.2
   cached_network_image: ^3.2.3
-  multi_split_view: ^2.4.0
   intl: ^0.18.0
   encrypt: 5.0.1
   carousel_slider: ^4.2.1
-  virtual_keyboard_multi_language: ^1.0.3
 
 dev_dependencies:
   flutter_test:

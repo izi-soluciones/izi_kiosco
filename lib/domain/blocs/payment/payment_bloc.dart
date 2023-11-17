@@ -1,13 +1,15 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:developer';
-
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:izi_kiosco/app/values/app_constants.dart';
+import 'package:izi_kiosco/data/local/local_storage_card_errors.dart';
 import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
 import 'package:izi_kiosco/domain/dto/invoice_dto.dart';
 import 'package:izi_kiosco/domain/dto/new_order_dto.dart';
 import 'package:izi_kiosco/domain/dto/qr_dto.dart';
+import 'package:izi_kiosco/domain/models/card_payment.dart';
 import 'package:izi_kiosco/domain/models/cash_register.dart';
 import 'package:izi_kiosco/domain/models/charge.dart';
 import 'package:izi_kiosco/domain/models/comanda.dart';
@@ -96,12 +98,38 @@ class PaymentBloc extends Cubit<PaymentState> {
           currentCurrency = authState.currencies.elementAtOrNull(indexCurrency);
         }
 
+        List<PaymentMethod> paymentMethods=await _businessRepository.getPaymentMethods();
+        String? economicActivity;
+
+        if (authState.currentContribuyente?.config?["aERestaurante"] != null) {
+          if(authState.currentContribuyente?.config?["aERestaurante"] is num){
+            economicActivity =
+                authState.currentContribuyente?.config?["aERestaurante"]?.toString();
+          }
+          else if(authState.currentContribuyente?.config?["aERestaurante"] is String){
+            economicActivity =
+            authState.currentContribuyente?.config?["aERestaurante"];
+          }
+          else if(authState.currentContribuyente?.config?["aERestaurante"] is Map &&
+              authState.currentContribuyente?.config?["aERestaurante"]?["codigoCaeb"] !=null){
+
+            economicActivity =authState.currentContribuyente?.config?["aERestaurante"]?["codigoCaeb"];
+          }
+        }
+
+        if (authState.currentContribuyente?.config?["aERestaurante"] ==
+            null) {
+          return emit(state.copyWith(status: PaymentStatus.errorActivity));
+        }
+
         emit(state.copyWith(
             status: PaymentStatus.successGet,
 
               casaMatriz:(casaMatrizIndex != -1)?(authState.currentContribuyente?.sucursales?[casaMatrizIndex]):null,
             order: defaultOrder,
             step: 1,
+            economicActivity: economicActivity,
+            paymentMethods: paymentMethods,
             currentCurrency: currentCurrency,
             usaSiat: usaSiat,
             documentTypes: documentTypes,
@@ -338,6 +366,44 @@ class PaymentBloc extends Cubit<PaymentState> {
     return super.close();
   }
 
+  Future<void> makeCardPayment(AuthState authState)async{
+    if(_validateInputs()){
+      try{
+        emit(state.copyWith(status: PaymentStatus.cardProcessing));
+        CardPayment cardPayment =await _comandaRepository.callCardPayment(amount: 1);
+        emit(state.copyWith(status: PaymentStatus.paymentProcessing));
+        var success = false;
+        for(int i=0;i<5;i++){
+          if(await emitInvoice(authState: authState,cardDigits: cardPayment.cardNumber)){
+            success = true;
+            break;
+          }
+        }
+        if(!success){
+          await LocalStorageCardErrors.saveCardErrors(jsonEncode(cardPayment.toJson()));
+          emit(state.copyWith(step:3,status: PaymentStatus.cardSuccess));
+          timerSuccess=Timer(const Duration(seconds: 30),() async{
+            emit(state.copyWith(status: PaymentStatus.successInvoice));
+          },);
+        }
+        else{
+          emit(state.copyWith(step:2,status: PaymentStatus.cardSuccess));
+          timerSuccess=Timer(const Duration(seconds: 10),() async{
+            emit(state.copyWith(status: PaymentStatus.successInvoice));
+          },);
+        }
+
+      }
+      catch(e){
+        log(e.toString());
+        emit(state.copyWith(status: PaymentStatus.cardError));
+        emit(state.copyWith(status: PaymentStatus.successGet));
+      }
+    }
+
+  }
+
+
   Timer? timerSuccess;
   Future<bool> generateQR(AuthState authState) async {
     try{
@@ -416,7 +482,7 @@ class PaymentBloc extends Cubit<PaymentState> {
                 emit(state.copyWith(status: PaymentStatus.successInvoice));
               },);
             },);
-            emit(state.copyWith(status: PaymentStatus.qrProcessing));
+            emit(state.copyWith(status: PaymentStatus.paymentProcessing));
           }
           /*
           _socketRepository.closeQrListening();
@@ -508,17 +574,18 @@ class PaymentBloc extends Cubit<PaymentState> {
       return false;
     }
   }
-  emitInvoice({bool prefactura = false, required AuthState authState}) async {
+
+  Future<bool> emitInvoice({bool prefactura = false, required AuthState authState,String? cardDigits}) async {
     try{
 
-      if(_validateInputs()){
-        emit(state.copyWith(status: prefactura?PaymentStatus.waitingPreInvoice:PaymentStatus.waitingInvoice));
+
+      emit(state.copyWith(status: prefactura?PaymentStatus.waitingPreInvoice:PaymentStatus.waitingInvoice));
 
         PaymentMethod? paymentMethod;
 
         if (state.paymentMethods.isNotEmpty) {
               paymentMethod = state.paymentMethods.firstWhere(
-                      (element) => element.id == AppConstants.idPaymentMethodQR,
+                      (element) => element.id == AppConstants.idPaymentMethodCard,
                   orElse: () => state.paymentMethods.first);
         }
 
@@ -542,8 +609,18 @@ class PaymentBloc extends Cubit<PaymentState> {
           invoice.codigoMetodoPago = paymentMethod?.codigoSiat;
           invoice.customFactura?["siat"]={"actividadEconomica":state.economicActivity};
         }
+        if (state.usaSiat
+            && (paymentMethod?.id== AppConstants.idPaymentMethodCard|| paymentMethod?.id==AppConstants.idPaymentMethodOthers)) {
+          if (cardDigits!=null && cardDigits.length>=8) {
+            invoice.customFactura?["numeroTarjeta"] = '${cardDigits.substring(0,4)}00000000${cardDigits.substring(cardDigits.length-4,cardDigits.length)}';
+          }
+          else {
+            invoice.customFactura?["numeroTarjeta"] =  "1234000000001234";
+          }
+        }
 
         invoice.customFactura?["telefonoComprador"]=state.phoneNumber.value;
+        invoice.customFactura?["codigoExcepcion"] = 1;
 
 
         if(state.documentType!=null){
@@ -553,17 +630,12 @@ class PaymentBloc extends Cubit<PaymentState> {
           invoice.customFactura?["codigoExcepcion"]=1;
         }
 
-        await _comandaRepository.emit(invoice: invoice, orderId: state.order?.id ?? 0);
+        await _comandaRepository.invoicePreOrder(invoice: invoice, orderId: state.order?.id ?? 0);
         return true;
-      }
-      else{
-        return false;
-      }
     }
     catch(error){
-      emit(state.copyWith(
-          status: PaymentStatus.errorGet, errorDescription: error.toString()));
-      emit(state.copyWith(status: PaymentStatus.waitingGet));
+      log(error.toString());
+      return false;
     }
 
   }

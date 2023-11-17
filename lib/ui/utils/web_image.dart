@@ -1,7 +1,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:universal_html/html.dart';
-import 'package:fastor_app_ui_widget/fastor_app_ui_widget.dart'  if (dart.library.html)  'dart:ui' as ui;
+import 'package:izi_kiosco/ui/utils/fake_ui/platform_view_registry.dart';
 
 class WebImage extends StatelessWidget {
   final String imageUrl;
@@ -10,8 +10,7 @@ class WebImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // ignore:undefined_prefixed_name
-    ui.platformViewRegistry.registerViewFactory(
+    platformViewRegistry.registerViewFactory(
       imageUrl,
           (int _) => ImageElement()..src = imageUrl,
     );
@@ -19,4 +18,5 @@ class WebImage extends StatelessWidget {
       viewType: imageUrl,
     );
   }
+
 }

@@ -13,8 +13,12 @@ enum PaymentStatus {
   errorInvoiced,
   errorAnnulled,
   errorCashRegisters,
-  qrProcessing,
-  qrProcessed
+  paymentProcessing,
+  qrProcessed,
+  cardProcessing,
+  cardError,
+  cardSuccess,
+  errorActivity
 }
 
 enum PaymentType { cash, card, qr, bankTransfer, gitCard, others }

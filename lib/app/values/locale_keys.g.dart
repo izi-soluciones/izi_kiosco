@@ -219,6 +219,9 @@ abstract class  LocaleKeys {
   static const payment_body_beforePayment = 'payment.body.beforePayment';
   static const payment_body_weNotifyWhatsapp = 'payment.body.weNotifyWhatsapp';
   static const payment_body_waitingTime = 'payment.body.waitingTime';
+  static const payment_body_processingCard = 'payment.body.processingCard';
+  static const payment_body_cardSuccess = 'payment.body.cardSuccess';
+  static const payment_body_cardError = 'payment.body.cardError';
   static const payment_body = 'payment.body';
   static const payment_buttons_cash = 'payment.buttons.cash';
   static const payment_buttons_qr = 'payment.buttons.qr';
@@ -247,6 +250,7 @@ abstract class  LocaleKeys {
   static const payment_buttons_cancelOrder = 'payment.buttons.cancelOrder';
   static const payment_buttons_regenerateQR = 'payment.buttons.regenerateQR';
   static const payment_buttons_makeAnother = 'payment.buttons.makeAnother';
+  static const payment_buttons_paymentWithCardPOs = 'payment.buttons.paymentWithCardPOs';
   static const payment_buttons = 'payment.buttons';
   static const payment_inputs_percentage_label = 'payment.inputs.percentage.label';
   static const payment_inputs_percentage_placeholder = 'payment.inputs.percentage.placeholder';
@@ -333,6 +337,8 @@ abstract class  LocaleKeys {
   static const payment_messages_errorAnnulled = 'payment.messages.errorAnnulled';
   static const payment_messages_successOrder = 'payment.messages.successOrder';
   static const payment_messages_errorOrder = 'payment.messages.errorOrder';
+  static const payment_messages_errorPayment = 'payment.messages.errorPayment';
+  static const payment_messages_errorPaymentDescription = 'payment.messages.errorPaymentDescription';
   static const payment_messages = 'payment.messages';
   static const payment = 'payment';
   static const tapOnPhone_title = 'tapOnPhone.title';
@@ -478,6 +484,9 @@ abstract class  LocaleKeys {
   static const warningCashRegisters_title = 'warningCashRegisters.title';
   static const warningCashRegisters_description = 'warningCashRegisters.description';
   static const warningCashRegisters = 'warningCashRegisters';
+  static const warningActivity_title = 'warningActivity.title';
+  static const warningActivity_description = 'warningActivity.description';
+  static const warningActivity = 'warningActivity';
   static const warningRooms_title = 'warningRooms.title';
   static const warningRooms_description = 'warningRooms.description';
   static const warningRooms = 'warningRooms';

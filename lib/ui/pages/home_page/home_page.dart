@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -14,9 +15,24 @@ import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/page_utils/page_utils_bloc.dart';
 import 'package:izi_kiosco/ui/general/custom_icons/kiosk_hand_icon.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  Timer? timer;
+  bool errorPressed=false;
+  _startTimer(){
+    timer?.cancel();
+    timer = Timer(const Duration(seconds: 5), () {
+      setState(() {
+        errorPressed=true;
+      });
+    });
+  }
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<AuthBloc,AuthState>(
@@ -34,7 +50,18 @@ class HomePage extends StatelessWidget {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    IziText.titleBig(color: IziColors.primary, text: LocaleKeys.home_subtitles_iziSlogan.tr(),fontWeight: FontWeight.w400),
+                    GestureDetector(
+                        onTapDown: (details){
+                          _startTimer();
+                        },
+                        onTapUp: (details){
+                          timer?.cancel();
+                          if(errorPressed){
+                            context.read<PageUtilsBloc>().initScreenActive();
+                            GoRouter.of(context).pushNamed(RoutesKeys.errorPayments);
+                          }
+                        },
+                        child: IziText.titleBig(color: IziColors.primary, text: LocaleKeys.home_subtitles_iziSlogan.tr(),fontWeight: FontWeight.w400)),
                     Expanded(
                       child: Center(
                         child: SingleChildScrollView(
@@ -120,10 +147,7 @@ class HomePage extends StatelessWidget {
     );
   }
 
-
   Widget _textBig(String text,{FontWeight? fontWeight}){
     return Text(text,textAlign: TextAlign.center,style: TextStyle(height: 0.95,fontWeight: fontWeight ?? FontWeight.w800,color: IziColors.primary,fontSize: 128),);
   }
-
-
 }

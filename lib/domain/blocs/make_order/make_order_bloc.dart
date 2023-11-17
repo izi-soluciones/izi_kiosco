@@ -250,7 +250,7 @@ class MakeOrderBloc extends Cubit<MakeOrderState> {
         emit(state.copyWith(status: MakeOrderStatus.successGet));
       }
       else{
-        comanda=await _comandaRepository.emitOrder(newOrder: newOrderDto);
+        comanda=await _comandaRepository.emitOrderPre(newOrder: newOrderDto);
         emit(state.copyWith(status: MakeOrderStatus.successEmit));
         emit(state.copyWith(status: MakeOrderStatus.successGet));
       }

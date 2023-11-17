@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:dio/dio.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:izi_kiosco/app/values/app_constants.dart';
@@ -7,6 +9,7 @@ import 'package:izi_kiosco/domain/dto/filters_comanda.dart';
 import 'package:izi_kiosco/domain/dto/invoice_dto.dart';
 import 'package:izi_kiosco/domain/dto/new_order_dto.dart';
 import 'package:izi_kiosco/domain/dto/qr_dto.dart';
+import 'package:izi_kiosco/domain/models/card_payment.dart';
 import 'package:izi_kiosco/domain/models/category_order.dart';
 import 'package:izi_kiosco/domain/models/charge.dart';
 import 'package:izi_kiosco/domain/models/comanda.dart';
@@ -85,6 +88,29 @@ class ComandaRepositoryHttp extends ComandaRepository {
       }
     }
     throw response.data;
+  }
+  @override
+  Future<void> invoicePreOrder({required InvoiceDto invoice, required int orderId}) async {
+    try {
+      String path = "/comandas/pre-comanda/$orderId/facturar";
+      var response = await _dioClient.post(
+          uri: path,
+          body: invoice.toJson(),
+          options: Options(responseType: ResponseType.json));
+      if (response.statusCode != 200) {
+        if (response.data?["status"] ?? false) {
+          throw response.data?["data"];
+        }
+        throw response.data;
+      }
+    } on DioException catch (e) {
+      if (e.response?.data is String) {
+        throw e.response?.data;
+      }
+      throw e.error ?? "Network Error";
+    } catch (error) {
+      throw error.toString();
+    }
   }
 
   @override
@@ -370,7 +396,28 @@ class ComandaRepositoryHttp extends ComandaRepository {
       throw error.toString();
     }
   }
-
+  @override
+  Future<Comanda> emitOrderPre({required NewOrderDto newOrder}) async {
+    try {
+      String path = "/comandas/pre-comanda/emitir";
+      var response = await _dioClient.post(
+          uri: path,
+          options: Options(responseType: ResponseType.json),
+          body: newOrder.toJson());
+      if (response.statusCode == 200) {
+        return Comanda.fromJson(response.data);
+      } else {
+        throw response.data;
+      }
+    } on DioException catch (e) {
+      if (e.response?.data is String) {
+        throw e.response?.data;
+      }
+      throw e.error ?? "Network Error";
+    } catch (error) {
+      throw error.toString();
+    }
+  }
   @override
   Future<Comanda> editOrder({required NewOrderDto newOrder}) async {
     try {
@@ -395,6 +442,41 @@ class ComandaRepositoryHttp extends ComandaRepository {
       }
       throw e.error ?? "Network Error";
     } catch (error) {
+      throw error.toString();
+    }
+  }
+
+  @override
+  Future<CardPayment> callCardPayment({required int amount}) async{
+    try {
+      String path = "/sale";
+      var response = await _dioClient.get(
+          uri: path,
+          baseUrl: dotenv.env[AppConstants.posUrlEnv],
+          queryParameters: {
+            "monto": amount.toString(),
+            "cod_moneda": "068"
+          },
+          options: Options(responseType: ResponseType.json,receiveTimeout: const Duration(seconds: 60),sendTimeout: const Duration(seconds: 60)));
+    if (response.statusCode == 200) {
+        if(response.data is String){
+          var res=jsonDecode(response.data);
+          if(res["estado"]=="OK"){
+            return CardPayment.fromJson(res);
+          }
+          throw response.data;
+        }
+        throw response.data;
+      } else {
+        throw response.data;
+      }
+    } on DioException catch (e) {
+      if (e.response?.data is String) {
+        throw e.response?.data;
+      }
+      throw e.error ?? "Network Error";
+    } catch (error) {
+
       throw error.toString();
     }
   }

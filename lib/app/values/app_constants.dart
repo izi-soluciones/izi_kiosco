@@ -7,6 +7,7 @@ class AppConstants{
   static String defaultCurrency="Bs";
   static int defaultCurrencyId=150;
   static String restaurantEnv="restaurante";
+  static String posUrlEnv="POS_URL";
 
   static const idPaymentMethodCash=1;
   static const idPaymentMethodCard=2;

@@ -544,6 +544,37 @@ class _PaymentPageQrState extends State<PaymentPageQr> {
                         }),
           ],
         ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (ru.isXs())
+              Flexible(
+                child: IziBtn(
+                    buttonText: LocaleKeys.payment_buttons_paymentWithCardPOs.tr(),
+                    buttonType: ButtonType.primary,
+                    buttonSize:
+                    ru.gtXs() ? ButtonSize.large : ButtonSize.medium,
+                    buttonOnPressed: () async {
+                      context.read<PageUtilsBloc>().closeScreenActive();
+                      await context
+                          .read<PaymentBloc>()
+                          .makeCardPayment(context.read<AuthBloc>().state);
+                    }),
+              ),
+            if (ru.gtXs())
+              IziBtn(
+                  buttonText: LocaleKeys.payment_buttons_paymentWithCardPOs.tr(),
+                  buttonType: ButtonType.primary,
+                  buttonSize:
+                  ru.gtXs() ? ButtonSize.large : ButtonSize.medium,
+                  buttonOnPressed: () async {
+                    context.read<PageUtilsBloc>().closeScreenActive();
+                    await context
+                        .read<PaymentBloc>()
+                        .makeCardPayment(context.read<AuthBloc>().state);
+                  }),
+          ],
+        ),
       ],
     );
   }
