@@ -1,6 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:go_router/go_router.dart';
 import 'package:izi_design_system/tokens/izi_icons.dart';
 import 'package:izi_kiosco/app/values/locale_keys.g.dart';
@@ -77,29 +78,23 @@ class _MakeOrderSelectState extends State<MakeOrderSelect> {
     return LayoutBuilder(builder: (context, layout) {
       return IziScroll(
         scrollController: scrollControllerLg,
-        child: GridView.builder(
+        child: AlignedGridView.count(
+          crossAxisCount: ((layout.maxWidth > 1500
+              ? 6
+              : layout.maxWidth > 1250
+              ? 5
+              : layout.maxWidth > 950
+              ? 4
+              : layout.maxWidth > 700
+              ? 4
+              : layout.maxWidth > 450
+              ? 2
+              : 1)/(widget.makeOrderState.indexCategory==0?2:1)).ceil(),
+          mainAxisSpacing: 4,
+          crossAxisSpacing: 4,
           controller: scrollControllerLg,
           padding:
               const EdgeInsets.only(top: 16, right: 32, left: 32, bottom: 63),
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: widget.makeOrderState.indexCategory==0?2:layout.maxWidth > 1500
-                  ? 6
-                  : layout.maxWidth > 1250
-                      ? 5
-                      : layout.maxWidth > 950
-                          ? 4
-                          : layout.maxWidth > 700
-                              ? 4
-                              : layout.maxWidth > 450
-                                  ? 2
-                                  : 1,
-              childAspectRatio: widget.makeOrderState.indexCategory==0?0.9:layout.maxWidth > 700
-                  ? 0.5
-                  : layout.maxWidth > 450
-                      ? 0.5
-                      : 1.5,
-              crossAxisSpacing: 12,
-              mainAxisSpacing: 18),
           itemCount: items.length,
           itemBuilder: (BuildContext context, int index) {
             return MakeOrderItemLg(

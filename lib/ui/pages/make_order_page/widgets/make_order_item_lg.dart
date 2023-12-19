@@ -29,9 +29,11 @@ class MakeOrderItemLg extends StatelessWidget {
       child: InkWell(
         borderRadius: BorderRadius.circular(8),
         child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
+              mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Expanded(
+                AspectRatio(
+                  aspectRatio: 1,
                   child: Ink(
                     color: IziColors.grey25,
                     child:
@@ -60,29 +62,26 @@ class MakeOrderItemLg extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(vertical: 16,horizontal: 16),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       SizedBox(
-                         height: 90,
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             IziText.titleSmall(height: 1.1,maxLines: 2,color: IziColors.dark, text: item.nombre,textAlign: TextAlign.start),
                             const SizedBox(height: 4,),
-                            IziText.label(maxLines: 2,color: IziColors.dark, text: item.descripcion??"",textAlign: TextAlign.start,fontWeight: FontWeight.w400),
+                            IziText.label(maxLines: 5,color: IziColors.darkGrey85, text: item.descripcion??"",textAlign: TextAlign.start,fontWeight: FontWeight.w400),
 
                           ],
                         ),
                       ),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+
+                      IziText.titleSmall(color: IziColors.darkGrey, text: item.precioUnitario.moneyFormat(currency: state.currentCurrency?.simbolo), fontWeight: FontWeight.w400,textAlign: TextAlign.start),
+                      const SizedBox(height: 10,),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
                         children: [
-                          IziText.body(color: IziColors.grey, text: item.precioUnitario.moneyFormat(currency: state.currentCurrency?.simbolo), fontWeight: FontWeight.w400,textAlign: TextAlign.start),
-                          const SizedBox(height: 10,),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            children: [
-                                /*ConstrainedBox(
+                          /*ConstrainedBox(
                                   constraints: const BoxConstraints(
                                       maxWidth: 100
                                   ),
@@ -112,16 +111,14 @@ class MakeOrderItemLg extends StatelessWidget {
                                     child: Icon(IziIcons.close,size: 20,color: IziColors.darkGrey,),
                                   ),
                                 ),*/
-                                IziBtnIcon(
-                                    buttonIcon: IziIcons.plusB,
-                                    buttonType: ButtonType.secondary,
-                                    buttonSize: ButtonSize.medium,
-                                    buttonOnPressed: onPressed
-                                ),
-                            ],
+                          IziBtnIcon(
+                              buttonIcon: IziIcons.plusB,
+                              buttonType: ButtonType.secondary,
+                              buttonSize: ButtonSize.medium,
+                              buttonOnPressed: onPressed
                           ),
                         ],
-                      )
+                      ),
                     ],
                   ),
                 )

@@ -544,6 +544,7 @@ class _PaymentPageQrState extends State<PaymentPageQr> {
                         }),
           ],
         ),
+        if(!widget.state.qrLoading)
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [

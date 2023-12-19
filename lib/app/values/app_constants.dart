@@ -1,6 +1,6 @@
 class AppConstants{
   static num paginationSize = 15;
-  static int timerTimeSeconds=30;
+  static int timerTimeSeconds=3000;
   static int timerTimeSecondsInvoiced=60;
   static int regenerateQrTime=30;
   static int remainingQrTime=30;

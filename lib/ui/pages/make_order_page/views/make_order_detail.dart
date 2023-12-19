@@ -158,6 +158,7 @@ class _MakeOrderDetailState extends State<MakeOrderDetail> {
                         inputHintText: "0",
                         inputType: InputType.incremental,
                         minValue: 1,
+                        readOnly: true,
                         maxValue: 999999999,
                         inputSize: InputSize.extraSmall,
                         value: item.cantidad.toString(),

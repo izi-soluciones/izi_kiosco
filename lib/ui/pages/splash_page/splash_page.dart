@@ -48,8 +48,8 @@ class _SplashPageState extends State<SplashPage> {
     for(int i=0;i<(size.width>700?20:15);i++){
       items.add(
           Positioned(
-              left: random.nextInt(size.width.toInt()>2000?2000:size.width.toInt())*1.0,
-              bottom: random.nextInt(size.height.toInt()>2000?2000:size.height.toInt())*1.0,
+              left: size.width.toInt()>0?random.nextInt(size.width.toInt()>2000?2000:size.width.toInt())*1.0:0,
+              bottom: size.height.toInt()>0?random.nextInt(size.height.toInt()>2000?2000:size.height.toInt())*1.0:0,
               child: Icon(IziIcons.plusB,color: [IziColors.redLighten,IziColors.redLighten50,IziColors.secondaryLighten,IziColors.secondaryLighten60][random.nextInt(4)],)
           )
       );
