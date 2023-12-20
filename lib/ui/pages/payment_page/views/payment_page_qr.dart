@@ -161,7 +161,7 @@ class _PaymentPageQrState extends State<PaymentPageQr> {
                               height: 16,
                             ),
                           ConstrainedBox(
-                              constraints: const BoxConstraints(maxWidth: 400),
+                              constraints: BoxConstraints(maxWidth: (ru.width/2)>400?400:(ru.width/2)),
                               child: Center(
                                 child: widget.state.qrCharge != null &&
                                         !widget.state.qrLoading
