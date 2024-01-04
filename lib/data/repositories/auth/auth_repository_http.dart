@@ -1,6 +1,8 @@
 import 'package:dio/dio.dart';
 import 'package:izi_kiosco/data/core/dio_client.dart';
+import 'package:izi_kiosco/domain/dto/add_kiosk_dto.dart';
 import 'package:izi_kiosco/domain/models/contribuyente.dart';
+import 'package:izi_kiosco/domain/models/device.dart';
 import 'package:izi_kiosco/domain/models/login/login_request.dart';
 import 'package:izi_kiosco/domain/models/login/login_response.dart';
 import 'package:izi_kiosco/domain/models/user.dart';
@@ -70,6 +72,86 @@ class AuthRepositoryHttp extends AuthRepository{
       throw response.data;
     }
 
+  }
+
+  @override
+  Future<List<Device>> getDevicesByContribuyente(int idContribuyente) async {
+    try{
+
+      String path="/dispositivos";
+      var response=await _dioClient.get(
+          uri: path,
+          queryParameters: {
+            "contribuyente":idContribuyente
+          },
+          options: Options(responseType: ResponseType.json)
+      );
+      if(response.statusCode==200)
+      {
+        return List.from(response.data).map((e) => Device.fromJson(e)).toList();
+      }
+      else{
+        throw response.data;
+      }
+    }
+    catch(e){
+      throw(e.toString());
+    }
+  }
+
+  @override
+  Future<void> disableDevice(int idDevice) async {
+    try{
+      String path="/dispositivos/$idDevice/desactivar-uso";
+      var response=await _dioClient.post(
+          uri: path,
+          options: Options(responseType: ResponseType.json)
+      );
+      if(response.statusCode!=200)
+      {
+        throw response.data;
+      }
+    }
+    catch(e){
+      throw(e.toString());
+    }
+  }
+
+  @override
+  Future<void> enableDevice(int idDevice)async {
+    try{
+      String path="/dispositivos/$idDevice/activar-uso";
+      var response=await _dioClient.post(
+          uri: path,
+          options: Options(responseType: ResponseType.json)
+      );
+      if(response.statusCode!=200)
+      {
+        throw response.data;
+      }
+    }
+    catch(e){
+      throw(e.toString());
+    }
+  }
+
+  @override
+  Future<void> addDevice(AddKioskDto addKioskDto) async{
+    try{
+      String path="/dispositivos";
+      var response=await _dioClient.post(
+          uri: path,
+          body: addKioskDto.toJson(),
+          options: Options(responseType: ResponseType.json)
+      );
+      if(response.statusCode!=200)
+      {
+        throw response.data;
+      }
+    }
+    catch(e){
+      throw(e.toString());
+    }
   }
 
 

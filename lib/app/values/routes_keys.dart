@@ -8,6 +8,12 @@ class RoutesKeys{
   static const login="login";
   static const loginLink="/login";
 
+  static const kioskList="kioskList";
+  static const kioskListLink="/kioskList";
+
+  static const kioskNew="kioskNew";
+  static const kioskNewLink="/kioskNew";
+
   static const home="home";
   static const homeLink="/home";
 
@@ -31,7 +37,7 @@ class RoutesKeys{
   static const makeOrderLink="/makeOrder";
 
   static const configBusiness="configBusiness";
-  static const configBusinessLink="/configBusinessLink";
+  static const configBusinessLink="/configBusiness";
 
   static const errorPayments = "errorPayments";
   static const errorPaymentsLik = "/errorPayments";

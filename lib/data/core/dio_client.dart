@@ -58,7 +58,7 @@ class DioClient {
   }
   Future<Response> post({
     required String uri,
-    required Map<String, dynamic> body,
+    Map<String, dynamic>? body,
     Map<String, dynamic>? queryParameters,
     Options? options,
   }) async {

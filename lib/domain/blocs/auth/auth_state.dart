@@ -9,8 +9,10 @@ class AuthState extends Equatable{
   final List<Contribuyente>? contribuyentes;
   final Contribuyente? currentContribuyente;
   final Sucursal? currentSucursal;
+  final Device? currentDevice;
   final Pos? currentPos;
   final List<Currency> currencies;
+  final List<Device> devices;
 
   final bool loadingContribuyente;
 
@@ -26,14 +28,17 @@ class AuthState extends Equatable{
     this.invoiceSubscription,
     this.currentSucursal,
     this.currentPos,
-    required this.terminalInit
+    required this.terminalInit,
+    this.currentDevice,
+    required this.devices
   });
   factory AuthState.init()=>
       const AuthState(
           status: AuthStatus.init,
         loadingContribuyente: false,
         terminalInit: false,
-        currencies: []
+        currencies: [],
+        devices: []
       );
 
   AuthState copyWith({
@@ -46,7 +51,9 @@ class AuthState extends Equatable{
     Pos? currentPos,
     bool? loadingContribuyente,
     bool? terminalInit,
-    List<Currency>? currencies
+    List<Currency>? currencies,
+    List<Device>? devices,
+    Device? currentDevice
   }){
     return AuthState(
         currentContribuyente: currentContribuyente??this.currentContribuyente,
@@ -58,7 +65,9 @@ class AuthState extends Equatable{
       currentPos: currentPos ?? this.currentPos,
       loadingContribuyente: loadingContribuyente?? this.loadingContribuyente,
       terminalInit: terminalInit ?? this.terminalInit,
-      currencies: currencies ?? this.currencies
+      currencies: currencies ?? this.currencies,
+      devices: devices ?? this.devices,
+      currentDevice: currentDevice ?? this.currentDevice
     );
   }
   AuthState resetState(){
@@ -72,10 +81,12 @@ class AuthState extends Equatable{
       invoiceSubscription: null,
       loadingContribuyente: false,
       terminalInit: false,
-      currencies: []
+      currencies: [],
+      devices: [],
+      currentDevice: null
     );
   }
   @override
-  List<Object?> get props => [terminalInit,currentContribuyente,status,currentUser,contribuyentes,currentSucursal,invoiceSubscription,currentPos,loadingContribuyente,currencies];
+  List<Object?> get props => [currentDevice,devices,terminalInit,currentContribuyente,status,currentUser,contribuyentes,currentSucursal,invoiceSubscription,currentPos,loadingContribuyente,currencies];
 
 }

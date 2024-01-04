@@ -72,15 +72,16 @@ class PaymentBloc extends Cubit<PaymentState> {
           emit(state.copyWith(status: PaymentStatus.waitingGet));
           return;
         }
-        int indexCashRegister = cashRegisters.indexWhere((element) =>
-            element.userOpen == authState.currentUser?.id &&
-            element.userOpen != null);
+        int indexCashRegister = cashRegisters.indexWhere((element) => element.id == authState.currentDevice?.caja);
         CashRegister? currentCashRegister;
         if (indexCashRegister != -1) {
           currentCashRegister =
               cashRegisters.elementAtOrNull(indexCashRegister);
         } else {
-          currentCashRegister = cashRegisters.firstOrNull;
+
+          emit(state.copyWith(status: PaymentStatus.errorCashRegisters));
+          emit(state.copyWith(status: PaymentStatus.waitingGet));
+          return;
         }
 
         List<DocumentType>? documentTypes;

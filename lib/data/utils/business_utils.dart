@@ -1,6 +1,19 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
 class BusinessUtils{
+  static Future<void> saveDeviceId(int id)async{
+    SharedPreferences prefs=await SharedPreferences.getInstance();
+    await prefs.setInt("deviceId", id);
+  }
+  static Future<int?> getDeviceId()async{
+    SharedPreferences prefs=await SharedPreferences.getInstance();
+    int? sucursal=prefs.getInt("deviceId");
+    return sucursal;
+  }
+  static Future<void> deleteDeviceId()async{
+    SharedPreferences prefs=await SharedPreferences.getInstance();
+    await prefs.remove("deviceId");
+  }
   static Future<void> saveSucursalId(int id)async{
     SharedPreferences prefs=await SharedPreferences.getInstance();
 

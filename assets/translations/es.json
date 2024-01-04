@@ -15,12 +15,51 @@
       }
     },
     "subtitles": {
-      "select": "Definir sucursal"
+      "select": "Seleccionar contribuyente"
     },
     "messages": {
       "waitingLogin": "Iniciando Sesión",
       "successLogin": "Sesión iniciada",
       "errorLogin": "Usuario o contraseña incorrectos"
+    }
+  },
+  "kioskList": {
+    "title": "Seleccionar Kiosko",
+    "body": {
+      "branchOffice": "Sucursal"
+    },
+    "button": {
+      "add": "Agregar kiosko"
+    }
+  },
+  "kioskNew": {
+    "title": "Nuevo Kiosko",
+    "inputs": {
+      "branchOffice": {
+        "label": "Sucursal",
+        "placeholder": "Selecciona la sucursal",
+        "error": "Selecciona una sucursal"
+      },
+      "name": {
+        "label": "Nombre",
+        "placeholder": "Ingrese el nombre",
+        "error": "Nombre no válido"
+      },
+      "cashRegister": {
+        "label": "Caja",
+        "placeholder": "Selecciona la Caja",
+        "error": "Seleccione una caja"
+      }
+    },
+    "button": {
+      "add": "Agregar kiosko"
+    },
+    "messages": {
+      "waitingCashRegisters": "Obteniendo cajas",
+      "waitingSave": "Guardando kiosko",
+      "errorCashRegisters": "No se pudo obtener las cajas",
+      "errorSave": "No se pudo guardar el kiosko",
+      "successSave": "Kiosko guardado correctamente"
     }
   },
   "login": {

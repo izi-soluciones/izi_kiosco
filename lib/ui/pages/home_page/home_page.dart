@@ -122,7 +122,8 @@ class _HomePageState extends State<HomePage> {
 
                     Column(
                       children: [
-                        const Divider(color: IziColors.grey35,height: 50,thickness: 1,),
+                        IziText.body(color: IziColors.grey35, text: context.read<AuthBloc>().state.currentDevice?.nombre??"", fontWeight: FontWeight.w500),
+                        const Divider(color: IziColors.grey35,height: 20,thickness: 1,),
                         Row(
                           crossAxisAlignment: CrossAxisAlignment.center,
                           mainAxisAlignment: MainAxisAlignment.center,

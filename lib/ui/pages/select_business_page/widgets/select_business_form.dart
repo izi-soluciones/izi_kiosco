@@ -40,7 +40,7 @@ class SelectBusinessForm extends StatelessWidget {
               inputType: InputType.select,
           ),
           const SizedBox(height: 20,),
-          IziInput(
+          /*IziInput(
             labelInput: LocaleKeys.selectBusiness_inputs_sucursal_label.tr(),
             inputHintText: LocaleKeys.selectBusiness_inputs_sucursal_placeholder.tr(),
             value: state.currentSucursal?.id,
@@ -55,10 +55,10 @@ class SelectBusinessForm extends StatelessWidget {
             },
             inputType: InputType.select,
           ),
-          const SizedBox(height: 30,),
+          const SizedBox(height: 30,),*/
           IziBtn(
             buttonOnPressed:(){
-              GoRouter.of(context).goNamed(RoutesKeys.home);
+              GoRouter.of(context).goNamed(RoutesKeys.kioskList);
             },
             buttonSize: ButtonSize.medium,
             buttonText: LocaleKeys.selectBusiness_buttons_accept.tr(),
