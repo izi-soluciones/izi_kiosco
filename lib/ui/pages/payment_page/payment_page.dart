@@ -11,6 +11,7 @@ import 'package:izi_kiosco/ui/modals/warning_config_modal.dart';
 import 'package:izi_kiosco/ui/pages/payment_page/views/payment_page_order_complete.dart';
 import 'package:izi_kiosco/ui/pages/payment_page/views/payment_page_order_error.dart';
 import 'package:izi_kiosco/ui/pages/payment_page/views/payment_page_qr.dart';
+import 'package:izi_kiosco/ui/pages/payment_page/views/payment_page_selection.dart';
 import 'package:izi_kiosco/ui/pages/payment_page/widgets/payment_shimmer_payment_method.dart';
 import 'package:izi_kiosco/ui/utils/custom_alerts.dart';
 
@@ -53,7 +54,7 @@ class PaymentPage extends StatelessWidget {
                   text: LocaleKeys.payment_body_cardError.tr(),
                   snackBarType: SnackBarType.error));
         }
-        if (state.status == PaymentStatus.errorGet || state.status== PaymentStatus.errorInvoiced || state.status == PaymentStatus.errorAnnulled) {
+        if (state.status == PaymentStatus.errorGet || state.status == PaymentStatus.markCreateError || state.status== PaymentStatus.errorInvoiced || state.status == PaymentStatus.errorAnnulled) {
 
           context.read<PageUtilsBloc>().unlockPage();
           if(GoRouter.of(context).canPop()){
@@ -68,6 +69,8 @@ class PaymentPage extends StatelessWidget {
                       LocaleKeys.payment_messages_errorInvoiced.tr():
                       state.status== PaymentStatus.errorAnnulled?
                       LocaleKeys.payment_messages_errorAnnulled.tr():
+                      state.status== PaymentStatus.markCreateError?
+                      LocaleKeys.payment_messages_errorMarkCreate.tr():
                       state.status == PaymentStatus.cardError?
                       LocaleKeys.payment_body_cardError.tr():
                       LocaleKeys.payment_messages_errorGet.tr()),
@@ -80,6 +83,10 @@ class PaymentPage extends StatelessWidget {
         if(state.status == PaymentStatus.cardProcessing){
           context.read<PageUtilsBloc>().closeScreenActive();
           context.read<PageUtilsBloc>().showLoading(LocaleKeys.payment_body_processingCard.tr());
+        }
+        if(state.status == PaymentStatus.cashRegisterProcessing){
+          context.read<PageUtilsBloc>().closeScreenActive();
+          context.read<PageUtilsBloc>().showLoading(LocaleKeys.payment_body_processingOrder.tr());
         }
         if(state.status == PaymentStatus.paymentProcessing){
           context.read<PageUtilsBloc>().closeScreenActive();
@@ -112,9 +119,12 @@ class PaymentPage extends StatelessWidget {
 
 
             //SUCCESS PAGE = 2
-            const PaymentPageOrderComplete(),
+            PaymentPageOrderComplete(state: state,),
             //ERROR PAGE = 3
             const PaymentPageOrderError(),
+
+            //PAYMENT SELECTION = 4
+            PaymentPageSelection(state: state),
           ],
         );
       },

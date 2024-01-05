@@ -229,6 +229,7 @@ abstract class  LocaleKeys {
   static const payment_subtitles_areYOurSureCancel = 'payment.subtitles.areYOurSureCancel';
   static const payment_subtitles_payAndInvoiced = 'payment.subtitles.payAndInvoiced';
   static const payment_subtitles_successPayment = 'payment.subtitles.successPayment';
+  static const payment_subtitles_successOrder = 'payment.subtitles.successOrder';
   static const payment_subtitles = 'payment.subtitles';
   static const payment_body_detail = 'payment.body.detail';
   static const payment_body_subtotal = 'payment.body.subtotal';
@@ -251,6 +252,10 @@ abstract class  LocaleKeys {
   static const payment_body_processingCard = 'payment.body.processingCard';
   static const payment_body_cardSuccess = 'payment.body.cardSuccess';
   static const payment_body_cardError = 'payment.body.cardError';
+  static const payment_body_paymentQrDescription = 'payment.body.paymentQrDescription';
+  static const payment_body_paymentCardDescription = 'payment.body.paymentCardDescription';
+  static const payment_body_paymentCashRegisterDescription = 'payment.body.paymentCashRegisterDescription';
+  static const payment_body_goToCashRegisters = 'payment.body.goToCashRegisters';
   static const payment_body = 'payment.body';
   static const payment_buttons_cash = 'payment.buttons.cash';
   static const payment_buttons_qr = 'payment.buttons.qr';
@@ -280,6 +285,7 @@ abstract class  LocaleKeys {
   static const payment_buttons_regenerateQR = 'payment.buttons.regenerateQR';
   static const payment_buttons_makeAnother = 'payment.buttons.makeAnother';
   static const payment_buttons_paymentWithCardPOs = 'payment.buttons.paymentWithCardPOs';
+  static const payment_buttons_paymentCashRegister = 'payment.buttons.paymentCashRegister';
   static const payment_buttons = 'payment.buttons';
   static const payment_inputs_percentage_label = 'payment.inputs.percentage.label';
   static const payment_inputs_percentage_placeholder = 'payment.inputs.percentage.placeholder';
@@ -368,6 +374,7 @@ abstract class  LocaleKeys {
   static const payment_messages_errorOrder = 'payment.messages.errorOrder';
   static const payment_messages_errorPayment = 'payment.messages.errorPayment';
   static const payment_messages_errorPaymentDescription = 'payment.messages.errorPaymentDescription';
+  static const payment_messages_errorMarkCreate = 'payment.messages.errorMarkCreate';
   static const payment_messages = 'payment.messages';
   static const payment = 'payment';
   static const tapOnPhone_title = 'tapOnPhone.title';

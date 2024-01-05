@@ -128,7 +128,7 @@ class PaymentBloc extends Cubit<PaymentState> {
 
               casaMatriz:(casaMatrizIndex != -1)?(authState.currentContribuyente?.sucursales?[casaMatrizIndex]):null,
             order: defaultOrder,
-            step: 1,
+            step: 4,
             economicActivity: economicActivity,
             paymentMethods: paymentMethods,
             currentCurrency: currentCurrency,
@@ -311,6 +311,25 @@ class PaymentBloc extends Cubit<PaymentState> {
   }
 
 
+  selectPayment(PaymentType paymentType) async {
+    try{
+      if(paymentType==PaymentType.cashRegister){
+        emit(state.copyWith(status: PaymentStatus.cashRegisterProcessing));
+        await _comandaRepository.markAsCreated(state.order?.id??0);
+        emit(state.copyWith(step:2,status: PaymentStatus.cardSuccess,paymentType: paymentType));
+        timerSuccess=Timer(const Duration(seconds: 10),() async{
+          emit(state.copyWith(status: PaymentStatus.successInvoice));
+        },);
+        return;
+      }
+      emit(state.copyWith(paymentType: paymentType,step: 1));
+    }
+    catch(e){
+      log(e.toString());
+      emit(state.copyWith(status: PaymentStatus.markCreateError));
+      emit(state.copyWith(status: PaymentStatus.successGet));
+    }
+  }
   markPaidQr(){
     emit(state.copyWith(step: 3, paymentType:PaymentType.qr));
   }

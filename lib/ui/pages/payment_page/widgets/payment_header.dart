@@ -71,7 +71,7 @@ class PaymentHeader extends StatelessWidget {
               ),
 
             Positioned(
-              top: 10,
+              top: 15,
               left: 10,
               child: IziBtn(
                 buttonText: LocaleKeys.payment_buttons_cancelOrder.tr(),

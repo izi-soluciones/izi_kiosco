@@ -13,10 +13,12 @@ import 'package:izi_kiosco/app/values/env_keys.dart';
 import 'package:izi_kiosco/app/values/locale_keys.g.dart';
 import 'package:izi_kiosco/app/values/routes_keys.dart';
 import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
+import 'package:izi_kiosco/domain/blocs/payment/payment_bloc.dart';
 import 'package:lottie/lottie.dart';
 
 class PaymentPageOrderComplete extends StatelessWidget {
-  const PaymentPageOrderComplete({super.key});
+  final PaymentState state;
+  const PaymentPageOrderComplete({super.key,required this.state});
 
   @override
   Widget build(BuildContext context) {
@@ -39,12 +41,12 @@ class PaymentPageOrderComplete extends StatelessWidget {
             ))
             : const SizedBox.shrink(),
         const SizedBox(height: 32,),
-        IziText.titleBig(color: IziColors.darkGrey, text: LocaleKeys.payment_subtitles_successPayment.tr(),fontWeight: FontWeight.w600),
+        IziText.titleBig(color: IziColors.darkGrey, text: state.paymentType==PaymentType.cashRegister?LocaleKeys.payment_subtitles_successOrder.tr():LocaleKeys.payment_subtitles_successPayment.tr(),fontWeight: FontWeight.w600),
         Lottie.asset(AssetsKeys.okAnimationJson,width: 250,repeat: false,),
         const SizedBox(height: 8,),
-        IziText.titleMedium(maxLines: 2,color: IziColors.darkGrey, text: LocaleKeys.payment_body_weNotifyWhatsapp.tr(),fontWeight: FontWeight.w500),
+        IziText.titleMedium(maxLines: 2,color: IziColors.darkGrey, text: state.paymentType==PaymentType.cashRegister?LocaleKeys.payment_body_goToCashRegisters.tr():LocaleKeys.payment_body_weNotifyWhatsapp.tr(),fontWeight: FontWeight.w500),
         const SizedBox(height: 24,),
-        IziText.titleSmall(color: IziColors.darkGrey, text: LocaleKeys.payment_body_waitingTime.tr(),fontWeight: FontWeight.w400),
+        if(state.paymentType!=PaymentType.cashRegister)IziText.titleSmall(color: IziColors.darkGrey, text: LocaleKeys.payment_body_waitingTime.tr(),fontWeight: FontWeight.w400),
         const SizedBox(height: 54,),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,

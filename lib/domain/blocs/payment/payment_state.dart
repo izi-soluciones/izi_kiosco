@@ -16,12 +16,14 @@ enum PaymentStatus {
   paymentProcessing,
   qrProcessed,
   cardProcessing,
+  cashRegisterProcessing,
   cardError,
   cardSuccess,
-  errorActivity
+  errorActivity,
+  markCreateError
 }
 
-enum PaymentType { cash, card, qr, bankTransfer, gitCard, others }
+enum PaymentType { cash, card, qr, bankTransfer, gitCard, others, cashRegister}
 
 class PaymentState extends Equatable {
   final String? errorDescription;

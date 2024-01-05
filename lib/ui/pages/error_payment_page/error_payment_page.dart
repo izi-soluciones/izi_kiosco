@@ -1,12 +1,14 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:izi_design_system/atoms/izi_typography.dart';
 import 'package:izi_design_system/molecules/izi_btn.dart';
 import 'package:izi_design_system/tokens/colors.dart';
 import 'package:izi_design_system/tokens/types.dart';
 import 'package:izi_kiosco/data/local/local_storage_card_errors.dart';
+import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
 import 'package:izi_kiosco/domain/models/card_payment.dart';
 class ErrorPaymentPage extends StatefulWidget {
   const ErrorPaymentPage({super.key});
@@ -97,6 +99,18 @@ class _ErrorPaymentPageState extends State<ErrorPaymentPage> {
                   buttonSize: ButtonSize.medium,
                   buttonOnPressed: (){
                     GoRouter.of(context).pop();
+                  }
+              ),
+            ),
+
+            Padding(
+              padding: const EdgeInsets.all(32),
+              child: IziBtn(
+                  buttonText: "Cerrar Sesión",
+                  buttonType: ButtonType.terciary,
+                  buttonSize: ButtonSize.medium,
+                  buttonOnPressed: (){
+                    context.read<AuthBloc>().logout();
                   }
               ),
             )

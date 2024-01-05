@@ -7,7 +7,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:go_router/go_router.dart';
 import 'package:izi_design_system/atoms/izi_typography.dart';
 import 'package:izi_design_system/molecules/izi_btn.dart';
 import 'package:izi_design_system/molecules/izi_input.dart';
@@ -17,7 +16,6 @@ import 'package:izi_design_system/tokens/types.dart';
 import 'package:izi_kiosco/app/values/app_constants.dart';
 import 'package:izi_kiosco/app/values/env_keys.dart';
 import 'package:izi_kiosco/app/values/locale_keys.g.dart';
-import 'package:izi_kiosco/app/values/routes_keys.dart';
 import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/page_utils/page_utils_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/payment/payment_bloc.dart';
@@ -81,8 +79,7 @@ class _PaymentPageQrState extends State<PaymentPageQr> {
                       left: 0,
                       child: InkWell(
                         onTap: () {
-                          GoRouter.of(context).goNamed(RoutesKeys.home);
-                          context.read<PageUtilsBloc>().closeScreenActive();
+                          context.read<PaymentBloc>().changeStep(4);
                         },
                         child: const Padding(
                           padding: EdgeInsets.all(20),
@@ -497,6 +494,7 @@ class _PaymentPageQrState extends State<PaymentPageQr> {
         const SizedBox(
           height: 20,
         ),
+        if(widget.state.paymentType==PaymentType.qr)
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -544,7 +542,7 @@ class _PaymentPageQrState extends State<PaymentPageQr> {
                         }),
           ],
         ),
-        if(!widget.state.qrLoading)
+        if(widget.state.paymentType==PaymentType.card)
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [

@@ -292,7 +292,8 @@
       "scanQrToPay": "Escanea el código QR para proceder con el pago",
       "areYOurSureCancel": "¿Estas seguro que deseas cancelar tu order?",
       "payAndInvoiced": "Pago y facturación",
-      "successPayment": "¡Pago exitoso!"
+      "successPayment": "¡Pago exitoso!",
+      "successOrder": "Orden completada"
     },
     "body": {
       "detail": "Detalle",
@@ -315,7 +316,11 @@
       "waitingTime": "Tiempo de espera estimado: 5 minutos.",
       "processingCard": "Esperando pago en el lector de tarjetas",
       "cardSuccess": "Pago relaizado correctamente",
-      "cardError": "No se pudo completrar el pago"
+      "cardError": "No se pudo completrar el pago",
+      "paymentQrDescription": "Utiliza tu aplicación de banco para escanear el QR",
+      "paymentCardDescription": "Utiliza el POS para pagar con tu tarjeta",
+      "paymentCashRegisterDescription": "Acércate a nuestras cajas para completar tu órden",
+      "goToCashRegisters": "Acercate a una de nuestras cajas para completar tu órden"
 
     },
     "buttons": {
@@ -346,7 +351,8 @@
       "cancelOrder": "Cancelar orden",
       "regenerateQR": "Regenerar QR",
       "makeAnother": "Realizar otra orden",
-      "paymentWithCardPOs": "Pagar con tarjeta"
+      "paymentWithCardPOs": "Pagar con tarjeta",
+      "paymentCashRegister": "Pagar en caja"
     },
     "inputs": {
 
@@ -467,7 +473,8 @@
       "successOrder": "Orden generada correctamente",
       "errorOrder": "No se pudo generar la orden intenta nuevamente",
       "errorPayment": "Ocurrio un error al completar la orden",
-      "errorPaymentDescription": "Acercate a una de nuestras cajas para informar el problema"
+      "errorPaymentDescription": "Acercate a una de nuestras cajas para informar el problema",
+      "errorMarkCreate": "No se pudo completar la orden"
 
     }
   },

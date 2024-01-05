@@ -44,19 +44,19 @@ class _AddKioskPageState extends State<AddKioskPage> {
           context.read<AuthBloc>().getKiosks().then((value){
             context.read<PageUtilsBloc>().closeLoading();
             context.read<PageUtilsBloc>().showSnackBar(snackBar: SnackBarInfo(
-                text: LocaleKeys.kioskNew_messages_successSave, snackBarType: SnackBarType.success));
+                text: LocaleKeys.kioskNew_messages_successSave.tr(), snackBarType: SnackBarType.success));
             GoRouter.of(context).goNamed(RoutesKeys.kioskList);
           });
         }
         if(state.status == AddKioskStatus.errorSave){
           context.read<PageUtilsBloc>().closeLoading();
           context.read<PageUtilsBloc>().showSnackBar(snackBar: SnackBarInfo(
-              text: LocaleKeys.kioskNew_messages_errorSave, snackBarType: SnackBarType.error));
+              text: LocaleKeys.kioskNew_messages_errorSave.tr(), snackBarType: SnackBarType.error));
         }
         if(state.status == AddKioskStatus.errorCashRegister){
           context.read<PageUtilsBloc>().closeLoading();
           context.read<PageUtilsBloc>().showSnackBar(snackBar: SnackBarInfo(
-              text: LocaleKeys.kioskNew_messages_errorCashRegisters, snackBarType: SnackBarType.error));
+              text: LocaleKeys.kioskNew_messages_errorCashRegisters.tr(), snackBarType: SnackBarType.error));
         }
       },
         builder: (context,state) {
@@ -145,7 +145,7 @@ class _AddKioskPageState extends State<AddKioskPage> {
           onChanged: (value,valueRaw){
             _errorName();
           },
-          error: nameError?LocaleKeys.kioskNew_inputs_name_error:null,
+          error: nameError?LocaleKeys.kioskNew_inputs_name_error.tr():null,
           controller: nameController,
         ),
         const SizedBox(height: 16,),
@@ -157,7 +157,7 @@ class _AddKioskPageState extends State<AddKioskPage> {
           },
           onSelected: (val){
             if(val is int){
-              context.read<PageUtilsBloc>().showLoading(LocaleKeys.kioskNew_messages_waitingCashRegisters);
+              context.read<PageUtilsBloc>().showLoading(LocaleKeys.kioskNew_messages_waitingCashRegisters.tr());
               context.read<AddKioskBloc>().getCashRegisters(val, context.read<AuthBloc>().state);
               setState(() {
                 branchOffice=val;
@@ -167,7 +167,7 @@ class _AddKioskPageState extends State<AddKioskPage> {
               _errorBranchOffice();
             }
           },
-          error: branchOfficeError?LocaleKeys.kioskNew_inputs_branchOffice_error:null,
+          error: branchOfficeError?LocaleKeys.kioskNew_inputs_branchOffice_error.tr():null,
           inputType: InputType.select,
         ),
         const SizedBox(height: 16,),
@@ -187,7 +187,7 @@ class _AddKioskPageState extends State<AddKioskPage> {
             }
             _errorCashRegister();
           },
-          error: cashRegisterError?LocaleKeys.kioskNew_inputs_cashRegister_error:null,
+          error: cashRegisterError?LocaleKeys.kioskNew_inputs_cashRegister_error.tr():null,
         ),
         const SizedBox(height: 16,),
         IziBtn(
@@ -206,7 +206,7 @@ class _AddKioskPageState extends State<AddKioskPage> {
     if(_verifyErrors()){
       return;
     }
-    context.read<PageUtilsBloc>().showLoading(LocaleKeys.kioskNew_messages_waitingSave);
+    context.read<PageUtilsBloc>().showLoading(LocaleKeys.kioskNew_messages_waitingSave.tr());
     var addKioskDto = AddKioskDto(
         branchOffice: branchOffice??0,
         cashRegister: cashRegister??0,

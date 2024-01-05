@@ -37,4 +37,7 @@ abstract class ComandaRepository{
   Future<CardPayment> callCardPayment({required int amount});
 
 
+  Future<void> markAsCreated(int orderId);
+
+
 }

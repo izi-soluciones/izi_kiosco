@@ -30,13 +30,16 @@ class AuthBloc extends Cubit<AuthState> {
 
   logout() async {
     emit(state.copyWith(status: AuthStatus.init));
-    await TokenUtils.deleteToken();
     try{
       if(state.currentDevice!=null){
         await _authRepository.disableDevice(state.currentDevice!.id);
       }
     }
     catch(_){}
+    await TokenUtils.deleteToken();
+    await BusinessUtils.deleteDeviceId();
+    await BusinessUtils.deleteContribuyenteId();
+    await BusinessUtils.deleteSucursalId();
     await Future.delayed(const Duration(seconds: 2));
     if (state.invoiceSubscription != null) {
       state.invoiceSubscription!.cancel();

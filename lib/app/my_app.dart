@@ -48,7 +48,7 @@ class MyApp extends StatelessWidget {
           location != RoutesKeys.configBusinessLink &&
           location != RoutesKeys.kioskListLink &&
           location != RoutesKeys.kioskNewLink) {
-        return RoutesKeys.kioskListLink;
+        return RoutesKeys.configBusinessLink;
       }
       return null;
     },
