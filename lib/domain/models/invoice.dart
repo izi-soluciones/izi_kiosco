@@ -13,9 +13,13 @@ class Invoice {
   String? correoElectronicoComprador;
   int? caja;
   num? descuentos;
+  num? descuentosImpuesto;
   int? tipoCompra;
   String? terminosPago;
   int? prefactura;
+  num? giftCards;
+  num? contribuyente;
+  num? giftCardsImpuesto;
   int? anulada;
   String? notaInterna;
   bool? isCuentaCobro;
@@ -28,11 +32,16 @@ class Invoice {
   dynamic customFactura;
   List<Items>? listaItems;
   num? monto;
+  num? montoImpuesto;
+  num? montoTotalImpuesto;
+  num? sincredito;
+  num? sincreditoImpuesto;
   num? montoTotal;
   String? pdfCarta;
   String? pdfRollo;
   int? usuarioPreCreacion;
   int? numero;
+  int? numeroPrefactura;
   String? autorizacion;
   String? validadorUnico;
   String? id;
@@ -58,6 +67,7 @@ class Invoice {
   String? usuarioCobroNombre;
   String? usuarioPagoNombre;
   bool? desdeInventario;
+  int? clienteId;
 
   Invoice(
       {
@@ -80,6 +90,7 @@ class Invoice {
         this.isIzi,
         this.uuid,
         this.isApi,
+        this.clienteId,
         this.contribuyenteApi,
         this.correoElectronicoComprador,
         this.caja,
@@ -119,8 +130,16 @@ class Invoice {
         this.usuarioModificacionNombre,
         this.usuarioCobroNombre,
         this.usuarioPagoNombre,
-        this.actividadEconomica
-
+        this.actividadEconomica,
+        this.numeroPrefactura,
+        this.montoImpuesto,
+        this.sincredito,
+        this.sincreditoImpuesto,
+        this.descuentosImpuesto,
+        this.giftCards,
+        this.giftCardsImpuesto,
+        this.montoTotalImpuesto,
+        this.contribuyente
       });
 
 
@@ -155,6 +174,7 @@ class Invoice {
       sucursalDireccion : json['sucursalDireccion'],
       customFactura : json['customFactura'],
       monto : json['monto'],
+        montoImpuesto : json['montoImpuesto'],
       montoTotal : json['montoTotal'],
       pdfCarta : json['pdfCarta'],
       pdfRollo : json['pdfRollo'],
@@ -184,9 +204,22 @@ class Invoice {
       usuarioModificacionNombre : json['usuarioModificacionNombre'],
       usuarioCobroNombre : json['usuarioCobroNombre'],
       usuarioPagoNombre : json['usuarioPagoNombre'],
+      numeroPrefactura: json['numeroPrefactura'],
+      clienteId: json['clienteId'],
+      sincredito: json['sincredito'],
+      sincreditoImpuesto: json['sincreditoImpuesto'],
+      descuentosImpuesto: json['descuentosImpuesto'],
+      giftCards: json["giftCards"],
+        giftCardsImpuesto: json["giftCardsImpuesto"],
+      montoTotalImpuesto: json["montoTotalImpuesto"],
+      contribuyente: json["contribuyente"]
     );
   }
 
+  @override
+  String toString() {
+    return 'Invoice{isIzi: $isIzi, uuid: $uuid, tipoFactura: $tipoFactura, isApi: $isApi, actividadEconomica: $actividadEconomica, contribuyenteApi: $contribuyenteApi, emisor: $emisor, razonSocialEmisor: $razonSocialEmisor, comprador: $comprador, razonSocial: $razonSocial, correoElectronicoComprador: $correoElectronicoComprador, caja: $caja, descuentos: $descuentos, descuentosImpuesto: $descuentosImpuesto, tipoCompra: $tipoCompra, terminosPago: $terminosPago, prefactura: $prefactura, giftCards: $giftCards, giftCardsImpuesto: $giftCardsImpuesto, anulada: $anulada, notaInterna: $notaInterna, isCuentaCobro: $isCuentaCobro, fechaPago: $fechaPago, fecha: $fecha, isPruebas: $isPruebas, pagada: $pagada, sucursal: $sucursal, sucursalDireccion: $sucursalDireccion, customFactura: $customFactura, listaItems: $listaItems, monto: $monto, montoImpuesto: $montoImpuesto, montoTotalImpuesto: $montoTotalImpuesto, sincredito: $sincredito, sincreditoImpuesto: $sincreditoImpuesto, montoTotal: $montoTotal, pdfCarta: $pdfCarta, pdfRollo: $pdfRollo, usuarioPreCreacion: $usuarioPreCreacion, numero: $numero, numeroPrefactura: $numeroPrefactura, autorizacion: $autorizacion, validadorUnico: $validadorUnico, id: $id, qr: $qr, iceVariable: $iceVariable, iceFijo: $iceFijo, control: $control, concepto: $concepto, contingencia: $contingencia, sucursalCompra: $sucursalCompra, customCasosEspeciales: $customCasosEspeciales, creado: $creado, almacen: $almacen, usuarioCreacion: $usuarioCreacion, usuarioAnulacion: $usuarioAnulacion, usuarioModificacion: $usuarioModificacion, usuarioCobro: $usuarioCobro, usuarioPago: $usuarioPago, usuarioPreCreacionNombre: $usuarioPreCreacionNombre, usuarioCreacionNombre: $usuarioCreacionNombre, usuarioAnulacionNombre: $usuarioAnulacionNombre, usuarioModificacionNombre: $usuarioModificacionNombre, usuarioCobroNombre: $usuarioCobroNombre, usuarioPagoNombre: $usuarioPagoNombre, desdeInventario: $desdeInventario, clienteId: $clienteId}';
+  }
 }
 
 class Items {
@@ -196,6 +229,13 @@ class Items {
   num? precioTotal;
   num? valor;
   num? valorTotal;
+  num? precioUnitarioImpuesto;
+  num? descuento;
+  num? descuentoImpuesto;
+  num? precioTotalImpuesto;
+  dynamic codigoInventario;
+  dynamic codigo;
+
 
   Items({
     required this.articulo,
@@ -203,8 +243,15 @@ class Items {
     this.precioUnitario,
     this.precioTotal,
     this.valor,
-    this.valorTotal
+    this.valorTotal,
+    this.descuento,
+    this.descuentoImpuesto,
+    this.precioUnitarioImpuesto,
+    this.precioTotalImpuesto,
+    this.codigoInventario,
+    this.codigo
   });
+
 
 
   @override
@@ -232,7 +279,13 @@ class Items {
         precioTotal : json['precioTotal'],
         precioUnitario : json['precioUnitario'] is String?0:json["precioUnitario"],
         valorTotal: json["valorTotal"],
-        valor: json["valor"]
+        valor: json["valor"],
+      descuento: json["descuento"],
+        descuentoImpuesto: json["descuentoImpuesto"],
+      precioUnitarioImpuesto: json["precioUnitarioImpuesto"],
+      precioTotalImpuesto: json["precioTotalImpuesto"],
+      codigo: json["codigo"],
+      codigoInventario: json["codigoInventario"]
     );
   }
 

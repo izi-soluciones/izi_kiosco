@@ -16,12 +16,15 @@ import 'package:izi_kiosco/domain/models/comanda.dart';
 import 'package:izi_kiosco/domain/models/contribuyente.dart';
 import 'package:izi_kiosco/domain/models/currency.dart';
 import 'package:izi_kiosco/domain/models/document_type.dart';
+import 'package:izi_kiosco/domain/models/invoice.dart';
 import 'package:izi_kiosco/domain/models/payment.dart';
 import 'package:izi_kiosco/domain/models/payment_method.dart';
 import 'package:izi_kiosco/domain/repositories/business_repository.dart';
 import 'package:izi_kiosco/domain/repositories/comanda_repository.dart';
 import 'package:izi_kiosco/domain/repositories/socket_repository.dart';
 import 'package:izi_kiosco/domain/utils/input_obj.dart';
+import 'package:izi_kiosco/domain/utils/print/print_template.dart';
+import 'package:izi_kiosco/domain/utils/print_utils.dart';
 part 'payment_state.dart';
 part 'payment_inputs.dart';
 
@@ -395,6 +398,7 @@ class PaymentBloc extends Cubit<PaymentState> {
         var success = false;
         for(int i=0;i<5;i++){
           if(await emitInvoice(authState: authState,cardDigits: cardPayment.cardNumber)){
+          //if(await emitInvoice(authState: authState,cardDigits: "1234000000001234")){
             success = true;
             break;
           }
@@ -483,6 +487,12 @@ class PaymentBloc extends Cubit<PaymentState> {
         Timer? timer;
         qrStream = _socketRepository.listenQr(charge: charge).listen((event) async{
           if(event is Map && event["statusVenta"]=="success"){
+            try{
+              if(event["idFactura"] is int){
+                await _printRollo(authState, idInvoice: event["idFactura"]);
+              }
+            }
+            catch(_){}
             if(timer!=null){
               timer!.cancel();
             }
@@ -650,7 +660,10 @@ class PaymentBloc extends Cubit<PaymentState> {
           invoice.customFactura?["codigoExcepcion"]=1;
         }
 
-        await _comandaRepository.invoicePreOrder(invoice: invoice, orderId: state.order?.id ?? 0);
+        Invoice invoiceRes = await _comandaRepository.invoicePreOrder(invoice: invoice, orderId: state.order?.id ?? 0);
+        if(invoiceRes.id !=null){
+          await _printRollo(authState, invoice: invoiceRes);
+        }
         return true;
     }
     catch(error){
@@ -694,6 +707,18 @@ class PaymentBloc extends Cubit<PaymentState> {
       emit(state.copyWith(status: PaymentStatus.waitingGet));
       return false;
     }
+  }
+
+  _printRollo(AuthState authState,{int? idInvoice,Invoice? invoice})async{
+    if(idInvoice==null && invoice==null){
+      return;
+    }
+    if(idInvoice!=null){
+      invoice = await _comandaRepository.getInvoice(idInvoice);
+    }
+    var tmp = await PrintTemplate.invoice80(invoice!, authState.currentContribuyente!, authState.currentSucursal!);
+    var printUtils = PrintUtils();
+    printUtils.print(tmp);
   }
 
 

@@ -6,6 +6,7 @@ import 'package:izi_kiosco/domain/models/card_payment.dart';
 import 'package:izi_kiosco/domain/models/category_order.dart';
 import 'package:izi_kiosco/domain/models/charge.dart';
 import 'package:izi_kiosco/domain/models/comanda.dart';
+import 'package:izi_kiosco/domain/models/invoice.dart';
 import 'package:izi_kiosco/domain/models/payment.dart';
 import 'package:izi_kiosco/domain/models/consumption_point.dart';
 import 'package:izi_kiosco/domain/models/room.dart';
@@ -32,12 +33,13 @@ abstract class ComandaRepository{
   Future<Comanda> emitOrder({required NewOrderDto newOrder});
   Future<Comanda> emitOrderPre({required NewOrderDto newOrder});
   Future<Comanda> editOrder({required NewOrderDto newOrder});
-  Future<void> invoicePreOrder({required InvoiceDto invoice,required int orderId});
+  Future<Invoice> invoicePreOrder({required InvoiceDto invoice,required int orderId});
 
   Future<CardPayment> callCardPayment({required int amount});
 
 
   Future<void> markAsCreated(int orderId);
 
+  Future<Invoice> getInvoice(int invoiceId);
 
 }

@@ -13,6 +13,7 @@ import 'package:izi_kiosco/domain/models/card_payment.dart';
 import 'package:izi_kiosco/domain/models/category_order.dart';
 import 'package:izi_kiosco/domain/models/charge.dart';
 import 'package:izi_kiosco/domain/models/comanda.dart';
+import 'package:izi_kiosco/domain/models/invoice.dart';
 import 'package:izi_kiosco/domain/models/payment.dart';
 import 'package:izi_kiosco/domain/models/consumption_point.dart';
 import 'package:izi_kiosco/domain/models/room.dart';
@@ -90,14 +91,17 @@ class ComandaRepositoryHttp extends ComandaRepository {
     throw response.data;
   }
   @override
-  Future<void> invoicePreOrder({required InvoiceDto invoice, required int orderId}) async {
+  Future<Invoice> invoicePreOrder({required InvoiceDto invoice, required int orderId}) async {
     try {
       String path = "/comandas/pre-comanda/$orderId/facturar";
       var response = await _dioClient.post(
           uri: path,
           body: invoice.toJson(),
           options: Options(responseType: ResponseType.json));
-      if (response.statusCode != 200) {
+      if (response.statusCode == 200) {
+        return Invoice.fromJson(response.data);
+      }
+      else{
         if (response.data?["status"] ?? false) {
           throw response.data?["data"];
         }
@@ -490,6 +494,33 @@ class ComandaRepositoryHttp extends ComandaRepository {
           uri: path,
           options: Options(responseType: ResponseType.json));
       if (response.statusCode != 200) {
+        if (response.data?["status"] ?? false) {
+          throw response.data?["data"];
+        }
+        throw response.data;
+      }
+    } on DioException catch (e) {
+      if (e.response?.data is String) {
+        throw e.response?.data;
+      }
+      throw e.error ?? "Network Error";
+    } catch (error) {
+      throw error.toString();
+    }
+  }
+
+  @override
+  Future<Invoice> getInvoice(int invoiceId) async{
+    try {
+      String path =
+          "/facturas/$invoiceId";
+      var response = await _dioClient.get(
+          uri: path,
+          options: Options(responseType: ResponseType.json));
+      if (response.statusCode == 200 && response.data is Map && response.data["factura"]!=null) {
+        return Invoice.fromJson(response.data["factura"]);
+      }
+      else{
         if (response.data?["status"] ?? false) {
           throw response.data?["data"];
         }

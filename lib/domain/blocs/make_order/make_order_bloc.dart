@@ -12,7 +12,6 @@ import 'package:izi_kiosco/domain/models/currency.dart';
 import 'package:izi_kiosco/domain/models/item.dart';
 import 'package:izi_kiosco/domain/repositories/business_repository.dart';
 import 'package:izi_kiosco/domain/repositories/comanda_repository.dart';
-
 part 'make_order_state.dart';
 
 class MakeOrderBloc extends Cubit<MakeOrderState> {
@@ -267,4 +266,5 @@ class MakeOrderBloc extends Cubit<MakeOrderState> {
   resetOrder(){
     emit(state.copyWith(numberDiners: ()=>null,tableId: ()=>null,itemsSelected: [],discountAmount: 0));
   }
+
 }
