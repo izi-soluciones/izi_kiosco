@@ -53,7 +53,7 @@ class PaymentPageSelection extends StatelessWidget {
       children: [
         PaymentMethodBtn(
             onPressed: (){
-              context.read<PaymentBloc>().selectPayment(PaymentType.card);
+              context.read<PaymentBloc>().selectPayment(PaymentType.card,authState);
             },
             color: IziColors.secondaryDarken,
             icon: IziIcons.card,
@@ -62,7 +62,7 @@ class PaymentPageSelection extends StatelessWidget {
         ),
         PaymentMethodBtn(
             onPressed: (){
-              context.read<PaymentBloc>().selectPayment(PaymentType.qr);
+              context.read<PaymentBloc>().selectPayment(PaymentType.qr,authState);
               },
             icon: IziIcons.qrCode,
             color: IziColors.primaryDarken,
@@ -71,7 +71,7 @@ class PaymentPageSelection extends StatelessWidget {
         ),
         PaymentMethodBtn(
             onPressed: (){
-              context.read<PaymentBloc>().selectPayment(PaymentType.cashRegister);
+              context.read<PaymentBloc>().selectPayment(PaymentType.cashRegister,authState);
               },
             icon: IziIcons.registerMachine,
             color: IziColors.darkGrey,

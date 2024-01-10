@@ -92,6 +92,7 @@ class _MakeOrderDetailState extends State<MakeOrderDetail> {
                     buttonType: ButtonType.outline,
                     buttonSize: ButtonSize.large,
                     buttonOnPressed: () {
+                      //context.read<MakeOrderBloc>().printRollo(context.read<AuthBloc>().state);
                       context.read<MakeOrderBloc>().resetItems();
                     }),
               ),

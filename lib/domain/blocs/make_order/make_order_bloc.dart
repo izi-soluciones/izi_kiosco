@@ -12,6 +12,8 @@ import 'package:izi_kiosco/domain/models/currency.dart';
 import 'package:izi_kiosco/domain/models/item.dart';
 import 'package:izi_kiosco/domain/repositories/business_repository.dart';
 import 'package:izi_kiosco/domain/repositories/comanda_repository.dart';
+import 'package:izi_kiosco/domain/utils/print/print_template.dart';
+import 'package:izi_kiosco/domain/utils/print_utils.dart';
 part 'make_order_state.dart';
 
 class MakeOrderBloc extends Cubit<MakeOrderState> {
@@ -265,6 +267,12 @@ class MakeOrderBloc extends Cubit<MakeOrderState> {
 
   resetOrder(){
     emit(state.copyWith(numberDiners: ()=>null,tableId: ()=>null,itemsSelected: [],discountAmount: 0));
+  }
+  printRollo(AuthState authState)async{
+    var invoice = await _comandaRepository.getInvoice(1842665);
+    var tmp = await PrintTemplate.invoice80(invoice, authState.currentContribuyente!, authState.currentSucursal!);
+    var printUtils = PrintUtils();
+    await printUtils.print(tmp);
   }
 
 }

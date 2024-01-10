@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:printing/printing.dart';
 import 'package:universal_html/html.dart' as html;
 
 class DownloadUtils{
@@ -45,6 +46,29 @@ class DownloadUtils{
           (await getApplicationDocumentsDirectory()).absolute.path;
     }
     return externalStorageDirPath;
+  }
+  Future<bool> saveFileLocal(Uint8List bytes,String fileName)async{
+    try{
+
+      bool permission=await _checkPermission();
+      if(!permission){
+        throw "Error";
+      }
+
+      if(kIsWeb){
+        Printing.layoutPdf(onLayout: (format)=>bytes);
+      }else{
+        String route="${(await _getSavedDir()??"/")}/$fileName";
+        await File(route).writeAsBytes(bytes);
+        await OpenFile.open(route, type: 'application/pdf');
+      }
+      return true;
+    }
+    catch(error){
+      debugPrint(error.toString());
+      return false;
+    }
+
   }
   Future<bool> downloadFile(String url)async{
     try{

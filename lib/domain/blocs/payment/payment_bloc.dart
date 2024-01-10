@@ -314,11 +314,14 @@ class PaymentBloc extends Cubit<PaymentState> {
   }
 
 
-  selectPayment(PaymentType paymentType) async {
+  selectPayment(PaymentType paymentType,AuthState authState) async {
     try{
       if(paymentType==PaymentType.cashRegister){
         emit(state.copyWith(status: PaymentStatus.cashRegisterProcessing));
-        await _comandaRepository.markAsCreated(state.order?.id??0);
+        Comanda comanda = await _comandaRepository.markAsCreated(state.order?.id??0);
+        if(comanda.numero is int){
+          _printRolloOrder(authState, orderNumber: (comanda.numero as int));
+        }
         emit(state.copyWith(step:2,status: PaymentStatus.cardSuccess,paymentType: paymentType));
         timerSuccess=Timer(const Duration(seconds: 10),() async{
           emit(state.copyWith(status: PaymentStatus.successInvoice));
@@ -464,7 +467,7 @@ class PaymentBloc extends Cubit<PaymentState> {
         newOrderDto.id=state.order?.id;
 
         var documentType=state.documentType;
-        if(state.documentNumber.value.isEmpty){
+        if(state.documentNumber.value.isEmpty && state.usaSiat){
           documentType=state.documentTypes.first;
         }
         custom["pagadorData"]={
@@ -488,6 +491,9 @@ class PaymentBloc extends Cubit<PaymentState> {
         qrStream = _socketRepository.listenQr(charge: charge).listen((event) async{
           if(event is Map && event["statusVenta"]=="success"){
             try{
+              if(event["numeroOrden"] is int){
+                await _printRolloOrder(authState, orderNumber: event["numeroOrden"]);
+              }
               if(event["idFactura"] is int){
                 await _printRollo(authState, idInvoice: event["idFactura"]);
               }
@@ -547,7 +553,8 @@ class PaymentBloc extends Cubit<PaymentState> {
       }
       return false;
     }
-    catch(_){
+    catch(e){
+      log(e.toString());
       emit(state.copyWith(qrLoading: false,qrCharge: ()=>null));
       return false;
     }
@@ -661,6 +668,9 @@ class PaymentBloc extends Cubit<PaymentState> {
         }
 
         Invoice invoiceRes = await _comandaRepository.invoicePreOrder(invoice: invoice, orderId: state.order?.id ?? 0);
+        if(invoiceRes.numeroOrden!=null){
+          await _printRolloOrder(authState, orderNumber: invoiceRes.numeroOrden!);
+        }
         if(invoiceRes.id !=null){
           await _printRollo(authState, invoice: invoiceRes);
         }
@@ -709,6 +719,11 @@ class PaymentBloc extends Cubit<PaymentState> {
     }
   }
 
+  _printRolloOrder(AuthState authState,{required int orderNumber})async{
+    var tmp = await PrintTemplate.order80(orderNumber,authState.currentContribuyente!, authState.currentSucursal!);
+    var printUtils = PrintUtils();
+    await printUtils.print(tmp);
+  }
   _printRollo(AuthState authState,{int? idInvoice,Invoice? invoice})async{
     if(idInvoice==null && invoice==null){
       return;
@@ -718,7 +733,7 @@ class PaymentBloc extends Cubit<PaymentState> {
     }
     var tmp = await PrintTemplate.invoice80(invoice!, authState.currentContribuyente!, authState.currentSucursal!);
     var printUtils = PrintUtils();
-    printUtils.print(tmp);
+    await printUtils.print(tmp);
   }
 
 

@@ -10,6 +10,39 @@ import 'package:izi_kiosco/domain/utils/date_formatter.dart';
 import 'package:izi_kiosco/domain/utils/print_utils.dart';
 
 class PrintTemplate {
+
+  static Future<List<IziPrintItem>> order80(int orderNumber, Contribuyente contribuyente, Sucursal sucursal)async{
+
+    List<IziPrintItem> items = [];
+    items.add(IziPrintText(
+        text: contribuyente.razonSocial ?? "",
+        size: IziPrintSize.md,
+        align: IziPrintAlign.center,
+        bold: true));
+    items.add(IziPrintText(
+        text: sucursal.nombre ?? "",
+        size: IziPrintSize.sm,
+        align: IziPrintAlign.center,
+        bold: true));
+    items.add(IziPrintSeparator());
+    items.add(IziPrintText(
+        text: "Orden #$orderNumber",
+        size: IziPrintSize.lg,
+        align: IziPrintAlign.center,
+        bold: true));
+    items.add(IziPrintSeparator(dotted: true));
+    items.add(IziPrintText(
+        text: DateTime.now().dateFormat(DateFormatterType.dateHour),
+        size: IziPrintSize.md,
+        align: IziPrintAlign.center,));
+    items.add(IziPrintSeparator());
+    items.add(IziPrintText(
+        text: "Generada a través de iZi",
+        size: IziPrintSize.sm,
+        bold: true,
+        align: IziPrintAlign.center));
+    return items;
+}
   static Future<List<IziPrintItem>> invoice80(
       Invoice invoice, Contribuyente contribuyente, Sucursal sucursal) async {
     List<IziPrintItem> items = [];
@@ -273,11 +306,7 @@ class PrintTemplate {
       if (invoice.prefactura!=1) {
 
         if (configSiat==null) {
-          items.add(IziPrintLineWrap(lines: 3));
-          items.add(IziPrintText(
-              text: "Código de Control: ${invoice.control}" ,
-              size: IziPrintSize.sm,
-              align: IziPrintAlign.center));
+          items.add(IziPrintLineWrap(lines: 2));
           items.add(IziPrintText(
               text: "Código de Control: ${invoice.control}" ,
               size: IziPrintSize.sm,
@@ -291,6 +320,7 @@ class PrintTemplate {
                   align: IziPrintAlign.center));
             }
           }
+          items.add(IziPrintLineWrap(lines: 2));
         }
         if (invoice.prefactura!=1) {
 

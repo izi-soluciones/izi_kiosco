@@ -68,6 +68,7 @@ class Invoice {
   String? usuarioPagoNombre;
   bool? desdeInventario;
   int? clienteId;
+  int? numeroOrden;
 
   Invoice(
       {
@@ -139,7 +140,8 @@ class Invoice {
         this.giftCards,
         this.giftCardsImpuesto,
         this.montoTotalImpuesto,
-        this.contribuyente
+        this.contribuyente,
+        this.numeroOrden
       });
 
 
@@ -186,7 +188,7 @@ class Invoice {
       qr : json["qr"],
       iceVariable : json["iceVariable"],
       iceFijo : json["iceFijo"],
-      control : json["control "],
+      control : json["control"],
       concepto : json["concepto"],
       contingencia : json['contingencia'],
       sucursalCompra : json["sucursalCompra"],
@@ -212,7 +214,9 @@ class Invoice {
       giftCards: json["giftCards"],
         giftCardsImpuesto: json["giftCardsImpuesto"],
       montoTotalImpuesto: json["montoTotalImpuesto"],
-      contribuyente: json["contribuyente"]
+      contribuyente: json["contribuyente"],
+      numeroOrden: json["numeroOrden"],
+      actividadEconomica: json["actividadEconomica"],
     );
   }
 

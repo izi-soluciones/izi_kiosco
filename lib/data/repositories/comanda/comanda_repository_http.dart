@@ -486,14 +486,17 @@ class ComandaRepositoryHttp extends ComandaRepository {
   }
 
   @override
-  Future<void> markAsCreated(int orderId) async{
+  Future<Comanda> markAsCreated(int orderId) async{
     try {
       String path =
           "/comandas/pre-comanda/$orderId/crear";
       var response = await _dioClient.post(
           uri: path,
           options: Options(responseType: ResponseType.json));
-      if (response.statusCode != 200) {
+      if (response.statusCode == 200) {
+        return Comanda.fromJson(response.data);
+      }
+      else{
         if (response.data?["status"] ?? false) {
           throw response.data?["data"];
         }

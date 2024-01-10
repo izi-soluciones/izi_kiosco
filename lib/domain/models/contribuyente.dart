@@ -130,7 +130,7 @@ class Contribuyente {
     llaves : null,
     tiposFactura : [],
     camposExtra : [],
-    autorizaciones : [],
+    autorizaciones : json["autorizaciones"],
     usuarios : []
   );
 
@@ -174,7 +174,7 @@ class Contribuyente {
       llaves : null,
       tiposFactura : [],
       camposExtra : [],
-      autorizaciones : [],
+      autorizaciones : json["autorizaciones"],
       usuarios : List.from(json["usuarios"] is Iterable?json["usuarios"]:[]).map((e) => Usuarios.fromJson(e)).toList()
   );
 
