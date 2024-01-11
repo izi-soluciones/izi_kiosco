@@ -114,7 +114,7 @@ class _OrderDetailsState extends State<OrderDetails> {
                     setState(() {
                       waitDownload = true;
                     });
-                    await DownloadUtils().downloadFile(pdf);
+                    await DownloadUtils().downloadFilePdf(pdf);
                     setState(() {
                       waitDownload = false;
                     });
@@ -126,7 +126,7 @@ class _OrderDetailsState extends State<OrderDetails> {
                   setState(() {
                     waitDownload = true;
                   });
-                  await DownloadUtils().downloadFile(pdf);
+                  await DownloadUtils().downloadFilePdf(pdf);
                   setState(() {
                     waitDownload = false;
                   });
@@ -139,7 +139,7 @@ class _OrderDetailsState extends State<OrderDetails> {
                     setState(() {
                       waitDownload = true;
                     });
-                    await DownloadUtils().downloadFile(pdf);
+                    await DownloadUtils().downloadFilePdf(pdf);
                     setState(() {
                       waitDownload = false;
                     });
@@ -152,7 +152,7 @@ class _OrderDetailsState extends State<OrderDetails> {
                     setState(() {
                       waitDownload = true;
                     });
-                    await DownloadUtils().downloadFile(pdf);
+                    await DownloadUtils().downloadFilePdf(pdf);
                     setState(() {
                       waitDownload = false;
                     });

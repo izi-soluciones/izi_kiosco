@@ -1,3 +1,4 @@
+import 'dart:developer';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
@@ -81,7 +82,9 @@ class PrintUtils {
     } else {
       if (Platform.isAndroid) {
         var resBinding = await SunmiPrinter.bindingPrinter();
+        await SunmiPrinter.initPrinter();
         var status = await SunmiPrinter.getPrinterStatus();
+        log(status.toString());
         if (resBinding == true && status != PrinterStatus.ERROR) {
           await _sunmiPrint(values);
         } else {

@@ -136,7 +136,7 @@ class TablesBloc extends Cubit<TablesState> {
 
         String? pdf = order.detallePdf;
         if(pdf!=null){
-          await DownloadUtils().downloadFile(pdf);
+          await DownloadUtils().downloadFilePdf(pdf);
         }
         List<List<ConsumptionPoint?>> listNew=List.from(listOld);
         for(var i=0;i<listOld.length;i++){

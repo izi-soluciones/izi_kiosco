@@ -13,6 +13,7 @@ class AuthState extends Equatable{
   final Pos? currentPos;
   final List<Currency> currencies;
   final List<Device> devices;
+  final File? video;
 
   final bool loadingContribuyente;
 
@@ -30,7 +31,8 @@ class AuthState extends Equatable{
     this.currentPos,
     required this.terminalInit,
     this.currentDevice,
-    required this.devices
+    required this.devices,
+    required this.video
   });
   factory AuthState.init()=>
       const AuthState(
@@ -38,7 +40,8 @@ class AuthState extends Equatable{
         loadingContribuyente: false,
         terminalInit: false,
         currencies: [],
-        devices: []
+        devices: [],
+        video: null
       );
 
   AuthState copyWith({
@@ -53,7 +56,8 @@ class AuthState extends Equatable{
     bool? terminalInit,
     List<Currency>? currencies,
     List<Device>? devices,
-    Device? currentDevice
+    Device? currentDevice,
+    File? video
   }){
     return AuthState(
         currentContribuyente: currentContribuyente??this.currentContribuyente,
@@ -67,7 +71,8 @@ class AuthState extends Equatable{
       terminalInit: terminalInit ?? this.terminalInit,
       currencies: currencies ?? this.currencies,
       devices: devices ?? this.devices,
-      currentDevice: currentDevice ?? this.currentDevice
+      currentDevice: currentDevice ?? this.currentDevice,
+      video: video ?? this.video
     );
   }
   AuthState resetState(){
@@ -83,10 +88,11 @@ class AuthState extends Equatable{
       terminalInit: false,
       currencies: [],
       devices: [],
-      currentDevice: null
+      currentDevice: null,
+      video: null
     );
   }
   @override
-  List<Object?> get props => [currentDevice,devices,terminalInit,currentContribuyente,status,currentUser,contribuyentes,currentSucursal,invoiceSubscription,currentPos,loadingContribuyente,currencies];
+  List<Object?> get props => [video,currentDevice,devices,terminalInit,currentContribuyente,status,currentUser,contribuyentes,currentSucursal,invoiceSubscription,currentPos,loadingContribuyente,currencies];
 
 }

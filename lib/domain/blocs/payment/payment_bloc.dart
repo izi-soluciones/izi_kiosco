@@ -1,15 +1,12 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:developer';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:izi_kiosco/app/values/app_constants.dart';
-import 'package:izi_kiosco/data/local/local_storage_card_errors.dart';
 import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
 import 'package:izi_kiosco/domain/dto/invoice_dto.dart';
 import 'package:izi_kiosco/domain/dto/new_order_dto.dart';
 import 'package:izi_kiosco/domain/dto/qr_dto.dart';
-import 'package:izi_kiosco/domain/models/card_payment.dart';
 import 'package:izi_kiosco/domain/models/cash_register.dart';
 import 'package:izi_kiosco/domain/models/charge.dart';
 import 'package:izi_kiosco/domain/models/comanda.dart';
@@ -396,18 +393,18 @@ class PaymentBloc extends Cubit<PaymentState> {
     if(_validateInputs()){
       try{
         emit(state.copyWith(status: PaymentStatus.cardProcessing));
-        CardPayment cardPayment =await _comandaRepository.callCardPayment(amount: 1);
+        //CardPayment cardPayment =await _comandaRepository.callCardPayment(amount: 1);
         emit(state.copyWith(status: PaymentStatus.paymentProcessing));
         var success = false;
         for(int i=0;i<5;i++){
-          if(await emitInvoice(authState: authState,cardDigits: cardPayment.cardNumber)){
-          //if(await emitInvoice(authState: authState,cardDigits: "1234000000001234")){
+          //if(await emitInvoice(authState: authState,cardDigits: cardPayment.cardNumber)){
+          if(await emitInvoice(authState: authState,cardDigits: "1234000000001234")){
             success = true;
             break;
           }
         }
         if(!success){
-          await LocalStorageCardErrors.saveCardErrors(jsonEncode(cardPayment.toJson()));
+          //await LocalStorageCardErrors.saveCardErrors(jsonEncode(cardPayment.toJson()));
           emit(state.copyWith(step:3,status: PaymentStatus.cardSuccess));
           timerSuccess=Timer(const Duration(seconds: 30),() async{
             emit(state.copyWith(status: PaymentStatus.successInvoice));
@@ -662,6 +659,9 @@ class PaymentBloc extends Cubit<PaymentState> {
 
         if(state.documentType!=null){
           invoice.documentType =state.documentType;
+        }
+        if(state.documentNumber.value.isEmpty && state.usaSiat){
+          invoice.documentType =state.documentTypes.first;
         }
         if(state.withException){
           invoice.customFactura?["codigoExcepcion"]=1;

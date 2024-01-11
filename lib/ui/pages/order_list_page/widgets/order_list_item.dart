@@ -116,27 +116,27 @@ class OrderListItem extends StatelessWidget {
                       if(value=="detail"){
                         String? pdf = order.detallePdf;
                         if(pdf!=null){
-                          DownloadUtils().downloadFile(pdf);
+                          DownloadUtils().downloadFilePdf(pdf);
                         }
                         return;
                       }
                       String? pdf = order.comandasPdf[value].pdf;
                       if(pdf!=null){
-                        DownloadUtils().downloadFile(pdf);
+                        DownloadUtils().downloadFilePdf(pdf);
                       }
                     },
                     buttonOnPressed: (){
                       if(order.facturada!=1){
                         String? pdf = order.detallePdf;
                         if(pdf!=null){
-                          DownloadUtils().downloadFile(pdf);
+                          DownloadUtils().downloadFilePdf(pdf);
                           return;
                         }
                       }
                       if(order.facturada==1){
                         String? pdf = order.pdfRollo;
                         if(pdf!=null){
-                          DownloadUtils().downloadFile(pdf);
+                          DownloadUtils().downloadFilePdf(pdf);
                           return;
                         }
                       }

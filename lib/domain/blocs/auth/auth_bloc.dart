@@ -1,5 +1,5 @@
 import 'dart:async';
-
+import 'dart:io';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:izi_kiosco/data/local/local_storage_credentials.dart';
@@ -19,6 +19,7 @@ import 'dart:developer' as developer;
 
 import 'package:izi_kiosco/domain/repositories/auth_repository.dart';
 import 'package:izi_kiosco/domain/repositories/business_repository.dart';
+import 'package:izi_kiosco/domain/utils/download_utils.dart';
 
 part 'auth_state.dart';
 
@@ -108,6 +109,15 @@ class AuthBloc extends Cubit<AuthState> {
             await BusinessUtils.deleteDeviceId();
             device=null;
           }
+          File? video;
+          if(device != null){
+            try{
+              if(device.config["video"] is String){
+                video = await DownloadUtils().downloadFile(device.config["video"]);
+              }
+            }
+            catch(e){developer.log(e.toString());}
+          }
 
           for (var d in devices) {
             d.sucursalName = contribuyente.sucursales
@@ -131,6 +141,7 @@ class AuthBloc extends Cubit<AuthState> {
               devices: devices,
               currentDevice: device,
               currentSucursal: sucursal,
+              video: video,
               currentContribuyente: contribuyente));
           await LocalStorageFirstConfiguration.saveFirstConfiguration(true);
         } else {

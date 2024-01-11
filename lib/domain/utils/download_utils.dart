@@ -70,7 +70,41 @@ class DownloadUtils{
     }
 
   }
-  Future<bool> downloadFile(String url)async{
+  Future<File?> downloadFile(String url)async{
+    try{
+
+      bool permission=await _checkPermission();
+      if(!permission){
+        throw "Error";
+      }
+
+      if(kIsWeb){
+        return null;
+      }else{
+
+        String fileName = url.split("/").last;
+        String route="${(await _getSavedDir()??"/")}/$fileName";
+        var file = File(route);
+        if(await file.exists()){
+          return file;
+        }
+        else{
+          var data = await Dio().get(url, options: Options(responseType: ResponseType.bytes));
+          if(data.data is List<int>){
+            await file.writeAsBytes(data.data);
+            return file;
+          }
+        }
+      }
+      return null;
+    }
+    catch(error){
+      debugPrint(error.toString());
+      return null;
+    }
+
+  }
+  Future<bool> downloadFilePdf(String url)async{
     try{
 
       bool permission=await _checkPermission();
