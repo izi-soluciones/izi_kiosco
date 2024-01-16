@@ -90,8 +90,8 @@ class _MakeOrderSelectState extends State<MakeOrderSelect> {
               : layout.maxWidth > 450
               ? 2
               : 1)/(widget.makeOrderState.indexCategory==0?2:1)).ceil(),
-          mainAxisSpacing: 4,
-          crossAxisSpacing: 4,
+          mainAxisSpacing: 16,
+          crossAxisSpacing: 16,
           controller: scrollControllerLg,
           padding:
               const EdgeInsets.only(top: 16, right: 32, left: 32, bottom: 63),

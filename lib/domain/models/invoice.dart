@@ -69,6 +69,7 @@ class Invoice {
   bool? desdeInventario;
   int? clienteId;
   int? numeroOrden;
+  int? numeroCustom;
 
   Invoice(
       {
@@ -141,7 +142,8 @@ class Invoice {
         this.giftCardsImpuesto,
         this.montoTotalImpuesto,
         this.contribuyente,
-        this.numeroOrden
+        this.numeroOrden,
+        this.numeroCustom
       });
 
 
@@ -216,6 +218,7 @@ class Invoice {
       montoTotalImpuesto: json["montoTotalImpuesto"],
       contribuyente: json["contribuyente"],
       numeroOrden: json["numeroOrden"],
+      numeroCustom: json["numeroCustom"] is int?json["numeroCustom"]:null,
       actividadEconomica: json["actividadEconomica"],
     );
   }

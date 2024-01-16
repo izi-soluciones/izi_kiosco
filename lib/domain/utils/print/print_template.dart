@@ -11,7 +11,7 @@ import 'package:izi_kiosco/domain/utils/print_utils.dart';
 
 class PrintTemplate {
 
-  static Future<List<IziPrintItem>> order80(int orderNumber, Contribuyente contribuyente, Sucursal sucursal)async{
+  static Future<List<IziPrintItem>> order80(int orderNumber, int? customOrderNumber, Contribuyente contribuyente, Sucursal sucursal)async{
 
     List<IziPrintItem> items = [];
     items.add(IziPrintText(
@@ -26,7 +26,7 @@ class PrintTemplate {
         bold: true));
     items.add(IziPrintSeparator());
     items.add(IziPrintText(
-        text: "Orden #$orderNumber",
+        text: customOrderNumber!=null?"Orden del día #$customOrderNumber":"Orden #${orderNumber}",
         size: IziPrintSize.lg,
         align: IziPrintAlign.center,
         bold: true));
