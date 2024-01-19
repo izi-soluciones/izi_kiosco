@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
+import 'dart:math' as math;
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:izi_kiosco/app/values/app_constants.dart';
@@ -396,7 +397,7 @@ class PaymentBloc extends Cubit<PaymentState> {
     if(_validateInputs()){
       try{
         emit(state.copyWith(status: PaymentStatus.cardProcessing));
-        CardPayment cardPayment =await _comandaRepository.callCardPayment(amount: 1);
+        CardPayment cardPayment =await _comandaRepository.callCardPayment(amount: _getIntFromDecimal(_roundToNDecimals(state.order?.monto ?? 0, 2)));
         emit(state.copyWith(status: PaymentStatus.paymentProcessing));
         var success = false;
         for(int i=0;i<5;i++){
@@ -739,6 +740,15 @@ class PaymentBloc extends Cubit<PaymentState> {
     var tmp = await PrintTemplate.invoice80(invoice!, authState.currentContribuyente!, authState.currentSucursal!);
     var printUtils = PrintUtils();
     await printUtils.print(tmp);
+  }
+
+  double _roundToNDecimals(num num, int n) {
+    double multiplier = math.pow(10, n).toDouble();
+    return (num * multiplier).round() / multiplier;
+  }
+
+  int _getIntFromDecimal(double num){
+    return(num*100).toInt();
   }
 
 
