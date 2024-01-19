@@ -16,6 +16,7 @@ class NewOrderDto {
   String tipoComanda;
   int? id;
   bool anulada;
+  int deviceId;
 
   num total;
 
@@ -35,6 +36,7 @@ class NewOrderDto {
       required this.paraLlevar,
       required this.tipoComanda,
       this.total=0,
+        required this.deviceId,
       required this.sucursal});
 
   Map<String, dynamic> toJson() => {
@@ -42,7 +44,8 @@ class NewOrderDto {
         "custom": {
           if (cantidadComensales != null)
             "cantidadComensales": cantidadComensales,
-          if (nombreMesa != null) "nombreMesa": nombreMesa
+          if (nombreMesa != null) "nombreMesa": nombreMesa,
+          "dispositivo": deviceId
         },
         "descuentos": descuentos,
         "emisor": emisor,

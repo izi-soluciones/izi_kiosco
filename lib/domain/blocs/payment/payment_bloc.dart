@@ -455,6 +455,7 @@ class PaymentBloc extends Cubit<PaymentState> {
             emisor: state.order?.emisor??"",
             fecha: DateTime.now(),
             listaItems: [],
+            deviceId: authState.currentDevice?.id??0,
             mesa: "mesa",
             paraLlevar: true,
 
@@ -576,6 +577,7 @@ class PaymentBloc extends Cubit<PaymentState> {
             descuentos: 0,
             emisor: state.order?.emisor??"",
             fecha: DateTime.now(),
+            deviceId: authState.currentDevice?.id??0,
             listaItems: [],
             mesa: "mesa",
             paraLlevar: true,
