@@ -51,15 +51,15 @@ class PaymentPageSelection extends StatelessWidget {
       gapH: 16,
       crossAxisAlignment: WrapCrossAlignment.center,
       children: [
-        PaymentMethodBtn(
-            onPressed: (){
-              context.read<PaymentBloc>().selectPayment(PaymentType.card,authState);
-            },
-            color: IziColors.secondaryDarken,
-            icon: IziIcons.card,
-            text: LocaleKeys.payment_buttons_card.tr(),
-          description: LocaleKeys.payment_body_paymentCardDescription.tr(),
-        ),
+        // PaymentMethodBtn(
+        //     onPressed: (){
+        //       context.read<PaymentBloc>().selectPayment(PaymentType.card,authState);
+        //     },
+        //     color: IziColors.secondaryDarken,
+        //     icon: IziIcons.card,
+        //     text: LocaleKeys.payment_buttons_card.tr(),
+        //   description: LocaleKeys.payment_body_paymentCardDescription.tr(),
+        // ),
         PaymentMethodBtn(
             onPressed: (){
               context.read<PaymentBloc>().selectPayment(PaymentType.qr,authState);

@@ -655,11 +655,11 @@
 
   "warningCashRegisters": {
     "title": "No se encuentra una caja abierta para poder realizar el pedido",
-    "description": "Utiliza la app de iZi administrador para abrir las cajas"
+    "description": "Informa a un administrador sobre el problema"
   },
   "warningActivity": {
     "title": "No se tiene una actividad economica para procesar el pedido",
-    "description": "Utiliza la app de iZi administrador para configurarla"
+    "description": "Informa a un administrador sobre el problema"
   },
   "warningRooms": {
     "title": "No se encuentra ningun espacio disponible",

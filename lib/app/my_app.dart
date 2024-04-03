@@ -79,7 +79,7 @@ class MyApp extends StatelessWidget {
         debugShowCheckedModeBanner: false,
         debugShowMaterialGrid: false,
         routerConfig: route,
-        title: "Izi Kiosco",
+        title: "iZi Kiosco",
         theme: iziThemeData(),
         builder: (context, child) {
           return BlocBuilder<AuthBloc, AuthState>(
@@ -88,7 +88,7 @@ class MyApp extends StatelessWidget {
             },
             builder: (context, state) {
               return MediaQuery(
-                data: MediaQuery.of(context).copyWith(textScaleFactor: 1.0),
+                data: MediaQuery.of(context).copyWith(textScaler: const TextScaler.linear(1.0)),
                 child: AnimatedSwitcher(
                     duration: const Duration(milliseconds: 300),
                     transitionBuilder: (child, animation) => FadeTransition(
