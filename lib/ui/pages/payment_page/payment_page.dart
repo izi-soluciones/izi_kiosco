@@ -57,6 +57,8 @@ class PaymentPage extends StatelessWidget {
         if (state.status == PaymentStatus.errorGet || state.status == PaymentStatus.markCreateError || state.status== PaymentStatus.errorInvoiced || state.status == PaymentStatus.errorAnnulled) {
 
           context.read<PageUtilsBloc>().unlockPage();
+          context.read<PageUtilsBloc>().closeLoading();
+          context.read<PageUtilsBloc>().closeScreenActive();
           if(GoRouter.of(context).canPop()){
             GoRouter.of(context).pop();
           }else{

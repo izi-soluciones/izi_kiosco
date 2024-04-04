@@ -241,7 +241,7 @@ class MakeOrderBloc extends Cubit<MakeOrderState> {
           mesa: table?.id??"",
           anulada: true,
           deviceId: authState.currentDevice?.id??0,
-          paraLlevar: false,
+          paraLlevar: true,
           tipoComanda: AppConstants.restaurantEnv,
           sucursal: authState.currentSucursal?.id??0);
       Comanda comanda;

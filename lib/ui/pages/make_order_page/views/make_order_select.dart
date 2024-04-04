@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:go_router/go_router.dart';
 import 'package:izi_design_system/tokens/izi_icons.dart';
+import 'package:izi_kiosco/app/values/app_constants.dart';
 import 'package:izi_kiosco/app/values/locale_keys.g.dart';
 import 'package:izi_kiosco/app/values/routes_keys.dart';
 import 'package:izi_kiosco/domain/blocs/make_order/make_order_bloc.dart';
@@ -128,6 +129,18 @@ class _MakeOrderSelectState extends State<MakeOrderSelect> {
       );
     });
   }
+  
+  IconData _selectIconCategory(String name){
+    if(name.isEmpty){
+      return IziIcons.client;
+    }
+    for(var ci in AppConstants.categoryIcons){
+      if(name.toLowerCase().contains(ci.name)){
+        return ci.icon;
+      }
+    }
+    return IziIcons.list;
+  }
 
   Widget _headerLarge() {
     return SingleChildScrollView(
@@ -137,18 +150,7 @@ class _MakeOrderSelectState extends State<MakeOrderSelect> {
           gap: 16,
           children: widget.makeOrderState.categories.asMap().entries.map((e) {
             return MakeOrderCategory(
-                icon: e.value.nombre.isEmpty
-                    ? IziIcons.client
-                    : e.value.nombre.toLowerCase().contains("postre")
-                        ? IziIcons.cake
-                        : e.value.nombre.toLowerCase().contains("sandwich") ||
-                                e.value.nombre
-                                    .toLowerCase()
-                                    .contains("sándwich")
-                            ? IziIcons.sandwich
-                            : e.value.nombre.toLowerCase().contains("jugo")
-                                ? IziIcons.juices
-                                : IziIcons.list,
+                icon: _selectIconCategory(e.value.nombre.toLowerCase()),
                 onPressed: () {
                   context.read<MakeOrderBloc>().changeCategory(e.key);
                 },

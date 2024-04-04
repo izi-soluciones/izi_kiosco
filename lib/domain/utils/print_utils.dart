@@ -76,6 +76,28 @@ class IziPrintLineWrap extends IziPrintItem {
 abstract class IziPrintItem {}
 
 class PrintUtils {
+  printDummy() async {
+    if (kIsWeb) {
+    } else {
+      if (Platform.isAndroid) {
+        var resBinding = await SunmiPrinter.bindingPrinter();
+        await SunmiPrinter.initPrinter();
+        var status = await SunmiPrinter.getPrinterStatus();
+        if (resBinding == true && status != PrinterStatus.ERROR) {
+          await SunmiPrinter.initPrinter();
+          await SunmiPrinter.startTransactionPrint(true);
+          await SunmiPrinter.printText("Bienvenido");
+          await SunmiPrinter.submitTransactionPrint();
+          await SunmiPrinter.cut();
+          await SunmiPrinter.exitTransactionPrint(true);
+        } else {
+          //await _pdfPrint(values);
+        }
+      } else {
+        //await _pdfPrint(values);
+      }
+    }
+  }
   print(List<IziPrintItem> values) async {
     if (kIsWeb) {
       await _pdfPrint(values);

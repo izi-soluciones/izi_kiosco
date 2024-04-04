@@ -44,13 +44,25 @@ class KioskListPage extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          Container(
-                              alignment: Alignment.centerLeft,
-                              padding: const EdgeInsets.all(16),
-                              child: const FittedBox(
-                                  fit: BoxFit.fill,
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Padding(
+                                  padding: EdgeInsets.all(16),
                                   child: Icon(IziIcons.izi,color: IziColors.primary)
-                              )
+                              ),
+
+                              InkWell(
+                                onTap: (){
+                                  context.read<AuthBloc>().logout();
+                                },
+                                child: const Padding(
+                                    padding: EdgeInsets.all(16),
+                                    child: Icon(IziIcons.close,color: IziColors.primary)
+                                ),
+                              ),
+
+                            ],
                           ),
                           IziText.titleMedium(
                               color: IziColors.dark,

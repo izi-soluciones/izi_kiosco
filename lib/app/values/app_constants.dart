@@ -1,3 +1,6 @@
+import 'package:flutter/material.dart';
+import 'package:izi_design_system/tokens/izi_icons.dart';
+
 class AppConstants{
   static num paginationSize = 15;
   static int timerTimeSeconds=30;
@@ -15,4 +18,18 @@ class AppConstants{
   static const idPaymentMethodTransfer=5;
   static const idPaymentMethodGiftCard=6;
   static const idPaymentMethodOthers=8;
+
+
+
+  static const categoryIcons=[
+    CategoryIcons("postre", IziIcons.cake),
+    CategoryIcons("sandwich", IziIcons.sandwich),
+    CategoryIcons("sándwich", IziIcons.sandwich),
+    CategoryIcons("jugo", IziIcons.juices)
+  ];
+}
+class CategoryIcons{
+  final String name;
+  final IconData icon;
+  const CategoryIcons(this.name,this.icon);
 }
