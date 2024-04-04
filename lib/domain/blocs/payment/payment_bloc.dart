@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
 import 'dart:math' as math;
+import 'package:collection/collection.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:izi_kiosco/app/values/app_constants.dart';
@@ -691,10 +692,14 @@ class PaymentBloc extends Cubit<PaymentState> {
 
   }
 
-  queryBusiness({required String query,required AuthState authState})async{
+  Future<void> queryBusiness({required AuthState authState})async{
+    if(state.documentNumber.value.length<3){
+      return;
+    }
     emit(state.copyWith(documentNumber: state.documentNumber.changeLoading(true)));
-    List<Contribuyente> businessList=await _businessRepository.queryBusinessSearch(query: query, contribuyenteId: authState.currentContribuyente?.id??0);
-    emit(state.copyWith(documentNumber: state.documentNumber.changeLoading(false),queryBusinessList: businessList));
+    List<Contribuyente> businessList=await _businessRepository.queryBusinessSearch(query: state.documentNumber.value, contribuyenteId: authState.currentContribuyente?.id??0);
+    Contribuyente? find = businessList.firstWhereOrNull((element) => element.nit==state.documentNumber.value);
+    emit(state.copyWith(businessName: state.businessName.changeValue(find?.razonSocial??""),documentNumber: state.documentNumber.changeLoading(false)));
   }
 
 
