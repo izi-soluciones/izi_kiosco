@@ -3,15 +3,18 @@ import 'dart:typed_data';
 import 'package:collection/collection.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:izi_kiosco/app/values/app_constants.dart';
 import 'package:izi_kiosco/app/values/env_keys.dart';
+import 'package:izi_kiosco/domain/models/comanda.dart';
 import 'package:izi_kiosco/domain/models/contribuyente.dart';
 import 'package:izi_kiosco/domain/models/invoice.dart';
 import 'package:izi_kiosco/domain/utils/date_formatter.dart';
 import 'package:izi_kiosco/domain/utils/print_utils.dart';
+import 'package:izi_kiosco/ui/utils/money_formatter.dart';
 
 class PrintTemplate {
 
-  static Future<List<IziPrintItem>> order80(int orderNumber, int? customOrderNumber, Contribuyente contribuyente, Sucursal sucursal)async{
+  static Future<List<IziPrintItem>> order80(int orderNumber, int? customOrderNumber, Contribuyente contribuyente, Sucursal sucursal, Comanda? order)async{
 
     List<IziPrintItem> items = [];
     items.add(IziPrintText(
@@ -30,6 +33,18 @@ class PrintTemplate {
         size: IziPrintSize.lg,
         align: IziPrintAlign.center,
         bold: true));
+    items.add(IziPrintSeparator(dotted: true));
+    items.add(IziPrintLineWrap(lines: 1));
+    items.add(IziPrintText(
+      text: order?.listaItems.map((e) => e.nombre).join(", ") ?? "",
+      size: IziPrintSize.md,
+      align: IziPrintAlign.left,));
+    items.add(IziPrintText(
+        text: "Monto total: ${order?.montoTotal?.moneyFormat(currency: AppConstants.defaultCurrency)}",
+        size: IziPrintSize.md,
+        align: IziPrintAlign.left,
+        bold: true));
+    items.add(IziPrintLineWrap(lines: 1));
     items.add(IziPrintSeparator(dotted: true));
     items.add(IziPrintText(
         text: DateTime.now().dateFormat(DateFormatterType.dateHour),

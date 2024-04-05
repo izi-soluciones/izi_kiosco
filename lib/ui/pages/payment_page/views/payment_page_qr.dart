@@ -208,6 +208,13 @@ class _PaymentPageQrState extends State<PaymentPageQr> {
                                 text:
                                     LocaleKeys.payment_body_cantPayWithQR.tr(),
                                 fontWeight: FontWeight.w400),
+
+                          if(widget.state.qrWait)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 32.0),
+                            child: IziText.titleSmall(maxLines: 5,textAlign: TextAlign.center,color: IziColors.secondaryDarken, text: "Si ya hiciste el pago, espera unos segundos a que recibamos la confirmación", fontWeight: FontWeight.w500),
+                          ),
+
                         ],
                       )),
                 ),

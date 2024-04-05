@@ -46,6 +46,7 @@ class PaymentState extends Equatable {
   //VARIABLES
   final num? qrAmount;
   final Charge? qrCharge;
+  final bool qrWait;
   final int? qrPaymentKey;
 
   final bool qrLoading;
@@ -98,6 +99,7 @@ class PaymentState extends Equatable {
         required this.qrLoading,
         this.qrAmount,
         this.qrCharge,
+        this.qrWait = false,
         this.qrPaymentKey});
 
   factory PaymentState.init() => PaymentState(
@@ -156,6 +158,7 @@ class PaymentState extends Equatable {
         Charge? Function()? qrCharge,
         num? qrAmount,
         int? qrPaymentKey,
+        bool? qrWait,
         bool? qrLoading,
       Sucursal? casaMatriz}) {
     return PaymentState(
@@ -187,7 +190,8 @@ class PaymentState extends Equatable {
       phoneNumber: phoneNumber ?? this.phoneNumber,
       qrCharge: qrCharge !=null?qrCharge() : this.qrCharge,
       qrPaymentKey: qrPaymentKey == -1?null: qrPaymentKey ?? this.qrPaymentKey,
-      qrLoading: qrLoading ?? this.qrLoading
+      qrLoading: qrLoading ?? this.qrLoading,
+      qrWait: qrWait ?? this.qrWait
     );
   }
 
@@ -209,6 +213,7 @@ class PaymentState extends Equatable {
         documentNumber,
         documentType,
         isManual,
+    qrWait,
         queryBusinessList,
     phoneNumber,
     payments,

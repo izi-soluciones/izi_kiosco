@@ -1,4 +1,5 @@
 import 'dart:developer';
+import 'package:collection/collection.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:izi_kiosco/app/values/app_constants.dart';
@@ -211,14 +212,13 @@ class MakeOrderBloc extends Cubit<MakeOrderState> {
 
   Future<Comanda?> emitOrder(AuthState authState)async{
     try{
-
-      int cajaUsuarioIndex=state.cashRegisters.indexWhere((element) => element.userOpen==authState.currentUser?.id);
+      int cajaUsuarioIndex=state.cashRegisters.indexWhere((element) => authState.currentDevice?.caja==element.id);
       CashRegister? cashRegister;
       if(cajaUsuarioIndex!=-1){
         cashRegister=state.cashRegisters[cajaUsuarioIndex];
       }
       else{
-        cashRegister=state.cashRegisters.firstWhere((element) => element.abierta==true);
+        cashRegister=state.cashRegisters.firstWhereOrNull((element) => element.abierta==true);
       }
       int tableIndex= state.tables.indexWhere((element) => element.id==state.tableId);
       ConsumptionPoint? table;
@@ -229,9 +229,8 @@ class MakeOrderBloc extends Cubit<MakeOrderState> {
       for(var c in state.itemsSelected){
         items.addAll(c.items);
       }
-
       NewOrderDto newOrderDto = NewOrderDto(
-          caja: cashRegister.id,
+          caja: cashRegister?.id,
           cantidadComensales: state.numberDiners,
           nombreMesa: table?.nombre,
           descuentos: state.discountAmount,

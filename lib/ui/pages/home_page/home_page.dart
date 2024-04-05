@@ -31,7 +31,7 @@ class _HomePageState extends State<HomePage> {
   VideoPlayerController? _controller;
   _startTimer() {
     timer?.cancel();
-    timer = Timer(const Duration(seconds: 5), () {
+    timer = Timer(const Duration(seconds: 4), () {
       setState(() {
         errorPressed = true;
       });
@@ -59,7 +59,7 @@ class _HomePageState extends State<HomePage> {
         _controller?.dispose();
       }
       var authState = (context ?? this.context).read<AuthBloc>().state;
-      Future.delayed(const Duration(seconds: 30)).then((value) {
+      Future.delayed(const Duration(seconds: 5)).then((value) {
         if(!mounted){
           return;
         }
@@ -250,6 +250,8 @@ class _HomePageState extends State<HomePage> {
                       setState(() {
                         showVideo=false;
                         _initVideo(context: context);
+                        GoRouter.of(context).goNamed(RoutesKeys.makeOrder);
+                        context.read<PageUtilsBloc>().initScreenActive();
                       });
                     },
                     child: Column(

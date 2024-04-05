@@ -102,8 +102,8 @@
     }
   },
   "orderList": {
-    "drawer": "Todas las órdenes",
-    "title": "Todas las órdenes",
+    "drawer": "Todas las ordenes",
+    "title": "Todas las ordenes",
     "buttons": {
       "moreFilters": "Más filtros",
       "print": "Imprimir",
@@ -241,7 +241,7 @@
       "and": "y",
       "pay": "paga",
       "here": "aquí",
-      "clickToInit": "Toca la pantalla para iniciar",
+      "clickToInit": "Toca aqui para hacer tu pedido",
       "anIziPlatform": "Una plataforma de"
     }
   },
@@ -319,8 +319,8 @@
       "cardError": "No se pudo completrar el pago",
       "paymentQrDescription": "Utiliza tu aplicación de banco para escanear el QR",
       "paymentCardDescription": "Utiliza el POS para pagar con tu tarjeta",
-      "paymentCashRegisterDescription": "Acércate a nuestras cajas para completar tu órden",
-      "goToCashRegisters": "Acercate a una de nuestras cajas para completar tu órden"
+      "paymentCashRegisterDescription": "Acércate a nuestras cajas para completar tu orden",
+      "goToCashRegisters": "Acercate a una de nuestras cajas para completar tu orden"
 
     },
     "buttons": {
@@ -631,8 +631,8 @@
     },
     "messages": {
       "errorEmit": "No se pudo guardar la orden",
-      "successEmit": "Órden emitida correctamente",
-      "successEdit": "Órden editada correctamente"
+      "successEmit": "Orden emitida correctamente",
+      "successEdit": "Orden editada correctamente"
     }
   },
   "general": {

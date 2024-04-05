@@ -110,7 +110,7 @@ class PrintUtils {
         if (resBinding == true && status != PrinterStatus.ERROR) {
           await _sunmiPrint(values);
         } else {
-          //await _pdfPrint(values);
+          await _pdfPrint(values);
         }
       } else {
         //await _pdfPrint(values);

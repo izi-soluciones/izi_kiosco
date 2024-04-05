@@ -330,7 +330,7 @@ class PaymentBloc extends Cubit<PaymentState> {
         },);
         return;
       }
-      emit(state.copyWith(paymentType: paymentType,step: 1));
+      emit(state.copyWith(paymentType: paymentType,step: 1,qrWait: false,qrLoading: false,qrCharge: ()=>null));
     }
     catch(e){
       log(e.toString());
@@ -491,6 +491,13 @@ class PaymentBloc extends Cubit<PaymentState> {
           qrStream?.cancel();
         }
         Timer? timer;
+
+        Timer(const Duration(seconds: 15),() async{
+          if(!isClosed){
+            emit(state.copyWith(qrWait: true));
+          }
+        },);
+
         qrStream = _socketRepository.listenQr(charge: charge).listen((event) async{
           if(event is Map && event["statusVenta"]=="success"){
             try{
@@ -733,7 +740,7 @@ class PaymentBloc extends Cubit<PaymentState> {
   }
 
   _printRolloOrder(AuthState authState,{required int orderNumber,int? customOrderNumber})async{
-    var tmp = await PrintTemplate.order80(orderNumber,customOrderNumber,authState.currentContribuyente!, authState.currentSucursal!);
+    var tmp = await PrintTemplate.order80(orderNumber,customOrderNumber,authState.currentContribuyente!, authState.currentSucursal!,state.order);
     var printUtils = PrintUtils();
     await printUtils.print(tmp);
   }
