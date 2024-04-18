@@ -212,7 +212,7 @@ class MakeOrderBloc extends Cubit<MakeOrderState> {
 
   Future<Comanda?> emitOrder(AuthState authState)async{
     try{
-      int cajaUsuarioIndex=state.cashRegisters.indexWhere((element) => authState.currentDevice?.caja==element.id);
+      int cajaUsuarioIndex=state.cashRegisters.indexWhere((element) => authState.currentDevice?.caja==element.id && element.abierta==true);
       CashRegister? cashRegister;
       if(cajaUsuarioIndex!=-1){
         cashRegister=state.cashRegisters[cajaUsuarioIndex];
