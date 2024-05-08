@@ -1,4 +1,4 @@
-import 'package:izi_kiosco/domain/utils/date_formatter.dart';
+import 'package:izi_kiosco/app/values/app_constants.dart';
 
 class QrDto {
   int orderId;
@@ -17,12 +17,10 @@ class QrDto {
   Map<String,dynamic> toJson(int contribuyenteId)=>{
     "contribuyente": contribuyenteId,
     "pedido": orderId,
-    "titulo": "Cobro Solicitado",
-    "fechaCreacion": date.dateFormat(DateFormatterType.data),
-    "pasarela": "LINKSER",
     "monto": monto,
     "moneda": moneda,
     "monedaId": monedaId,
+    "metodoPago": AppConstants.idPaymentMethodQR,
     "config": {
       "notificarPagador":true,
       "desdeKiosco":true

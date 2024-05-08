@@ -211,7 +211,7 @@ class ComandaRepositoryHttp extends ComandaRepository {
   Future<Charge> generateQr(
       {required int contribuyenteId, required QrDto qr}) async {
     try {
-      String path = "/cobros-contribuyente";
+      String path = "/solicitudes-cobro";
       var response = await _dioClient.post(
           uri: path,
           body: qr.toJson(contribuyenteId),

@@ -399,6 +399,7 @@ class PaymentBloc extends Cubit<PaymentState> {
       try{
         emit(state.copyWith(status: PaymentStatus.cardProcessing));
         CardPayment cardPayment =await _comandaRepository.callCardPayment(amount: _getIntFromDecimal(_roundToNDecimals(state.order?.monto ?? 0, 2)));
+
         emit(state.copyWith(status: PaymentStatus.paymentProcessing));
         var success = false;
         for(int i=0;i<5;i++){
