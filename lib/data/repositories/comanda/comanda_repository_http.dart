@@ -8,6 +8,7 @@ import 'package:izi_kiosco/data/core/dio_client.dart';
 import 'package:izi_kiosco/domain/dto/filters_comanda.dart';
 import 'package:izi_kiosco/domain/dto/invoice_dto.dart';
 import 'package:izi_kiosco/domain/dto/new_order_dto.dart';
+import 'package:izi_kiosco/domain/dto/paid_charge_dto.dart';
 import 'package:izi_kiosco/domain/dto/qr_dto.dart';
 import 'package:izi_kiosco/domain/models/card_payment.dart';
 import 'package:izi_kiosco/domain/models/category_order.dart';
@@ -524,6 +525,31 @@ class ComandaRepositoryHttp extends ComandaRepository {
         return Invoice.fromJson(response.data["factura"]);
       }
       else{
+        if (response.data?["status"] ?? false) {
+          throw response.data?["data"];
+        }
+        throw response.data;
+      }
+    } on DioException catch (e) {
+      if (e.response?.data is String) {
+        throw e.response?.data;
+      }
+      throw e.error ?? "Network Error";
+    } catch (error) {
+      throw error.toString();
+    }
+  }
+
+  @override
+  Future<void> createPaidCharge(PaidChargeDto paidChargeDto) async{
+    try {
+      String path =
+          "/solicitudes-cobro/cobro-pagado";
+      var response = await _dioClient.post(
+          uri: path,
+          body: paidChargeDto.toJson(),
+          options: Options(responseType: ResponseType.json));
+      if (response.statusCode != 200) {
         if (response.data?["status"] ?? false) {
           throw response.data?["data"];
         }
