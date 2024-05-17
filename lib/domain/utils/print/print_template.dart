@@ -225,7 +225,7 @@ class PrintTemplate {
           align: IziPrintAlign.center,bold: true));
       items.add(IziPrintText(
           text:
-              "FECHA: ${DateTime.parse(invoice.fecha).dateFormat(DateFormatterType.dateHour)}",
+              "FECHA: ${DateTime.parse(invoice.fecha).toLocal().dateFormat(DateFormatterType.dateHour)}",
           size: IziPrintSize.sm,
           align: IziPrintAlign.center,bold: true));
 

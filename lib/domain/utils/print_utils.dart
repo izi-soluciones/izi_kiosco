@@ -98,6 +98,34 @@ class PrintUtils {
       }
     }
   }
+  printTest() async {
+    if (kIsWeb) {
+    } else {
+      if (Platform.isAndroid) {
+        var resBinding = await SunmiPrinter.bindingPrinter();
+        await SunmiPrinter.initPrinter();
+        var status = await SunmiPrinter.getPrinterStatus();
+        log(status.toString());
+        if (resBinding == true && status != PrinterStatus.ERROR) {
+
+          await SunmiPrinter.initPrinter();
+          await SunmiPrinter.startTransactionPrint(true);
+
+          await SunmiPrinter.printText("Bienvenido Kiosko-iZi",
+              style: SunmiStyle(
+                  align: SunmiPrintAlign.CENTER,
+                  bold: true,
+                  fontSize: SunmiFontSize.MD));
+          await SunmiPrinter.submitTransactionPrint();
+          await SunmiPrinter.cut();
+          await SunmiPrinter.exitTransactionPrint(true);
+        } else {
+        }
+      } else {
+        //await _pdfPrint(values);
+      }
+    }
+  }
   print(List<IziPrintItem> values) async {
     if (kIsWeb) {
       await _pdfPrint(values);

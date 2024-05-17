@@ -38,7 +38,7 @@ class PaymentPage extends StatelessWidget {
         }
         if(state.status == PaymentStatus.errorActivity){
           CustomAlerts.defaultAlert(context: context,dismissible: true, child: WarningConfigModal(
-              title: LocaleKeys.warningActivity.tr(),
+              title: LocaleKeys.warningActivity_title.tr(),
               description: LocaleKeys.warningActivity_description.tr()
           )).then((value){
             GoRouter.of(context).goNamed(RoutesKeys.home);
