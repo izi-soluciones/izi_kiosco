@@ -48,7 +48,7 @@ class PaymentBloc extends Cubit<PaymentState> {
       if (order != null || orderId != null) {
         bool usaSiat = false;
         int casaMatrizIndex = authState.currentContribuyente?.sucursales
-                ?.indexWhere((element) => element.isCasaMatriz == true) ??
+                ?.indexWhere((element) => element.id==authState.currentDevice?.sucursal) ??
             -1;
         if (casaMatrizIndex != -1) {
 
@@ -499,7 +499,7 @@ class PaymentBloc extends Cubit<PaymentState> {
           documentType=state.documentTypes.first;
         }
         custom["pagadorData"]={
-          "tipoDocumento": documentType,
+          "tipoDocumento": documentType?.toJson(),
           "nit":state.documentNumber.value.isEmpty? "0":state.documentNumber.value,
           "complemento":state.complement.value,
           "razonSocial":state.businessName.value.isEmpty?"S/N":state.businessName.value,
