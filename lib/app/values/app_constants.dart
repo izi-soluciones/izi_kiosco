@@ -11,6 +11,9 @@ class AppConstants{
   static int defaultCurrencyId=150;
   static String restaurantEnv="restaurante";
   static String posUrlEnv="POS_URL";
+  static int codeCI =1;
+
+  static List<String> ciList=["lp", "cb", "sc", "or", "pt", "ch", "tj", "be", "pd"];
 
   static const idPaymentMethodCash=1;
   static const idPaymentMethodCard=2;

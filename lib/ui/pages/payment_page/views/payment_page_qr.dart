@@ -5,6 +5,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:izi_design_system/atoms/izi_typography.dart';
@@ -440,12 +441,14 @@ class _PaymentPageQrState extends State<PaymentPageQr> {
                   inputType: InputType.number,
                 ),
               ),
-              if (widget.state.usaSiat)
+              if (widget.state.usaSiat && widget.state.documentType?.codigoClasificador==AppConstants.codeCI)
                 Expanded(
                   flex: 1,
                   child: IziInput(
                     labelInput: LocaleKeys.payment_inputs_complement_label.tr(),
                     inputHintText: "",
+                    inputFormatters: [
+                      FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z]')),],
                     readOnly: widget.state.qrCharge != null || widget.state.qrLoading==true,
                     onChanged: (value, valueRaw) {
                       context.read<PaymentBloc>().changeInputs(complement: value);

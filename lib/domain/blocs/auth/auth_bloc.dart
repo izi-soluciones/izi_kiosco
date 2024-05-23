@@ -20,6 +20,7 @@ import 'dart:developer' as developer;
 import 'package:izi_kiosco/domain/repositories/auth_repository.dart';
 import 'package:izi_kiosco/domain/repositories/business_repository.dart';
 import 'package:izi_kiosco/domain/utils/download_utils.dart';
+import 'package:izi_kiosco/domain/utils/print_utils.dart';
 
 part 'auth_state.dart';
 
@@ -50,6 +51,7 @@ class AuthBloc extends Cubit<AuthState> {
 
   Future<void> verify() async {
     try {
+      PrintUtils().printTest();
       emit(state.copyWith(status: AuthStatus.init));
       await Future.delayed(const Duration(milliseconds: 2000));
       CredentialStorage? credentials =

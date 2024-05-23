@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 1.0.0+1
+version: 1.0.8+3
 
 environment:
   sdk: '>=3.0.6 <4.0.0'
@@ -31,9 +31,9 @@ dependencies:
   flutter:
     sdk: flutter
   izi_design_system:
-    #path: /Users/macbookm2pro/Documents/izi/izi-design-system-flutter
-    git:
-      url: https://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@github.com/izi-soluciones/izi-design-system-flutter.git
+    path: /Users/macbookm2pro/Documents/izi/izi-design-system-flutter
+    #git:
+    #  url: https://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@github.com/izi-soluciones/izi-design-system-flutter.git
 
 
   # The following adds the Cupertino Icons font to your application.

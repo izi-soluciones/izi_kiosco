@@ -1,6 +1,7 @@
 import 'package:izi_kiosco/domain/dto/filters_comanda.dart';
 import 'package:izi_kiosco/domain/dto/invoice_dto.dart';
 import 'package:izi_kiosco/domain/dto/new_order_dto.dart';
+import 'package:izi_kiosco/domain/dto/paid_charge_dto.dart';
 import 'package:izi_kiosco/domain/dto/qr_dto.dart';
 import 'package:izi_kiosco/domain/models/card_payment.dart';
 import 'package:izi_kiosco/domain/models/category_order.dart';
@@ -41,5 +42,6 @@ abstract class ComandaRepository{
   Future<Comanda> markAsCreated(int orderId);
 
   Future<Invoice> getInvoice(int invoiceId);
+  Future<void> createPaidCharge(PaidChargeDto paidChargeDto);
 
 }
