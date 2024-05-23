@@ -31,9 +31,9 @@ dependencies:
   flutter:
     sdk: flutter
   izi_design_system:
-    #path: /Users/macbookm2pro/Documents/izi/izi-design-system-flutter
-    git:
-      url: https://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@github.com/izi-soluciones/izi-design-system-flutter.git
+    path: /Users/macbookm2pro/Documents/izi/izi-design-system-flutter
+    #git:
+    #  url: https://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@github.com/izi-soluciones/izi-design-system-flutter.git
 
 
   # The following adds the Cupertino Icons font to your application.

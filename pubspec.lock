@@ -392,11 +392,9 @@ packages:
   izi_design_system:
     dependency: "direct main"
     description:
-      path: "."
-      ref: HEAD
-      resolved-ref: f123958702181acf9bad4cb757cfcd3b64fa4063
-      url: "https://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@github.com/izi-soluciones/izi-design-system-flutter.git"
-    source: git
+      path: "/Users/macbookm2pro/Documents/izi/izi-design-system-flutter"
+      relative: false
+    source: path
     version: "0.0.2"
   js:
     dependency: transitive

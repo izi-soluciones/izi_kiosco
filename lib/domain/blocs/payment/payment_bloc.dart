@@ -501,7 +501,7 @@ class PaymentBloc extends Cubit<PaymentState> {
         custom["pagadorData"]={
           "tipoDocumento": documentType?.toJson(),
           "nit":state.documentNumber.value.isEmpty? "0":state.documentNumber.value,
-          "complemento":state.complement.value,
+          "complemento":AppConstants.ciList.contains(state.complement.value.toLowerCase()) || state.documentNumber.value.isEmpty?null:state.complement.value,
           "razonSocial":state.businessName.value.isEmpty?"S/N":state.businessName.value,
           "telefonoComprador":state.phoneNumber.value
         };
