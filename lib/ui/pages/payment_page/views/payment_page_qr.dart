@@ -576,10 +576,7 @@ class _PaymentPageQrState extends State<PaymentPageQr> {
                       buttonSize:
                       ru.gtXs() ? ButtonSize.large : ButtonSize.medium,
                       buttonOnPressed: () async {
-                        context.read<PageUtilsBloc>().closeScreenActive();
-                        await context
-                            .read<PaymentBloc>()
-                            .makeCardPayment(context.read<AuthBloc>().state);
+                        _paymentCard(context);
                       }),
                 ),
               if (ru.gtXs())
@@ -589,16 +586,26 @@ class _PaymentPageQrState extends State<PaymentPageQr> {
                     buttonSize:
                     ru.gtXs() ? ButtonSize.large : ButtonSize.medium,
                     buttonOnPressed: () async {
-                      context.read<PageUtilsBloc>().closeScreenActive();
-                      await context
-                          .read<PaymentBloc>()
-                          .makeCardPayment(context.read<AuthBloc>().state);
+                      _paymentCard(context);
                     }),
             ],
           ),
         ],
       ),
     );
+  }
+  _paymentCard(BuildContext context)async{
+
+    context.read<PageUtilsBloc>().closeScreenActive();
+    var status = await context
+        .read<PaymentBloc>()
+        .makeCardPaymentATC(context.read<AuthBloc>().state);
+    if(!mounted){
+      return;
+    }
+    if(!status){
+      context.read<PageUtilsBloc>().initScreenActive();
+    }
   }
 
   String? _getErrorsDocumentNumber(InputError? inputError) {

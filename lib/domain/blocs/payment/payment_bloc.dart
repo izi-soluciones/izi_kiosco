@@ -11,7 +11,7 @@ import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
 import 'package:izi_kiosco/domain/dto/invoice_dto.dart';
 import 'package:izi_kiosco/domain/dto/new_order_dto.dart';
 import 'package:izi_kiosco/domain/dto/paid_charge_dto.dart';
-import 'package:izi_kiosco/domain/dto/qr_dto.dart';
+import 'package:izi_kiosco/domain/dto/payment_dto.dart';
 import 'package:izi_kiosco/domain/models/card_payment.dart';
 import 'package:izi_kiosco/domain/models/cash_register.dart';
 import 'package:izi_kiosco/domain/models/charge.dart';
@@ -28,6 +28,7 @@ import 'package:izi_kiosco/domain/repositories/socket_repository.dart';
 import 'package:izi_kiosco/domain/utils/input_obj.dart';
 import 'package:izi_kiosco/domain/utils/print/print_template.dart';
 import 'package:izi_kiosco/domain/utils/print_utils.dart';
+import 'package:izi_kiosco/ui/utils/money_formatter.dart';
 part 'payment_state.dart';
 part 'payment_inputs.dart';
 
@@ -395,6 +396,54 @@ class PaymentBloc extends Cubit<PaymentState> {
     return super.close();
   }
 
+  Future<bool> makeCardPaymentATC(AuthState authState)async{
+    if(_validateInputs()){
+      try{
+        emit(state.copyWith(status: PaymentStatus.cardProcessing));
+        PaymentDto newPayment = PaymentDto(
+            orderId: state.order?.id??0,
+            date: DateTime.now(),
+            monto: state.order?.monto??0,
+            metodoPago: AppConstants.idPaymentMethodPOS,
+            moneda: state.currentCurrency?.simbolo == "Bs"?"BOB":state.currentCurrency?.simbolo ?? "BOB",
+            monedaId: state.currentCurrency?.id ?? AppConstants.defaultCurrencyId
+        );
+
+        Charge charge = await _comandaRepository.generatePayment(contribuyenteId: authState.currentContribuyente?.id??0, payment: newPayment);
+        await _saveAndListenPayment(authState,charge);
+        CardPayment cardPayment =await _comandaRepository.callCardPaymentATC(amount: (state.order?.monto ?? 0).moneyFormat());
+        var success=false;
+        for(var i=0;i<5;i++){
+          try{
+            await _comandaRepository.markPaymentATC(charge.token??'', charge.uuid);
+            success =true;
+            break;
+          }
+          catch(e){
+            log(e.toString());
+          }
+        }
+        if(!success){
+          await LocalStorageCardErrors.saveCardErrors(jsonEncode(cardPayment.toJson()));
+          emit(state.copyWith(step:3,status: PaymentStatus.cardSuccess));
+          timerSuccess=Timer(const Duration(seconds: 30),() async{
+            emit(state.copyWith(status: PaymentStatus.successInvoice));
+          },);
+          return false;
+        }
+        else{
+          return true;
+        }
+      }
+      catch(e){
+        log(e.toString());
+        emit(state.copyWith(status: PaymentStatus.cardError));
+        emit(state.copyWith(status: PaymentStatus.successGet));
+      }
+    }
+    return false;
+
+  }
   Future<void> makeCardPayment(AuthState authState)async{
     if(_validateInputs()){
       try{
@@ -464,98 +513,112 @@ class PaymentBloc extends Cubit<PaymentState> {
       if(_validateInputs()){
 
         emit(state.copyWith(qrLoading: true));
-        QrDto qr = QrDto(
+        PaymentDto qr = PaymentDto(
             orderId: state.order?.id??0,
             date: DateTime.now(),
+            metodoPago: AppConstants.idPaymentMethodQR,
             monto: state.order?.monto??0,
             moneda: state.currentCurrency?.simbolo == "Bs"?"BOB":state.currentCurrency?.simbolo ?? "BOB",
             monedaId: state.currentCurrency?.id ?? AppConstants.defaultCurrencyId
         );
 
-        Charge charge = await _comandaRepository.generateQr(contribuyenteId: authState.currentContribuyente?.id??0, qr: qr);
-        var newOrderDto = NewOrderDto(
-            caja: state.order?.caja,
-            cantidadComensales: 0,
-            nombreMesa: "nombreMesa",
-            descuentos: 0,
-            emisor: state.order?.emisor??"",
-            fecha: DateTime.now(),
-            listaItems: [],
-            deviceId: authState.currentDevice?.id??0,
-            mesa: "mesa",
-            paraLlevar: true,
+        Charge charge = await _comandaRepository.generatePayment(contribuyenteId: authState.currentContribuyente?.id??0, payment: qr);
+        await _saveAndListenPayment(authState,charge);
+        emit(state.copyWith(qrCharge: ()=>charge,qrLoading: false));
+        return true;
+      }
+      return false;
+    }
+    catch(e){
+      log(e.toString());
+      emit(state.copyWith(qrLoading: false,qrCharge: ()=>null));
+      return false;
+    }
+  }
+  _saveAndListenPayment(AuthState authState,Charge charge)async {
+    var newOrderDto = NewOrderDto(
+        caja: state.order?.caja,
+        cantidadComensales: 0,
+        nombreMesa: "nombreMesa",
+        descuentos: 0,
+        emisor: state.order?.emisor??"",
+        fecha: DateTime.now(),
+        listaItems: [],
+        deviceId: authState.currentDevice?.id??0,
+        mesa: "mesa",
+        paraLlevar: true,
 
-            tipoComanda: AppConstants.restaurantEnv,
-            sucursal: state.order?.sucursal??0
-        );
-        Map custom ={};
-        if(state.order?.custom is Map){
-          custom=(state.order!.custom  as Map);
+        tipoComanda: AppConstants.restaurantEnv,
+        sucursal: state.order?.sucursal??0
+    );
+    Map custom ={};
+    if(state.order?.custom is Map){
+      custom=(state.order!.custom  as Map);
+    }
+    newOrderDto.id=state.order?.id;
+
+    var documentType=state.documentType;
+    if(state.documentNumber.value.isEmpty && state.usaSiat){
+      documentType=state.documentTypes.first;
+    }
+    custom["pagadorData"]={
+      "tipoDocumento": documentType?.toJson(),
+      "nit":state.documentNumber.value.isEmpty? "0":state.documentNumber.value,
+      "complemento":AppConstants.ciList.contains(state.complement.value.toLowerCase()) || state.documentNumber.value.isEmpty?null:state.complement.value,
+      "razonSocial":state.businessName.value.isEmpty?"S/N":state.businessName.value,
+      "telefonoComprador":state.phoneNumber.value
+    };
+
+    newOrderDto.custom=custom;
+    await _comandaRepository.editOrder(newOrder: newOrderDto);
+    if(isClosed){
+      return false;
+    }
+    if(qrStream !=null){
+      _socketRepository.closeQrListening();
+      qrStream?.cancel();
+    }
+    Timer? timer;
+
+    Timer(const Duration(seconds: 15),() async{
+      if(!isClosed){
+        emit(state.copyWith(qrWait: true));
+      }
+    },);
+
+    qrStream = _socketRepository.listenPayment(charge: charge).listen((event) async{
+      if(event is Map && event["statusVenta"]=="success"){
+        try{
+          if(event["numeroOrden"] is int){
+            await _printRolloOrder(authState, orderNumber: event["numeroOrden"],customOrderNumber: event["numeroCustom"] is int?event["numeroCustom"]:null);
+          }
+          if(event["idFactura"] is int){
+            await _printRollo(authState, idInvoice: event["idFactura"]);
+          }
         }
-        newOrderDto.id=state.order?.id;
-
-        var documentType=state.documentType;
-        if(state.documentNumber.value.isEmpty && state.usaSiat){
-          documentType=state.documentTypes.first;
-        }
-        custom["pagadorData"]={
-          "tipoDocumento": documentType?.toJson(),
-          "nit":state.documentNumber.value.isEmpty? "0":state.documentNumber.value,
-          "complemento":AppConstants.ciList.contains(state.complement.value.toLowerCase()) || state.documentNumber.value.isEmpty?null:state.complement.value,
-          "razonSocial":state.businessName.value.isEmpty?"S/N":state.businessName.value,
-          "telefonoComprador":state.phoneNumber.value
-        };
-
-        newOrderDto.custom=custom;
-        await _comandaRepository.editOrder(newOrder: newOrderDto);
-        if(isClosed){
-          return false;
+        catch(_){}
+        if(timer!=null){
+          timer!.cancel();
         }
         if(qrStream !=null){
           _socketRepository.closeQrListening();
           qrStream?.cancel();
         }
-        Timer? timer;
-
-        Timer(const Duration(seconds: 15),() async{
-          if(!isClosed){
-            emit(state.copyWith(qrWait: true));
-          }
+        emit(state.copyWith(step:2,status: PaymentStatus.qrProcessed));
+        timerSuccess=Timer(const Duration(seconds: 10),() async{
+          emit(state.copyWith(status: PaymentStatus.successInvoice));
         },);
-
-        qrStream = _socketRepository.listenQr(charge: charge).listen((event) async{
-          if(event is Map && event["statusVenta"]=="success"){
-            try{
-              if(event["numeroOrden"] is int){
-                await _printRolloOrder(authState, orderNumber: event["numeroOrden"],customOrderNumber: event["numeroCustom"] is int?event["numeroCustom"]:null);
-              }
-              if(event["idFactura"] is int){
-                await _printRollo(authState, idInvoice: event["idFactura"]);
-              }
-            }
-            catch(_){}
-            if(timer!=null){
-              timer!.cancel();
-            }
-            if(qrStream !=null){
-              _socketRepository.closeQrListening();
-              qrStream?.cancel();
-            }
-            emit(state.copyWith(step:2,status: PaymentStatus.qrProcessed));
-            timerSuccess=Timer(const Duration(seconds: 10),() async{
-              emit(state.copyWith(status: PaymentStatus.successInvoice));
-            },);
-          }
-          else{
-            timer=Timer(const Duration(seconds: 60),() async{
-              emit(state.copyWith(step:2,status: PaymentStatus.qrProcessed));
-              timerSuccess=Timer(const Duration(seconds: 10),() async{
-                emit(state.copyWith(status: PaymentStatus.successInvoice));
-              },);
-            },);
-            emit(state.copyWith(status: PaymentStatus.paymentProcessing));
-          }
-          /*
+      }
+      else{
+        timer=Timer(const Duration(seconds: 60),() async{
+          emit(state.copyWith(step:2,status: PaymentStatus.qrProcessed));
+          timerSuccess=Timer(const Duration(seconds: 10),() async{
+            emit(state.copyWith(status: PaymentStatus.successInvoice));
+          },);
+        },);
+        emit(state.copyWith(status: PaymentStatus.paymentProcessing));
+      }
+      /*
           _socketRepository.closeQrListening();
           qrStream?.cancel();
           qrStream = null;
@@ -582,17 +645,7 @@ class PaymentBloc extends Cubit<PaymentState> {
             emit(state.copyWith(step:2,status: PaymentStatus.qrProcessed));
           await Future.delayed(const Duration(seconds: 5));
           emit(state.copyWith(status: PaymentStatus.successInvoice));*/
-        },);
-        emit(state.copyWith(qrCharge: ()=>charge,qrLoading: false));
-        return true;
-      }
-      return false;
-    }
-    catch(e){
-      log(e.toString());
-      emit(state.copyWith(qrLoading: false,qrCharge: ()=>null));
-      return false;
-    }
+    },);
   }
 
 

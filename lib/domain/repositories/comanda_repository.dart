@@ -2,7 +2,7 @@ import 'package:izi_kiosco/domain/dto/filters_comanda.dart';
 import 'package:izi_kiosco/domain/dto/invoice_dto.dart';
 import 'package:izi_kiosco/domain/dto/new_order_dto.dart';
 import 'package:izi_kiosco/domain/dto/paid_charge_dto.dart';
-import 'package:izi_kiosco/domain/dto/qr_dto.dart';
+import 'package:izi_kiosco/domain/dto/payment_dto.dart';
 import 'package:izi_kiosco/domain/models/card_payment.dart';
 import 'package:izi_kiosco/domain/models/category_order.dart';
 import 'package:izi_kiosco/domain/models/charge.dart';
@@ -21,7 +21,7 @@ abstract class ComandaRepository{
   Future<void> emitContingencia({required InvoiceDto invoice,required int orderId});
   Future<Payment> addPayment({required Payment payment,required int orderId,required int contribuyente});
   Future<void> removePayment({required int paymentId});
-  Future<Charge> generateQr({required int contribuyenteId, required QrDto qr});
+  Future<Charge> generatePayment({required int contribuyenteId, required PaymentDto payment});
   Future<void> markInternal({required InternalMovementDto internalMovementDto});
   Future<List<CategoryOrder>> getCategories({required int sucursal,required int contribuyente});
 
@@ -37,11 +37,13 @@ abstract class ComandaRepository{
   Future<Invoice> invoicePreOrder({required InvoiceDto invoice,required int orderId});
 
   Future<CardPayment> callCardPayment({required int amount});
+  Future<CardPayment> callCardPaymentATC({required String amount});
 
 
   Future<Comanda> markAsCreated(int orderId);
 
   Future<Invoice> getInvoice(int invoiceId);
   Future<void> createPaidCharge(PaidChargeDto paidChargeDto);
+  Future<void> markPaymentATC(String token,String chargeUuid);
 
 }

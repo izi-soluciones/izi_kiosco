@@ -5,6 +5,6 @@ abstract class SocketRepository{
 
   Stream<Invoice> listenInvoices({required int contribuyenteId,required int sucursalId});
   closeInvoicesListening();
-  Stream<dynamic> listenQr({required Charge charge});
+  Stream<dynamic> listenPayment({required Charge charge});
   closeQrListening();
 }

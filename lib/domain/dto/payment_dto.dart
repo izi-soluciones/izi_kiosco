@@ -1,18 +1,18 @@
-import 'package:izi_kiosco/app/values/app_constants.dart';
-
-class QrDto {
+class PaymentDto {
   int orderId;
   DateTime date;
   num monto;
   int monedaId;
   String moneda;
+  int metodoPago;
 
-  QrDto(
+  PaymentDto(
       {required this.orderId,
       required this.date,
       required this.monto,
       required this.moneda,
-      required this.monedaId});
+      required this.monedaId,
+      required this.metodoPago});
 
   Map<String,dynamic> toJson(int contribuyenteId)=>{
     "contribuyente": contribuyenteId,
@@ -20,7 +20,7 @@ class QrDto {
     "monto": monto,
     "moneda": moneda,
     "monedaId": monedaId,
-    "metodoPago": AppConstants.idPaymentMethodQR,
+    "metodoPago": metodoPago,
     "config": {
       "notificarPagador":true,
       "desdeKiosco":true

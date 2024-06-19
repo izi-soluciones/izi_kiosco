@@ -44,7 +44,7 @@ class SocketRepositoryHttp extends SocketRepository{
 
   io.Socket? _socketQr;
   @override
-  Stream<dynamic> listenQr({required Charge charge}) async*{
+  Stream<dynamic> listenPayment({required Charge charge}) async*{
     StreamController<dynamic> streamController = StreamController();
     String path = "/payment_notification";
     _socketQr = io.io("${dotenv.env[EnvKeys.apiUrlNotifications]}$path",

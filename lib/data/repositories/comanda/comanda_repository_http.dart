@@ -9,7 +9,7 @@ import 'package:izi_kiosco/domain/dto/filters_comanda.dart';
 import 'package:izi_kiosco/domain/dto/invoice_dto.dart';
 import 'package:izi_kiosco/domain/dto/new_order_dto.dart';
 import 'package:izi_kiosco/domain/dto/paid_charge_dto.dart';
-import 'package:izi_kiosco/domain/dto/qr_dto.dart';
+import 'package:izi_kiosco/domain/dto/payment_dto.dart';
 import 'package:izi_kiosco/domain/models/card_payment.dart';
 import 'package:izi_kiosco/domain/models/category_order.dart';
 import 'package:izi_kiosco/domain/models/charge.dart';
@@ -209,13 +209,13 @@ class ComandaRepositoryHttp extends ComandaRepository {
   }
 
   @override
-  Future<Charge> generateQr(
-      {required int contribuyenteId, required QrDto qr}) async {
+  Future<Charge> generatePayment(
+      {required int contribuyenteId, required PaymentDto payment}) async {
     try {
       String path = "/solicitudes-cobro";
       var response = await _dioClient.post(
           uri: path,
-          body: qr.toJson(contribuyenteId),
+          body: payment.toJson(contribuyenteId),
           options: Options(responseType: ResponseType.json));
       if (response.statusCode == 200 || response.statusCode == 201) {
         return Charge.fromJson(response.data);
@@ -548,6 +548,64 @@ class ComandaRepositoryHttp extends ComandaRepository {
       var response = await _dioClient.post(
           uri: path,
           body: paidChargeDto.toJson(),
+          options: Options(responseType: ResponseType.json));
+      if (response.statusCode != 200) {
+        if (response.data?["status"] ?? false) {
+          throw response.data?["data"];
+        }
+        throw response.data;
+      }
+    } on DioException catch (e) {
+      if (e.response?.data is String) {
+        throw e.response?.data;
+      }
+      throw e.error ?? "Network Error";
+    } catch (error) {
+      throw error.toString();
+    }
+  }
+
+  @override
+  Future<CardPayment> callCardPaymentATC({required String amount}) async{
+    try {
+      String path = "/v2/ctl/${dotenv.env[AppConstants.atcPosIP]}/$amount/0";
+      var response = await _dioClient.get(
+          uri: path,
+          baseUrl: dotenv.env[AppConstants.atcServerPOS],
+          options: Options(responseType: ResponseType.json,receiveTimeout: const Duration(seconds: 60),sendTimeout: const Duration(seconds: 60)));
+      if (response.statusCode == 200) {
+        if(response.data is String){
+          var res=jsonDecode(response.data);
+          if(res["status"]==false && res["data"]!=null){
+            return CardPayment.fromJsonATC(res["data"]);
+          }
+          throw response.data;
+        }
+        throw response.data;
+      } else {
+        throw response.data;
+      }
+    } on DioException catch (e) {
+      if (e.response?.data is String) {
+        throw e.response?.data;
+      }
+      throw e.error ?? "Network Error";
+    } catch (error) {
+
+      throw error.toString();
+    }
+  }
+
+  @override
+  Future<void> markPaymentATC(String token, String chargeUuid) async{
+    try {
+      String path =
+          "/solicitudes-cobro/$chargeUuid/notificacion-pos";
+      var response = await _dioClient.post(
+          uri: path,
+          body: {
+            "token":token
+          },
           options: Options(responseType: ResponseType.json));
       if (response.statusCode != 200) {
         if (response.data?["status"] ?? false) {
