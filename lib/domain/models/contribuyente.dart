@@ -387,7 +387,7 @@ class Sucursal {
     data['zona'] = zona;
     data['ciudad'] = ciudad;
     data['telf'] = telf;
-    data['config'] = config!=null?config!.toJson():null;
+    data['config'] = config?.toJson();
     data['usaInventario'] = usaInventario;
     data['permiteSobreventas'] = permiteSobreventas;
     data['estado'] = estado;
@@ -453,7 +453,7 @@ class Config {
 
   Map<String, dynamic> toJson() {
     final data = <String, dynamic>{};
-    data['pasosConfig'] = pasosConfig==null?null:pasosConfig!.toJson();
+    data['pasosConfig'] = pasosConfig?.toJson();
     data['usaInventario'] = usaInventario;
     data['configPrefactura'] = configPrefactura;
     data['permiteSobreventas'] = permiteSobreventas;

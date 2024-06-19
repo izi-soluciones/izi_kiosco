@@ -29,7 +29,7 @@ class PrintTemplate {
         bold: true));
     items.add(IziPrintSeparator());
     items.add(IziPrintText(
-        text: customOrderNumber!=null?"Orden del día #$customOrderNumber":"Orden #${orderNumber}",
+        text: customOrderNumber!=null?"Orden del día #$customOrderNumber":"Orden #$orderNumber",
         size: IziPrintSize.lg,
         align: IziPrintAlign.center,
         bold: true));

@@ -62,7 +62,7 @@ class PaymentPercentageAmount extends StatelessWidget {
                     inputHintText:
                         LocaleKeys.payment_inputs_specificAmount_placeholder.tr(),
                     inputType: InputType.number,
-                  value: currentValue == null?null:currentValue!.toStringAsFixed(2),
+                  value: currentValue?.toStringAsFixed(2),
                   controller: _amountInput,
                     onChanged: (value,valueRaw){
                       num valor=(num.tryParse(value) ?? 0);
