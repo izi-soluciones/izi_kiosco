@@ -114,8 +114,8 @@ class AuthBloc extends Cubit<AuthState> {
           File? video;
           if(device != null){
             try{
-              if(device.config["video"] is String){
-                video = await DownloadUtils().downloadFile(device.config["video"]);
+              if(device.config.video !=null){
+                video = await DownloadUtils().downloadFile(device.config.video!);
               }
             }
             catch(e){developer.log(e.toString());}

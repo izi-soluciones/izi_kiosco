@@ -452,12 +452,12 @@ class ComandaRepositoryHttp extends ComandaRepository {
   }
 
   @override
-  Future<CardPayment> callCardPayment({required int amount}) async{
+  Future<CardPayment> callCardPayment({required int amount,required String ip}) async{
     try {
       String path = "/sale";
       var response = await _dioClient.get(
           uri: path,
-          baseUrl: dotenv.env[AppConstants.posUrlEnv],
+          baseUrl: "http://$ip:8000",
           queryParameters: {
             "monto": amount.toString(),
             "cod_moneda": "068"
@@ -466,7 +466,7 @@ class ComandaRepositoryHttp extends ComandaRepository {
     if (response.statusCode == 200) {
         if(response.data is String){
           var res=jsonDecode(response.data);
-          if(res["estado"]=="OK"){
+          if(res["estado"]=="False"){
             return CardPayment.fromJson(res);
           }
           throw response.data;
@@ -566,17 +566,23 @@ class ComandaRepositoryHttp extends ComandaRepository {
   }
 
   @override
-  Future<CardPayment> callCardPaymentATC({required String amount}) async{
+  Future<CardPayment> callCardPaymentATC({required String amount,required String ip,required bool contactless}) async{
     try {
-      String path = "/v2/ctl/${dotenv.env[AppConstants.atcPosIP]}/$amount/0";
+      String path;
+      if(contactless){
+        path = "/v2/ctl/$ip/$amount/0";
+      }
+      else{
+        path = "/v2/chip/$ip/$amount/0";
+      }
       var response = await _dioClient.get(
           uri: path,
-          baseUrl: dotenv.env[AppConstants.atcServerPOS],
+          baseUrl: dotenv.env[EnvKeys.atcServerPOS],
           options: Options(responseType: ResponseType.json,receiveTimeout: const Duration(seconds: 60),sendTimeout: const Duration(seconds: 60)));
       if (response.statusCode == 200) {
         if(response.data is String){
           var res=jsonDecode(response.data);
-          if(res["status"]==false && res["data"]!=null){
+          if(res["status"]==true && res["data"]!=null){
             return CardPayment.fromJsonATC(res["data"]);
           }
           throw response.data;

@@ -65,9 +65,9 @@ class _HomePageState extends State<HomePage> {
         }
 
 
-        if (kIsWeb && authState.currentDevice?.config["video"] is String) {
+        if (kIsWeb && authState.currentDevice?.config.video !=null) {
           _controller = VideoPlayerController.networkUrl(
-              Uri.parse(authState.currentDevice?.config["video"]))
+              Uri.parse(authState.currentDevice?.config.video??""))
             ..setLooping(true)
             ..initialize().then((_) {
               setState(() {

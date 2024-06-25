@@ -10,7 +10,6 @@ import 'package:izi_kiosco/data/local/local_storage_card_errors.dart';
 import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
 import 'package:izi_kiosco/domain/dto/invoice_dto.dart';
 import 'package:izi_kiosco/domain/dto/new_order_dto.dart';
-import 'package:izi_kiosco/domain/dto/paid_charge_dto.dart';
 import 'package:izi_kiosco/domain/dto/payment_dto.dart';
 import 'package:izi_kiosco/domain/models/card_payment.dart';
 import 'package:izi_kiosco/domain/models/cash_register.dart';
@@ -396,8 +395,8 @@ class PaymentBloc extends Cubit<PaymentState> {
     return super.close();
   }
 
-  Future<bool> makeCardPaymentATC(AuthState authState)async{
-    if(_validateInputs()){
+  Future<bool> makeCardPayment(AuthState authState,{bool atc=false,bool linkser=false,bool contactless=true})async{
+    if(_validateInputs() && (atc || linkser)){
       try{
         emit(state.copyWith(status: PaymentStatus.cardProcessing));
         PaymentDto newPayment = PaymentDto(
@@ -411,15 +410,22 @@ class PaymentBloc extends Cubit<PaymentState> {
 
         Charge charge = await _comandaRepository.generatePayment(contribuyenteId: authState.currentContribuyente?.id??0, payment: newPayment);
         await _saveAndListenPayment(authState,charge);
-        CardPayment cardPayment =await _comandaRepository.callCardPaymentATC(amount: (state.order?.monto ?? 0).moneyFormat());
+        CardPayment cardPayment;
+        if(linkser){
+          cardPayment = await _comandaRepository.callCardPayment(amount: _getIntFromDecimal(_roundToNDecimals(state.order?.monto ?? 0, 2)), ip: authState.currentDevice!.config.ipLinkser!);
+        }
+        else{
+          cardPayment=await _comandaRepository.callCardPaymentATC(amount: (state.order?.monto ?? 0).moneyFormat(),ip: authState.currentDevice!.config.ipAtc!,contactless: contactless);
+        }
         var success=false;
-        for(var i=0;i<5;i++){
+        for(var i=0;i<10;i++){
           try{
             await _comandaRepository.markPaymentATC(charge.token??'', charge.uuid);
             success =true;
             break;
           }
           catch(e){
+            await Future.delayed(Duration(seconds: 1*(i+1)));
             log(e.toString());
           }
         }
@@ -444,67 +450,67 @@ class PaymentBloc extends Cubit<PaymentState> {
     return false;
 
   }
-  Future<void> makeCardPayment(AuthState authState)async{
-    if(_validateInputs()){
-      try{
-        emit(state.copyWith(status: PaymentStatus.cardProcessing));
-        CardPayment cardPayment =await _comandaRepository.callCardPayment(amount: _getIntFromDecimal(_roundToNDecimals(state.order?.monto ?? 0, 2)));
-        emit(state.copyWith(status: PaymentStatus.paymentProcessing));
-        var success = false;
-        for(int j=0;j<5;j++){
-          await Future.delayed(Duration(milliseconds: 100*j));
-          PaidChargeDto paidChargeDto = PaidChargeDto(
-              orden: state.order?.id ??0,
-              metodoPago: AppConstants.idPaymentMethodCard,
-              monto: (state.order?.monto ?? 0) - state.discountAmount,
-              moneda: state.currentCurrency?.simbolo ?? AppConstants.defaultCurrency,
-              monedaId: state.currentCurrency?.id ?? AppConstants.defaultCurrencyId,
-              contribuyente: authState.currentContribuyente?.id??0
-          );
-          try{
-            await _comandaRepository.createPaidCharge(paidChargeDto);
-            success = true;
-            break;
-          }
-          catch(e){
-            log(e.toString());
-          }
-        }
-
-        if(!success){
-          await LocalStorageCardErrors.saveCardErrors(jsonEncode(cardPayment.toJson()));
-          emit(state.copyWith(step:3,status: PaymentStatus.cardSuccess));
-          timerSuccess=Timer(const Duration(seconds: 30),() async{
-            emit(state.copyWith(status: PaymentStatus.successInvoice));
-          },);
-          return;
-
-        }
-        for(int i=0;i<5;i++){
-          await Future.delayed(Duration(milliseconds: 100*i));
-          if(await emitInvoice(authState: authState,cardDigits: cardPayment.cardNumber)){
-          //if(await emitInvoice(authState: authState,cardDigits: "1234000000001234")){
-            success = true;
-            break;
-          }
-          else{
-            success=false;
-          }
-        }
-        emit(state.copyWith(step:2,status: PaymentStatus.cardSuccess));
-        timerSuccess=Timer(const Duration(seconds: 10),() async{
-          emit(state.copyWith(status: PaymentStatus.successInvoice));
-        },);
-
-      }
-      catch(e){
-        log(e.toString());
-        emit(state.copyWith(status: PaymentStatus.cardError));
-        emit(state.copyWith(status: PaymentStatus.successGet));
-      }
-    }
-
-  }
+  // Future<void> makeCardPayment(AuthState authState)async{
+  //   if(_validateInputs()){
+  //     try{
+  //       emit(state.copyWith(status: PaymentStatus.cardProcessing));
+  //       CardPayment cardPayment =await _comandaRepository.callCardPayment(amount: _getIntFromDecimal(_roundToNDecimals(state.order?.monto ?? 0, 2)));
+  //       emit(state.copyWith(status: PaymentStatus.paymentProcessing));
+  //       var success = false;
+  //       for(int j=0;j<5;j++){
+  //         await Future.delayed(Duration(milliseconds: 100*j));
+  //         PaidChargeDto paidChargeDto = PaidChargeDto(
+  //             orden: state.order?.id ??0,
+  //             metodoPago: AppConstants.idPaymentMethodCard,
+  //             monto: (state.order?.monto ?? 0) - state.discountAmount,
+  //             moneda: state.currentCurrency?.simbolo ?? AppConstants.defaultCurrency,
+  //             monedaId: state.currentCurrency?.id ?? AppConstants.defaultCurrencyId,
+  //             contribuyente: authState.currentContribuyente?.id??0
+  //         );
+  //         try{
+  //           await _comandaRepository.createPaidCharge(paidChargeDto);
+  //           success = true;
+  //           break;
+  //         }
+  //         catch(e){
+  //           log(e.toString());
+  //         }
+  //       }
+  //
+  //       if(!success){
+  //         await LocalStorageCardErrors.saveCardErrors(jsonEncode(cardPayment.toJson()));
+  //         emit(state.copyWith(step:3,status: PaymentStatus.cardSuccess));
+  //         timerSuccess=Timer(const Duration(seconds: 30),() async{
+  //           emit(state.copyWith(status: PaymentStatus.successInvoice));
+  //         },);
+  //         return;
+  //
+  //       }
+  //       for(int i=0;i<5;i++){
+  //         await Future.delayed(Duration(milliseconds: 100*i));
+  //         if(await emitInvoice(authState: authState,cardDigits: cardPayment.cardNumber)){
+  //         //if(await emitInvoice(authState: authState,cardDigits: "1234000000001234")){
+  //           success = true;
+  //           break;
+  //         }
+  //         else{
+  //           success=false;
+  //         }
+  //       }
+  //       emit(state.copyWith(step:2,status: PaymentStatus.cardSuccess));
+  //       timerSuccess=Timer(const Duration(seconds: 10),() async{
+  //         emit(state.copyWith(status: PaymentStatus.successInvoice));
+  //       },);
+  //
+  //     }
+  //     catch(e){
+  //       log(e.toString());
+  //       emit(state.copyWith(status: PaymentStatus.cardError));
+  //       emit(state.copyWith(status: PaymentStatus.successGet));
+  //     }
+  //   }
+  //
+  // }
 
 
   Timer? timerSuccess;

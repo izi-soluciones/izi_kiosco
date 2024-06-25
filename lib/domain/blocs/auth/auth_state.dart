@@ -19,6 +19,7 @@ class AuthState extends Equatable{
 
   final StreamSubscription? invoiceSubscription;
   final bool terminalInit;
+
   const AuthState({
     required this.currencies,
     required this.status,

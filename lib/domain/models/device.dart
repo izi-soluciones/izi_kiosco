@@ -3,7 +3,7 @@ class Device {
   int sucursal;
   String nombre;
   int caja;
-  Map config;
+  ConfigDevice config;
   bool activo;
   bool enUso;
   String? sucursalName;
@@ -23,7 +23,7 @@ class Device {
       sucursal: json["sucursal"],
       nombre: json["nombre"],
       caja: json["caja"],
-      config: json["config"] is Map ? json["config"] : {},
+      config: ConfigDevice.fromJson(json["config"]),
       activo: json["activo"] ?? false,
       enUso: json["enUso"] ?? false);
 
@@ -31,4 +31,22 @@ class Device {
   String toString() {
     return 'Device{id: $id, sucursal: $sucursal, nombre: $nombre, caja: $caja, config: $config, activo: $activo, enUso: $enUso, sucursalName: $sucursalName}';
   }
+}
+
+class ConfigDevice{
+  final String? ipAtc;
+  final String? ipLinkser;
+  final String? video;
+
+  const ConfigDevice(this.ipAtc,this.ipLinkser,this.video);
+
+  factory ConfigDevice.fromJson(dynamic json){
+    var jsonObj = json is Map? json: null;
+    return ConfigDevice(
+        jsonObj?["ipAtc"] is String? jsonObj!["ipAtc"]:null,
+        jsonObj?["ipLinkser"] is String? jsonObj!["ipLinkser"]:null,
+        jsonObj?["video"] is String? jsonObj!["video"]:null
+    );
+  }
+
 }

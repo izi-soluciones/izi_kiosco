@@ -23,7 +23,9 @@ import 'package:izi_kiosco/domain/blocs/payment/payment_bloc.dart';
 import 'package:izi_kiosco/domain/models/document_type.dart';
 import 'package:izi_kiosco/domain/utils/input_obj.dart';
 import 'package:izi_kiosco/ui/general/kiosco_numeric_keyboard.dart';
+import 'package:izi_kiosco/ui/pages/payment_page/modals/card_type_atc_modal.dart';
 import 'package:izi_kiosco/ui/utils/column_container.dart';
+import 'package:izi_kiosco/ui/utils/custom_alerts.dart';
 import 'package:izi_kiosco/ui/utils/money_formatter.dart';
 import 'package:izi_kiosco/ui/utils/responsive_utils.dart';
 import 'package:izi_kiosco/ui/utils/row_container.dart';
@@ -594,18 +596,49 @@ class _PaymentPageQrState extends State<PaymentPageQr> {
       ),
     );
   }
-  _paymentCard(BuildContext context)async{
 
+  _paymentCard(BuildContext context){
+    if(context.read<AuthBloc>().state.currentDevice?.config.ipLinkser!=null){
+      _paymentCardLinkser(context);
+    }
+    else if(context.read<AuthBloc>().state.currentDevice?.config.ipAtc!=null){
+      _paymentCardATC(context);
+    }
+  }
+  _paymentCardLinkser(BuildContext context)async{
     context.read<PageUtilsBloc>().closeScreenActive();
     var status = await context
         .read<PaymentBloc>()
-        .makeCardPaymentATC(context.read<AuthBloc>().state);
+        .makeCardPayment(context.read<AuthBloc>().state,linkser: true);
     if(!mounted){
       return;
     }
     if(!status){
       context.read<PageUtilsBloc>().initScreenActive();
     }
+  }
+
+  _paymentCardATC(BuildContext context)async{
+
+    CustomAlerts.defaultAlert(
+        context: context,
+        dismissible: true,
+        defaultScroll: false,
+        child: CardTypeAtcModal(amount: (widget.state.order?.monto ?? 0))
+    ).then((value) async{
+      if(value is int){
+        context.read<PageUtilsBloc>().closeScreenActive();
+        var status = await context
+            .read<PaymentBloc>()
+            .makeCardPayment(context.read<AuthBloc>().state,atc: true,contactless: value==1?false:true);
+        if(!mounted){
+          return;
+        }
+        if(!status){
+          context.read<PageUtilsBloc>().initScreenActive();
+        }
+      }
+    });
   }
 
   String? _getErrorsDocumentNumber(InputError? inputError) {

@@ -51,6 +51,7 @@ class PaymentPageSelection extends StatelessWidget {
       gapH: 16,
       crossAxisAlignment: WrapCrossAlignment.center,
       children: [
+        if(authState.currentDevice?.config.ipAtc!=null||authState.currentDevice?.config.ipLinkser!=null )
         PaymentMethodBtn(
             onPressed: (){
               context.read<PaymentBloc>().selectPayment(PaymentType.card,authState);

@@ -13,9 +13,9 @@ class CardPayment{
 
   factory CardPayment.fromJson(Map json)=>CardPayment(
       response: json["mensaje"] ?? "",
-      cardNumber:json["pan"],
-      date: json["fecha"],
-      hour: json["hora"]);
+      cardNumber:json["pan"]??"",
+      date: json["fecha"]??"",
+      hour: json["hora"]??"");
   factory CardPayment.fromJsonATC(Map json)=>CardPayment(
       response: json["mensaje"] ?? "",
       cardNumber:json["pan"] ?? "",

@@ -4,5 +4,6 @@ class EnvKeys{
   static const String apiScheme="API_SCHEME";
 
   static const String apiUrlNotifications = 'API_URL_NOTIFICATIONS';
+  static String atcServerPOS="ATC_SERVER_URL";
 
 }

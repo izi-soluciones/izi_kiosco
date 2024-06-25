@@ -36,8 +36,8 @@ abstract class ComandaRepository{
   Future<Comanda> editOrder({required NewOrderDto newOrder});
   Future<Invoice> invoicePreOrder({required InvoiceDto invoice,required int orderId});
 
-  Future<CardPayment> callCardPayment({required int amount});
-  Future<CardPayment> callCardPaymentATC({required String amount});
+  Future<CardPayment> callCardPayment({required int amount,required String ip});
+  Future<CardPayment> callCardPaymentATC({required String amount,required String ip,required bool contactless});
 
 
   Future<Comanda> markAsCreated(int orderId);

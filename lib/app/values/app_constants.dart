@@ -10,9 +10,6 @@ class AppConstants{
   static String defaultCurrency="Bs";
   static int defaultCurrencyId=150;
   static String restaurantEnv="restaurante";
-  static String posUrlEnv="POS_URL";
-  static String atcServerPOS="ATC_SERVER_URL";
-  static String atcPosIP="ATC_POS_IP";
   static int codeCI =1;
 
   static List<String> ciList=["lp", "cb", "sc", "or", "pt", "ch", "tj", "be", "pd"];
