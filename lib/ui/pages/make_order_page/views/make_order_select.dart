@@ -101,26 +101,7 @@ class _MakeOrderSelectState extends State<MakeOrderSelect> {
             return MakeOrderItemLg(
               item: items[index],
               onPressed: () {
-                if (items[index].modificadores.isEmpty) {
-                  var itemNew = items[index].copyWith();
-                  itemNew.cantidad = 1;
-                  context.read<MakeOrderBloc>().addItem(item: itemNew);
-                } else {
-                  CustomAlerts.defaultAlert(
-                          defaultScroll: false,
-                          padding: EdgeInsets.zero,
-                          context: context,
-                          dismissible: true,
-                          child: ItemOptionsModal(
-                              item: items[index], state: widget.makeOrderState))
-                      .then((result) {
-                    if (result is Item) {
-                      var itemNew = result;
-                      itemNew.cantidad = 1;
-                      context.read<MakeOrderBloc>().addItem(item: itemNew);
-                    }
-                  });
-                }
+                _selectItem(items,index);
               },
               state: widget.makeOrderState,
             );
@@ -129,13 +110,37 @@ class _MakeOrderSelectState extends State<MakeOrderSelect> {
       );
     });
   }
+  _selectItem(List<Item> items,int index){
+    if (items[index].modificadores.isEmpty) {
+      var itemNew = items[index].copyWith();
+      itemNew.cantidad = 1;
+      context.read<MakeOrderBloc>().addItem(item: itemNew);
+    } else {
+      CustomAlerts.defaultAlert(
+          defaultScroll: false,
+          padding: EdgeInsets.zero,
+          context: context,
+          dismissible: false,
+          child: ItemOptionsModal(
+              item: items[index], state: widget.makeOrderState))
+          .then((result) {
+        if (result is Item) {
+          var itemNew = result;
+          itemNew.cantidad = 1;
+          context.read<MakeOrderBloc>().addItem(item: itemNew);
+        }
+      });
+    }
+  }
   
   IconData _selectIconCategory(String name){
     if(name.isEmpty){
       return IziIcons.client;
     }
     for(var ci in AppConstants.categoryIcons){
-      if(name.toLowerCase().contains(ci.name)){
+      if(ci.name.indexWhere((element) {
+        return name.toLowerCase().contains(element);
+      })!=-1){
         return ci.icon;
       }
     }

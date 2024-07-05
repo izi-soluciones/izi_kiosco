@@ -102,8 +102,8 @@
     }
   },
   "orderList": {
-    "drawer": "Todas las ordenes",
-    "title": "Todas las ordenes",
+    "drawer": "Todas las órdenes",
+    "title": "Todas las órdenes",
     "buttons": {
       "moreFilters": "Más filtros",
       "print": "Imprimir",
@@ -241,7 +241,7 @@
       "and": "y",
       "pay": "paga",
       "here": "aquí",
-      "clickToInit": "Toca aqui para hacer tu pedido",
+      "clickToInit": "Toca aquí para hacer tu pedido",
       "anIziPlatform": "Una plataforma de"
     }
   },

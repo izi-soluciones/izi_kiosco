@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:izi_design_system/tokens/izi_icons.dart';
 
 class AppConstants{
   static num paginationSize = 15;
@@ -25,14 +24,20 @@ class AppConstants{
 
 
   static const categoryIcons=[
-    CategoryIcons("postre", IziIcons.cake),
-    CategoryIcons("sandwich", IziIcons.sandwich),
-    CategoryIcons("sándwich", IziIcons.sandwich),
-    CategoryIcons("jugo", IziIcons.juices)
+    CategoryIcons(["postre","alfajores"], Icons.bakery_dining_outlined),
+    CategoryIcons(["sandwich","sándwich"], Icons.fastfood_outlined),
+    CategoryIcons(["hamburguesa",'burguer'], Icons.fastfood_outlined),
+    CategoryIcons(["combo","pastas"], Icons.restaurant_menu),
+    CategoryIcons(["desayuno"], Icons.free_breakfast_outlined),
+    CategoryIcons(["extras"], Icons.plus_one),
+    CategoryIcons(["jugo","bebidas","gaseosas"], Icons.local_drink_outlined),
+    CategoryIcons(["car"], Icons.directions_car),
+    CategoryIcons(["niños"], Icons.child_care_outlined),
+    CategoryIcons(["otras"], Icons.restaurant)
   ];
 }
 class CategoryIcons{
-  final String name;
+  final List<String> name;
   final IconData icon;
   const CategoryIcons(this.name,this.icon);
 }

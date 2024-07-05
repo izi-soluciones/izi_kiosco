@@ -34,17 +34,30 @@ class PrintTemplate {
         align: IziPrintAlign.center,
         bold: true));
     items.add(IziPrintSeparator(dotted: true));
-    items.add(IziPrintLineWrap(lines: 1));
-    items.add(IziPrintText(
-      text: order?.listaItems.map((e) => e.nombre).join(", ") ?? "",
-      size: IziPrintSize.md,
-      align: IziPrintAlign.left,));
+    for(ItemComanda? item in order?.listaItems??[]){
+      items.add(IziPrintLineWrap(lines: 1));
+      items.add(IziPrintText(
+        text: "x${item?.cantidad} ${item?.nombre}",
+        size: IziPrintSize.md,
+        bold: false,
+        align: IziPrintAlign.left,));
+      if(item?.modificadores is Map){
+        for(var mod in (item?.modificadores as Map).entries){
+          if(mod.value is List){
+            items.add(IziPrintText(
+              text: mod.key + ":"+ (mod.value as List).map((e) => e.toString()).join(", ") ?? "",
+              size: IziPrintSize.sm,
+              align: IziPrintAlign.left,));
+          }
+        }
+      }
+    }
+    items.add(IziPrintSeparator(dotted: true));
     items.add(IziPrintText(
         text: "Monto total: ${order?.montoTotal?.moneyFormat(currency: AppConstants.defaultCurrency)}",
         size: IziPrintSize.md,
         align: IziPrintAlign.left,
         bold: true));
-    items.add(IziPrintLineWrap(lines: 1));
     items.add(IziPrintSeparator(dotted: true));
     items.add(IziPrintText(
         text: DateTime.now().dateFormat(DateFormatterType.dateHour),

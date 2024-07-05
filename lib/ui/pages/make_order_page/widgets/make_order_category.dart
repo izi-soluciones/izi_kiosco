@@ -26,7 +26,7 @@ class MakeOrderCategory extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.center,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon,color: active?IziColors.white:IziColors.dark,size: 40,),
+            Icon(icon,color: active?IziColors.white:IziColors.dark,size: 40,weight: 1),
             IziText.body(color: active?IziColors.white:IziColors.dark,textAlign: TextAlign.center, text: title, fontWeight: FontWeight.w600,maxLines: 3),
           ],
         ),

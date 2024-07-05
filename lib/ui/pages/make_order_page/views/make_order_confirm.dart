@@ -162,7 +162,6 @@ class _MakeOrderConfirmState extends State<MakeOrderConfirm> {
                       border: e.key<state.itemsSelected.length-1 || i.key<e.value.items.length-1?const Border(bottom: BorderSide(color: IziColors.grey35,width: 1)):null
                     ),
                     child: SizedBox(
-                        height: 100,
                         child: _item(
                             i.value,
                             cIndex < controllers.length - 1
@@ -230,41 +229,68 @@ class _MakeOrderConfirmState extends State<MakeOrderConfirm> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          AspectRatio(
-            aspectRatio: 1,
-            child: Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(8),
-                color: IziColors.grey25,
+          SizedBox(
+            height: 68,
+            child: AspectRatio(
+              aspectRatio: 1,
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(8),
+                  color: IziColors.grey25,
+                ),
+                clipBehavior: Clip.antiAlias,
+                child: item.imagen == null || item.imagen?.isEmpty == true
+                    ? const FittedBox(
+                        child: Icon(IziIcons.dish, color: IziColors.warmLighten))
+                    : CachedNetworkImage(
+                        imageUrl: item.imagen ?? "",
+                        fit: BoxFit.cover,
+                        placeholder: (context, url) => const Center(
+                            child: CircularProgressIndicator(
+                                strokeWidth: 2, color: IziColors.dark)),
+                        errorWidget: (context, url, error) {
+                          return const FittedBox(
+                              child: Icon(IziIcons.dish,
+                                  color: IziColors.warmLighten));
+                        },
+                      ),
               ),
-              clipBehavior: Clip.antiAlias,
-              child: item.imagen == null || item.imagen?.isEmpty == true
-                  ? const FittedBox(
-                      child: Icon(IziIcons.dish, color: IziColors.warmLighten))
-                  : CachedNetworkImage(
-                      imageUrl: item.imagen ?? "",
-                      fit: BoxFit.cover,
-                      placeholder: (context, url) => const Center(
-                          child: CircularProgressIndicator(
-                              strokeWidth: 2, color: IziColors.dark)),
-                      errorWidget: (context, url, error) {
-                        return const FittedBox(
-                            child: Icon(IziIcons.dish,
-                                color: IziColors.warmLighten));
-                      },
-                    ),
             ),
           ),
           const SizedBox(
             width: 16,
           ),
           Expanded(
-            child: IziText.title(
-                textAlign: TextAlign.left,
-                color: IziColors.dark,
-                text: item.nombre,
-                fontWeight: FontWeight.w600,
-                maxLines: 2),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IziText.title(
+                    textAlign: TextAlign.left,
+                    color: IziColors.dark,
+                    text: item.nombre,
+                    fontWeight: FontWeight.w600,
+                    maxLines: 2),
+
+                ...item.modificadores.map(
+                      (e) {
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: e.caracteristicas
+                          .where((element) => element.check)
+                          .map((c) {
+                        return IziText.bodySmall(
+                            color: IziColors.darkGrey,
+                            text:
+                            "${c.nombre}${c.modPrecio > 0 ? " (+${c.modPrecio})" : ""}",
+                            fontWeight: FontWeight.w400);
+                      }).toList(),
+                    );
+                  },
+                ).toList(),
+              ],
+            ),
           ),
           const SizedBox(
             width: 16,

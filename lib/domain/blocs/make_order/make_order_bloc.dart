@@ -47,7 +47,7 @@ class MakeOrderBloc extends Cubit<MakeOrderState> {
       }
       list.sort(
         (a, b) {
-          return b.nombre.toLowerCase().compareTo(a.nombre.toLowerCase());
+          return a.nombre.toLowerCase().compareTo(b.nombre.toLowerCase());
         },
       );
       if(itemsFeatured.isNotEmpty){
