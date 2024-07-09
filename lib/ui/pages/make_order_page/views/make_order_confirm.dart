@@ -301,25 +301,29 @@ class _MakeOrderConfirmState extends State<MakeOrderConfirm> {
                 }).map(
                       (e) {
                         return Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                         IziText.bodySmall(
                         color: IziColors.dark,
                             text:
                             "${e.nombre}: " ,
                             fontWeight: FontWeight.w500),
-                        IziText.bodySmall(
-                        color: IziColors.darkGrey,
-                        text: e.caracteristicas.fold("", (previousValue, c){
-                          if(!c.check){
+                        Expanded(
+                          child: IziText.bodySmall(
+                          color: IziColors.darkGrey,
+                          maxLines: 50,
+                          text: e.caracteristicas.fold("", (previousValue, c){
+                            if(!c.check){
+                              return previousValue;
+                            }
+                            if(previousValue!=""){
+                              previousValue+=", ";
+                            }
+                            previousValue+="${c.nombre}${c.modPrecio > 0 ? " (+${c.modPrecio})" : ""}";
                             return previousValue;
-                          }
-                          if(previousValue!=""){
-                            previousValue+=", ";
-                          }
-                          previousValue+="${c.nombre}${c.modPrecio > 0 ? " (+${c.modPrecio})" : ""}";
-                          return previousValue;
-                        }),
-                        fontWeight: FontWeight.w400)
+                          }),
+                          fontWeight: FontWeight.w400),
+                        )
                           ],
                         );
                     // return Column(
