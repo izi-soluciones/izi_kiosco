@@ -49,6 +49,7 @@ class MakeOrderState extends Equatable{
             codigo: item.codigo,
             customItem: item.customItem,
             descripcion: item.descripcion,
+            detalle: item.detalle,
             imagen: item.imagen,
             modificadores: item.modificadoresEdit is List? (item.modificadoresEdit as List).map((e) => Modifier.fromJson(e)).toList():[],
             modificadoresRaw: item.modificadoresEdit,

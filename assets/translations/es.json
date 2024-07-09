@@ -614,6 +614,10 @@
       "initAgain": "Empezar de nuevo"
     },
     "inputs": {
+      "comments": {
+        "label": "Comentarios",
+        "placeholder": ""
+      },
       "search": {
         "placeholder": "Busca un producto"
       },

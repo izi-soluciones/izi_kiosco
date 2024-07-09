@@ -488,6 +488,9 @@ abstract class  LocaleKeys {
   static const makeOrder_buttons_confirmingOrder = 'makeOrder.buttons.confirmingOrder';
   static const makeOrder_buttons_initAgain = 'makeOrder.buttons.initAgain';
   static const makeOrder_buttons = 'makeOrder.buttons';
+  static const makeOrder_inputs_comments_label = 'makeOrder.inputs.comments.label';
+  static const makeOrder_inputs_comments_placeholder = 'makeOrder.inputs.comments.placeholder';
+  static const makeOrder_inputs_comments = 'makeOrder.inputs.comments';
   static const makeOrder_inputs_search_placeholder = 'makeOrder.inputs.search.placeholder';
   static const makeOrder_inputs_search = 'makeOrder.inputs.search';
   static const makeOrder_inputs_amountOrPercentage_label = 'makeOrder.inputs.amountOrPercentage.label';

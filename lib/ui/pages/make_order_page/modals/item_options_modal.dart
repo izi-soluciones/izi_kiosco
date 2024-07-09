@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:izi_design_system/atoms/izi_radio_button.dart';
 import 'package:izi_design_system/atoms/izi_typography.dart';
 import 'package:izi_design_system/molecules/izi_btn.dart';
+import 'package:izi_design_system/molecules/izi_input.dart';
 import 'package:izi_design_system/molecules/izi_switch.dart';
 import 'package:izi_design_system/tokens/colors.dart';
 import 'package:izi_design_system/tokens/types.dart';
@@ -198,6 +199,22 @@ class _ItemOptionsModalState extends State<ItemOptionsModal> {
                             }).toList()
                         ),
                       ),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 32,vertical: 8),
+                    child: IziInput(
+                      background: IziColors.white,
+                      labelInput: LocaleKeys.makeOrder_inputs_comments_label.tr(),
+                      inputHintText: LocaleKeys.makeOrder_inputs_comments_placeholder.tr(),
+                      inputType: InputType.textArea,
+                      value: widget.item.detalle,
+                      onChanged: (value,valueRaw){
+                        setState(() {
+                          itemEdit?.detalle=value;
+                        });
+                      },
+                      minLines: 4,
                     ),
                   ),
                 ]

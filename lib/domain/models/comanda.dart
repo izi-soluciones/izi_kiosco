@@ -159,12 +159,14 @@ class ItemComanda {
   num? valor;
   int? categoriaId;
   String? categoria;
+  String? detalle;
 
   ItemComanda(
       {this.cantidad,
       this.codigo,
       this.customItem,
       this.descripcion,
+        this.detalle,
       this.imagen,
       this.item,
       this.modificadores,
@@ -185,6 +187,7 @@ class ItemComanda {
       descripcion: json["descripcion"],
       imagen: json["imagen"],
       item: json["item"],
+      detalle: json["detalle"],
       modificadores: json["modificadores"],
       modificadoresEdit: json["modificadoresEdit"],
       ordenProduccion: json["ordenProduccion"],

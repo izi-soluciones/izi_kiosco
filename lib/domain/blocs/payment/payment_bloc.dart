@@ -59,7 +59,7 @@ class PaymentBloc extends Cubit<PaymentState> {
         Comanda defaultOrder =
             order ?? await _comandaRepository.getComanda(orderId: orderId!);
 
-        PrintUtils().print(await PrintTemplate.order80(14, 34, authState.currentContribuyente!, authState.currentSucursal!, defaultOrder));
+        //PrintUtils().print(await PrintTemplate.order80(14, 34, authState.currentContribuyente!, authState.currentSucursal!, defaultOrder));
         if(defaultOrder.facturada==1){
           emit(state.copyWith(status: PaymentStatus.errorInvoiced));
           return;

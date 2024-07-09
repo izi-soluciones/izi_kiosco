@@ -16,6 +16,7 @@ class Item {
   num precioUnitario;
   num? valor;
   num precioModificadores;
+  String? detalle;
 
   Item(
       {required this.cantidad,
@@ -23,6 +24,7 @@ class Item {
       required this.customItem,
       required this.descripcion,
       required this.imagen,
+        required this.detalle,
       required this.modificadores,
       required this.modificadoresRaw,
       required this.nombre,
@@ -46,6 +48,7 @@ class Item {
         customItem: json["customItem"],
         descripcion: json["descripcion"],
         imagen: json["imagen"],
+        detalle: json["detalle"],
         modificadores:
             listModificadores.map((e) => Modifier.fromJson(e)).toList(),
         modificadoresRaw: json["modificadores"],
@@ -71,6 +74,7 @@ class Item {
       valor: valor,
       activo: activo,
       id: id,
+      detalle: detalle,
       precioUnitario: precioUnitario,
       categoria: categoria,
       categoriaId: categoriaId,
@@ -99,6 +103,7 @@ class Item {
       "descripcion": descripcion,
       "imagen": imagen,
       "modificadoresEdit": modificadores.map((e) => e.toJson()).toList(),
+      if(detalle != null) "detalle":detalle,
       "modificadores": modificadoresNames,
       "nombre": nombre,
       "valor": precioUnitario*cantidad,
