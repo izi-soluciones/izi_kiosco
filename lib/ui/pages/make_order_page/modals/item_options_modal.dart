@@ -34,8 +34,17 @@ class _ItemOptionsModalState extends State<ItemOptionsModal> {
   @override
   void initState() {
     itemEdit = widget.item.copyWith();
-    for(var _ in itemEdit?.modificadores??[]){
+    for(Modifier m in itemEdit?.modificadores??[]){
       titleKeys.add(GlobalKey());
+      var existList = m.caracteristicas.where((element) => element.check);
+
+      if(existList.isEmpty){
+        for(ModifierItem c in m.caracteristicas){
+          if(c.defaultValue){
+            c.check=true;
+          }
+        }
+      }
     }
     super.initState();
   }
@@ -95,69 +104,97 @@ class _ItemOptionsModalState extends State<ItemOptionsModal> {
                           mainAxisSize: MainAxisSize.min,
                           children:(itemEdit?.modificadores??[]).asMap().entries.map((entry) {
                             var e1 = entry.value;
-                              return Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const SizedBox(height: 16,),
-                                  Padding(
-                                    key: titleKeys[entry.key],
-                                    padding: const EdgeInsets.symmetric(horizontal: 32),
-                                    child: IziText.titleSmall(color: entry.key==indexRequired?IziColors.red:IziColors.dark, text: e1.nombre+(e1.isObligatorio?"*":"")),
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Container(
+                                  decoration: const BoxDecoration(
+                                      border:Border(bottom: BorderSide(color: IziColors.grey25,width: 1))
                                   ),
-                                  ...e1.caracteristicas.asMap().entries.map((e2) {
-                                    return InkWell(
-                                      onTap: (){
-                                        if(e1.isMultiple){
-                                          setState(() {
-                                            e2.value.check=!e2.value.check;
-                                          });
-                                        }
-                                        else{
-                                          setState(() {
-                                            var lastCheck=e2.value.check;
-                                            for(var ca in e1.caracteristicas){
-                                              ca.check=false;
+                                  child: ExpansionTile(
+                                    key: titleKeys[entry.key],
+                                    initiallyExpanded: e1.isObligatorio,
+                                    tilePadding: const EdgeInsets.symmetric(horizontal: 32,vertical: 8),
+                                    title: IziText.titleSmall(color: entry.key==indexRequired?IziColors.red:IziColors.dark, text: e1.nombre+(e1.isObligatorio?"*":"")),
+                                    children:
+                                    e1.caracteristicas.asMap().entries.map((e2) {
+                                      return InkWell(
+                                        onTap: (){
+                                          if(e1.isMultiple){
+                                            setState(() {
+                                              e2.value.check=!e2.value.check;
+                                            });
+                                          }
+                                          else if(e1.isLimitado!=null){
+                                            int count = 0;
+                                            for(var i in e1.caracteristicas){
+                                              if(i.check){
+                                                count++;
+                                              }
                                             }
-                                            e2.value.check=!lastCheck;
-                                          });
-                                        }
-                                      },
-                                      child: Container(
-                                        padding: const EdgeInsets.symmetric(vertical: 18,horizontal: 32),
-                                        decoration: BoxDecoration(
-                                            border: e2.key<e1.caracteristicas.length-1?const Border(bottom: BorderSide(color: IziColors.grey25,width: 1)):null
-                                        ),
-                                        child: Row(
-                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                          children: [
-                                            IziText.body(color: IziColors.darkGrey, text: "${e2.value.nombre}${e2.value.modPrecio>0? " (+${e2.value.modPrecio.moneyFormat(currency: widget.state.currentCurrency?.simbolo)})":""}", fontWeight: FontWeight.w600),
-                                            e1.isMultiple?
-                                            IziSwitch( value: e2.value.check, onChanged: (value){
+                                            if(count<e1.isLimitado! || e2.value.check){
                                               setState(() {
-                                                e2.value.check=value;
+                                                e2.value.check=!e2.value.check;
                                               });
-                                            }):
-                                                IziRadioButton(
-                                                    onPressed: (){
-                                                      setState(() {
-                                                        var lastCheck=e2.value.check;
-                                                        for(var ca in e1.caracteristicas){
-                                                          ca.check=false;
-                                                        }
-                                                        e2.value.check=!lastCheck;
-                                                      });
-                                                    },
-                                                    radioButtonType: e2.value.check?RadioButtonType.checkboxChecked:RadioButtonType.checkboxDefault
-                                                )
-                                          ],
+                                            }
+                                          }
+                                          else{
+                                            setState(() {
+                                              var lastCheck=e2.value.check;
+                                              for(var ca in e1.caracteristicas){
+                                                ca.check=false;
+                                              }
+                                              e2.value.check=!lastCheck;
+                                            });
+                                          }
+                                        },
+                                        child: Container(
+                                          padding: const EdgeInsets.symmetric(vertical: 18,horizontal: 32),
+                                          child: Row(
+                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              Flexible(child: IziText.body(color: IziColors.darkGrey, text: "${e2.value.nombre}${e2.value.modPrecio>0? " (+${e2.value.modPrecio.moneyFormat(currency: widget.state.currentCurrency?.simbolo)})":""}", fontWeight: FontWeight.w600)),
+                                              e1.isMultiple || e1.isLimitado!=null?
+                                              IziSwitch( value: e2.value.check, onChanged: (value){
+                                                setState(() {
+                                                  if(e1.isMultiple){
+                                                    e2.value.check=value;
+                                                  }
+                                                  else{
+                                                    int count = 0;
+                                                    for(var i in e1.caracteristicas){
+                                                      if(i.check){
+                                                        count++;
+                                                      }
+                                                    }
+                                                    if(count<e1.isLimitado! || !value){
+                                                      e2.value.check=value;
+                                                    }
+                                                  }
+                                                });
+                                              }):
+                                              IziRadioButton(
+                                                  onPressed: (){
+                                                    setState(() {
+                                                      var lastCheck=e2.value.check;
+                                                      for(var ca in e1.caracteristicas){
+                                                        ca.check=false;
+                                                      }
+                                                      e2.value.check=!lastCheck;
+                                                    });
+                                                  },
+                                                  radioButtonType: e2.value.check?RadioButtonType.checkboxChecked:RadioButtonType.checkboxDefault
+                                              )
+                                            ],
+                                          ),
                                         ),
-                                      ),
-                                    );
-                                  }).toList(),
-                                  const SizedBox(height: 16,),
-                                ],
-                              );
+                                      );
+                                    }).toList(),
+                                  ),
+                                ),
+                              ],
+                            );
                             }).toList()
                         ),
                       ),

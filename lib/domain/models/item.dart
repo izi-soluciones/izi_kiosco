@@ -115,6 +115,7 @@ class Modifier {
   bool isIngreso;
   bool isMultiple;
   bool isObligatorio;
+  int? isLimitado;
   List<ModifierItem> caracteristicas;
 
   Modifier(
@@ -122,6 +123,7 @@ class Modifier {
       required this.isMultiple,
       required this.isObligatorio,
       required this.isIngreso,
+        required this.isLimitado,
       required this.caracteristicas});
 
   factory Modifier.fromJson(Map<dynamic, dynamic> json) {
@@ -130,15 +132,17 @@ class Modifier {
     listCaracteristicas.removeWhere((element) => element.isEmpty);
     return Modifier(
         nombre: json["nombre"] ?? "",
+        isLimitado: json["isLimitado"] is int?json["isLimitado"]:null,
         isIngreso: json["isIngreso"] ?? false,
         isMultiple: json["isMultiple"] ?? false,
         isObligatorio: json["isObligatorio"] ?? false,
         caracteristicas:
-            listCaracteristicas.map((e) => ModifierItem.fromJson(e)).toList());
+        listCaracteristicas.map((e) => ModifierItem.fromJson(e)).toList());
   }
   Modifier copyWith() => Modifier(
       nombre: nombre,
       isMultiple: isMultiple,
+      isLimitado: isLimitado,
       isObligatorio: isObligatorio,
       isIngreso: isIngreso,
       caracteristicas: caracteristicas.map((e) => e.copyWith()).toList());
@@ -146,6 +150,7 @@ class Modifier {
   Map<String,dynamic> toJson()=>{
     "nombre": nombre,
     "isMultiple": isMultiple,
+    "isLimitado": isLimitado,
     "isObligatorio": isObligatorio,
     "isIngreso": isIngreso,
     "caracteristicas": caracteristicas.map((e) => e.toJson()).toList()
@@ -155,6 +160,7 @@ class Modifier {
 class ModifierItem {
   String nombre;
   num modPrecio;
+  bool defaultValue;
   bool check;
   List<ModifierIngredient> ingredientes;
 
@@ -162,6 +168,7 @@ class ModifierItem {
       {required this.nombre,
       this.check = false,
       required this.modPrecio,
+        required this.defaultValue,
       required this.ingredientes});
 
   factory ModifierItem.fromJson(Map<dynamic, dynamic> json) {
@@ -173,7 +180,8 @@ class ModifierItem {
         nombre: json["nombre"] ?? "",
         modPrecio: json["modPrecio"] ?? 0,
         check: json["check"] ?? false,
-        ingredientes: listIngredientes
+        defaultValue: json["default"] ?? false,
+        ingredientes: []//listIngredientes
             .map((e) => ModifierIngredient.fromJson(e))
             .toList());
   }
@@ -181,6 +189,7 @@ class ModifierItem {
       nombre: nombre,
       modPrecio: modPrecio,
       check: check,
+      defaultValue: defaultValue,
       ingredientes: ingredientes.map((e) => e.copyWith()).toList());
 
   Map<String,dynamic> toJson()=>{
