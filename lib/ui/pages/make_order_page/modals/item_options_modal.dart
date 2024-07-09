@@ -28,7 +28,7 @@ class ItemOptionsModal extends StatefulWidget {
 class _ItemOptionsModalState extends State<ItemOptionsModal> {
   Item? itemEdit;
   int? indexRequired;
-  ScrollController _scrollController = ScrollController();
+  final ScrollController _scrollController = ScrollController();
 
   List<GlobalKey> titleKeys = [];
   @override

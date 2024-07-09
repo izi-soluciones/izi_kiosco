@@ -84,8 +84,8 @@ class MakeOrderBloc extends Cubit<MakeOrderState> {
     }
   }
 
-  changeReviewStatus(bool review){
-    emit(state.copyWith(review:review));
+  changeStepStatus(int step){
+    emit(state.copyWith(step:step));
   }
 
   changeCategory(index) {
@@ -210,6 +210,10 @@ class MakeOrderBloc extends Cubit<MakeOrderState> {
     emit(state.copyWith(numberDiners: ()=>number));
   }
 
+  changeTakeAway(bool takeAway){
+    emit(state.copyWith(takeAway: takeAway));
+  }
+
   Future<Comanda?> emitOrder(AuthState authState)async{
     try{
       int cajaUsuarioIndex=state.cashRegisters.indexWhere((element) => authState.currentDevice?.caja==element.id && element.abierta==true);
@@ -240,7 +244,7 @@ class MakeOrderBloc extends Cubit<MakeOrderState> {
           mesa: table?.id??"",
           anulada: true,
           deviceId: authState.currentDevice?.id??0,
-          paraLlevar: true,
+          paraLlevar: state.takeAway,
           tipoComanda: AppConstants.restaurantEnv,
           sucursal: authState.currentSucursal?.id??0);
       Comanda comanda;

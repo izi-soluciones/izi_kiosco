@@ -11,6 +11,7 @@ import 'package:izi_kiosco/ui/modals/warning_config_modal.dart';
 import 'package:izi_kiosco/ui/pages/make_order_page/views/make_order_confirm.dart';
 import 'package:izi_kiosco/ui/pages/make_order_page/views/make_order_detail.dart';
 import 'package:izi_kiosco/ui/pages/make_order_page/views/make_order_select.dart';
+import 'package:izi_kiosco/ui/pages/make_order_page/views/make_order_type.dart';
 import 'package:izi_kiosco/ui/pages/make_order_page/widgets/make_order_shimmer.dart';
 import 'package:izi_kiosco/ui/utils/custom_alerts.dart';
 
@@ -28,15 +29,12 @@ class _MakeOrderPageState extends State<MakeOrderPage> {
   Widget build(BuildContext context) {
     return BlocConsumer<MakeOrderBloc, MakeOrderState>(
       listenWhen: (previous, current) {
-        return previous.status!=current.status || previous.review != current.review;
+        return previous.status!=current.status || previous.step != current.step;
       },
         listener: (context, state) {
 
-          if(state.review && pageController.page!=1){
-            pageController.jumpToPage(1);
-          }
-          else if(!state.review && pageController.page!=0){
-            pageController.jumpToPage(0);
+          if(pageController.page!=state.step){
+            pageController.jumpToPage(state.step);
           }
 
           if(state.status == MakeOrderStatus.errorCashRegisters){
@@ -61,6 +59,7 @@ class _MakeOrderPageState extends State<MakeOrderPage> {
           controller: pageController,
           physics: const NeverScrollableScrollPhysics(),
           children: [
+            MakeOrderType(state: state),
             Column(
                 children: [
                   Expanded(

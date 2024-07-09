@@ -71,7 +71,7 @@ class _MakeOrderConfirmState extends State<MakeOrderConfirm> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   MakeOrderHeaderLg(onPop: () {
-                    context.read<MakeOrderBloc>().changeReviewStatus(false);
+                    context.read<MakeOrderBloc>().changeStepStatus(1);
                   }),
                   const SizedBox(
                     height: 40,
@@ -87,11 +87,13 @@ class _MakeOrderConfirmState extends State<MakeOrderConfirm> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.stretch,
                                 children: [
-                                  IziText.titleMedium(
+                                  IziText.titleBig(
                                       color: IziColors.darkGrey,
                                       textAlign: TextAlign.left,
-                                      text: "${LocaleKeys
-                                          .makeOrder_body_confirmOrder
+                                      text: "${widget.state.takeAway?LocaleKeys
+                                          .makeOrder_body_confirmOrderTakeWay
+                                          .tr():LocaleKeys
+                                          .makeOrder_body_confirmOrderEatHere
                                           .tr()}:",
                                       fontWeight: FontWeight.w500),
                                   const SizedBox(
@@ -109,13 +111,30 @@ class _MakeOrderConfirmState extends State<MakeOrderConfirm> {
                                   const SizedBox(
                                     height: 30,
                                   ),
+                                  // Row(
+                                  //   mainAxisAlignment: MainAxisAlignment.end,
+                                  //   children: [
+                                  //     Flexible(
+                                  //       child: IziCheckboxLabel(
+                                  //
+                                  //           onPressCheckbox: (){
+                                  //             context.read<MakeOrderBloc>().changeTakeAway(!widget.state.takeAway);
+                                  //           },
+                                  //           checkboxSize: CheckboxSize.large,
+                                  //           checkboxType: widget.state.takeAway?CheckboxType.checkboxChecked:CheckboxType.checkboxDefault,
+                                  //           checkboxLabelTitle: LocaleKeys.makeOrder_body_takeAway.tr()
+                                  //       ),
+                                  //     ),
+                                  //   ],
+                                  // ),
+
                                   Row(
                                     mainAxisSize: MainAxisSize.min,
                                     mainAxisAlignment: MainAxisAlignment.end,
                                     children: [
-                                      IziText.title(
+                                      IziText.titleMedium(
                                         color: IziColors.darkGrey,
-                                        fontWeight: FontWeight.w600,
+                                        fontWeight: FontWeight.w500,
                                         text:
                                             "${LocaleKeys.makeOrder_labels_total.tr()}: ${(_getTotal(widget.state) - widget.state.discountAmount).moneyFormat(currency: widget.state.currentCurrency?.simbolo)}",
                                       ),
@@ -194,7 +213,7 @@ class _MakeOrderConfirmState extends State<MakeOrderConfirm> {
                     buttonType: ButtonType.outline,
                     buttonSize: ButtonSize.large,
                     buttonOnPressed: () {
-                      context.read<MakeOrderBloc>().changeReviewStatus(false);
+                      context.read<MakeOrderBloc>().changeStepStatus(1);
                     }),
               ),
               const SizedBox(
@@ -229,6 +248,10 @@ class _MakeOrderConfirmState extends State<MakeOrderConfirm> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
+          IziText.title(color: IziColors.dark, text: "x${item.cantidad}"),
+          const SizedBox(
+            width: 16,
+          ),
           SizedBox(
             height: 68,
             child: AspectRatio(
@@ -273,20 +296,44 @@ class _MakeOrderConfirmState extends State<MakeOrderConfirm> {
                     fontWeight: FontWeight.w600,
                     maxLines: 2),
 
-                ...item.modificadores.map(
+                ...item.modificadores.where((element) {
+                  return element.caracteristicas.indexWhere((c) => c.check) !=-1;
+                }).map(
                       (e) {
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: e.caracteristicas
-                          .where((element) => element.check)
-                          .map((c) {
-                        return IziText.bodySmall(
-                            color: IziColors.darkGrey,
+                        return Row(
+                          children: [
+                        IziText.bodySmall(
+                        color: IziColors.dark,
                             text:
-                            "${c.nombre}${c.modPrecio > 0 ? " (+${c.modPrecio})" : ""}",
-                            fontWeight: FontWeight.w400);
-                      }).toList(),
-                    );
+                            "${e.nombre}: " ,
+                            fontWeight: FontWeight.w500),
+                        IziText.bodySmall(
+                        color: IziColors.darkGrey,
+                        text: e.caracteristicas.fold("", (previousValue, c){
+                          if(!c.check){
+                            return previousValue;
+                          }
+                          if(previousValue!=""){
+                            previousValue+=", ";
+                          }
+                          previousValue+="${c.nombre}${c.modPrecio > 0 ? " (+${c.modPrecio})" : ""}";
+                          return previousValue;
+                        }),
+                        fontWeight: FontWeight.w400)
+                          ],
+                        );
+                    // return Column(
+                    //   crossAxisAlignment: CrossAxisAlignment.start,
+                    //   children: e.caracteristicas
+                    //       .where((element) => element.check)
+                    //       .map((c) {
+                    //     return IziText.bodySmall(
+                    //         color: IziColors.darkGrey,
+                    //         text:
+                    //         "${c.nombre}${c.modPrecio > 0 ? " (+${c.modPrecio})" : ""}",
+                    //         fontWeight: FontWeight.w400);
+                    //   }).toList(),
+                    // );
                   },
                 ).toList(),
               ],
@@ -316,7 +363,7 @@ class _MakeOrderConfirmState extends State<MakeOrderConfirm> {
                     .removeItem(indexCategory, indexItem);
                 if (widget.state.itemsSelected.length == 1 &&
                     widget.state.itemsSelected[0].items.length == 1) {
-                  context.read<MakeOrderBloc>().changeReviewStatus(false);
+                  context.read<MakeOrderBloc>().changeStepStatus(1);
                 }
               })
         ],

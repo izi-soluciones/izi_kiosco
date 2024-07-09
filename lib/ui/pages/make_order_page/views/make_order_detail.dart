@@ -123,7 +123,7 @@ class _MakeOrderDetailState extends State<MakeOrderDetail> {
   }
 
   _next(BuildContext context) {
-    context.read<MakeOrderBloc>().changeReviewStatus(true);
+    context.read<MakeOrderBloc>().changeStepStatus(2);
   }
 
   _item(Item item, int indexCategory,

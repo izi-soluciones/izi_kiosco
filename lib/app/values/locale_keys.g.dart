@@ -468,7 +468,12 @@ abstract class  LocaleKeys {
   static const makeOrder_body_quantity = 'makeOrder.body.quantity';
   static const makeOrder_body_items = 'makeOrder.body.items';
   static const makeOrder_body_confirmOrder = 'makeOrder.body.confirmOrder';
+  static const makeOrder_body_confirmOrderTakeWay = 'makeOrder.body.confirmOrderTakeWay';
+  static const makeOrder_body_confirmOrderEatHere = 'makeOrder.body.confirmOrderEatHere';
   static const makeOrder_body_featured = 'makeOrder.body.featured';
+  static const makeOrder_body_selectWhere = 'makeOrder.body.selectWhere';
+  static const makeOrder_body_eatHere = 'makeOrder.body.eatHere';
+  static const makeOrder_body_takeAway = 'makeOrder.body.takeAway';
   static const makeOrder_body = 'makeOrder.body';
   static const makeOrder_buttons_next = 'makeOrder.buttons.next';
   static const makeOrder_buttons_confirm = 'makeOrder.buttons.confirm';

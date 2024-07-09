@@ -592,7 +592,12 @@
       "quantity": "Cantidad",
       "items": "Items ({})",
       "confirmOrder": "Confirmación de la orden",
-      "featured": "Recomendados"
+      "confirmOrderTakeWay": "Orden para llevar",
+      "confirmOrderEatHere": "Orden para comer aquí",
+      "featured": "Recomendados",
+      "selectWhere": "Selecciona dónde comerás hoy",
+      "eatHere": "Para comer aquí",
+      "takeAway": "Para llevar"
     },
     "buttons": {
       "next": "Siguiente",
