@@ -33,6 +33,7 @@ class MakeOrderItemLg extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     AspectRatio(
                       aspectRatio: 1,

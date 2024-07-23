@@ -4,6 +4,7 @@ class AppConstants{
   static num paginationSize = 15;
   static int timerTimeSeconds=30;
   static int timerTimeSecondsInvoiced=90;
+  static int timerMessage=12;
   static int regenerateQrTime=30;
   static int remainingQrTime=30;
   static String defaultCurrency="Bs";

@@ -36,9 +36,12 @@ class MakeOrderState extends Equatable{
   final bool takeAway;
 
 
+  final Item? itemModal;
 
 
-  const MakeOrderState({required this.takeAway,required this.step,required this.itemsFeatured,this.order,this.errorDescription,required this.cashRegisters,required this.tables,this.tableId,this.numberDiners,this.offsetDiscount,required this.discountAmount,required this.status,this.currentCurrency, required this.categories, required this.indexCategory,required this.itemsSelected});
+
+
+  const MakeOrderState({required this.itemModal,required this.takeAway,required this.step,required this.itemsFeatured,this.order,this.errorDescription,required this.cashRegisters,required this.tables,this.tableId,this.numberDiners,this.offsetDiscount,required this.discountAmount,required this.status,this.currentCurrency, required this.categories, required this.indexCategory,required this.itemsSelected});
 
   factory MakeOrderState.init(String? tableId,int? numberDiners,Comanda? order){
     List<CategoryOrder> initSelectItems=[];
@@ -88,6 +91,7 @@ class MakeOrderState extends Equatable{
         order: order,
       takeAway: true,
       itemsFeatured: const [],
+      itemModal: null,
       step:0,
     );
   }
@@ -107,7 +111,8 @@ class MakeOrderState extends Equatable{
     String? errorDescription,
     List<Item>? itemsFeatured,
     int? step,
-bool? takeAway
+bool? takeAway,
+    Item? Function()? itemModal
 }){
     return MakeOrderState(
         status: status ?? this.status,
@@ -125,11 +130,12 @@ bool? takeAway
       order: order,
       itemsFeatured: itemsFeatured ?? this.itemsFeatured,
       step: step ?? this.step,
-takeAway: takeAway ?? this.takeAway
+takeAway: takeAway ?? this.takeAway,
+      itemModal: itemModal != null? itemModal():this.itemModal
     );
   }
 
   @override
-  List<Object?> get props => [takeAway,step,itemsFeatured,status,cashRegisters,tables,categories,errorDescription,indexCategory,itemsSelected,currentCurrency,discountAmount,offsetDiscount,tableId,numberDiners];
+  List<Object?> get props => [itemModal,takeAway,step,itemsFeatured,status,cashRegisters,tables,categories,errorDescription,indexCategory,itemsSelected,currentCurrency,discountAmount,offsetDiscount,tableId,numberDiners];
 
 }

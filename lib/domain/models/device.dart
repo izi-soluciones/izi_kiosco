@@ -33,20 +33,23 @@ class Device {
   }
 }
 
-class ConfigDevice{
+class ConfigDevice {
   final String? ipAtc;
   final String? ipLinkser;
   final String? video;
+  final int? timeMessage;
 
-  const ConfigDevice(this.ipAtc,this.ipLinkser,this.video);
+  const ConfigDevice(
+      {this.ipAtc, this.ipLinkser, this.video, this.timeMessage});
 
-  factory ConfigDevice.fromJson(dynamic json){
-    var jsonObj = json is Map? json: null;
+  factory ConfigDevice.fromJson(dynamic json) {
+    Map? jsonObj = json is Map ? json : null;
     return ConfigDevice(
-        jsonObj?["ipAtc"] is String? jsonObj!["ipAtc"]:null,
-        jsonObj?["ipLinkser"] is String? jsonObj!["ipLinkser"]:null,
-        jsonObj?["video"] is String? jsonObj!["video"]:null
+      ipAtc: jsonObj?["ipAtc"] is String ? jsonObj!["ipAtc"] : null,
+      ipLinkser: jsonObj?["ipLinkser"] is String ? jsonObj!["ipLinkser"] : null,
+      video: jsonObj?["video"] is String ? jsonObj!["video"] : null,
+      timeMessage:
+          jsonObj?["timeMessage"] is int ? jsonObj!["timeMessage"] : null,
     );
   }
-
 }

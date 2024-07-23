@@ -79,6 +79,9 @@ class _ItemOptionsModalState extends State<ItemOptionsModal> {
     return BlocListener<PageUtilsBloc,PageUtilsState>(
       listener: (context, state) {
         if(state.screenActive==false){
+          if(itemEdit != null){
+            context.read<MakeOrderBloc>().setItemModal(itemEdit!);
+          }
           Navigator.pop(context);
         }
       },
@@ -210,6 +213,7 @@ class _ItemOptionsModalState extends State<ItemOptionsModal> {
                       inputType: InputType.textArea,
                       value: widget.item.detalle,
                       onChanged: (value,valueRaw){
+                        context.read<PageUtilsBloc>().updateScreenActive();
                         setState(() {
                           itemEdit?.detalle=value;
                         });

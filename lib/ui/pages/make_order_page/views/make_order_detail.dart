@@ -12,7 +12,9 @@ import 'package:izi_kiosco/app/values/locale_keys.g.dart';
 import 'package:izi_kiosco/domain/blocs/make_order/make_order_bloc.dart';
 import 'package:izi_kiosco/domain/models/item.dart';
 import 'package:izi_kiosco/ui/general/izi_scroll.dart';
+import 'package:izi_kiosco/ui/pages/make_order_page/modals/item_options_modal.dart';
 import 'package:izi_kiosco/ui/pages/make_order_page/widgets/make_order_amount_btn.dart';
+import 'package:izi_kiosco/ui/utils/custom_alerts.dart';
 import 'package:izi_kiosco/ui/utils/money_formatter.dart';
 import 'package:izi_kiosco/ui/utils/responsive_utils.dart';
 import 'package:izi_kiosco/ui/utils/row_container.dart';
@@ -126,7 +128,7 @@ class _MakeOrderDetailState extends State<MakeOrderDetail> {
     context.read<MakeOrderBloc>().changeStepStatus(2);
   }
 
-  _item(Item item, int indexCategory,
+  _item(BuildContext context,Item item, int indexCategory,
       int indexItem) {
     return SizedBox(
       width: 150,
@@ -135,6 +137,9 @@ class _MakeOrderDetailState extends State<MakeOrderDetail> {
           Padding(
             padding: const EdgeInsets.only(top: 5, right: 5),
             child: IziCard(
+              onPressed: () {
+                _editItem(context, item, indexCategory, indexItem);
+              },
               child: Padding(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
@@ -218,6 +223,7 @@ class _MakeOrderDetailState extends State<MakeOrderDetail> {
                 ...e.value.items.asMap().entries.map(
                   (i) {
                     return _item(
+                      context,
                         i.value,
                         e.key,
                         i.key);
@@ -230,6 +236,27 @@ class _MakeOrderDetailState extends State<MakeOrderDetail> {
       ),
     );
   }
+  _editItem(BuildContext context, Item item, int indexC, int indexI) {
+
+    CustomAlerts.defaultAlert(
+        defaultScroll: false,
+        padding: EdgeInsets.zero,
+        context: context,
+        dismissible: true,
+        child: ItemOptionsModal(
+          item: item,
+          state: widget.state,
+        )).then((result) {
+      if (result is Item) {
+        var itemNew = result;
+        context
+            .read<MakeOrderBloc>()
+            .updateItemSelected(itemNew, indexC, indexI);
+      }
+    });
+    return;
+  }
+
 
   num _getTotal() {
     num total = 0;

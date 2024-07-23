@@ -18,8 +18,10 @@ import 'package:izi_kiosco/domain/blocs/page_utils/page_utils_bloc.dart';
 import 'package:izi_kiosco/domain/models/comanda.dart';
 import 'package:izi_kiosco/domain/models/item.dart';
 import 'package:izi_kiosco/ui/general/izi_scroll.dart';
+import 'package:izi_kiosco/ui/pages/make_order_page/modals/item_options_modal.dart';
 import 'package:izi_kiosco/ui/pages/make_order_page/widgets/make_order_amount_btn.dart';
 import 'package:izi_kiosco/ui/pages/make_order_page/widgets/make_order_header_lg.dart';
+import 'package:izi_kiosco/ui/utils/custom_alerts.dart';
 import 'package:izi_kiosco/ui/utils/money_formatter.dart';
 
 class MakeOrderConfirm extends StatefulWidget {
@@ -180,14 +182,14 @@ class _MakeOrderConfirmState extends State<MakeOrderConfirm> {
                     decoration: BoxDecoration(
                       border: e.key<state.itemsSelected.length-1 || i.key<e.value.items.length-1?const Border(bottom: BorderSide(color: IziColors.grey35,width: 1)):null
                     ),
-                    child: SizedBox(
-                        child: _item(
-                            i.value,
-                            cIndex < controllers.length - 1
-                                ? controllers[cIndex]
-                                : null,
-                            e.key,
-                            i.key)),
+                    child: _item(
+                      context,
+                        i.value,
+                        cIndex < controllers.length - 1
+                            ? controllers[cIndex]
+                            : null,
+                        e.key,
+                        i.key),
                   );
                 },
               )
@@ -241,136 +243,148 @@ class _MakeOrderConfirmState extends State<MakeOrderConfirm> {
     );
   }
 
-  _item(Item item, TextEditingController? controller, int indexCategory,
+  _item(BuildContext context,Item item, TextEditingController? controller, int indexCategory,
       int indexItem) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          IziText.title(color: IziColors.dark, text: "x${item.cantidad}"),
-          const SizedBox(
-            width: 16,
-          ),
-          SizedBox(
-            height: 68,
-            child: AspectRatio(
-              aspectRatio: 1,
-              child: Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(8),
-                  color: IziColors.grey25,
+    return InkWell(
+      onTap: () {
+        _editItem(context, item, indexCategory, indexItem);
+      },
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            IziText.title(color: IziColors.dark, text: "x${item.cantidad}"),
+            const SizedBox(
+              width: 16,
+            ),
+            SizedBox(
+              height: 68,
+              child: AspectRatio(
+                aspectRatio: 1,
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(8),
+                    color: IziColors.grey25,
+                  ),
+                  clipBehavior: Clip.antiAlias,
+                  child: item.imagen == null || item.imagen?.isEmpty == true
+                      ? const FittedBox(
+                          child: Icon(IziIcons.dish, color: IziColors.warmLighten))
+                      : CachedNetworkImage(
+                          imageUrl: item.imagen ?? "",
+                          fit: BoxFit.cover,
+                          placeholder: (context, url) => const Center(
+                              child: CircularProgressIndicator(
+                                  strokeWidth: 2, color: IziColors.dark)),
+                          errorWidget: (context, url, error) {
+                            return const FittedBox(
+                                child: Icon(IziIcons.dish,
+                                    color: IziColors.warmLighten));
+                          },
+                        ),
                 ),
-                clipBehavior: Clip.antiAlias,
-                child: item.imagen == null || item.imagen?.isEmpty == true
-                    ? const FittedBox(
-                        child: Icon(IziIcons.dish, color: IziColors.warmLighten))
-                    : CachedNetworkImage(
-                        imageUrl: item.imagen ?? "",
-                        fit: BoxFit.cover,
-                        placeholder: (context, url) => const Center(
-                            child: CircularProgressIndicator(
-                                strokeWidth: 2, color: IziColors.dark)),
-                        errorWidget: (context, url, error) {
-                          return const FittedBox(
-                              child: Icon(IziIcons.dish,
-                                  color: IziColors.warmLighten));
-                        },
-                      ),
               ),
             ),
-          ),
-          const SizedBox(
-            width: 16,
-          ),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                IziText.title(
-                    textAlign: TextAlign.left,
-                    color: IziColors.dark,
-                    text: item.nombre,
-                    fontWeight: FontWeight.w600,
-                    maxLines: 2),
-
-                ...item.modificadores.where((element) {
-                  return element.caracteristicas.indexWhere((c) => c.check) !=-1;
-                }).map(
-                      (e) {
-                        return Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                        IziText.bodySmall(
-                        color: IziColors.dark,
-                            text:
-                            "${e.nombre}: " ,
-                            fontWeight: FontWeight.w500),
-                        Expanded(
-                          child: IziText.bodySmall(
-                          color: IziColors.darkGrey,
-                          maxLines: 50,
-                          text: e.caracteristicas.fold("", (previousValue, c){
-                            if(!c.check){
-                              return previousValue;
-                            }
-                            if(previousValue!=""){
-                              previousValue+=", ";
-                            }
-                            previousValue+="${c.nombre}${c.modPrecio > 0 ? " (+${c.modPrecio})" : ""}";
-                            return previousValue;
-                          }),
-                          fontWeight: FontWeight.w400),
-                        )
-                          ],
-                        );
-                    // return Column(
-                    //   crossAxisAlignment: CrossAxisAlignment.start,
-                    //   children: e.caracteristicas
-                    //       .where((element) => element.check)
-                    //       .map((c) {
-                    //     return IziText.bodySmall(
-                    //         color: IziColors.darkGrey,
-                    //         text:
-                    //         "${c.nombre}${c.modPrecio > 0 ? " (+${c.modPrecio})" : ""}",
-                    //         fontWeight: FontWeight.w400);
-                    //   }).toList(),
-                    // );
-                  },
-                ).toList(),
-              ],
+            const SizedBox(
+              width: 16,
             ),
-          ),
-          const SizedBox(
-            width: 16,
-          ),
-          IziText.body(
-              textAlign: TextAlign.center,
-              color: IziColors.grey,
-              text: (item.precioModificadores +
-                  item.cantidad * item.precioUnitario)
-                  .moneyFormat(currency: widget.state.currentCurrency?.simbolo),
-              fontWeight: FontWeight.w500),
-          const SizedBox(
-            width: 16,
-          ),
-          IziBtnIcon(
-              buttonIcon: IziIcons.close,
-              buttonType: ButtonType.secondary,
-              buttonSize: ButtonSize.medium,
-              color: IziColors.red,
-              buttonOnPressed: () {
-                context
-                    .read<MakeOrderBloc>()
-                    .removeItem(indexCategory, indexItem);
-                if (widget.state.itemsSelected.length == 1 &&
-                    widget.state.itemsSelected[0].items.length == 1) {
-                  context.read<MakeOrderBloc>().changeStepStatus(1);
-                }
-              })
-        ],
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IziText.title(
+                      textAlign: TextAlign.left,
+                      color: IziColors.dark,
+                      text: item.nombre,
+                      fontWeight: FontWeight.w600,
+                      maxLines: 2),
+
+                  ...item.modificadores.where((element) {
+                    return element.caracteristicas.indexWhere((c) => c.check) !=-1;
+                  }).map(
+                        (e) {
+                          return Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                          IziText.bodySmall(
+                          color: IziColors.dark,
+                              text:
+                              "${e.nombre}: " ,
+                              fontWeight: FontWeight.w500),
+                          Expanded(
+                            child: IziText.bodySmall(
+                            color: IziColors.darkGrey,
+                            maxLines: 50,
+                            text: e.caracteristicas.fold("", (previousValue, c){
+                              if(!c.check){
+                                return previousValue;
+                              }
+                              if(previousValue!=""){
+                                previousValue+=", ";
+                              }
+                              previousValue+="${c.nombre}${c.modPrecio > 0 ? " (+${c.modPrecio})" : ""}";
+                              return previousValue;
+                            }),
+                            fontWeight: FontWeight.w400),
+                          )
+                            ],
+                          );
+                      // return Column(
+                      //   crossAxisAlignment: CrossAxisAlignment.start,
+                      //   children: e.caracteristicas
+                      //       .where((element) => element.check)
+                      //       .map((c) {
+                      //     return IziText.bodySmall(
+                      //         color: IziColors.darkGrey,
+                      //         text:
+                      //         "${c.nombre}${c.modPrecio > 0 ? " (+${c.modPrecio})" : ""}",
+                      //         fontWeight: FontWeight.w400);
+                      //   }).toList(),
+                      // );
+                    },
+                  ).toList(),
+                  if(item.detalle?.isNotEmpty==true)
+                  IziText.body(
+                      textAlign: TextAlign.left,
+                      color: IziColors.primary,
+                      text: item.detalle!,
+                      fontWeight: FontWeight.w400,
+                      maxLines: 2),
+                ],
+              ),
+            ),
+            const SizedBox(
+              width: 16,
+            ),
+            IziText.body(
+                textAlign: TextAlign.center,
+                color: IziColors.grey,
+                text: (item.precioModificadores +
+                    item.cantidad * item.precioUnitario)
+                    .moneyFormat(currency: widget.state.currentCurrency?.simbolo),
+                fontWeight: FontWeight.w500),
+            const SizedBox(
+              width: 16,
+            ),
+            IziBtnIcon(
+                buttonIcon: IziIcons.close,
+                buttonType: ButtonType.secondary,
+                buttonSize: ButtonSize.medium,
+                color: IziColors.red,
+                buttonOnPressed: () {
+                  context
+                      .read<MakeOrderBloc>()
+                      .removeItem(indexCategory, indexItem);
+                  if (widget.state.itemsSelected.length == 1 &&
+                      widget.state.itemsSelected[0].items.length == 1) {
+                    context.read<MakeOrderBloc>().changeStepStatus(1);
+                  }
+                })
+          ],
+        ),
       ),
     );
   }
@@ -411,5 +425,27 @@ class _MakeOrderConfirmState extends State<MakeOrderConfirm> {
       }
     }
     return total;
+  }
+
+
+  _editItem(BuildContext context, Item item, int indexC, int indexI) {
+
+    CustomAlerts.defaultAlert(
+        defaultScroll: false,
+        padding: EdgeInsets.zero,
+        context: context,
+        dismissible: true,
+        child: ItemOptionsModal(
+          item: item,
+          state: widget.state,
+        )).then((result) {
+      if (result is Item) {
+        var itemNew = result;
+        context
+            .read<MakeOrderBloc>()
+            .updateItemSelected(itemNew, indexC, indexI);
+      }
+    });
+    return;
   }
 }

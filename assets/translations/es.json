@@ -316,7 +316,7 @@
       "waitingTime": "Tiempo de espera estimado: 5 minutos.",
       "processingCard": "Esperando pago en el lector de tarjetas",
       "cardSuccess": "Pago relaizado correctamente",
-      "cardError": "No se pudo completrar el pago",
+      "cardError": "No se pudo completar el pago",
       "paymentQrDescription": "Utiliza tu aplicación de banco para escanear el QR",
       "paymentCardDescription": "Utiliza el POS para pagar con tu tarjeta",
       "paymentCashRegisterDescription": "Acércate a nuestras cajas para completar tu orden",
@@ -650,7 +650,7 @@
     },
     "body": {
       "sucursal": "Sucursal",
-      "thisScreenClose": "¿NECESITAS MÁS TIEMPO?\nEsta pantalla se cerrará en 10 segundos."
+      "thisScreenClose": "¿NECESITAS MÁS TIEMPO?\nEsta pantalla se cerrará en {} segundos."
     },
     "buttons": {
       "filters": "Filtros",

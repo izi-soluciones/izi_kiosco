@@ -7,10 +7,14 @@ import 'package:izi_design_system/tokens/izi_icons.dart';
 import 'package:izi_kiosco/app/values/locale_keys.g.dart';
 import 'package:izi_kiosco/app/values/routes_keys.dart';
 import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
+import 'package:izi_kiosco/domain/blocs/make_order/make_order_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/order_list/order_list_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/page_utils/page_utils_bloc.dart';
+import 'package:izi_kiosco/domain/models/item.dart';
 import 'package:izi_kiosco/ui/general/izi_loading.dart';
 import 'package:izi_kiosco/ui/general/izi_screen_inactive.dart';
+import 'package:izi_kiosco/ui/pages/make_order_page/modals/item_options_modal.dart';
+import 'package:izi_kiosco/ui/utils/custom_alerts.dart';
 import 'package:izi_kiosco/ui/utils/responsive_utils.dart';
 import 'package:izi_design_system/molecules/izi_snack_bar.dart';
 import 'package:izi_design_system/organisms/izi_side_nav.dart';
@@ -36,6 +40,10 @@ class MainLayout extends StatelessWidget {
     final ru=ResponsiveUtils(context);
     return Listener(
       onPointerDown: (e) {
+        Item? item = context.read<MakeOrderBloc>().state.itemModal;
+        if(item != null){
+        _openAlertItem(item,context);
+        }
         context.read<PageUtilsBloc>().updateScreenActive();
       },
       child: BlocBuilder<AuthBloc,AuthState>(
@@ -208,6 +216,25 @@ class MainLayout extends StatelessWidget {
         ]
           ),
     ];
+  }
+
+  _openAlertItem(Item item,BuildContext context){
+
+    context.read<MakeOrderBloc>().resetItemModal();
+    CustomAlerts.defaultAlert(
+        defaultScroll: false,
+        padding: EdgeInsets.zero,
+        context: context,
+        dismissible: false,
+        child: ItemOptionsModal(
+            item: item, state: context.read<MakeOrderBloc>().state))
+        .then((result) {
+      if (result is Item) {
+        var itemNew = result;
+        itemNew.cantidad = 1;
+        context.read<MakeOrderBloc>().addItem(item: itemNew);
+      }
+    });
   }
 }
 

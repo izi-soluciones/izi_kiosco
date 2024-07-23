@@ -279,4 +279,34 @@ class MakeOrderBloc extends Cubit<MakeOrderState> {
     await printUtils.print(tmp);
   }
 
+
+  setItemModal(Item item){
+    emit(state.copyWith(itemModal: ()=>item));
+  }
+  resetItemModal(){
+    emit(state.copyWith(itemModal: ()=>null));
+  }
+  updateItemSelected(Item itemNew, int indexC, indexI) {
+    List<CategoryOrder> categories = List.from(state.itemsSelected);
+    for (var i = 0; i < state.itemsSelected.length; i++) {
+      categories[i] = state.itemsSelected[i].copyWith();
+      for (var j = 0; j < categories[i].items.length; j++) {
+        if (i == indexC && indexI == j) {
+          categories[i].items[j] = itemNew;
+        }
+        final item = categories[i].items[j];
+        num pM = 0;
+        for (var m in item.modificadores) {
+          for (var c in m.caracteristicas) {
+            if (c.check) {
+              pM += c.modPrecio * item.cantidad;
+            }
+          }
+        }
+        item.precioModificadores = pM;
+      }
+    }
+    emit(state.copyWith(itemsSelected: categories));
+  }
+
 }

@@ -13,9 +13,12 @@ import 'package:izi_kiosco/domain/utils/print_utils.dart';
 import 'package:izi_kiosco/ui/utils/money_formatter.dart';
 
 class PrintTemplate {
-
-  static Future<List<IziPrintItem>> order80(int orderNumber, int? customOrderNumber, Contribuyente contribuyente, Sucursal sucursal, Comanda? order)async{
-
+  static Future<List<IziPrintItem>> order80(
+      int orderNumber,
+      int? customOrderNumber,
+      Contribuyente contribuyente,
+      Sucursal sucursal,
+      Comanda? order) async {
     List<IziPrintItem> items = [];
     items.add(IziPrintText(
         text: contribuyente.razonSocial ?? "",
@@ -29,40 +32,62 @@ class PrintTemplate {
         bold: true));
     items.add(IziPrintSeparator());
     items.add(IziPrintText(
-        text: customOrderNumber!=null?"Orden del día #$customOrderNumber":"Orden #$orderNumber",
+        text: customOrderNumber != null
+            ? "Orden del día #$customOrderNumber"
+            : "Orden #$orderNumber",
         size: IziPrintSize.lg,
         align: IziPrintAlign.center,
         bold: true));
     items.add(IziPrintSeparator(dotted: true));
-    for(ItemComanda? item in order?.listaItems??[]){
+    for (ItemComanda? item in order?.listaItems ?? []) {
       items.add(IziPrintLineWrap(lines: 1));
       items.add(IziPrintText(
         text: "x${item?.cantidad} ${item?.nombre}",
         size: IziPrintSize.md,
         bold: false,
-        align: IziPrintAlign.left,));
-      if(item?.modificadores is Map){
-        for(var mod in (item?.modificadores as Map).entries){
-          if(mod.value is List){
+        align: IziPrintAlign.left,
+      ));
+      if (item?.modificadores is Map) {
+        for (var mod in (item?.modificadores as Map).entries) {
+          if (mod.value is List) {
             items.add(IziPrintText(
-              text: mod.key + ":"+ (mod.value as List).map((e) => e.toString()).join(", ") ?? "",
+              text: mod.key +
+                      ":" +
+                      (mod.value as List).map((e) => e.toString()).join(", ") ??
+                  "",
               size: IziPrintSize.sm,
-              align: IziPrintAlign.left,));
+              align: IziPrintAlign.left,
+            ));
           }
         }
       }
     }
     items.add(IziPrintSeparator(dotted: true));
     items.add(IziPrintText(
-        text: "Monto total: ${order?.montoTotal?.moneyFormat(currency: AppConstants.defaultCurrency)}",
+        text:
+            "Monto total: ${order?.montoTotal?.moneyFormat(currency: AppConstants.defaultCurrency)}",
         size: IziPrintSize.md,
         align: IziPrintAlign.left,
         bold: true));
     items.add(IziPrintSeparator(dotted: true));
     items.add(IziPrintText(
-        text: DateTime.now().dateFormat(DateFormatterType.dateHour),
-        size: IziPrintSize.md,
-        align: IziPrintAlign.center,));
+      text: DateTime.now().dateFormat(DateFormatterType.dateHour),
+      size: IziPrintSize.md,
+      align: IziPrintAlign.center,
+    ));
+
+    items.add(IziPrintSeparator(dotted: true));
+    items.add(IziPrintText(
+      text: "Cliente: ${
+          order?.custom is Map &&
+              order?.custom["pagadorData"] is Map &&
+              order?.custom["pagadorData"]["razonSocial"] is String
+              ? order?.custom["pagadorData"]["razonSocial"]
+              : "-"
+      }",
+      size: IziPrintSize.md,
+      align: IziPrintAlign.center,
+    ));
     items.add(IziPrintSeparator());
     items.add(IziPrintText(
         text: "Generada a través de iZi",
@@ -70,7 +95,8 @@ class PrintTemplate {
         bold: true,
         align: IziPrintAlign.center));
     return items;
-}
+  }
+
   static Future<List<IziPrintItem>> invoice80(
       Invoice invoice, Contribuyente contribuyente, Sucursal sucursal) async {
     List<IziPrintItem> items = [];
@@ -88,19 +114,22 @@ class PrintTemplate {
         : [];
     Uint8List? image;
     bool isPng(List<int> bytes) {
-      Uint8List pngSignature = Uint8List.fromList([137, 80, 78, 71, 13, 10, 26, 10]);
+      Uint8List pngSignature =
+          Uint8List.fromList([137, 80, 78, 71, 13, 10, 26, 10]);
       return const ListEquality().equals(bytes.take(8).toList(), pngSignature);
     }
-    try{
-      var res = await Dio().get("${dotenv.env[EnvKeys.apiUrl]}/contribuyentes/${invoice.contribuyente}/logo",
-          options: Options(responseType: ResponseType.bytes),);
+
+    try {
+      var res = await Dio().get(
+        "${dotenv.env[EnvKeys.apiUrl]}/contribuyentes/${invoice.contribuyente}/logo",
+        options: Options(responseType: ResponseType.bytes),
+      );
       if (res.statusCode == 200 && res.data is List<int> && !isPng(res.data)) {
         image = Uint8List.fromList(res.data);
       }
-    }
-    catch(_){}
-    if(image!=null && image.isNotEmpty){
-      items.add(IziPrintImage(image,size: 70));
+    } catch (_) {}
+    if (image != null && image.isNotEmpty) {
+      items.add(IziPrintImage(image, size: 70));
       items.add(IziPrintLineWrap(lines: 4));
     }
     items.add(IziPrintText(
@@ -113,9 +142,7 @@ class PrintTemplate {
         size: IziPrintSize.sm,
         align: IziPrintAlign.center,
         bold: true));
-    if (
-        sucursal.config is Map &&
-        sucursal.config["siat"] is Map) {
+    if (sucursal.config is Map && sucursal.config["siat"] is Map) {
       items.add(IziPrintText(
           text: "No. Punto de Venta ${sucursal.config["siat"]["puntoVenta"]}",
           size: IziPrintSize.sm,
@@ -204,13 +231,15 @@ class PrintTemplate {
         items.add(IziPrintText(
             text: "NOMBRE: ${invoice.razonSocial}",
             size: IziPrintSize.sm,
-            align: IziPrintAlign.center,bold: true));
+            align: IziPrintAlign.center,
+            bold: true));
         labelDocIdentidad = 'CODIGO: ';
       } else {
         items.add(IziPrintText(
             text: "NOMBRE/RAZÓN SOCIAL: ${invoice.razonSocial}",
             size: IziPrintSize.sm,
-            align: IziPrintAlign.center,bold: true));
+            align: IziPrintAlign.center,
+            bold: true));
         labelDocIdentidad = 'NIT/CI/CEX: ';
       }
       var esCi = true;
@@ -223,7 +252,8 @@ class PrintTemplate {
       items.add(IziPrintText(
           text: "$labelDocIdentidad ${invoice.comprador}$complemento",
           size: IziPrintSize.sm,
-          align: IziPrintAlign.center,bold: true));
+          align: IziPrintAlign.center,
+          bold: true));
 
       String codCliente = (datosSiat != null &&
               invoice.prefactura != 1 &&
@@ -235,12 +265,14 @@ class PrintTemplate {
       items.add(IziPrintText(
           text: "COD. CLIENTE: $codCliente",
           size: IziPrintSize.sm,
-          align: IziPrintAlign.center,bold: true));
+          align: IziPrintAlign.center,
+          bold: true));
       items.add(IziPrintText(
           text:
               "FECHA: ${DateTime.parse(invoice.fecha).toLocal().dateFormat(DateFormatterType.dateHour)}",
           size: IziPrintSize.sm,
-          align: IziPrintAlign.center,bold: true));
+          align: IziPrintAlign.center,
+          bold: true));
 
       if (listCE.isNotEmpty) {
         items.add(IziPrintSeparator());
@@ -258,133 +290,247 @@ class PrintTemplate {
       items.add(IziPrintRow([
         IziPrintColumn(text: "Cant.", width: 10, align: IziPrintAlign.left),
         IziPrintColumn(text: "Detalle", width: 30, align: IziPrintAlign.left),
-        IziPrintColumn(text: "Precio U.", width: 20, align: IziPrintAlign.right),
+        IziPrintColumn(
+            text: "Precio U.", width: 20, align: IziPrintAlign.right),
         IziPrintColumn(text: "Desc U", width: 20, align: IziPrintAlign.right),
         IziPrintColumn(text: "Subtotal", width: 20, align: IziPrintAlign.right),
-      ], size: IziPrintSize.sm,bold: true));
+      ], size: IziPrintSize.sm, bold: true));
       items.add(IziPrintSeparator());
 
-      for (Items item in invoice.listaItems??[]) {
+      for (Items item in invoice.listaItems ?? []) {
+        num precioUnitario = (invoice.prefactura == 1
+                ? item.precioUnitario
+                : item.precioUnitarioImpuesto) ??
+            0;
+        num descuento = (invoice.prefactura == 1
+                ? item.descuento
+                : item.descuentoImpuesto) ??
+            0;
+        num precioTotal = (invoice.prefactura == 1
+                ? item.precioTotal
+                : item.precioTotalImpuesto) ??
+            0;
+        var codInve = (item.codigoInventario == null && item.codigo == null)
+            ? ' '
+            : '${item.codigoInventario ?? item.codigo ?? "000"}-';
 
-        num precioUnitario = (invoice.prefactura == 1 ? item.precioUnitario : item.precioUnitarioImpuesto) ?? 0;
-        num descuento = (invoice.prefactura == 1  ? item.descuento : item.descuentoImpuesto) ??0;
-        num  precioTotal = (invoice.prefactura == 1  ? item.precioTotal : item.precioTotalImpuesto) ?? 0;
-        var codInve = (item.codigoInventario == null && item.codigo == null) ? ' ' : '${item.codigoInventario ?? item.codigo??"000"}-';
-
-        if(invoice.prefactura == 1 && sucursal.config is Map && sucursal.config["noMostrarCodigoInventarioPrefactura"]){
+        if (invoice.prefactura == 1 &&
+            sucursal.config is Map &&
+            sucursal.config["noMostrarCodigoInventarioPrefactura"]) {
           codInve = "";
         }
         items.add(IziPrintRow([
-          IziPrintColumn(text: item.cantidad.toString(), width:10, align: IziPrintAlign.left),
-          IziPrintColumn(text: codInve + item.articulo, width: 30, align: IziPrintAlign.left),
-          IziPrintColumn(text: precioUnitario.toStringAsFixed(2), width: 20, align: IziPrintAlign.right),
-          IziPrintColumn(text: descuento.toStringAsFixed(2), width: 20, align: IziPrintAlign.right),
-          IziPrintColumn(text: precioTotal.toStringAsFixed(2), width: 20, align: IziPrintAlign.right),
-        ], size: IziPrintSize.sm,bold: true));
+          IziPrintColumn(
+              text: item.cantidad.toString(),
+              width: 10,
+              align: IziPrintAlign.left),
+          IziPrintColumn(
+              text: codInve + item.articulo,
+              width: 30,
+              align: IziPrintAlign.left),
+          IziPrintColumn(
+              text: precioUnitario.toStringAsFixed(2),
+              width: 20,
+              align: IziPrintAlign.right),
+          IziPrintColumn(
+              text: descuento.toStringAsFixed(2),
+              width: 20,
+              align: IziPrintAlign.right),
+          IziPrintColumn(
+              text: precioTotal.toStringAsFixed(2),
+              width: 20,
+              align: IziPrintAlign.right),
+        ], size: IziPrintSize.sm, bold: true));
         items.add(IziPrintLineWrap(lines: 1));
       }
 
-      var monto = _roundNumber(invoice.prefactura == 1 ? invoice.monto ?? 0 : (invoice.montoImpuesto ?? invoice.monto ?? 0),2);
+      var monto = _roundNumber(
+          invoice.prefactura == 1
+              ? invoice.monto ?? 0
+              : (invoice.montoImpuesto ?? invoice.monto ?? 0),
+          2);
       //var sincredito = _roundNumber(invoice.prefactura ==1? invoice.sincredito ?? 0 : invoice.sincreditoImpuesto??0,2);
-      var descuento = _roundNumber(invoice.prefactura ==1? invoice.descuentos ?? 0 : (invoice.descuentosImpuesto ?? invoice.descuentos ?? 0),2);
-      var total = _roundNumber(invoice.prefactura ==1? (invoice.monto ??0) - (invoice.descuentos ?? 0) : (invoice.montoImpuesto!=null && invoice.descuentosImpuesto!=null?(invoice.montoImpuesto ?? 0) - (invoice.descuentosImpuesto??0) : ((invoice.monto??0)) - (invoice.descuentos??0)),2);
-      var giftCards = _roundNumber(invoice.prefactura ==1? (invoice.giftCards ?? 0) : (invoice.giftCardsImpuesto ?? invoice.giftCards ?? 0),2);
-      var importeBase = _roundNumber(invoice.prefactura ==1 ? (invoice.montoTotal??0) - (invoice.giftCards ??0): (invoice.montoTotalImpuesto!=null && invoice.giftCardsImpuesto!=null?(invoice.montoTotalImpuesto??0) - (invoice.giftCardsImpuesto??0):(invoice.montoTotal??0) - (invoice.giftCards??0)),2);
-      var esUnMil = (invoice.prefactura ==1? (invoice.monto ??0) - (invoice.giftCards ?? 0): (invoice.montoImpuesto!=null && invoice.giftCardsImpuesto!=null?invoice.montoImpuesto! - invoice.giftCardsImpuesto! : (invoice.monto ?? 0) - (invoice.giftCards??0))) ~/ 1000 == 1;
-      num auxCents = ((invoice.prefactura ==1? invoice.montoTotal ??0 : (invoice.montoTotalImpuesto ?? invoice.montoTotal ?? 0)) - ((invoice.prefactura == 1 ? invoice.montoTotal ?? 0 : (invoice.montoTotalImpuesto ?? invoice.montoTotal ?? 0))).toInt());
-      var totalCentavos = (auxCents*100).round().toInt();
+      var descuento = _roundNumber(
+          invoice.prefactura == 1
+              ? invoice.descuentos ?? 0
+              : (invoice.descuentosImpuesto ?? invoice.descuentos ?? 0),
+          2);
+      var total = _roundNumber(
+          invoice.prefactura == 1
+              ? (invoice.monto ?? 0) - (invoice.descuentos ?? 0)
+              : (invoice.montoImpuesto != null &&
+                      invoice.descuentosImpuesto != null
+                  ? (invoice.montoImpuesto ?? 0) -
+                      (invoice.descuentosImpuesto ?? 0)
+                  : ((invoice.monto ?? 0)) - (invoice.descuentos ?? 0)),
+          2);
+      var giftCards = _roundNumber(
+          invoice.prefactura == 1
+              ? (invoice.giftCards ?? 0)
+              : (invoice.giftCardsImpuesto ?? invoice.giftCards ?? 0),
+          2);
+      var importeBase = _roundNumber(
+          invoice.prefactura == 1
+              ? (invoice.montoTotal ?? 0) - (invoice.giftCards ?? 0)
+              : (invoice.montoTotalImpuesto != null &&
+                      invoice.giftCardsImpuesto != null
+                  ? (invoice.montoTotalImpuesto ?? 0) -
+                      (invoice.giftCardsImpuesto ?? 0)
+                  : (invoice.montoTotal ?? 0) - (invoice.giftCards ?? 0)),
+          2);
+      var esUnMil = (invoice.prefactura == 1
+                  ? (invoice.monto ?? 0) - (invoice.giftCards ?? 0)
+                  : (invoice.montoImpuesto != null &&
+                          invoice.giftCardsImpuesto != null
+                      ? invoice.montoImpuesto! - invoice.giftCardsImpuesto!
+                      : (invoice.monto ?? 0) - (invoice.giftCards ?? 0))) ~/
+              1000 ==
+          1;
+      num auxCents = ((invoice.prefactura == 1
+              ? invoice.montoTotal ?? 0
+              : (invoice.montoTotalImpuesto ?? invoice.montoTotal ?? 0)) -
+          ((invoice.prefactura == 1
+                  ? invoice.montoTotal ?? 0
+                  : (invoice.montoTotalImpuesto ?? invoice.montoTotal ?? 0)))
+              .toInt());
+      var totalCentavos = (auxCents * 100).round().toInt();
       //var totalCentavosStr = totalCentavos.toString().padLeft(2,'0');
-      num auxWritten= (invoice.prefactura ==1? (invoice.montoTotal??0) - (invoice.giftCards??0) : (invoice.montoTotalImpuesto!=null && invoice.giftCardsImpuesto!=null?invoice.montoTotalImpuesto! - invoice.giftCardsImpuesto! : (invoice.montoTotal??0) - (invoice.giftCards??0)));
+      num auxWritten = (invoice.prefactura == 1
+          ? (invoice.montoTotal ?? 0) - (invoice.giftCards ?? 0)
+          : (invoice.montoTotalImpuesto != null &&
+                  invoice.giftCardsImpuesto != null
+              ? invoice.montoTotalImpuesto! - invoice.giftCardsImpuesto!
+              : (invoice.montoTotal ?? 0) - (invoice.giftCards ?? 0)));
 
-      var writtenTotal = (esUnMil ? "un " : "") + _formatNumberToWord(auxWritten.toInt());
+      var writtenTotal =
+          (esUnMil ? "un " : "") + _formatNumberToWord(auxWritten.toInt());
       items.add(IziPrintSeparator(dotted: true));
 
       items.add(IziPrintRow([
         IziPrintColumn(text: "SUBTOTAL", width: 70, align: IziPrintAlign.right),
-        IziPrintColumn(text: monto.toStringAsFixed(2), width: 30, align: IziPrintAlign.right),
-      ], size: IziPrintSize.sm,bold: true));
+        IziPrintColumn(
+            text: monto.toStringAsFixed(2),
+            width: 30,
+            align: IziPrintAlign.right),
+      ], size: IziPrintSize.sm, bold: true));
       items.add(IziPrintRow([
-        IziPrintColumn(text: "DESCUENTO", width: 70, align: IziPrintAlign.right),
-        IziPrintColumn(text: descuento.toStringAsFixed(2), width: 30, align: IziPrintAlign.right),
-      ], size: IziPrintSize.sm,bold: true));
+        IziPrintColumn(
+            text: "DESCUENTO", width: 70, align: IziPrintAlign.right),
+        IziPrintColumn(
+            text: descuento.toStringAsFixed(2),
+            width: 30,
+            align: IziPrintAlign.right),
+      ], size: IziPrintSize.sm, bold: true));
       items.add(IziPrintRow([
         IziPrintColumn(text: "TOTAL", width: 70, align: IziPrintAlign.right),
-        IziPrintColumn(text: total.toStringAsFixed(2), width: 30, align: IziPrintAlign.right),
-      ], size: IziPrintSize.sm,bold: true));
+        IziPrintColumn(
+            text: total.toStringAsFixed(2),
+            width: 30,
+            align: IziPrintAlign.right),
+      ], size: IziPrintSize.sm, bold: true));
       items.add(IziPrintRow([
-        IziPrintColumn(text: "MONTO GIFT-CARD", width: 70, align: IziPrintAlign.right),
-        IziPrintColumn(text: giftCards.toStringAsFixed(2), width: 30, align: IziPrintAlign.right),
-      ], size: IziPrintSize.sm,bold: true));
+        IziPrintColumn(
+            text: "MONTO GIFT-CARD", width: 70, align: IziPrintAlign.right),
+        IziPrintColumn(
+            text: giftCards.toStringAsFixed(2),
+            width: 30,
+            align: IziPrintAlign.right),
+      ], size: IziPrintSize.sm, bold: true));
       items.add(IziPrintRow([
-        IziPrintColumn(text: "IMPORTE BASE DE CREDITO FISCAL", width: 70, align: IziPrintAlign.right),
-        IziPrintColumn(text: importeBase.toStringAsFixed(2), width: 30, align: IziPrintAlign.right),
-      ], size: IziPrintSize.sm,bold: true));
+        IziPrintColumn(
+            text: "IMPORTE BASE DE CREDITO FISCAL",
+            width: 70,
+            align: IziPrintAlign.right),
+        IziPrintColumn(
+            text: importeBase.toStringAsFixed(2),
+            width: 30,
+            align: IziPrintAlign.right),
+      ], size: IziPrintSize.sm, bold: true));
       items.add(IziPrintRow([
-        IziPrintColumn(text: "TOTAL A PAGAR", width: 70, align: IziPrintAlign.right),
-        IziPrintColumn(text: importeBase.toStringAsFixed(2), width: 30, align: IziPrintAlign.right),
-      ], size: IziPrintSize.sm,bold: true));
+        IziPrintColumn(
+            text: "TOTAL A PAGAR", width: 70, align: IziPrintAlign.right),
+        IziPrintColumn(
+            text: importeBase.toStringAsFixed(2),
+            width: 30,
+            align: IziPrintAlign.right),
+      ], size: IziPrintSize.sm, bold: true));
       items.add(IziPrintSeparator(dotted: true));
 
       items.add(IziPrintText(
-          text: 'SON:  ${(writtenTotal).capitalize()} $totalCentavos/100 Bolivianos',
+          text:
+              'SON:  ${(writtenTotal).capitalize()} $totalCentavos/100 Bolivianos',
           size: IziPrintSize.sm,
           align: IziPrintAlign.left));
       items.add(IziPrintSeparator());
       dynamic aut;
-      if (invoice.prefactura!=1) {
-
-        if (configSiat==null) {
+      if (invoice.prefactura != 1) {
+        if (configSiat == null) {
           items.add(IziPrintLineWrap(lines: 2));
           items.add(IziPrintText(
-              text: "Código de Control: ${invoice.control}" ,
+              text: "Código de Control: ${invoice.control}",
               size: IziPrintSize.sm,
               align: IziPrintAlign.center));
-          if(contribuyente.autorizaciones is List && invoice.autorizacion!=null){
-            aut=(contribuyente.autorizaciones as List).firstWhereOrNull((element) => element["autorizacion"]==invoice.autorizacion);
-            if(aut is Map && aut["limiteEmision"] is String){
+          if (contribuyente.autorizaciones is List &&
+              invoice.autorizacion != null) {
+            aut = (contribuyente.autorizaciones as List).firstWhereOrNull(
+                (element) => element["autorizacion"] == invoice.autorizacion);
+            if (aut is Map && aut["limiteEmision"] is String) {
               items.add(IziPrintText(
-                  text: "Fecha límite de Emisión: ${DateTime.tryParse(aut["limiteEmision"])?.dateFormat(DateFormatterType.visual)}" ,
+                  text:
+                      "Fecha límite de Emisión: ${DateTime.tryParse(aut["limiteEmision"])?.dateFormat(DateFormatterType.visual)}",
                   size: IziPrintSize.sm,
                   align: IziPrintAlign.center));
             }
           }
           items.add(IziPrintLineWrap(lines: 2));
         }
-        if (invoice.prefactura!=1) {
-
+        if (invoice.prefactura != 1) {
           var nit = invoice.emisor;
-          var cuf = invoice.customFactura is Map && invoice.customFactura["siat"] is Map?invoice.customFactura["siat"]["cuf"]:null;
+          var cuf = invoice.customFactura is Map &&
+                  invoice.customFactura["siat"] is Map
+              ? invoice.customFactura["siat"]["cuf"]
+              : null;
           var number = invoice.numero;
           String siatQRUrl;
-          if (contribuyente.customData is Map && contribuyente.customData["configSiat"] is Map && contribuyente.customData["configSiat"]["codigoAmbiente"] == 1) {
-            siatQRUrl ="https://siat.impuestos.gob.bo/consulta/QR?nit=$nit&cuf=$cuf&numero=$number&t=2";
+          if (contribuyente.customData is Map &&
+              contribuyente.customData["configSiat"] is Map &&
+              contribuyente.customData["configSiat"]["codigoAmbiente"] == 1) {
+            siatQRUrl =
+                "https://siat.impuestos.gob.bo/consulta/QR?nit=$nit&cuf=$cuf&numero=$number&t=2";
           } else {
-            siatQRUrl ="https://pilotosiat.impuestos.gob.bo/consulta/QR?nit=$nit&cuf=$cuf&numero=$number&t=2";
+            siatQRUrl =
+                "https://pilotosiat.impuestos.gob.bo/consulta/QR?nit=$nit&cuf=$cuf&numero=$number&t=2";
           }
-          items.add(IziPrintQR(siatQRUrl,size:3));
+          items.add(IziPrintQR(siatQRUrl, size: 3));
           items.add(IziPrintLineWrap(lines: 1));
 
-          final leyendaLey = (configSiat==null) ? aut is Map? aut["leyenda"]:"": datosSiat?["leyenda"]??"";
+          final leyendaLey = (configSiat == null)
+              ? aut is Map
+                  ? aut["leyenda"]
+                  : ""
+              : datosSiat?["leyenda"] ?? "";
 
-          var ley = 'ESTA FACTURA CONTRIBUYE AL DESARROLLO DEL PAÍS, EL USO ILÍCITO DE ÉSTA SERÁ SANCIONADO PENALMENTE DE ACUERDO A LEY';
+          var ley =
+              'ESTA FACTURA CONTRIBUYE AL DESARROLLO DEL PAÍS, EL USO ILÍCITO DE ÉSTA SERÁ SANCIONADO PENALMENTE DE ACUERDO A LEY';
 
           items.add(IziPrintText(
-              text: ley,
-              size: IziPrintSize.sm,
-              align: IziPrintAlign.center));
+              text: ley, size: IziPrintSize.sm, align: IziPrintAlign.center));
           items.add(IziPrintLineWrap(lines: 1));
 
           items.add(IziPrintText(
-              text: leyendaLey ,
+              text: leyendaLey,
               size: IziPrintSize.sm,
               align: IziPrintAlign.center));
 
-          if (configSiat!=null) {
-            var mensajeFacturaSiat = datosSiat?["codigoDescripcion"] == 'CONTINGENCIA' ? '"Este documento es la Representaci\u00F3n Gr\u00E1fica de un Documento Fiscal Digital emitido fuera de l\u00EDnea, verifique su env\u00EDo con su proveedor o en la p\u00E1gina web www.impuestos.gob.bo"' : '“Este documento es la Representaci\u00F3n Gr\u00E1fica de un Documento Fiscal Digital emitido en una modalidad de facturaci\u00F3n en l\u00EDnea”';
+          if (configSiat != null) {
+            var mensajeFacturaSiat = datosSiat?["codigoDescripcion"] ==
+                    'CONTINGENCIA'
+                ? '"Este documento es la Representaci\u00F3n Gr\u00E1fica de un Documento Fiscal Digital emitido fuera de l\u00EDnea, verifique su env\u00EDo con su proveedor o en la p\u00E1gina web www.impuestos.gob.bo"'
+                : '“Este documento es la Representaci\u00F3n Gr\u00E1fica de un Documento Fiscal Digital emitido en una modalidad de facturaci\u00F3n en l\u00EDnea”';
 
             items.add(IziPrintLineWrap(lines: 1));
             items.add(IziPrintText(
-                text: mensajeFacturaSiat ,
+                text: mensajeFacturaSiat,
                 size: IziPrintSize.sm,
                 align: IziPrintAlign.center));
           }
@@ -396,65 +542,64 @@ class PrintTemplate {
           size: IziPrintSize.sm,
           bold: true,
           align: IziPrintAlign.center));
-
-
     }
     return items;
   }
- static final _wordMap = {
-   0: 'cero',
-   1: 'uno',
-   2: 'dos',
-   3: 'tres',
-   4: 'cuatro',
-   5: 'cinco',
-   6: 'seis',
-   7: 'siete',
-   8: 'ocho',
-   9: 'nueve',
-   10: 'diez',
-   11: 'once',
-   12: 'doce',
-   13: 'trece',
-   14: 'catorce',
-   15: 'quince',
-   16: 'dieciséis',
-   17: 'diecisiete',
-   18: 'dieciocho',
-   19: 'diecinueve',
-   20: 'veinte',
-   21: 'veintiuno',
-   22: 'veintidós',
-   23: 'veintitres',
-   24: 'veinticuatro',
-   25: 'veinticinco',
-   26: 'veintiseis',
-   27: 'veintisiete',
-   28: 'veintiocho',
-   29: 'veintinueve',
-   30: 'treinta',
-   40: 'cuarenta',
-   50: 'cincuenta',
-   60: 'sesenta',
-   70: 'setenta',
-   80: 'ochenta',
-   90: 'noventa',
-   100: 'cien',
-   200: 'doscientos',
-   300: 'trescientos',
-   400: 'cuatrocientos',
-   500: 'quinientos',
-   600: 'seiscientos',
-   700: 'setecientos',
-   800: 'ochocientos',
-   900: 'novecientos',
- };
+
+  static final _wordMap = {
+    0: 'cero',
+    1: 'uno',
+    2: 'dos',
+    3: 'tres',
+    4: 'cuatro',
+    5: 'cinco',
+    6: 'seis',
+    7: 'siete',
+    8: 'ocho',
+    9: 'nueve',
+    10: 'diez',
+    11: 'once',
+    12: 'doce',
+    13: 'trece',
+    14: 'catorce',
+    15: 'quince',
+    16: 'dieciséis',
+    17: 'diecisiete',
+    18: 'dieciocho',
+    19: 'diecinueve',
+    20: 'veinte',
+    21: 'veintiuno',
+    22: 'veintidós',
+    23: 'veintitres',
+    24: 'veinticuatro',
+    25: 'veinticinco',
+    26: 'veintiseis',
+    27: 'veintisiete',
+    28: 'veintiocho',
+    29: 'veintinueve',
+    30: 'treinta',
+    40: 'cuarenta',
+    50: 'cincuenta',
+    60: 'sesenta',
+    70: 'setenta',
+    80: 'ochenta',
+    90: 'noventa',
+    100: 'cien',
+    200: 'doscientos',
+    300: 'trescientos',
+    400: 'cuatrocientos',
+    500: 'quinientos',
+    600: 'seiscientos',
+    700: 'setecientos',
+    800: 'ochocientos',
+    900: 'novecientos',
+  };
   static num _roundNumber(num number, int decimalPlaces) {
     num factor = pow(10.0, decimalPlaces);
     return (number * factor).roundToDouble() / factor;
   }
-  static String _formatNumberToWord(int value){
 
+  static String _formatNumberToWord(int value) {
     if (value >= 100000) {
       return value.toString();
     }
@@ -488,9 +633,8 @@ class PrintTemplate {
         result.add('cien');
       } else {
         if (hundreds != 1) {
-          result.add(_wordMap[hundreds*100]!);
-        }
-        else{
+          result.add(_wordMap[hundreds * 100]!);
+        } else {
           result.add('ciento');
         }
       }
@@ -505,8 +649,8 @@ class PrintTemplate {
 
     return result.reversed.join(' ');
   }
-
 }
+
 extension StringExtension on String {
   String capitalize() {
     return "${this[0].toUpperCase()}${substring(1).toLowerCase()}";
