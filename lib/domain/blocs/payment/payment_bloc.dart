@@ -575,6 +575,7 @@ class PaymentBloc extends Cubit<PaymentState> {
       "razonSocial":state.businessName.value.isEmpty?"S/N":state.businessName.value,
       "telefonoComprador":state.phoneNumber.value
     };
+    newOrderDto.clienteNombre = state.businessName.value.isNotEmpty?state.businessName.value:null;
 
     newOrderDto.custom=custom;
     await _comandaRepository.editOrder(newOrder: newOrderDto);

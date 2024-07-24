@@ -422,6 +422,7 @@ class _PaymentPageQrState extends State<PaymentPageQr> {
                   labelInput: LocaleKeys.payment_inputs_documentNumber_label.tr(),
                   bigLabel: true,
                   inputSize: InputSize.big,
+                  inputMaxLength: 50,
                   readOnly: true,
                   suffixWidget: widget.state.documentNumber.loading?Container(padding: const EdgeInsets.symmetric(horizontal: 12),alignment: Alignment.center,height: 20,width:20,child: const CircularProgressIndicator(color: IziColors.darkGrey,strokeWidth: 2,)):null,
                   onChanged: (value, valueRaw) {
@@ -449,6 +450,7 @@ class _PaymentPageQrState extends State<PaymentPageQr> {
                   child: IziInput(
                     labelInput: LocaleKeys.payment_inputs_complement_label.tr(),
                     inputHintText: "",
+                    inputMaxLength: 10,
                     inputFormatters: [
                       FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z]')),],
                     readOnly: widget.state.qrCharge != null || widget.state.qrLoading==true,
@@ -467,6 +469,7 @@ class _PaymentPageQrState extends State<PaymentPageQr> {
             inputHintText:
                 LocaleKeys.payment_inputs_businessName_placeholder.tr(),
             bigLabel: true,
+            inputMaxLength: 150,
             readOnly: widget.state.qrCharge != null || widget.state.qrLoading==true,
             inputSize: InputSize.big,
             onChanged: (value, valueRaw) {
@@ -490,6 +493,7 @@ class _PaymentPageQrState extends State<PaymentPageQr> {
                 inputHintText: LocaleKeys.payment_inputs_phoneNumber_placeholder.tr(),
                 bigLabel: true,
                 key: phoneKey,
+                inputMaxLength: 8,
                 controller: phoneController,
                 readOnly: true,
                 inputSize: InputSize.big,

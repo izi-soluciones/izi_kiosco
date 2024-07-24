@@ -22,6 +22,8 @@ class NewOrderDto {
 
   Map? custom;
 
+  String? clienteNombre;
+
   NewOrderDto(
       {required this.caja,
       required this.cantidadComensales,
@@ -37,6 +39,7 @@ class NewOrderDto {
       required this.tipoComanda,
       this.total=0,
         required this.deviceId,
+        this.clienteNombre,
       required this.sucursal});
 
   Map<String, dynamic> toJson() => {
@@ -65,7 +68,8 @@ class NewOrderDto {
       };
   Map<String, dynamic> toJsonEdit() => {
     "custom": custom,
-    "fecha": fecha.dateFormat(DateFormatterType.dataWithHour)
+    "fecha": fecha.dateFormat(DateFormatterType.dataWithHour),
+    "clienteNombre": clienteNombre
   };
 
 }
