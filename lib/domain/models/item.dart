@@ -140,7 +140,7 @@ class Modifier {
         isLimitado: json["isLimitado"] is int?json["isLimitado"]:null,
         isIngreso: json["isIngreso"] ?? false,
         isMultiple: json["isMultiple"] ?? false,
-        isObligatorio: json["isObligatorio"] ?? false,
+        isObligatorio: json["isLimitado"] is int  &&  json["isLimitado"] > 0? true: (json["isObligatorio"] ?? false),
         caracteristicas:
         listCaracteristicas.map((e) => ModifierItem.fromJson(e)).toList());
   }
