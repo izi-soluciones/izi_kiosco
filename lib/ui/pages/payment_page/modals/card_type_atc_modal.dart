@@ -28,7 +28,8 @@ class _CardTypeAtcModalState extends State<CardTypeAtcModal> {
   }
   _verifyTime(){
     Timer(Duration(seconds: AppConstants.timerTimeSecondsInvoiced-1), () {
-      Navigator.pop(context);
+      if(mounted){
+        Navigator.pop(context);}
     });
   }
   @override

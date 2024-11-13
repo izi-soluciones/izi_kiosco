@@ -27,6 +27,7 @@ class MakeOrderItemLg extends StatelessWidget {
       ),
       clipBehavior: Clip.hardEdge,
       child: InkWell(
+        onTap: onPressed,
         borderRadius: BorderRadius.circular(8),
         child: Column(
               mainAxisSize: MainAxisSize.max,

@@ -4,6 +4,7 @@ import 'dart:developer';
 import 'dart:math' as math;
 import 'package:collection/collection.dart';
 import 'package:equatable/equatable.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:izi_kiosco/app/values/app_constants.dart';
 import 'package:izi_kiosco/data/local/local_storage_card_errors.dart';
@@ -416,8 +417,22 @@ class PaymentBloc extends Cubit<PaymentState> {
           cardPayment = await _comandaRepository.callCardPayment(amount: _getIntFromDecimal(_roundToNDecimals(state.order?.monto ?? 0, 2)), ip: authState.currentDevice!.config.ipLinkser!);
         }
         else{
-          cardPayment=await _comandaRepository.callCardPaymentATC(amount: (state.order?.monto ?? 0).moneyFormat(),ip: authState.currentDevice!.config.ipAtc!,contactless: contactless);
-        }
+          try{cardPayment=await _comandaRepository.callCardPaymentATC(amount: (state.order?.monto ?? 0).moneyFormat(),ip: authState.currentDevice!.config.ipAtc!,contactless: contactless);
+
+          }
+          catch(e){
+            if(authState.currentDevice?.config.demo ==true){
+              cardPayment = CardPayment(
+                  response: "",
+                  cardNumber: "",
+                  date: "",
+                  hour: "");
+            }
+            else{
+              rethrow;
+            }
+          }
+          }
         var success=false;
         for(var i=0;i<10;i++){
           try{
@@ -519,6 +534,39 @@ class PaymentBloc extends Cubit<PaymentState> {
     try{
       if(_validateInputs()){
 
+        if(authState.currentDevice?.config.demo ==true){
+          emit(state.copyWith(status: PaymentStatus.cardProcessing));
+          PaymentDto newPayment = PaymentDto(
+              orderId: state.order?.id??0,
+              date: DateTime.now(),
+              monto: state.order?.monto??0,
+              metodoPago: AppConstants.idPaymentMethodPOS,
+              moneda: state.currentCurrency?.simbolo == "Bs"?"BOB":state.currentCurrency?.simbolo ?? "BOB",
+              monedaId: state.currentCurrency?.id ?? AppConstants.defaultCurrencyId
+          );
+
+          Charge charge = await _comandaRepository.generatePayment(contribuyenteId: authState.currentContribuyente?.id??0, payment: newPayment);
+          await _saveAndListenPayment(authState,charge);
+          var success=false;
+          for(var i=0;i<10;i++){
+            try{
+              await _comandaRepository.markPaymentATC(charge.token??'', charge.uuid);
+              success =true;
+              break;
+            }
+            catch(e){
+              await Future.delayed(Duration(seconds: 1*(i+1)));
+              log(e.toString());
+            }
+          }
+          if(!success){
+            return false;
+          }
+          else{
+            return true;
+          }
+        }
+
         emit(state.copyWith(qrLoading: true));
         PaymentDto qr = PaymentDto(
             orderId: state.order?.id??0,
@@ -599,6 +647,9 @@ class PaymentBloc extends Cubit<PaymentState> {
         try{
           if(event["numeroOrden"] is int){
             await _printRolloOrder(authState, orderNumber: event["numeroOrden"],customOrderNumber: event["numeroCustom"] is int?event["numeroCustom"]:null);
+          }
+          if(kIsWeb){
+            await Future.delayed(const Duration(seconds: 1));
           }
           if(event["idFactura"] is int){
             await _printRollo(authState, idInvoice: event["idFactura"]);

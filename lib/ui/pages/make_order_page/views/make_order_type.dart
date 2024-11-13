@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:izi_design_system/atoms/izi_card.dart';
 import 'package:izi_design_system/atoms/izi_typography.dart';
 import 'package:izi_design_system/tokens/colors.dart';
+import 'package:izi_design_system/tokens/izi_icons.dart';
 import 'package:izi_kiosco/app/values/locale_keys.g.dart';
 import 'package:izi_kiosco/app/values/routes_keys.dart';
 import 'package:izi_kiosco/domain/blocs/make_order/make_order_bloc.dart';
@@ -63,11 +64,11 @@ class _MakeOrderTypeState extends State<MakeOrderType> {
                               Row(
                                 children: [
                                   Expanded(
-                                      child: _buttonSelect(Icons.local_dining_outlined, LocaleKeys.makeOrder_body_eatHere.tr(), false)
+                                      child: _buttonSelect(IziIcons.hereOrder, LocaleKeys.makeOrder_body_eatHere.tr(), false)
                                   ),
                                   const SizedBox(width: 24,),
                                   Expanded(
-                                      child: _buttonSelect(Icons.takeout_dining_outlined, LocaleKeys.makeOrder_body_takeAway.tr(), true)
+                                      child: _buttonSelect(IziIcons.takeAwayOrder, LocaleKeys.makeOrder_body_takeAway.tr(), true)
                                   )
                                 ],
                               ),

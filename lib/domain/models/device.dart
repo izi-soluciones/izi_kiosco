@@ -37,10 +37,11 @@ class ConfigDevice {
   final String? ipAtc;
   final String? ipLinkser;
   final String? video;
+  final bool demo;
   final int? timeMessage;
 
   const ConfigDevice(
-      {this.ipAtc, this.ipLinkser, this.video, this.timeMessage});
+      {this.ipAtc, this.ipLinkser, this.video, this.timeMessage,required this.demo});
 
   factory ConfigDevice.fromJson(dynamic json) {
     Map? jsonObj = json is Map ? json : null;
@@ -48,6 +49,7 @@ class ConfigDevice {
       ipAtc: jsonObj?["ipAtc"] is String ? jsonObj!["ipAtc"] : null,
       ipLinkser: jsonObj?["ipLinkser"] is String ? jsonObj!["ipLinkser"] : null,
       video: jsonObj?["video"] is String ? jsonObj!["video"] : null,
+      demo: jsonObj?["demo"] is bool ? jsonObj!["demo"] : false,
       timeMessage:
           jsonObj?["timeMessage"] is int ? jsonObj!["timeMessage"] : null,
     );
