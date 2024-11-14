@@ -8,6 +8,7 @@ import 'package:izi_kiosco/domain/models/category_order.dart';
 import 'package:izi_kiosco/domain/models/charge.dart';
 import 'package:izi_kiosco/domain/models/comanda.dart';
 import 'package:izi_kiosco/domain/models/invoice.dart';
+import 'package:izi_kiosco/domain/models/item.dart';
 import 'package:izi_kiosco/domain/models/payment.dart';
 import 'package:izi_kiosco/domain/models/consumption_point.dart';
 import 'package:izi_kiosco/domain/models/room.dart';
@@ -45,5 +46,7 @@ abstract class ComandaRepository{
   Future<Invoice> getInvoice(int invoiceId);
   Future<void> createPaidCharge(PaidChargeDto paidChargeDto);
   Future<void> markPaymentATC(String token,String chargeUuid);
+
+  Future<List<Item>> getSaleItems(int sucursal);
 
 }

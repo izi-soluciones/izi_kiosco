@@ -575,7 +575,30 @@
       "errorMarkInternal": "No se pudo marcar como consumo interno"
     }
   },
+"makeOrderRetail": {
+  "init": {
+    "scanProducts": "Escanea tus productos",
+    "enterInvoiceData": "Ingresa los datos de factura",
+    "selectPaymentMethod": "Selecciona el método de pago",
+    "retirePurchase": "Retira tu compra",
+    "pressToInit": "Presiona para empezar\na escanear tus productos"
+  },
+  "needHelp": {
+    "title": "Necesitas Ayuda",
+    "askHelp": "Llamar a un asesor",
+    "viewTutorial": "Ver tutoriales"
+  },
 
+  "scan": {
+    "productsScanned": "Productos escaneados",
+    "unitPrice": "Precio unitario",
+    "totalPrice": "Precio total",
+    "total": "Total",
+    "initAgain": "Empezar de nuevo",
+    "finishPurchase": "Finalizar la compra y pagar",
+    "finish": "Finalizar"
+  }
+},
   "makeOrder": {
     "title": "Nueva orden",
     "drawer": "Nueva orden",

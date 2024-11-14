@@ -15,6 +15,9 @@ class AssetsKeys{
   static const String cityGraphic="assets/graphics/city_1.png";
   static const String iziSound="assets/sounds/izi_sound.wav";
   static const String symbioticLogo="assets/icons/isoSym.png";
+  static const String homeTitleRetailSvg="assets/graphics/escanea.svg";
+  static const String barCodeSvg="assets/graphics/barcode.svg";
+  static const String homeTitleSvg="assets/graphics/ordena.svg";
 
 
 

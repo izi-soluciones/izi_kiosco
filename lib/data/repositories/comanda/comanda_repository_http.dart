@@ -15,6 +15,7 @@ import 'package:izi_kiosco/domain/models/category_order.dart';
 import 'package:izi_kiosco/domain/models/charge.dart';
 import 'package:izi_kiosco/domain/models/comanda.dart';
 import 'package:izi_kiosco/domain/models/invoice.dart';
+import 'package:izi_kiosco/domain/models/item.dart';
 import 'package:izi_kiosco/domain/models/payment.dart';
 import 'package:izi_kiosco/domain/models/consumption_point.dart';
 import 'package:izi_kiosco/domain/models/room.dart';
@@ -44,7 +45,28 @@ class ComandaRepositoryHttp extends ComandaRepository {
       throw response.data;
     }
   }
-
+  @override
+  Future<List<Item>> getSaleItems(
+      int sucursal) async {
+    String path = "/items-inventarios";
+    var response = await _dioClient.get(
+        uri: path,
+        queryParameters: {
+          "sucursal": sucursal,
+          "seVende": true
+        },
+        options: Options(
+          responseType: ResponseType.json,
+        ));
+    if (response.statusCode == 200) {
+      List<Item> list = List.from(response.data)
+        .map((e) => Item.fromJson(e))
+        .toList();
+      return list;
+    } else {
+      throw response.data;
+    }
+  }
   @override
   Future<List<ConsumptionPoint>> getConsumptionPoints(
       int sucursal, int contribuyente,

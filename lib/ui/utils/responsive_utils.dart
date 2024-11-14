@@ -57,6 +57,10 @@ class ResponsiveUtils{
     return size.width<=lg;
   }
 
+  bool isVertical(){
+    return size.aspectRatio < 1;
+  }
+
 
   double get width => size.width;
   double get height => size.height;

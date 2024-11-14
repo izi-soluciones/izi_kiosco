@@ -1,5 +1,7 @@
 // DO NOT EDIT. This is code generated via package:easy_localization/generate.dart
 
+// ignore_for_file: constant_identifier_names
+
 abstract class  LocaleKeys {
   static const selectBusiness_title = 'selectBusiness.title';
   static const selectBusiness_buttons_accept = 'selectBusiness.buttons.accept';
@@ -455,6 +457,25 @@ abstract class  LocaleKeys {
   static const tables_messages_errorMarkInternal = 'tables.messages.errorMarkInternal';
   static const tables_messages = 'tables.messages';
   static const tables = 'tables';
+  static const makeOrderRetail_init_scanProducts = 'makeOrderRetail.init.scanProducts';
+  static const makeOrderRetail_init_enterInvoiceData = 'makeOrderRetail.init.enterInvoiceData';
+  static const makeOrderRetail_init_selectPaymentMethod = 'makeOrderRetail.init.selectPaymentMethod';
+  static const makeOrderRetail_init_retirePurchase = 'makeOrderRetail.init.retirePurchase';
+  static const makeOrderRetail_init_pressToInit = 'makeOrderRetail.init.pressToInit';
+  static const makeOrderRetail_init = 'makeOrderRetail.init';
+  static const makeOrderRetail_needHelp_title = 'makeOrderRetail.needHelp.title';
+  static const makeOrderRetail_needHelp_askHelp = 'makeOrderRetail.needHelp.askHelp';
+  static const makeOrderRetail_needHelp_viewTutorial = 'makeOrderRetail.needHelp.viewTutorial';
+  static const makeOrderRetail_needHelp = 'makeOrderRetail.needHelp';
+  static const makeOrderRetail_scan_productsScanned = 'makeOrderRetail.scan.productsScanned';
+  static const makeOrderRetail_scan_unitPrice = 'makeOrderRetail.scan.unitPrice';
+  static const makeOrderRetail_scan_totalPrice = 'makeOrderRetail.scan.totalPrice';
+  static const makeOrderRetail_scan_total = 'makeOrderRetail.scan.total';
+  static const makeOrderRetail_scan_initAgain = 'makeOrderRetail.scan.initAgain';
+  static const makeOrderRetail_scan_finishPurchase = 'makeOrderRetail.scan.finishPurchase';
+  static const makeOrderRetail_scan_finish = 'makeOrderRetail.scan.finish';
+  static const makeOrderRetail_scan = 'makeOrderRetail.scan';
+  static const makeOrderRetail = 'makeOrderRetail';
   static const makeOrder_title = 'makeOrder.title';
   static const makeOrder_drawer = 'makeOrder.drawer';
   static const makeOrder_subtitles_itemOptions = 'makeOrder.subtitles.itemOptions';

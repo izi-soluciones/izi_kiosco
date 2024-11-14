@@ -1,21 +1,25 @@
 import 'dart:async';
 import 'dart:developer';
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:izi_design_system/atoms/izi_typography.dart';
 import 'package:izi_design_system/tokens/colors.dart';
 import 'package:izi_design_system/tokens/izi_icons.dart';
+import 'package:izi_kiosco/app/values/assets_keys.dart';
 import 'package:izi_kiosco/app/values/env_keys.dart';
 import 'package:izi_kiosco/app/values/locale_keys.g.dart';
 import 'package:izi_kiosco/app/values/routes_keys.dart';
 import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/page_utils/page_utils_bloc.dart';
 import 'package:izi_kiosco/ui/general/custom_icons/kiosk_hand_icon.dart';
+import 'package:izi_kiosco/ui/utils/responsive_utils.dart';
 import 'package:video_player/video_player.dart';
 
 class HomePage extends StatefulWidget {
@@ -92,6 +96,7 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final ru = ResponsiveUtils(context);
     return BlocBuilder<AuthBloc, AuthState>(builder: (context, state) {
       return LayoutBuilder(
         builder: (context,layout) {
@@ -100,7 +105,13 @@ class _HomePageState extends State<HomePage> {
               GestureDetector(
                 behavior: HitTestBehavior.opaque,
                 onTap: () {
-                  GoRouter.of(context).goNamed(RoutesKeys.makeOrder);
+                  if(context.read<AuthBloc>().state.currentDevice?.config.isRetail==true){
+
+                    GoRouter.of(context).goNamed(RoutesKeys.makeOrderRetail);
+                  }
+                  else{
+                    GoRouter.of(context).goNamed(RoutesKeys.makeOrder);
+                  }
                   context.read<PageUtilsBloc>().initScreenActive();
                 },
                 child: Padding(
@@ -124,80 +135,57 @@ class _HomePageState extends State<HomePage> {
                               color: IziColors.primary,
                               text: LocaleKeys.home_subtitles_iziSlogan.tr(),
                               fontWeight: FontWeight.w400)),
+                      const SizedBox(height: 32,),
                       Expanded(
-                        child: Center(
-                          child: SingleChildScrollView(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                SizedBox(
-                                  height: 200,
-                                  child: state.currentContribuyente?.logo != null
-                                      ? CachedNetworkImage(
-                                          imageUrl:
-                                              "${dotenv.env[EnvKeys.apiUrl]}/contribuyentes/${state.currentContribuyente?.id}/logo",
-                                          fit: BoxFit.fitHeight,
-                                          placeholder: (context, url) =>
-                                              const Center(
-                                                  child: CircularProgressIndicator(
-                                                      strokeWidth: 2,
-                                                      color: IziColors.dark)),
-                                          errorWidget: (context, url, error) {
-                                            return const SizedBox.shrink();
-                                          },
-                                        )
-                                      : const SizedBox.shrink(),
-                                ),
-                                const SizedBox(
-                                  height: 60,
-                                ),
-                                Stack(
-                                  children: [
-                                    Padding(
-                                      padding: const EdgeInsets.only(
-                                          bottom: 30, right: 30, left: 30),
-                                      child: Column(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          _textBig(LocaleKeys.home_body_order.tr()),
-                                          Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.center,
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              _textBig(
-                                                  LocaleKeys.home_body_and.tr(),
-                                                  fontWeight: FontWeight.w200),
-                                              const SizedBox(
-                                                width: 16,
-                                              ),
-                                              _textBig(
-                                                  LocaleKeys.home_body_pay.tr()),
-                                            ],
-                                          ),
-                                          _textBig(LocaleKeys.home_body_here.tr()),
-                                        ],
-                                      ),
-                                    ),
-                                    const Positioned(
-                                        right: 0,
-                                        bottom: 0,
-                                        child: Padding(
-                                          padding: EdgeInsets.only(),
-                                          child: KioskHandIcon(width: 100),
-                                        )),
-                                  ],
-                                ),
-                                const SizedBox(
-                                  height: 40,
-                                ),
-                                IziText.titleBig(
-                                    color: IziColors.grey,
-                                    text: LocaleKeys.home_body_clickToInit.tr(),
-                                    fontWeight: FontWeight.w400),
-                              ],
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Flexible(
+                              flex: 2,
+                              child: ConstrainedBox(
+                                constraints: const BoxConstraints(
+                                  maxHeight: 200,),
+                                child: state.currentContribuyente?.logo != null
+                                    ? CachedNetworkImage(
+                                        imageUrl:
+                                            "${dotenv.env[EnvKeys.apiUrl]}/contribuyentes/${state.currentContribuyente?.id}/logo",
+                                        fit: BoxFit.fitHeight,
+                                        placeholder: (context, url) =>
+                                            const Center(
+                                                child: CircularProgressIndicator(
+                                                    strokeWidth: 2,
+                                                    color: IziColors.dark)),
+                                        errorWidget: (context, url, error) {
+                                          return const SizedBox.shrink();
+                                        },
+                                      )
+                                    : const SizedBox.shrink(),
+                              ),
                             ),
-                          ),
+                            Expanded(
+                              flex: 8,
+                              child: Padding(
+                                  padding: const EdgeInsets.only(
+                                      bottom: 30, right: 30, left: 30),
+                                  child:SvgPicture.asset(
+                                      context.read<AuthBloc>().state.currentDevice?.config.isRetail==true?AssetsKeys.homeTitleRetailSvg:AssetsKeys.homeTitleSvg,
+                                    width: ru.width,
+                                    fit: BoxFit.contain,
+
+                                  )
+                              ),
+                            ),
+                            ConstrainedBox(
+                              constraints: const BoxConstraints(maxWidth: 1400),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                                child: AutoSizeText(LocaleKeys.home_body_clickToInit.tr(),minFontSize: 1,style: const TextStyle(
+                                  color: IziColors.grey,
+                                  fontWeight: FontWeight.w400,
+                                ),maxLines: 1),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                       Column(
@@ -216,26 +204,30 @@ class _HomePageState extends State<HomePage> {
                             height: 20,
                             thickness: 1,
                           ),
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              IziText.titleMedium(
-                                  color: IziColors.darkGrey,
-                                  text: LocaleKeys.home_body_anIziPlatform.tr(),
-                                  fontWeight: FontWeight.w400),
-                              const Padding(
-                                padding: EdgeInsets.only(left: 4, bottom: 8),
-                                child: Icon(
-                                  IziIcons.izi,
-                                  color: IziColors.primary,
-                                  size: 40,
+                          SizedBox(
+                            height: ru.height*0.03,
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                AutoSizeText(LocaleKeys.home_body_anIziPlatform.tr(),minFontSize: 1,style: const TextStyle(
+                                  color: IziColors.darkGrey,fontWeight: FontWeight.w400
+                                ),),
+                                Padding(
+                                  padding: EdgeInsets.only(left: ru.height*0.005,bottom: ru.height*0.002),
+                                  child: const FittedBox(
+                                    child: Icon(
+                                      IziIcons.izi,
+                                      color: IziColors.primary,
+                                      size: 40,
+                                    ),
+                                  ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
-                          const SizedBox(
-                            height: 40,
+                          SizedBox(
+                            height: ru.height*0.01,
                           ),
                         ],
                       )
@@ -316,17 +308,5 @@ class _HomePageState extends State<HomePage> {
         }
       );
     });
-  }
-
-  Widget _textBig(String text, {FontWeight? fontWeight}) {
-    return Text(
-      text,
-      textAlign: TextAlign.center,
-      style: TextStyle(
-          height: 0.95,
-          fontWeight: fontWeight ?? FontWeight.w800,
-          color: IziColors.primary,
-          fontSize: 128),
-    );
   }
 }
