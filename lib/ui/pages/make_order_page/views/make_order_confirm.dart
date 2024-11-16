@@ -17,6 +17,7 @@ import 'package:izi_kiosco/domain/blocs/make_order/make_order_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/page_utils/page_utils_bloc.dart';
 import 'package:izi_kiosco/domain/models/comanda.dart';
 import 'package:izi_kiosco/domain/models/item.dart';
+import 'package:izi_kiosco/domain/models/payment_obj.dart';
 import 'package:izi_kiosco/ui/general/izi_scroll.dart';
 import 'package:izi_kiosco/ui/pages/make_order_page/modals/item_options_modal.dart';
 import 'package:izi_kiosco/ui/pages/make_order_page/widgets/make_order_amount_btn.dart';
@@ -404,9 +405,20 @@ class _MakeOrderConfirmState extends State<MakeOrderConfirm> {
       (value) {
         context.read<PageUtilsBloc>().closeLoading();
         if (value is Comanda) {
+          var paymentObj = PaymentObj(
+              id: value.id,
+              custom: value.custom is Map? value.custom : {},
+              amount: value.montoTotal??0,
+              isComanda: true,
+              items: value.listaItems.map((e) => ItemPaymentObj(
+                  quantity: e.cantidad ?? 0,
+                  custom: e.modificadores,
+                  name: e.nombre)
+              ).toList()
+          );
           context.read<PageUtilsBloc>().initScreenActiveInvoiced();
           GoRouter.of(this.context).goNamed(RoutesKeys.payment,
-              extra: value, pathParameters: {"id": value.id.toString()});
+              extra: paymentObj, pathParameters: {"id": value.id.toString()});
         } else {
           context.read<PageUtilsBloc>().initScreenActive();
         }

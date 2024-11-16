@@ -24,7 +24,7 @@ class PaymentPageSelection extends StatelessWidget {
       children: [
         PaymentHeader(
             currency: state.currentCurrency?.simbolo??AppConstants.defaultCurrency,
-            amount: (state.order?.monto ?? 0) - state.discountAmount),
+            amount: state.paymentObj?.amount ?? 0,),
         Expanded(
           child: SingleChildScrollView(
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),

@@ -593,10 +593,18 @@
     "productsScanned": "Productos escaneados",
     "unitPrice": "Precio unitario",
     "totalPrice": "Precio total",
+    "areYouSureBack": "¿Esta seguro de cancelar la venta?",
+    "areYouSureInitAgain": "¿Esta seguro de borrar los items registrados?",
+    "unitPriceAbr": "P. Unitario",
+    "totalPriceAbr": "P. Total",
     "total": "Total",
+    "quantity": "Cantidad",
+    "quantityAbr": "Cant",
     "initAgain": "Empezar de nuevo",
     "finishPurchase": "Finalizar la compra y pagar",
-    "finish": "Finalizar"
+    "finish": "Finalizar",
+    "waitingScan": "Acerca los códigos de barras de tus productos al lector para poder escanearlos",
+    "waitingPurchase": "Procesando compra"
   }
 },
   "makeOrder": {
@@ -700,5 +708,9 @@
   "warningPermissions": {
     "title": "Sin permisos",
     "description": "No tiene los permisos suficientes para ver este apartado"
+  },
+  "warningStore": {
+    "title": "La sucursal no tiene configurado un almacen para procesar el pedido",
+    "description": "Informa a un administrador sobre el problema"
   }
 }

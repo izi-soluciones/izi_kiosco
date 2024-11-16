@@ -40,18 +40,23 @@ class ConfigDevice {
   final bool demo;
   final int? timeMessage;
   final bool isRetail;
+  final int? almacen;
+  final String? actividadEconomica;
 
   const ConfigDevice(
-      {this.ipAtc, required this.isRetail,this.ipLinkser, this.video, this.timeMessage,required this.demo});
+      {this.ipAtc,required this.actividadEconomica,required this.almacen, required this.isRetail,this.ipLinkser, this.video, this.timeMessage,required this.demo});
 
   factory ConfigDevice.fromJson(dynamic json) {
     Map? jsonObj = json is Map ? json : null;
     return ConfigDevice(
+
       ipAtc: jsonObj?["ipAtc"] is String ? jsonObj!["ipAtc"] : null,
       ipLinkser: jsonObj?["ipLinkser"] is String ? jsonObj!["ipLinkser"] : null,
       video: jsonObj?["video"] is String ? jsonObj!["video"] : null,
       demo: jsonObj?["demo"] is bool ? jsonObj!["demo"] : false,
       isRetail: jsonObj?["isRetail"] is bool ? jsonObj!["isRetail"] : false,
+      almacen: jsonObj?["almacen"] is int ? jsonObj!["almacen"] : null,
+      actividadEconomica:jsonObj?["actividadEconomica"] is int ? (jsonObj?["actividadEconomica"] as int).toString(): jsonObj?["actividadEconomica"] is String ?  jsonObj!["actividadEconomica"] : null,
       timeMessage:
           jsonObj?["timeMessage"] is int ? jsonObj!["timeMessage"] : null,
     );

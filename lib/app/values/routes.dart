@@ -12,6 +12,7 @@ import 'package:izi_kiosco/domain/blocs/make_order/make_order_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/make_order_retail/make_order_retail_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/payment/payment_bloc.dart';
 import 'package:izi_kiosco/domain/models/comanda.dart';
+import 'package:izi_kiosco/domain/models/payment_obj.dart';
 import 'package:izi_kiosco/ui/general/main_layout/main_layout.dart';
 import 'package:izi_kiosco/ui/pages/add_kiosk_page/add_kiosk_page.dart';
 import 'package:izi_kiosco/ui/pages/error_payment_page/error_payment_page.dart';
@@ -166,22 +167,22 @@ class Routes {
               name: RoutesKeys.payment,
               path: RoutesKeys.paymentLink,
               pageBuilder: (BuildContext context, GoRouterState state) {
-                Comanda? order;
-                int? orderId = int.tryParse(state.pathParameters["id"] ?? "");
-                if (state.extra is Comanda) {
-                  order = state.extra as Comanda;
+                if (state.extra is PaymentObj) {
+                  PaymentObj paymentObj = state.extra as PaymentObj;
+                  return NoTransitionPage(
+                    child: BlocProvider(
+                      create: (context) => PaymentBloc(ComandaRepositoryHttp(),
+                          BusinessRepositoryHttp(), SocketRepositoryHttp())
+                        ..initOrder(
+                            paymentObj: paymentObj,
+                            authState: context.read<AuthBloc>().state),
+                      child: Scaffold(
+                          body: PaymentPage()),
+                    ),
+                  );
                 }
-                return NoTransitionPage(
-                  child: BlocProvider(
-                    create: (context) => PaymentBloc(ComandaRepositoryHttp(),
-                        BusinessRepositoryHttp(), SocketRepositoryHttp())
-                      ..initOrder(
-                          order: order,
-                          orderId: orderId,
-                          authState: context.read<AuthBloc>().state),
-                    child: Scaffold(
-                        body: PaymentPage()),
-                  ),
+                return const NoTransitionPage(
+                  child: Scaffold()
                 );
               },
             )

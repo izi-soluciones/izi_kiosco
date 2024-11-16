@@ -52,7 +52,7 @@ class Item {
         modificadores:
             listModificadores.map((e) => Modifier.fromJson(e)).toList(),
         modificadoresRaw: json["modificadores"],
-        precioUnitario: json["precioUnitario"],
+        precioUnitario: json["precioUnitario"] ?? 0,
         activo: json["activo"] ?? false,
         categoria: json["categoria"],
         categoriaId: json["categoriaId"],

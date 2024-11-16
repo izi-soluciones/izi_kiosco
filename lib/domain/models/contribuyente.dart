@@ -304,6 +304,7 @@ class Sucursal {
   bool? canAdminInsumos;
   bool? canMoveInsumos;
   bool? canEditValoresItems;
+  int? almacenVenta;
 
   Sucursal.fromJson(Map<String, dynamic> json){
     id = json['id'];
@@ -351,6 +352,10 @@ class Sucursal {
     canAdminInsumos = json['canAdminInsumos'];
     canMoveInsumos = json['canMoveInsumos'];
     canEditValoresItems = json['canEditValoresItems'];
+    almacenVenta = json['config'] is Map
+        && json['config']['almacenVenta'] is int
+        ? json['config']['almacenVenta']
+        : null;
   }
   factory Sucursal.init()=>Sucursal(
     ciudad: "La Paz",

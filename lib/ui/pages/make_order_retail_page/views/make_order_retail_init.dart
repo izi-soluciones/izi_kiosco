@@ -9,26 +9,16 @@ import 'package:izi_design_system/tokens/izi_icons.dart';
 import 'package:izi_kiosco/app/values/assets_keys.dart';
 import 'package:izi_kiosco/app/values/locale_keys.g.dart';
 import 'package:izi_kiosco/app/values/routes_keys.dart';
-import 'package:izi_kiosco/domain/blocs/make_order/make_order_bloc.dart';
+import 'package:izi_kiosco/domain/blocs/make_order_retail/make_order_retail_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/page_utils/page_utils_bloc.dart';
 import 'package:izi_kiosco/ui/pages/make_order_page/widgets/make_order_header_lg.dart';
 import 'package:izi_kiosco/ui/utils/dynamic_list.dart';
 import 'package:izi_kiosco/ui/utils/responsive_utils.dart';
+import 'package:shimmer/shimmer.dart';
 
-class MakeOrderRetailInit extends StatefulWidget {
-  final MakeOrderState state;
+class MakeOrderRetailInit extends StatelessWidget {
+  final MakeOrderRetailState state;
   const MakeOrderRetailInit({super.key, required this.state});
-
-  @override
-  State<MakeOrderRetailInit> createState() => _MakeOrderRetailInitState();
-}
-
-class _MakeOrderRetailInitState extends State<MakeOrderRetailInit> {
-  ScrollController scrollController = ScrollController();
-  @override
-  void initState() {
-    super.initState();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -37,13 +27,16 @@ class _MakeOrderRetailInitState extends State<MakeOrderRetailInit> {
       children: [
         Positioned.fill(
           child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
             onTap: (){
-
+              if(state.status != MakeOrderRetailStatus.waitingGet){
+                context.read<MakeOrderRetailBloc>().changeStepStatus(1);
+              }
             },
             child: Center(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: DynamicList(
+                child: state.status == MakeOrderRetailStatus.waitingGet?_shimmer(ru):DynamicList(
                   direction: ru.isVertical()
                       ? DynamicListDirection.column
                       : DynamicListDirection.row,
@@ -60,19 +53,19 @@ class _MakeOrderRetailInitState extends State<MakeOrderRetailInit> {
                             defaultVerticalAlignment: TableCellVerticalAlignment.middle,
                             children: [
                               _infoItem(
-                                  IziIcons.qrCode,
+                                  IziIcons.barCode,
                                   "1. ${LocaleKeys.makeOrderRetail_init_scanProducts.tr()}",
                                   ru),
                               _infoItem(
-                                  IziIcons.qrCode,
+                                  IziIcons.invoice2,
                                   "2. ${LocaleKeys.makeOrderRetail_init_enterInvoiceData.tr()}",
                                   ru),
                               _infoItem(
-                                  IziIcons.qrCode,
+                                  IziIcons.paymentMethod,
                                   "3. ${LocaleKeys.makeOrderRetail_init_selectPaymentMethod.tr()}",
                                   ru),
                               _infoItem(
-                                  IziIcons.qrCode,
+                                  IziIcons.purchase,
                                   "4. ${LocaleKeys.makeOrderRetail_init_retirePurchase.tr()}",
                                   ru)
                             ],
@@ -128,6 +121,75 @@ class _MakeOrderRetailInitState extends State<MakeOrderRetailInit> {
       ],
     );
   }
+  Widget _shimmerBox({required double height}) {
+    return Container(
+      height: height,
+      decoration: BoxDecoration(
+          color: IziColors.dark, borderRadius: BorderRadius.circular(8)),
+    );
+  }
+  _shimmer(ResponsiveUtils ru){
+    double size = 30;
+    if (ru.gtSm()) {
+      size = 42;
+    }
+    if (ru.isXl()) {
+      size = 50;
+    }
+    return Shimmer.fromColors(
+      baseColor: IziColors.grey25,
+      highlightColor: IziColors.lightGrey30,
+      direction: ShimmerDirection.ltr,
+      period: const Duration(seconds: 1),
+      child: DynamicList(
+        direction: ru.isVertical()
+            ? DynamicListDirection.column
+            : DynamicListDirection.row,
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Flexible(
+            child: ConstrainedBox(
+              constraints:  BoxConstraints( maxWidth: ru.gtMd() || (ru.gtSm() && ru.isVertical())?500:350),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  _shimmerBox(height: size),
+                  const SizedBox(height: 16,),
+                  _shimmerBox(height: size),
+                  const SizedBox(height: 16,),
+                  _shimmerBox(height: size),
+                  const SizedBox(height: 16,),
+                  _shimmerBox(height: size),
+                  const SizedBox(height: 16,),
+                  _shimmerBox(height: size),
+                ],
+              ),
+            ),
+          ),
+          Flexible(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints( maxWidth: 350),
+              child: Padding(
+                padding: EdgeInsets.only(left: ru.isVertical()?0:48,top: ru.isVertical()?32:0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    SizedBox(width: ru.gtMd() || (ru.gtSm() && ru.isVertical())?400:200,child: _shimmerBox(height: ru.gtMd() || (ru.gtSm() && ru.isVertical())?280:140)),
+                    const SizedBox(height: 16,),
+                    _shimmerBox(height: 30),
+                    const SizedBox(height: 8,),
+                    _shimmerBox(height: 30),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
   _infoItem(IconData icon, String text, ResponsiveUtils ru) {
     double sizeText = 20;
@@ -151,8 +213,8 @@ class _MakeOrderRetailInitState extends State<MakeOrderRetailInit> {
           color: IziColors.primary,
           size: sizeIcon,
         ),
-        const SizedBox(
-          width: 16,
+        SizedBox(
+          width: (ru.gtMd() || (ru.gtSm() && ru.isVertical()))?32:16,
         ),
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 12),

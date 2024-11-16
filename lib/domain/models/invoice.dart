@@ -5,7 +5,7 @@ class Invoice {
   int? tipoFactura;
   int? isApi;
   dynamic actividadEconomica;
-  String? contribuyenteApi;
+  int? contribuyenteApi;
   String? emisor;
   String? razonSocialEmisor;
   String? comprador;

@@ -50,7 +50,6 @@ class PaymentState extends Equatable {
   final int? qrPaymentKey;
 
   final bool qrLoading;
-  final num discountAmount;
   final num tipAmount;
   final num cashAmount;
   final int step;
@@ -66,13 +65,14 @@ class PaymentState extends Equatable {
   final List<DocumentType> documentTypes;
   final List<Contribuyente> queryBusinessList;
 
-  final Comanda? order;
+  final PaymentObj? paymentObj;
 
   final bool usaSiat;
 
   const PaymentState(
-      {this.order,
+      {
       this.errorDescription,
+        required this.paymentObj,
       required this.cashAmount,
       required this.economicActivity,
       required this.currentCurrency,
@@ -88,7 +88,6 @@ class PaymentState extends Equatable {
       required this.queryBusinessList,
       required this.payments,
       required this.paymentMethods,
-      required this.discountAmount,
       required this.tipAmount,
       required this.businessName,
       required this.complement,
@@ -104,7 +103,7 @@ class PaymentState extends Equatable {
 
   factory PaymentState.init() => PaymentState(
       status: PaymentStatus.waitingGet,
-      discountAmount: 0,
+      paymentObj: null,
       cashRegisters: const [],
       cashAmount: 0,
       tipAmount: 0,
@@ -130,10 +129,9 @@ class PaymentState extends Equatable {
       casaMatriz: null);
 
   copyWith(
-      {Comanda? order,
+      {
       PaymentStatus? status,
       String? errorDescription,
-      num? discountAmount,
       int? step,
       num? cashAmount,
       List<CashRegister>? cashRegisters,
@@ -160,7 +158,8 @@ class PaymentState extends Equatable {
         int? qrPaymentKey,
         bool? qrWait,
         bool? qrLoading,
-      Sucursal? casaMatriz}) {
+      Sucursal? casaMatriz,
+      PaymentObj? paymentObj}) {
     return PaymentState(
         casaMatriz: casaMatriz ?? this.casaMatriz,
         status: status ?? this.status,
@@ -175,10 +174,8 @@ class PaymentState extends Equatable {
         payments: payments ?? this.payments,
         paymentMethods: paymentMethods ?? this.paymentMethods,
         currentCurrency: currentCurrency ?? this.currentCurrency,
-        order: order ?? this.order,
         cashRegisters: cashRegisters ?? this.cashRegisters,
         currentCashRegister: currentCashRegister ?? this.currentCashRegister,
-        discountAmount: discountAmount ?? this.discountAmount,
         tipAmount: tipAmount ?? this.tipAmount,
         withException: withException ?? this.withException,
         businessName: businessName ?? this.businessName,
@@ -191,7 +188,8 @@ class PaymentState extends Equatable {
       qrCharge: qrCharge !=null?qrCharge() : this.qrCharge,
       qrPaymentKey: qrPaymentKey == -1?null: qrPaymentKey ?? this.qrPaymentKey,
       qrLoading: qrLoading ?? this.qrLoading,
-      qrWait: qrWait ?? this.qrWait
+      qrWait: qrWait ?? this.qrWait,
+      paymentObj: paymentObj ?? this.paymentObj
     );
   }
 
@@ -199,8 +197,7 @@ class PaymentState extends Equatable {
   List<Object?> get props => [
         status,
         step,
-        order,
-        discountAmount,
+        paymentObj,
         tipAmount,
         currentCurrency,
         cashAmount,

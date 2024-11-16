@@ -1,7 +1,9 @@
 import 'package:izi_kiosco/domain/dto/filters_comanda.dart';
 import 'package:izi_kiosco/domain/dto/invoice_dto.dart';
 import 'package:izi_kiosco/domain/dto/new_order_dto.dart';
+import 'package:izi_kiosco/domain/dto/new_sale_link_dto.dart';
 import 'package:izi_kiosco/domain/dto/paid_charge_dto.dart';
+import 'package:izi_kiosco/domain/dto/payment_attempt_dto.dart';
 import 'package:izi_kiosco/domain/dto/payment_dto.dart';
 import 'package:izi_kiosco/domain/models/card_payment.dart';
 import 'package:izi_kiosco/domain/models/category_order.dart';
@@ -13,6 +15,7 @@ import 'package:izi_kiosco/domain/models/payment.dart';
 import 'package:izi_kiosco/domain/models/consumption_point.dart';
 import 'package:izi_kiosco/domain/models/room.dart';
 import 'package:izi_kiosco/domain/dto/internal_movement_dto.dart';
+import 'package:izi_kiosco/domain/models/sale_link.dart';
 
 abstract class ComandaRepository{
 
@@ -45,8 +48,11 @@ abstract class ComandaRepository{
 
   Future<Invoice> getInvoice(int invoiceId);
   Future<void> createPaidCharge(PaidChargeDto paidChargeDto);
-  Future<void> markPaymentATC(String token,String chargeUuid);
+  Future<void> markPaymentATC(String token,String chargeUuid,int? internalId);
 
   Future<List<Item>> getSaleItems(int sucursal);
+
+  Future<SaleLink> createSaleLink(NewSaleLinkDto newSaleLinkDto);
+  Future<Charge> generatePaymentAttempt(PaymentAttemptDto paymentAttemptDto);
 
 }

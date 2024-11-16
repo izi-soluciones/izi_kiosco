@@ -470,10 +470,18 @@ abstract class  LocaleKeys {
   static const makeOrderRetail_scan_productsScanned = 'makeOrderRetail.scan.productsScanned';
   static const makeOrderRetail_scan_unitPrice = 'makeOrderRetail.scan.unitPrice';
   static const makeOrderRetail_scan_totalPrice = 'makeOrderRetail.scan.totalPrice';
+  static const makeOrderRetail_scan_areYouSureBack = 'makeOrderRetail.scan.areYouSureBack';
+  static const makeOrderRetail_scan_areYouSureInitAgain = 'makeOrderRetail.scan.areYouSureInitAgain';
+  static const makeOrderRetail_scan_unitPriceAbr = 'makeOrderRetail.scan.unitPriceAbr';
+  static const makeOrderRetail_scan_totalPriceAbr = 'makeOrderRetail.scan.totalPriceAbr';
   static const makeOrderRetail_scan_total = 'makeOrderRetail.scan.total';
+  static const makeOrderRetail_scan_quantity = 'makeOrderRetail.scan.quantity';
+  static const makeOrderRetail_scan_quantityAbr = 'makeOrderRetail.scan.quantityAbr';
   static const makeOrderRetail_scan_initAgain = 'makeOrderRetail.scan.initAgain';
   static const makeOrderRetail_scan_finishPurchase = 'makeOrderRetail.scan.finishPurchase';
   static const makeOrderRetail_scan_finish = 'makeOrderRetail.scan.finish';
+  static const makeOrderRetail_scan_waitingScan = 'makeOrderRetail.scan.waitingScan';
+  static const makeOrderRetail_scan_waitingPurchase = 'makeOrderRetail.scan.waitingPurchase';
   static const makeOrderRetail_scan = 'makeOrderRetail.scan';
   static const makeOrderRetail = 'makeOrderRetail';
   static const makeOrder_title = 'makeOrder.title';
@@ -558,5 +566,8 @@ abstract class  LocaleKeys {
   static const warningPermissions_title = 'warningPermissions.title';
   static const warningPermissions_description = 'warningPermissions.description';
   static const warningPermissions = 'warningPermissions';
+  static const warningStore_title = 'warningStore.title';
+  static const warningStore_description = 'warningStore.description';
+  static const warningStore = 'warningStore';
 
 }

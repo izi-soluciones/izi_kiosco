@@ -1,10 +1,10 @@
 part of 'make_order_retail_bloc.dart';
-enum MakeOrderStatus{waitingGet,successGet,errorGet,successEmit,errorCashRegisters,errorEmit,successEdit}
+enum MakeOrderRetailStatus{waitingGet,successGet,errorGet,successEmit,errorCashRegisters,errorStore,errorEmit,successEdit,errorActivity}
 
 
 class MakeOrderRetailState extends Equatable{
 
-  final MakeOrderStatus status;
+  final MakeOrderRetailStatus status;
   final List<Item> items;
 
   final List<Item> itemsSelected;
@@ -20,14 +20,14 @@ class MakeOrderRetailState extends Equatable{
   factory MakeOrderRetailState.init(){
     return const MakeOrderRetailState(
       items:[],
-        status: MakeOrderStatus.waitingGet,
+        status: MakeOrderRetailStatus.waitingGet,
         itemsSelected:[],
         step:0,
     );
   }
 
   MakeOrderRetailState copyWith({
-    MakeOrderStatus? status,
+    MakeOrderRetailStatus? status,
     List<Item>? itemsSelected,
     List<Item>? items,
     Currency? currentCurrency,

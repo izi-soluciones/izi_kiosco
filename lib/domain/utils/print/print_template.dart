@@ -5,9 +5,9 @@ import 'package:dio/dio.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:izi_kiosco/app/values/app_constants.dart';
 import 'package:izi_kiosco/app/values/env_keys.dart';
-import 'package:izi_kiosco/domain/models/comanda.dart';
 import 'package:izi_kiosco/domain/models/contribuyente.dart';
 import 'package:izi_kiosco/domain/models/invoice.dart';
+import 'package:izi_kiosco/domain/models/payment_obj.dart';
 import 'package:izi_kiosco/domain/utils/date_formatter.dart';
 import 'package:izi_kiosco/domain/utils/print_utils.dart';
 import 'package:izi_kiosco/ui/utils/money_formatter.dart';
@@ -18,7 +18,7 @@ class PrintTemplate {
       int? customOrderNumber,
       Contribuyente contribuyente,
       Sucursal sucursal,
-      Comanda? order) async {
+      PaymentObj? paymentObj) async {
     List<IziPrintItem> items = [];
     items.add(IziPrintText(
         text: contribuyente.razonSocial ?? "",
@@ -39,16 +39,16 @@ class PrintTemplate {
         align: IziPrintAlign.center,
         bold: true));
     items.add(IziPrintSeparator(dotted: true));
-    for (ItemComanda? item in order?.listaItems ?? []) {
+    for (ItemPaymentObj? item in paymentObj?.items ?? []) {
       items.add(IziPrintLineWrap(lines: 1));
       items.add(IziPrintText(
-        text: "x${item?.cantidad} ${item?.nombre}",
+        text: "x${item?.quantity} ${item?.name}",
         size: IziPrintSize.md,
         bold: false,
         align: IziPrintAlign.left,
       ));
-      if (item?.modificadores is Map) {
-        for (var mod in (item?.modificadores as Map).entries) {
+      if (item?.custom is Map) {
+        for (var mod in (item?.custom as Map).entries) {
           if (mod.value is List) {
             items.add(IziPrintText(
               text: mod.key +
@@ -65,7 +65,7 @@ class PrintTemplate {
     items.add(IziPrintSeparator(dotted: true));
     items.add(IziPrintText(
         text:
-            "Monto total: ${order?.montoTotal?.moneyFormat(currency: AppConstants.defaultCurrency)}",
+            "Monto total: ${paymentObj?.amount.moneyFormat(currency: AppConstants.defaultCurrency)}",
         size: IziPrintSize.md,
         align: IziPrintAlign.left,
         bold: true));
@@ -79,10 +79,10 @@ class PrintTemplate {
     items.add(IziPrintSeparator(dotted: true));
     items.add(IziPrintText(
       text: "Cliente: ${
-          order?.custom is Map &&
-              order?.custom["pagadorData"] is Map &&
-              order?.custom["pagadorData"]["razonSocial"] is String
-              ? order?.custom["pagadorData"]["razonSocial"]
+          paymentObj?.custom is Map &&
+              paymentObj?.custom["pagadorData"] is Map &&
+              paymentObj?.custom["pagadorData"]["razonSocial"] is String
+              ? paymentObj?.custom["pagadorData"]["razonSocial"]
               : "-"
       }",
       size: IziPrintSize.md,

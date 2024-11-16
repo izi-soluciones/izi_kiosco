@@ -17,6 +17,7 @@ class AssetsKeys{
   static const String symbioticLogo="assets/icons/isoSym.png";
   static const String homeTitleRetailSvg="assets/graphics/escanea.svg";
   static const String barCodeSvg="assets/graphics/barcode.svg";
+  static const String barCodeJson="assets/graphics/barcode.json";
   static const String homeTitleSvg="assets/graphics/ordena.svg";
 
 

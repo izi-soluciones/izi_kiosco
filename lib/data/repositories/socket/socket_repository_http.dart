@@ -61,7 +61,7 @@ class SocketRepositoryHttp extends SocketRepository{
     });
     _socketQr?.on('payment-notification', (data)
     {
-      if(data?["status"]=="success" && data?["uuid"] == charge.uuid){
+      if(data?["status"]=="success" && data?["uuid"] == charge.uuid && (charge.intentoPago ==null || data?["intentoPago"] == charge.intentoPago)){
         streamController.add(data);
       }
     }

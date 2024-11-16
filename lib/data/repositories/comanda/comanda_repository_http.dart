@@ -8,7 +8,9 @@ import 'package:izi_kiosco/data/core/dio_client.dart';
 import 'package:izi_kiosco/domain/dto/filters_comanda.dart';
 import 'package:izi_kiosco/domain/dto/invoice_dto.dart';
 import 'package:izi_kiosco/domain/dto/new_order_dto.dart';
+import 'package:izi_kiosco/domain/dto/new_sale_link_dto.dart';
 import 'package:izi_kiosco/domain/dto/paid_charge_dto.dart';
+import 'package:izi_kiosco/domain/dto/payment_attempt_dto.dart';
 import 'package:izi_kiosco/domain/dto/payment_dto.dart';
 import 'package:izi_kiosco/domain/models/card_payment.dart';
 import 'package:izi_kiosco/domain/models/category_order.dart';
@@ -19,6 +21,7 @@ import 'package:izi_kiosco/domain/models/item.dart';
 import 'package:izi_kiosco/domain/models/payment.dart';
 import 'package:izi_kiosco/domain/models/consumption_point.dart';
 import 'package:izi_kiosco/domain/models/room.dart';
+import 'package:izi_kiosco/domain/models/sale_link.dart';
 import 'package:izi_kiosco/domain/repositories/comanda_repository.dart';
 import 'package:izi_kiosco/domain/dto/internal_movement_dto.dart';
 
@@ -164,6 +167,30 @@ class ComandaRepositoryHttp extends ComandaRepository {
     }
   }
 
+  @override
+  Future<SaleLink> createSaleLink(NewSaleLinkDto newSaleLinkDto) async {
+    try {
+      String path = "/solicitudes-cobro/enlace";
+      var response = await _dioClient.post(
+          uri: path,
+          body: newSaleLinkDto.toJson(),
+          options: Options(responseType: ResponseType.json));
+      if (response.statusCode == 200) {
+        return SaleLink.fromJson(response.data);
+      }
+      if (response.data?["status"] ?? false) {
+        throw response.data?["data"];
+      }
+      throw response.data;
+    } on DioException catch (e) {
+      if (e.response?.data is String) {
+        throw e.response?.data;
+      }
+      throw e.error ?? "Network Error";
+    } catch (error) {
+      throw error.toString();
+    }
+  }
   @override
   Future<void> emitContingencia(
       {required InvoiceDto invoice, required int orderId}) async {
@@ -472,6 +499,28 @@ class ComandaRepositoryHttp extends ComandaRepository {
       throw error.toString();
     }
   }
+  @override
+  Future<Charge> generatePaymentAttempt(PaymentAttemptDto paymentAttemptDto) async {
+    try {
+      String path = "/solicitudes-cobro/intento-pago";
+      var response = await _dioClient.post(
+          uri: path,
+          options: Options(responseType: ResponseType.json),
+          body: paymentAttemptDto.toJson());
+      if (response.statusCode == 200) {
+        return Charge.fromJsonAttempt(response.data,paymentAttemptDto.uuid);
+      } else {
+        throw response.data;
+      }
+    } on DioException catch (e) {
+      if (e.response?.data is String) {
+        throw e.response?.data;
+      }
+      throw e.error ?? "Network Error";
+    } catch (error) {
+      throw error.toString();
+    }
+  }
 
   @override
   Future<CardPayment> callCardPayment({required int amount,required String ip}) async{
@@ -625,14 +674,15 @@ class ComandaRepositoryHttp extends ComandaRepository {
   }
 
   @override
-  Future<void> markPaymentATC(String token, String chargeUuid) async{
+  Future<void> markPaymentATC(String token, String chargeUuid,int? internalId) async{
     try {
       String path =
           "/solicitudes-cobro/$chargeUuid/notificacion-pos";
       var response = await _dioClient.post(
           uri: path,
           body: {
-            "token":token
+            "token":token,
+            if(internalId!=null) "internalId": internalId
           },
           options: Options(responseType: ResponseType.json));
       if (response.statusCode != 200) {

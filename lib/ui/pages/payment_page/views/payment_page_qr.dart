@@ -201,7 +201,7 @@ class _PaymentPageQrState extends State<PaymentPageQr> {
                           const SizedBox(
                             height: 8,
                           ),
-                          IziText.titleMedium(color: IziColors.darkGrey, text: "${ LocaleKeys.payment_body_total.tr()}: ${(widget.state.order?.monto ?? 0).moneyFormat(currency: widget.state.currentCurrency?.simbolo)}",fontWeight: FontWeight.w600),
+                          IziText.titleMedium(color: IziColors.darkGrey, text: "${ LocaleKeys.payment_body_total.tr()}: ${(widget.state.paymentObj?.amount ?? 0).moneyFormat(currency: widget.state.currentCurrency?.simbolo)}",fontWeight: FontWeight.w600),
                           const SizedBox(
                             height: 50,
                           ),
@@ -628,7 +628,7 @@ class _PaymentPageQrState extends State<PaymentPageQr> {
         context: context,
         dismissible: true,
         defaultScroll: false,
-        child: CardTypeAtcModal(amount: (widget.state.order?.monto ?? 0))
+        child: CardTypeAtcModal(amount: (widget.state.paymentObj?.amount ?? 0))
     ).then((value) async{
       if(value is int){
         context.read<PageUtilsBloc>().closeScreenActive();
