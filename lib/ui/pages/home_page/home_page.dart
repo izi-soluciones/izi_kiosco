@@ -176,11 +176,12 @@ class _HomePageState extends State<HomePage> {
                               ),
                             ),
                             ConstrainedBox(
-                              constraints: const BoxConstraints(maxWidth: 1400),
+                              constraints: const BoxConstraints(maxWidth: 600),
                               child: Padding(
                                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                                child: AutoSizeText(LocaleKeys.home_body_clickToInit.tr(),minFontSize: 1,style: const TextStyle(
+                                child: AutoSizeText(LocaleKeys.home_body_clickToInit.tr(),minFontSize: 1,maxFontSize: 100,style: const TextStyle(
                                   color: IziColors.grey,
+                                  fontSize: 100,
                                   fontWeight: FontWeight.w400,
                                 ),maxLines: 1),
                               ),

@@ -8,6 +8,8 @@ import 'package:izi_kiosco/app/values/routes_keys.dart';
 import 'package:izi_kiosco/domain/blocs/page_utils/page_utils_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/payment/payment_bloc.dart';
 import 'package:izi_kiosco/ui/modals/warning_config_modal.dart';
+import 'package:izi_kiosco/ui/pages/payment_page/views/payment_page_card.dart';
+import 'package:izi_kiosco/ui/pages/payment_page/views/payment_page_invoice.dart';
 import 'package:izi_kiosco/ui/pages/payment_page/views/payment_page_order_complete.dart';
 import 'package:izi_kiosco/ui/pages/payment_page/views/payment_page_order_error.dart';
 import 'package:izi_kiosco/ui/pages/payment_page/views/payment_page_qr.dart';
@@ -33,6 +35,7 @@ class PaymentPage extends StatelessWidget {
               title: LocaleKeys.warningCashRegisters_title.tr(),
               description: LocaleKeys.warningCashRegisters_description.tr()
           )).then((value){
+            context.read<PageUtilsBloc>().closeScreenActive();
             GoRouter.of(context).goNamed(RoutesKeys.home);
           });
         }
@@ -41,6 +44,7 @@ class PaymentPage extends StatelessWidget {
               title: LocaleKeys.warningActivity_title.tr(),
               description: LocaleKeys.warningActivity_description.tr()
           )).then((value){
+            context.read<PageUtilsBloc>().closeScreenActive();
             GoRouter.of(context).goNamed(RoutesKeys.home);
           });
         }
@@ -51,7 +55,7 @@ class PaymentPage extends StatelessWidget {
           context.read<PageUtilsBloc>().initScreenActiveInvoiced();
           context.read<PageUtilsBloc>().showSnackBar(
               snackBar: SnackBarInfo(
-                  text: LocaleKeys.payment_body_cardError.tr(),
+                  text: LocaleKeys.payment_messages_errorCard.tr(),
                   snackBarType: SnackBarType.error));
         }
         if (state.status == PaymentStatus.errorGet || state.status == PaymentStatus.markCreateError || state.status== PaymentStatus.errorInvoiced || state.status == PaymentStatus.errorAnnulled) {
@@ -67,47 +71,28 @@ class PaymentPage extends StatelessWidget {
           context.read<PageUtilsBloc>().showSnackBar(
               snackBar: SnackBarInfo(
                   text: state.errorDescription ??
-                      (state.status== PaymentStatus.errorInvoiced?
-                      LocaleKeys.payment_messages_errorInvoiced.tr():
-                      state.status== PaymentStatus.errorAnnulled?
-                      LocaleKeys.payment_messages_errorAnnulled.tr():
-                      state.status== PaymentStatus.markCreateError?
-                      LocaleKeys.payment_messages_errorMarkCreate.tr():
+                      (state.status == PaymentStatus.qrError?
+                      LocaleKeys.payment_messages_errorQR.tr():
                       state.status == PaymentStatus.cardError?
-                      LocaleKeys.payment_body_cardError.tr():
+                      LocaleKeys.payment_messages_errorCard.tr():
                       LocaleKeys.payment_messages_errorGet.tr()),
                   snackBarType: SnackBarType.error));
 
         }
-        if(state.status== PaymentStatus.cardSuccess){
+        if(state.status == PaymentStatus.processingInvoice){
+          context.read<PageUtilsBloc>().closeScreenActive();
+          context.read<PageUtilsBloc>().showLoading(LocaleKeys.payment_messages_processingInvoice.tr());
+        }
+        if(state.status == PaymentStatus.processingOrder){
+          context.read<PageUtilsBloc>().closeScreenActive();
+          context.read<PageUtilsBloc>().showLoading(LocaleKeys.payment_messages_processingOrder.tr());
+        }
+        if(state.status== PaymentStatus.paymentProcessed || state.status== PaymentStatus.cardProcessed){
           context.read<PageUtilsBloc>().closeLoading();
         }
-        if(state.status == PaymentStatus.cardProcessing){
-          context.read<PageUtilsBloc>().closeScreenActive();
-          context.read<PageUtilsBloc>().showLoading(LocaleKeys.payment_body_processingCard.tr());
+        if(state.status == PaymentStatus.successInvoice){
+          GoRouter.of(context).pushNamed(RoutesKeys.home);
         }
-        if(state.status == PaymentStatus.cashRegisterProcessing){
-          context.read<PageUtilsBloc>().closeScreenActive();
-          context.read<PageUtilsBloc>().showLoading(LocaleKeys.payment_body_processingOrder.tr());
-        }
-        if(state.status == PaymentStatus.paymentProcessing){
-          context.read<PageUtilsBloc>().closeScreenActive();
-          context.read<PageUtilsBloc>().showLoading(LocaleKeys.payment_body_processingOrder.tr());
-        }
-        if(state.status==PaymentStatus.errorInvoice || state.status == PaymentStatus.qrProcessed){
-          context.read<PageUtilsBloc>().closeLoading();
-        }
-        if(state.status == PaymentStatus.successInvoice|| state.status == PaymentStatus.successPreInvoice){
-          GoRouter.of(context).goNamed(RoutesKeys.home);
-        }
-        if(state.status == PaymentStatus.successPayment){
-          context.read<PageUtilsBloc>().unlockPage();
-          context.read<PageUtilsBloc>().showSnackBar(
-              snackBar: SnackBarInfo(
-                  text: LocaleKeys.payment_messages_successPayment.tr(),
-                  snackBarType: SnackBarType.success));
-        }
-
       },
       builder: (context, state) {
         return PageView(
@@ -115,18 +100,20 @@ class PaymentPage extends StatelessWidget {
           controller: _pageController,
 
           children: [
-
+            //0
             const PaymentShimmerPaymentMethod(),
-            PaymentPageQr(state: state),
-
-
-            //SUCCESS PAGE = 2
-            PaymentPageOrderComplete(state: state,),
-            //ERROR PAGE = 3
-            const PaymentPageOrderError(),
-
-            //PAYMENT SELECTION = 4
+            //1
             PaymentPageSelection(state: state),
+            //2
+            PaymentPageInvoice(state: state),
+            //3
+            PaymentPageQR(state: state),
+            //4
+            PaymentPageCard(state: state),
+            //5
+            PaymentPageOrderComplete(state: state,),
+            //6
+            const PaymentPageOrderError(),
           ],
         );
       },

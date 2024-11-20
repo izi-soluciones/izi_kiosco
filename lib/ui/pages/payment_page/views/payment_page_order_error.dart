@@ -38,16 +38,16 @@ class PaymentPageOrderError extends StatelessWidget {
             ))
             : const SizedBox.shrink(),
         const SizedBox(height: 32,),
-        IziText.titleBig(color: IziColors.darkGrey, text: LocaleKeys.payment_messages_errorPayment.tr(),fontWeight: FontWeight.w600),
+        IziText.titleBig(color: IziColors.darkGrey, text: LocaleKeys.payment_subtitles_error.tr(),fontWeight: FontWeight.w600),
         const Icon(IziIcons.close,size: 250,color: Colors.red),
         const SizedBox(height: 8,),
-        IziText.titleMedium(maxLines: 2,color: IziColors.darkGrey, text: LocaleKeys.payment_messages_errorPaymentDescription.tr(),fontWeight: FontWeight.w500),
+        IziText.titleMedium(maxLines: 2,color: IziColors.darkGrey, text: LocaleKeys.payment_subtitles_cantProcessPayment.tr(),fontWeight: FontWeight.w500),
         const SizedBox(height: 54,),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             IziBtn(
-                buttonText: LocaleKeys.payment_buttons_makeAnother.tr(),
+                buttonText: LocaleKeys.payment_buttons_makeAnotherPurchase.tr(),
                 buttonType: ButtonType.outline,
                 buttonSize: ButtonSize.medium,
                 buttonOnPressed: (){

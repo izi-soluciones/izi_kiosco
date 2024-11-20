@@ -19,6 +19,7 @@ class AssetsKeys{
   static const String barCodeSvg="assets/graphics/barcode.svg";
   static const String barCodeJson="assets/graphics/barcode.json";
   static const String homeTitleSvg="assets/graphics/ordena.svg";
+  static const String cardPOSSvg="assets/graphics/cardPOS.svg";
 
 
 

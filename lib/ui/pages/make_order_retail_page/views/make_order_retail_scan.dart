@@ -360,29 +360,8 @@ class _MakeOrderRetailScanState extends State<MakeOrderRetailScan> {
                     iconSuffix: IziIcons.rightB,
                     buttonText: LocaleKeys.makeOrderRetail_scan_finishPurchase.tr(),
                     buttonSize: (ru.gtSm())?ButtonSize.large:ButtonSize.medium,
-                    buttonOnPressed: () async {
-                      context.read<PageUtilsBloc>().showLoading("Procesando compra");
-                      context.read<PageUtilsBloc>().closeScreenActive();
-                      context.read<MakeOrderRetailBloc>().emitOrder(context.read<AuthBloc>().state).then((value) {
-                        context.read<PageUtilsBloc>().closeLoading();
-                        if(value is SaleLink){
-                          var paymentObj = PaymentObj(
-                              id: value.id,
-                              custom: {},
-                              amount: value.monto,
-                              isComanda: false,
-                              uuid: value.uuid,
-                              items: value.items.map((e) => ItemPaymentObj(
-                                  quantity: e.cantidad ,
-                                  custom: {},
-                                  name: e.nombre)
-                              ).toList()
-                          );
-                          context.read<PageUtilsBloc>().initScreenActiveInvoiced();
-                          GoRouter.of(context).goNamed(RoutesKeys.payment,
-                              extra: paymentObj, pathParameters: {"id": value.id.toString()});
-                        }
-                      });
+                    buttonOnPressed: widget.state.itemsSelected.isEmpty?null:() async {
+                      _emitPurchase();
                     },
                   )
               )
@@ -393,6 +372,31 @@ class _MakeOrderRetailScanState extends State<MakeOrderRetailScan> {
     );
   }
 
+  _emitPurchase(){
+
+    context.read<PageUtilsBloc>().showLoading("Procesando compra");
+    context.read<PageUtilsBloc>().closeScreenActive();
+    context.read<MakeOrderRetailBloc>().emitOrder(context.read<AuthBloc>().state).then((value) {
+      context.read<PageUtilsBloc>().closeLoading();
+      if(value is SaleLink){
+        var paymentObj = PaymentObj(
+            id: value.id,
+            custom: {},
+            amount: value.monto,
+            isComanda: false,
+            uuid: value.uuid,
+            items: value.items.map((e) => ItemPaymentObj(
+                quantity: e.cantidad ,
+                custom: {},
+                name: e.nombre)
+            ).toList()
+        );
+        context.read<PageUtilsBloc>().initScreenActiveInvoiced();
+        GoRouter.of(context).goNamed(RoutesKeys.payment,
+            extra: paymentObj, pathParameters: {"id": value.id.toString()});
+      }
+    });
+  }
   num _total(){
     return widget.state.itemsSelected.fold(0.0, (previousValue, element) => previousValue + (element.cantidad*element.precioUnitario));
   }

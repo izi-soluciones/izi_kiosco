@@ -4,6 +4,7 @@ enum PaymentStatus {
   waitingInvoice,
   waitingPreInvoice,
   waitingGet,
+  waitingQR,
   successGet,
   errorGet,
   successInvoice,
@@ -14,13 +15,16 @@ enum PaymentStatus {
   errorAnnulled,
   errorCashRegisters,
   paymentProcessing,
-  qrProcessed,
+  paymentProcessed,
   cardProcessing,
   cashRegisterProcessing,
   cardError,
-  cardSuccess,
+  qrError,
+  cardProcessed,
   errorActivity,
-  markCreateError
+  markCreateError,
+  processingInvoice,
+  processingOrder
 }
 
 enum PaymentType { cash, card, qr, bankTransfer, gitCard, others, cashRegister}

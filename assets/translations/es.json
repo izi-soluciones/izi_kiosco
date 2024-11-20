@@ -277,205 +277,75 @@
   },
   "payment": {
     "titles": {
-      "resume": "Resumen de la orden",
-      "cash": "Efectivo",
-      "qr": "Código QR",
-      "card": "Tarjeta",
-      "split": "Dividir pago",
-      "tapOnPhone": "Tap on phone",
-      "checkIn": "Facturar"
+      "paymentMethods": "Métodos de pago",
+      "invoiceData": "Datos de facturación",
+      "qrPayment": "Pago por QR",
+      "cardPayment": "Pago con tarjeta"
     },
     "subtitles": {
-      "mustCharge": "Debes pagar",
-      "invoiceData": "Datos de facturación",
-      "howDoPayment": "Indica cómo se hará el pago",
-      "scanQrToPay": "Escanea el código QR para proceder con el pago",
-      "areYOurSureCancel": "¿Estas seguro que deseas cancelar tu order?",
-      "payAndInvoiced": "Pago y facturación",
+      "selectPaymentMethod": "Selecciona el método con el que deseas pagar",
+      "beforePaymentNeedData": "Antes de proceder al pago necesitamos los siguientes datos",
+      "scanQRtoPay": "Escanea el código QR para pagar",
+      "enterYourCard": "Ingresa o acerca tu tarjeta al tarjetero",
+      "verifyPayment": "Verificación del pago",
       "successPayment": "¡Pago exitoso!",
-      "successOrder": "Orden completada"
+      "successOrder": "¡Orden creada!",
+      "error": "Error",
+      "cantProcessPayment": "No pudimos procesar el pago"
     },
     "body": {
-      "detail": "Detalle",
-      "subtotal": "Subtotal",
-      "discount": "Descuento",
-      "tip": "Propina (Opcional)",
-      "tipShort": "Propina",
       "total": "Total",
-      "selectMethod": "Selecciona el medio de pago",
-      "change": "Cambio",
-      "totalSplit": "Total",
-      "totalPaymentSplit": "Total pagado",
-      "remaining": "Restante",
-      "orderCompleted": "Orden generada correctamente",
-      "orderCompletedDescription": "En unos momentos tu orden estará lista.",
-      "processingOrder": "Procesando orden",
-      "cantPayWithQR": "¿No puedes pagar con QR? Acércate a cajas.",
-      "beforePayment": "Antes de proceder al pago necesitamos los siguientes datos",
+      "ifAlreadyPayment": "Si ya realizaste el pago, espera unos segundos",
+      "goToCashRegisters": "Acercate a una de nuestras cajas para completar tu orden",
       "weNotifyWhatsapp": "Te avisaremos por Whatsapp cuando tu orden esté lista.",
       "waitingTime": "Tiempo de espera estimado: 5 minutos.",
-      "processingCard": "Esperando pago en el lector de tarjetas",
-      "cardSuccess": "Pago relaizado correctamente",
-      "cardError": "No se pudo completar el pago",
-      "paymentQrDescription": "Utiliza tu aplicación de banco para escanear el QR",
-      "paymentCardDescription": "Utiliza el POS para pagar con tu tarjeta",
-      "paymentCashRegisterDescription": "Acércate a nuestras cajas para completar tu orden",
-      "goToCashRegisters": "Acercate a una de nuestras cajas para completar tu orden"
-
+      "canRetirePurchase": "Puedes retirar tu compra"
     },
     "buttons": {
-      "cash": "Efectivo",
-      "qr": "Código QR",
-      "card": "Tarjeta de crédito o Debito",
-      "others": "Otros",
-      "bankTransfer": "Transferencia Bancaria",
-      "giftCard": "Gift Card / Cupones",
-      "tapOnPhone": "Tap on Phone",
-      "splitPayment": "Dividir pago",
-      "pay": "Pagar",
-      "payAndGenerate": "Pagar y generar factura",
-      "changePaymentMethod": "Cambiar medio de pago",
-      "generateInvoice": "Generar factura",
-      "defaultPreInvoice": "Pre Factura",
-      "generateNoData": "Generar sin datos",
-      "morePayments": "Pagos",
-      "paymentType": "Tipo de Pago",
-      "remaining": "Restante: {} {}",
-      "addDiscount": "Agregar descuento",
-      "addTip": "Agregar propina",
-      "cashFull": "Exacto: {} {}",
-      "deletePayment": "Eliminar pago",
-      "markAsPaid": "Marcar como pagado",
-      "makeOrder": "Generar pedido",
-      "generateQr": "Generar QR",
-      "cancelOrder": "Cancelar orden",
-      "regenerateQR": "Regenerar QR",
-      "makeAnother": "Realizar otra orden",
-      "paymentWithCardPOs": "Pagar con tarjeta",
-      "paymentCashRegister": "Pagar en caja"
+      "qr": "QR",
+      "card": "Tarjeta",
+      "checkout": "Pagar en caja",
+      "initAgain": "Empezar de nuevo",
+      "proceedPayment": "Proceder al pago",
+      "tryAgain": "Volver a intentar",
+      "cancelPurchase": "Cancelar la compra",
+      "callHelp": "Llamar al asistente",
+      "makeAnotherPurchase": "Realizar otra compra"
     },
     "inputs": {
-
-      "percentage": {
-        "label": "Porcentaje",
-        "placeholder": "0"
-      },
-      "specificAmount": {
-        "label": "Monto específico",
-        "placeholder": "0.00"
-      },
-      "paymentType": {
-        "label": "Tipo de pago"
-      },
-      "amountReceived": {
-        "label": "Monto recibido",
-        "placeholder": "0.00",
-        "errors": {
-          "required": "El monto es requerido"
-        }
-      },
-      "payment": {
-        "label": "Pago {}",
-        "placeholder": "0.00"
-      },
-      "withException": {
-        "label": "Con excepción"
-      },
-      "documentType": {
-        "label": "Tipo documento*",
-        "errors": {
-          "required": "Requerido"
-        }
-      },
       "complement": {
         "label": "Complemento"
       },
-      "cashRegister": {
-        "label": "Emitir factura en caja",
-        "placeholder": "Elegir caja",
-        "errors": {
-          "required": "La caja es requerida"
-        }
-      },
       "documentNumber": {
-        "label": "Número de documento (opcional)",
+        "label": "Ingresa el número de NIT o CI para la factura (opcional)",
         "placeholder": "Ingresa el {}",
         "errors": {
           "required": "El número es requerido"
         }
       },
       "businessName": {
-        "label": "Nombre (opcional)",
+        "label": "Ingresa la razón social (opcional)",
         "placeholder": "Ingresa tu nombre o razon social",
         "errors": {
           "required": "La razón social es requerida"
         }
       },
-      "email": {
-        "label": "Correo electrónico",
-        "placeholder": "Ingresa el correo electrónico",
-        "errors": {
-          "invalid": "El correo no es válido"
-        }
-      },
-      "isManual": {
-        "label": "¿Es factura manual?"
-      },
-      "invoiceNumber": {
-        "label": "Numero de factura de contingencia",
-        "errors": {
-          "required": "El numero es requerido"
-        }
-      },
       "phoneNumber": {
-        "label": "Numero de teléfono*",
+        "label": "Ingresa tu número de celular",
         "placeholder": "Ingresa tu número de teléfono",
-        "description": "Te enviaremos un mensaje por Whatsapp con la confirmación de tu pedido y la factura.",
+        "description": "Te enviaremos tu factura digital por Whatsapp.",
         "errors": {
           "required": "El numero es requerido",
           "invalid": "El numero no es valido"
         }
-      },
-      "authorization": {
-        "label": "Autorización de contingencia",
-        "errors": {
-          "required": "La autorización es requerida"
-        }
-      },
-      "firstDigits": {
-        "errors": {
-          "required": "El campo es requerido",
-          "invalid": "Número no válido"
-        }
-      },
-      "lastDigits": {
-        "errors": {
-          "required": "El campo es requerido",
-          "invalid": "Número no válido"
-        }
       }
     },
-    "labels": {
-      "amount": "Cant.",
-      "item": "Item",
-      "price": "Precio U",
-      "total": "Total",
-      "firstAndLast": "Primeros y últimos dígitos de la tarjeta",
-      "cardDetails": "Detalles de Tarjeta"
-    },
     "messages": {
-      "errorGet": "Ocurrió un error al obtener la orden",
-      "successInvoice": "Factura emitida",
-      "successPreInvoiceCustom": "{} generado",
-      "successPayment": "Pago realizado correctamente",
-      "errorInvoiced": "Esta orden ya está facturada",
-      "errorAnnulled": "Esta orden esta anulada",
-      "successOrder": "Orden generada correctamente",
-      "errorOrder": "No se pudo generar la orden intenta nuevamente",
-      "errorPayment": "Ocurrio un error al completar la orden",
-      "errorPaymentDescription": "Acercate a una de nuestras cajas para informar el problema",
-      "errorMarkCreate": "No se pudo completar la orden"
-
+      "errorGet": "Ocurrió un error al obtener los datos",
+      "errorQR": "Ocurrió un problema al generar el QR",
+      "errorCard": "Ocurrió un problema al generar el cobro por POS",
+      "processingOrder": "Procesando órden",
+      "processingInvoice": "Procesando factura"
     }
   },
   "tapOnPhone": {
