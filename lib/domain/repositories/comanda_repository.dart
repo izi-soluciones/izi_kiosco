@@ -50,7 +50,7 @@ abstract class ComandaRepository{
   Future<void> createPaidCharge(PaidChargeDto paidChargeDto);
   Future<void> markPaymentATC(String token,String chargeUuid,int? internalId);
 
-  Future<List<Item>> getSaleItems(int sucursal);
+  Future<List<Item>> getSaleItems({required String catalog});
 
   Future<SaleLink> createSaleLink(NewSaleLinkDto newSaleLinkDto);
   Future<Charge> generatePaymentAttempt(PaymentAttemptDto paymentAttemptDto);

@@ -1,5 +1,5 @@
 class Comanda {
-  int? almacen;
+  String? almacen;
   int id;
   int? caja;
   List<ComandaPdf> comandasPdf;
@@ -148,7 +148,7 @@ class ItemComanda {
   dynamic customItem;
   String? descripcion;
   String? imagen;
-  int? item;
+  String? item;
   dynamic modificadores;
   dynamic modificadoresEdit;
   String nombre;
@@ -157,7 +157,7 @@ class ItemComanda {
   num? precioTotal;
   num? precioUnitario;
   num? valor;
-  int? categoriaId;
+  String? categoriaId;
   String? categoria;
   String? detalle;
 

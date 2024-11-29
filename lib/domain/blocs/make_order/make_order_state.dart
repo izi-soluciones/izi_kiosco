@@ -43,52 +43,16 @@ class MakeOrderState extends Equatable{
 
   const MakeOrderState({required this.itemModal,required this.takeAway,required this.step,required this.itemsFeatured,this.order,this.errorDescription,required this.cashRegisters,required this.tables,this.tableId,this.numberDiners,this.offsetDiscount,required this.discountAmount,required this.status,this.currentCurrency, required this.categories, required this.indexCategory,required this.itemsSelected});
 
-  factory MakeOrderState.init(String? tableId,int? numberDiners,Comanda? order){
+  factory MakeOrderState.init(String? tableId,int? numberDiners){
     List<CategoryOrder> initSelectItems=[];
-    if(order!=null){
-      for(var item in order.listaItems){
-        var itemNew=Item(
-            cantidad: item.cantidad ?? 0,
-            codigo: item.codigo,
-            customItem: item.customItem,
-            descripcion: item.descripcion,
-            detalle: item.detalle,
-            imagen: item.imagen,
-            modificadores: item.modificadoresEdit is List? (item.modificadoresEdit as List).map((e) => Modifier.fromJson(e)).toList():[],
-            modificadoresRaw: item.modificadoresEdit,
-            precioModificadores: item.precioModificadores??0,
-            nombre: item.nombre,
-            valor: item.valor,
-            activo: true,
-            id: item.item??0,
-            precioUnitario: item.precioUnitario??0,
-            categoria: item.categoria,
-            categoriaId: item.categoriaId,
-            centroProduccion: 1,
-            codigoBarras: ""
-        );
-
-        int indexCategory= initSelectItems.indexWhere((element) => element.id==item.categoriaId);
-        if(indexCategory==-1){
-          initSelectItems.add(CategoryOrder(
-              nombre: itemNew.categoria??"", id:itemNew.categoriaId, items:[itemNew]));
-        }
-        else{
-          initSelectItems[indexCategory].items.add(itemNew);
-        }
-      }
-    }
     return MakeOrderState(
         status: MakeOrderStatus.waitingGet,
         categories: const [],
         itemsSelected: initSelectItems,
         indexCategory: 0,
-        discountAmount: order?.descuentos ?? 0,
-        tableId: tableId ?? order?.mesa,
-        numberDiners: numberDiners ?? (order?.custom is Map?order?.custom["cantidadComensales"]:null),
+        discountAmount: 0,
         tables: const [],
         cashRegisters: const [],
-        order: order,
       takeAway: true,
       itemsFeatured: const [],
       itemModal: null,

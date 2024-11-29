@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:izi_kiosco/app/values/env_keys.dart';
+import 'package:izi_kiosco/data/utils/business_utils.dart';
 import 'package:izi_kiosco/data/utils/token_utils.dart';
 
 
@@ -108,7 +109,9 @@ class AppInterceptor extends InterceptorsWrapper {
       options.headers.remove("no-auth");
     } else {
       final token = await TokenUtils.getToken();
+      final contribuyente = await BusinessUtils.getContribuyenteId();
       options.headers.addAll({"Authorization": "Bearer $token"});
+      options.headers.addAll({"contribuyente": contribuyente});
     }
     options.headers.addAll({"Connection": "Keep-Alive",});
     return handler.next(options);

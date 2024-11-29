@@ -50,12 +50,13 @@ class ComandaRepositoryHttp extends ComandaRepository {
   }
   @override
   Future<List<Item>> getSaleItems(
-      int sucursal) async {
+  {required String catalog}) async {
     String path = "/items-inventarios";
     var response = await _dioClient.get(
         uri: path,
         queryParameters: {
-          "sucursal": sucursal,
+          "catalogo": catalog,
+          "habilitadoKiosco": 1,
           "seVende": true
         },
         options: Options(
@@ -406,11 +407,11 @@ class ComandaRepositoryHttp extends ComandaRepository {
       {required int sucursal, required int contribuyente}) async {
     try {
       String path =
-          "/contribuyentes/$contribuyente/sucursales/$sucursal/inventario/recetas/categorias";
+          "/categorias";
       var response = await _dioClient.get(
           uri: path,
           options: Options(responseType: ResponseType.json),
-          queryParameters: {"habilitadoKiosco": 1});
+          queryParameters: {"habilitadoKiosco": 1,"contribuyenteId": contribuyente});
       if (response.statusCode == 200) {
         return List.from(response.data)
             .map((e) => CategoryOrder.fromJson(e))

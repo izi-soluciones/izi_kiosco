@@ -8,7 +8,6 @@ import 'package:izi_kiosco/app/values/locale_keys.g.dart';
 import 'package:izi_kiosco/app/values/routes_keys.dart';
 import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/make_order/make_order_bloc.dart';
-import 'package:izi_kiosco/domain/blocs/order_list/order_list_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/page_utils/page_utils_bloc.dart';
 import 'package:izi_kiosco/domain/models/item.dart';
 import 'package:izi_kiosco/ui/general/izi_loading.dart';
@@ -183,9 +182,6 @@ class MainLayout extends StatelessWidget {
           onPressed: (){
             if (_scaffoldKey.currentState?.isDrawerOpen ?? false) {
               _scaffoldKey.currentState?.closeDrawer();
-            }
-            if(currentLocation==RoutesKeys.orderLink){
-              context.read<OrderListBloc>().getOrders(authState: context.read<AuthBloc>().state,puntoConsumo: true,first: true);
             }
             GoRouter.of(context).goNamed(RoutesKeys.order);
           }),

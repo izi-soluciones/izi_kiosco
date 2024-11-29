@@ -13,9 +13,7 @@ import 'package:izi_kiosco/data/repositories/business/business_repository_http.d
 import 'package:izi_kiosco/data/repositories/comanda/comanda_repository_http.dart';
 import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/make_order/make_order_bloc.dart';
-import 'package:izi_kiosco/domain/blocs/order_list/order_list_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/page_utils/page_utils_bloc.dart';
-import 'package:izi_kiosco/domain/blocs/tables/tables_bloc.dart';
 import 'package:izi_kiosco/ui/pages/splash_page/splash_page.dart';
 
 class MyApp extends StatelessWidget {
@@ -99,13 +97,6 @@ class MyApp extends StatelessWidget {
                             state.status == AuthStatus.waitingChange
                         ? SplashPage()
                         : MultiBlocProvider(providers: [
-                            BlocProvider(
-                                create: (context) =>
-                                    OrderListBloc(ComandaRepositoryHttp())),
-                            BlocProvider(
-                                create: (context) => TablesBloc(
-                                    ComandaRepositoryHttp(),
-                                    BusinessRepositoryHttp())),
                             BlocProvider(
                                 create: (context) => MakeOrderBloc(
                                     ComandaRepositoryHttp(),

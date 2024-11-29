@@ -2,14 +2,14 @@ class Item {
   bool activo;
   num cantidad;
   String? categoria;
-  int? categoriaId;
+  String? categoriaId;
   int? centroProduccion;
   String? codigo;
   String? codigoBarras;
   dynamic customItem;
   String? descripcion;
   String? imagen;
-  int id;
+  String id;
   List<Modifier> modificadores;
   dynamic modificadoresRaw;
   String nombre;
@@ -54,8 +54,8 @@ class Item {
         modificadoresRaw: json["modificadores"],
         precioUnitario: json["precioUnitario"] ?? 0,
         activo: json["activo"] ?? false,
-        categoria: json["categoria"],
-        categoriaId: json["categoriaId"],
+        categoria: json["categoria"]?["nombre"],
+        categoriaId: json["categoria"]?["id"] ?? json["categoria"]?["_id"],
         centroProduccion: json["centroProduccion"],
         codigoBarras: json["codigoBarras"],
         id: json["id"] ?? 0,

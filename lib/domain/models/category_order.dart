@@ -1,18 +1,18 @@
 import 'package:izi_kiosco/domain/models/item.dart';
 
 class CategoryOrder{
-  int? id;
+  String? id;
   String nombre;
   List<Item> items;
 
-  CategoryOrder({required this.nombre, required this.items,this.id});
+  CategoryOrder({required this.nombre, this.items = const [],this.id});
 
   factory CategoryOrder.fromJson(Map<dynamic,dynamic> json){
     List listItems=json["items"] is List?json["items"]:[];
     listItems.removeWhere((element) => element.isEmpty);
     return CategoryOrder(
         nombre: json["nombre"],
-        items: listItems.map((e) => Item.fromJson(e)).toList()
+        id: json["id"] ?? json["_id"] ?? ""
     );
   }
 

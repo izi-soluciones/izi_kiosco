@@ -40,7 +40,7 @@ class ConfigDevice {
   final bool demo;
   final int? timeMessage;
   final bool isRetail;
-  final int? almacen;
+  final String? almacen;
   final String? actividadEconomica;
 
   const ConfigDevice(
@@ -55,7 +55,7 @@ class ConfigDevice {
       video: jsonObj?["video"] is String ? jsonObj!["video"] : null,
       demo: jsonObj?["demo"] is bool ? jsonObj!["demo"] : false,
       isRetail: jsonObj?["isRetail"] is bool ? jsonObj!["isRetail"] : false,
-      almacen: jsonObj?["almacen"] is int ? jsonObj!["almacen"] : null,
+      almacen: jsonObj?["almacen"] is String ? jsonObj!["almacen"] : null,
       actividadEconomica:jsonObj?["actividadEconomica"] is int ? (jsonObj?["actividadEconomica"] as int).toString(): jsonObj?["actividadEconomica"] is String ?  jsonObj!["actividadEconomica"] : null,
       timeMessage:
           jsonObj?["timeMessage"] is int ? jsonObj!["timeMessage"] : null,

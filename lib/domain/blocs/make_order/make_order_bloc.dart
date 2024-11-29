@@ -20,8 +20,8 @@ part 'make_order_state.dart';
 class MakeOrderBloc extends Cubit<MakeOrderState> {
   final ComandaRepository _comandaRepository;
   final BusinessRepository _businessRepository;
-  MakeOrderBloc(this._comandaRepository,this._businessRepository, {String? tableId, int? numberDiners,Comanda? order})
-      : super(MakeOrderState.init(tableId, numberDiners,order));
+  MakeOrderBloc(this._comandaRepository,this._businessRepository, {String? tableId, int? numberDiners})
+      : super(MakeOrderState.init(tableId, numberDiners));
 
   init(AuthState authState) async {
     try {
@@ -32,12 +32,28 @@ class MakeOrderBloc extends Cubit<MakeOrderState> {
       if (indexCurrency != -1) {
         currentCurrency = authState.currencies.elementAtOrNull(indexCurrency);
       }
-      
-      
+
+
 
       List<CategoryOrder> list = await _comandaRepository.getCategories(
-          sucursal: authState.currentSucursal?.id ?? 0,
-          contribuyente: authState.currentSucursal?.id ?? 0);
+        sucursal: 0,
+          contribuyente: authState.currentContribuyente?.id ?? 0);
+      list.sort(
+            (a, b) => a.nombre.compareTo(b.nombre),
+      );
+
+      List<Item> listItems = await _comandaRepository.getSaleItems(catalog: authState.currentSucursal?.catalogo??"");
+      for (var cat in list) {
+        List<Item> itemsCat = [];
+        for (var i in listItems) {
+          if (i.categoriaId == cat.id && i.categoriaId != null) {
+            i.categoria = cat.nombre;
+            itemsCat.add(i);
+          }
+        }
+        cat.items = itemsCat;
+      }
+      list.removeWhere((element) => element.items.isEmpty);
       var indexAll = list.indexWhere((element) => element.nombre == " Todos");
       CategoryOrder? all;
       List<Item> itemsFeatured=[];
