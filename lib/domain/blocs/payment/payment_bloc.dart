@@ -371,7 +371,6 @@ class PaymentBloc extends Cubit<PaymentState> {
 
       Charge charge =
           await _comandaRepository.generatePaymentAttempt(newPayment);
-      emit(state.copyWith(status: PaymentStatus.cardProcessing));
       await _listenPaymentRetail(authState, charge);
       CardPayment cardPayment;
       if (linkser) {
@@ -394,6 +393,7 @@ class PaymentBloc extends Cubit<PaymentState> {
           }
         }
       }
+      emit(state.copyWith(status: PaymentStatus.processingOrder));
       var success = false;
       for (var i = 0; i < 10; i++) {
         try {
@@ -521,7 +521,6 @@ class PaymentBloc extends Cubit<PaymentState> {
 
   Future<bool> _generateRetailQR(AuthState authState) async {
     if (authState.currentDevice?.config.demo == true) {
-      emit(state.copyWith(status: PaymentStatus.cardProcessing));
 
       var documentType = state.documentType;
       if (state.documentNumber.value.isEmpty && state.usaSiat) {
@@ -547,6 +546,7 @@ class PaymentBloc extends Cubit<PaymentState> {
       Charge charge =
           await _comandaRepository.generatePaymentAttempt(newPayment);
       await _listenPaymentRetail(authState, charge);
+      emit(state.copyWith(status: PaymentStatus.processingOrder));
       var success = false;
       for (var i = 0; i < 10; i++) {
         try {
