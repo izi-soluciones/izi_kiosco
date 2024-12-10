@@ -446,7 +446,6 @@ class PaymentBloc extends Cubit<PaymentState> {
       Charge charge = await _comandaRepository.generatePayment(
           contribuyenteId: authState.currentContribuyente?.id ?? 0,
           payment: newPayment);
-      emit(state.copyWith(status: PaymentStatus.cardProcessing));
       await _saveAndListenPaymentOrder(authState, charge);
       CardPayment cardPayment;
       if (linkser) {
@@ -469,6 +468,7 @@ class PaymentBloc extends Cubit<PaymentState> {
           }
         }
       }
+      emit(state.copyWith(status: PaymentStatus.processingOrder));
       var success = false;
       for (var i = 0; i < 10; i++) {
         try {
@@ -595,7 +595,6 @@ class PaymentBloc extends Cubit<PaymentState> {
 
   Future<bool> _generateOrderQR(AuthState authState) async {
     if (authState.currentDevice?.config.demo == true) {
-      emit(state.copyWith(status: PaymentStatus.cardProcessing));
       PaymentDto newPayment = PaymentDto(
           orderId: state.paymentObj?.id ?? 0,
           date: DateTime.now(),
@@ -611,6 +610,7 @@ class PaymentBloc extends Cubit<PaymentState> {
           contribuyenteId: authState.currentContribuyente?.id ?? 0,
           payment: newPayment);
       await _saveAndListenPaymentOrder(authState, charge);
+      emit(state.copyWith(status: PaymentStatus.processingOrder));
       var success = false;
       for (var i = 0; i < 10; i++) {
         try {
