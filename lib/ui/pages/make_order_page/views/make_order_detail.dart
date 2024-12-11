@@ -40,8 +40,9 @@ class _MakeOrderDetailState extends State<MakeOrderDetail> {
     final ru = ResponsiveUtils(context);
     return Container(
       decoration: const BoxDecoration(
+        color: IziColors.greyBurgerKing,
         border: Border(
-          top: BorderSide(color: IziColors.grey35, width: 1),
+          top: BorderSide(color: IziColors.grey55, width: 1),
         ),
       ),
       child: Column(
@@ -67,7 +68,7 @@ class _MakeOrderDetailState extends State<MakeOrderDetail> {
                   padding: const EdgeInsets.all(32),
                   child: Center(
                     child: IziText.body(
-                        color: IziColors.grey,
+                        color: IziColors.darkGrey85,
                         text:
                             LocaleKeys.makeOrder_body_addDishesOrDrinks.tr(),
                         fontWeight: FontWeight.w400),

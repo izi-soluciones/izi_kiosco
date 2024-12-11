@@ -225,7 +225,7 @@ class _PaymentPageInvoiceState extends State<PaymentPageInvoice> {
                     borderRadius: BorderRadius.circular(6),
                     child: Ink(
                       decoration: BoxDecoration(
-                          color: IziColors.secondary,
+                          color: IziColors.primary,
                           borderRadius: BorderRadius.circular(6)),
                       child: Padding(
                         padding: const EdgeInsets.symmetric(

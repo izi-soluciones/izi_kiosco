@@ -21,6 +21,7 @@ class PaymentMethodBtn extends StatelessWidget {
       child: InkWell(
         onTap: onPressed,
         child: IziCard(
+          background: IziColors.greyBurgerKing,
           padding:  EdgeInsets.symmetric(vertical: ru.gtSm()?40:16,horizontal: 20),
           child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,

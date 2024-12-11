@@ -235,7 +235,7 @@ class _MakeOrderRetailScanState extends State<MakeOrderRetailScan> {
                                 "${LocaleKeys.makeOrderRetail_scan_quantity.tr()}: ",
                             style: const TextStyle(
                               fontFamily:
-                                  IziTypographyConfig.familyHindSiliguri,
+                                  IziTypographyConfig.familyFlame,
                               color: IziColors.darkGrey,
                               fontWeight: FontWeight.w400,
                             )),
@@ -243,7 +243,7 @@ class _MakeOrderRetailScanState extends State<MakeOrderRetailScan> {
                             text: "${item.cantidad}",
                             style: const TextStyle(
                               fontFamily:
-                                  IziTypographyConfig.familyHindSiliguri,
+                                  IziTypographyConfig.familyFlame,
                               color: IziColors.primaryDarken,
                               fontWeight: FontWeight.w400,
                             )),

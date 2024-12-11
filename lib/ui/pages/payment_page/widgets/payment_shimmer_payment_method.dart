@@ -28,7 +28,7 @@ class PaymentShimmerPaymentMethod extends StatelessWidget {
             padding: const EdgeInsets.symmetric(vertical: 32),
             alignment: Alignment.center,
             child: Shimmer.fromColors(
-              baseColor: IziColors.grey25,
+              baseColor: IziColors.greyBurgerKing,
               highlightColor: IziColors.lightGrey30,
               direction: ShimmerDirection.ltr,
               period: const Duration(seconds: 1),
@@ -50,7 +50,7 @@ class PaymentShimmerPaymentMethod extends StatelessWidget {
           child: SingleChildScrollView(
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
             child: Shimmer.fromColors(
-              baseColor: IziColors.grey25,
+              baseColor: IziColors.greyBurgerKing,
               highlightColor: IziColors.lightGrey30,
               direction: ShimmerDirection.ltr,
               period: const Duration(seconds: 1),

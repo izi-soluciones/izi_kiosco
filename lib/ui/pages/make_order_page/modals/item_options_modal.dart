@@ -158,7 +158,7 @@ class _ItemOptionsModalState extends State<ItemOptionsModal> {
                                           child: Row(
                                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                             children: [
-                                              Flexible(child: IziText.body(color: IziColors.darkGrey, text: "${e2.value.nombre}${e2.value.modPrecio>0? " (+${e2.value.modPrecio.moneyFormat(currency: widget.state.currentCurrency?.simbolo)})":""}", fontWeight: FontWeight.w600)),
+                                              Flexible(child: IziText.body(color: IziColors.darkGrey, text: "${e2.value.nombre}${e2.value.modPrecio>0? " (+${e2.value.modPrecio.moneyFormat(currency: widget.state.currentCurrency?.simbolo)})":""}", fontWeight: FontWeight.w400)),
                                               e1.isMultiple || e1.isLimitado!=null?
                                               IziSwitch( value: e2.value.check, onChanged: (value){
                                                 setState(() {

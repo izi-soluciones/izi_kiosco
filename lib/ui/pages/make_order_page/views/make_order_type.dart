@@ -57,7 +57,7 @@ class _MakeOrderTypeState extends State<MakeOrderType> {
                                   text: "${LocaleKeys
                                       .makeOrder_body_selectWhere
                                       .tr()}:",
-                                  fontWeight: FontWeight.w500),
+                                  fontWeight: FontWeight.w600),
                               const SizedBox(
                                 height: 60,
                               ),
@@ -95,6 +95,7 @@ class _MakeOrderTypeState extends State<MakeOrderType> {
         AspectRatio(
             aspectRatio: 0.8,
           child: IziCard(
+            background: IziColors.greyBurgerKing,
             onPressed: (){
               context.read<MakeOrderBloc>().changeTakeAway(takeAway);
               context.read<MakeOrderBloc>().changeStepStatus(1);
@@ -112,7 +113,7 @@ class _MakeOrderTypeState extends State<MakeOrderType> {
           ),
         ),
         const SizedBox(height: 12,),
-        IziText.titleBig(color: IziColors.darkGrey85, text: text,maxLines: 5,textAlign: TextAlign.center)
+        IziText.titleBig(color: IziColors.darkGrey85, text: text,maxLines: 5,textAlign: TextAlign.center,fontWeight: FontWeight.w400)
       ],
     );
   }

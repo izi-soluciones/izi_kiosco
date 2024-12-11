@@ -18,7 +18,7 @@ class MakeOrderCategory extends StatelessWidget {
       child: Ink(
         padding: const EdgeInsets.fromLTRB(32,10,32,5),
         decoration: BoxDecoration(
-          color: active? IziColors.dark:IziColors.grey25,
+          color: active? IziColors.dark:IziColors.greyBurgerKing,
           borderRadius: BorderRadius.circular(8)
         ),
         child: Column(

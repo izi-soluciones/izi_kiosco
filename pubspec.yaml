@@ -135,13 +135,10 @@ flutter:
   # list giving the asset and other descriptors for the font. For
   # example:
   fonts:
-    - family: HindSiliguri
+    - family: Flame
       fonts:
-        - asset: 'assets/fonts/HindSiliguri-Bold.ttf'
-        - asset: 'assets/fonts/HindSiliguri-Light.ttf'
-        - asset: 'assets/fonts/HindSiliguri-Medium.ttf'
-        - asset: 'assets/fonts/HindSiliguri-Regular.ttf'
-        - asset: 'assets/fonts/HindSiliguri-SemiBold.ttf'
+        - asset: 'assets/fonts/Flame-Bold.otf'
+        - asset: 'assets/fonts/Flame-Regular.otf'
     - family: IziIcons
       fonts:
         - asset: assets/icons/Iconsizi.ttf

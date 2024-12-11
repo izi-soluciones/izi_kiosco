@@ -17,6 +17,7 @@ class Item {
   num? valor;
   num precioModificadores;
   String? detalle;
+  List<Ingredient> ingredientes;
 
   Item(
       {required this.cantidad,
@@ -35,12 +36,16 @@ class Item {
       required this.categoria,
       required this.categoriaId,
       required this.centroProduccion,
+        required this.ingredientes,
         this.precioModificadores = 0,
       required this.codigoBarras});
   factory Item.fromJson(Map<dynamic, dynamic> json) {
     List listModificadores =
         json["modificadores"] is List ? json["modificadores"] : [];
     listModificadores.removeWhere((element) => element.isEmpty);
+    List listIngredientes =
+    json["ingredientes"] is List ? json["ingredientes"] : [];
+    listIngredientes.removeWhere((element) => element.isEmpty);
     return Item(
         nombre: json["nombre"] ?? "",
         cantidad: json["cantidad"] ?? 0,
@@ -51,6 +56,8 @@ class Item {
         detalle: json["detalle"],
         modificadores:
             listModificadores.map((e) => Modifier.fromJson(e)).toList(),
+        ingredientes:
+        listIngredientes.map((e) => Ingredient.fromJson(e)).toList(),
         modificadoresRaw: json["modificadores"],
         precioUnitario: json["precioUnitario"] ?? 0,
         activo: json["activo"] ?? false,
@@ -73,6 +80,7 @@ class Item {
       nombre: nombre,
       valor: valor,
       activo: activo,
+      ingredientes: ingredientes,
       id: id,
       detalle: detalle,
       precioUnitario: precioUnitario,
@@ -103,6 +111,7 @@ class Item {
       "descripcion": descripcion,
       "imagen": imagen,
       "modificadoresEdit": modificadores.map((e) => e.toJson()).toList(),
+      "ingredientes": ingredientes.map((e) => e.toJson()).toList(),
       if(detalle != null) "detalle":detalle,
       "modificadores": modificadoresNames,
       "nombre": nombre,
@@ -186,7 +195,7 @@ class ModifierItem {
         modPrecio: json["modPrecio"] ?? 0,
         check: json["check"] ?? false,
         defaultValue: json["default"] ?? false,
-        ingredientes: []//listIngredientes
+        ingredientes: listIngredientes
             .map((e) => ModifierIngredient.fromJson(e))
             .toList());
   }
@@ -208,25 +217,89 @@ class ModifierItem {
 class ModifierIngredient {
   String articulo;
   num cantidad;
-  int item;
+  String item;
+  Map customItem;
   String tipoUnidad;
 
   ModifierIngredient(
       {required this.articulo,
       required this.cantidad,
       required this.item,
+        required this.customItem,
       required this.tipoUnidad});
 
-  factory ModifierIngredient.fromJson(Map<dynamic, dynamic> json) =>
-      ModifierIngredient(
-          articulo: json["articulo"] ?? "",
-          cantidad: json["cantidad"] ?? 0,
-          item: json["item"],
-          tipoUnidad: json["tipoUnidad"]);
+  factory ModifierIngredient.fromJson(Map<dynamic, dynamic> json) {
+
+    String item="";
+    Map customItem = {};
+    if(json["item"] is Map){
+      item = json["item"]["id"];
+      customItem = json["item"]["customItem"];
+    }
+    else if(json["item"] is String){
+      item = json["item"];
+    }
+    return ModifierIngredient(
+        articulo: json["articulo"] ?? "",
+        cantidad: json["cantidad"] ?? 0,
+        item: item,
+        customItem: customItem,
+        tipoUnidad: json["tipoUnidad"]);
+  }
 
   ModifierIngredient copyWith() => ModifierIngredient(
       articulo: articulo,
       cantidad: cantidad,
+      customItem: customItem,
+      item: item,
+      tipoUnidad: tipoUnidad);
+
+  Map<String,dynamic> toJson()=>{
+    "articulo": articulo,
+    "cantidad": cantidad,
+    "customItem": customItem,
+    "item": item,
+    "tipoUnidad": tipoUnidad
+  };
+}
+
+class Ingredient {
+  String articulo;
+  num cantidad;
+  Map customItem;
+  String item;
+  String tipoUnidad;
+
+  Ingredient(
+      {required this.articulo,
+        required this.cantidad,
+        required this.item,
+        required this.customItem,
+        required this.tipoUnidad});
+
+  factory Ingredient.fromJson(Map<dynamic, dynamic> json) {
+    String item="";
+    Map customItem = {};
+    if(json["item"] is Map){
+      item = json["item"]["id"];
+      customItem = json["item"]["customItem"];
+    }
+    else if(json["item"] is String){
+      item = json["item"];
+    }
+    return
+      Ingredient(
+          articulo: json["articulo"] ?? "",
+          cantidad: json["cantidad"] ?? 0,
+          customItem: customItem,
+          item: item,
+          tipoUnidad: json["tipoUnidad"]);
+  }
+
+  Ingredient copyWith() => Ingredient(
+      articulo: articulo,
+      cantidad: cantidad,
+      customItem: customItem,
       item: item,
       tipoUnidad: tipoUnidad);
 
@@ -234,6 +307,7 @@ class ModifierIngredient {
     "articulo": articulo,
     "cantidad": cantidad,
     "item": item,
+    "customItem": customItem,
     "tipoUnidad": tipoUnidad
   };
 }

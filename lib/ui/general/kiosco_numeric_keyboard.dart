@@ -144,7 +144,7 @@ class KioscoNumericKeyboard extends StatelessWidget {
           borderRadius: BorderRadius.circular(8),
           child: Ink(
             decoration: BoxDecoration(
-              color: IziColors.grey25,
+              color: IziColors.greyBurgerKing,
               borderRadius: BorderRadius.circular(8),
             ),
             child: Padding(

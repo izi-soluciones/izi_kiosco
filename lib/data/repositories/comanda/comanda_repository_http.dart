@@ -57,6 +57,7 @@ class ComandaRepositoryHttp extends ComandaRepository {
         queryParameters: {
           "catalogo": catalog,
           "habilitadoKiosco": 1,
+          "parametrosIngredientes": true,
           "seVende": true
         },
         options: Options(

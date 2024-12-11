@@ -54,13 +54,9 @@ class MakeOrderBloc extends Cubit<MakeOrderState> {
         cat.items = itemsCat;
       }
       list.removeWhere((element) => element.items.isEmpty);
-      var indexAll = list.indexWhere((element) => element.nombre == " Todos");
-      CategoryOrder? all;
       List<Item> itemsFeatured=[];
-      if (indexAll != -1) {
-        all = list.removeAt(indexAll);
-        itemsFeatured=all.items.where((element) => element.customItem is Map && element.customItem?["kiosco"]?["destacado"]==true).toList();
-      }
+      itemsFeatured=listItems.where((element) => element.customItem is Map && element.customItem?["kiosco"]?["destacado"]==true).toList();
+
       list.sort(
         (a, b) {
           return a.nombre.toLowerCase().compareTo(b .nombre.toLowerCase());

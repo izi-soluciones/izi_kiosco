@@ -20,10 +20,9 @@ class MakeOrderItemLg extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       elevation: 0,
-      color: IziColors.white,
+      color: IziColors.greyBurgerKing,
       shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(8),
-        side: const BorderSide(color: IziColors.grey25,width: 1)
       ),
       clipBehavior: Clip.hardEdge,
       child: InkWell(
@@ -39,10 +38,10 @@ class MakeOrderItemLg extends StatelessWidget {
                     AspectRatio(
                       aspectRatio: 1,
                       child: Ink(
-                        color: IziColors.grey25,
+                        color: IziColors.greyBurgerKing,
                         child:
                         item.imagen==null || item.imagen?.isEmpty==true?
-                        const FittedBox(child: Icon(IziIcons.dish,color: IziColors.warmLighten)):
+                        const FittedBox(child: Icon(IziIcons.dish,color: IziColors.grey)):
                         CachedNetworkImage(
                           imageBuilder: (context, imageProvider) {
                             return Ink.image(
@@ -57,7 +56,7 @@ class MakeOrderItemLg extends StatelessWidget {
                             return const Center(child: CircularProgressIndicator(strokeWidth: 2,color: IziColors.dark));
                           },
                           errorWidget: (context, url, error)  {
-                            return const FittedBox(child: Icon(IziIcons.dish,color: IziColors.warmLighten));
+                            return const FittedBox(child: Icon(IziIcons.dish,color: IziColors.grey));
                           },
                         ),
                       ),
@@ -74,6 +73,7 @@ class MakeOrderItemLg extends StatelessWidget {
                             children: [
                               IziText.titleSmall(height: 1.1,maxLines: 3,color: IziColors.dark, text: item.nombre,textAlign: TextAlign.start),
                               const SizedBox(height: 4,),
+                              if(item.descripcion?.isNotEmpty==true)
                               IziText.label(maxLines: 5,color: IziColors.darkGrey85, text: item.descripcion??"",textAlign: TextAlign.start,fontWeight: FontWeight.w400),
 
                             ],

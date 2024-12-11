@@ -170,6 +170,7 @@ class _MakeOrderConfirmState extends State<MakeOrderConfirm> {
   _listItems(MakeOrderState state) {
     var cIndex = -1;
     return IziCard(
+      background: IziColors.greyBurgerKing,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: state.itemsSelected.asMap().entries.map((e) {

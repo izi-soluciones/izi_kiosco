@@ -64,24 +64,30 @@ class _PaymentPageQRState extends State<PaymentPageQR> {
         }),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
           children: [
-            ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 600),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  IziText.titleMedium(
-                      color: IziColors.dark,
-                      text: LocaleKeys.payment_titles_qrPayment.tr()),
-                  const SizedBox(
-                    height: 8,
+            Flexible(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 600),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      IziText.titleMedium(
+                          color: IziColors.dark,
+                          text: LocaleKeys.payment_titles_qrPayment.tr()),
+                      const SizedBox(
+                        height: 8,
+                      ),
+                      IziText.titleSmall(
+                          textAlign: TextAlign.center,
+                          color: IziColors.dark,
+                          text: LocaleKeys.payment_subtitles_scanQRtoPay.tr(),
+                          fontWeight: FontWeight.w500),
+                    ],
                   ),
-                  IziText.titleSmall(
-                      textAlign: TextAlign.center,
-                      color: IziColors.dark,
-                      text: LocaleKeys.payment_subtitles_scanQRtoPay.tr(),
-                      fontWeight: FontWeight.w500),
-                ],
+                ),
               ),
             ),
           ],
