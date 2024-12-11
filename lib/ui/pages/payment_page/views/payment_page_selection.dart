@@ -91,7 +91,7 @@ class PaymentPageSelection extends StatelessWidget {
               context.read<PaymentBloc>().selectPayment(PaymentType.qr,authState);
               },
             icon: IziIcons.qrCode,
-            color: IziColors.primary,
+            color: IziColors.secondary,
             text: LocaleKeys.payment_buttons_qr.tr(),
         ),
         if(authState.currentDevice?.config.ipAtc!=null||authState.currentDevice?.config.ipLinkser!=null )
@@ -109,7 +109,7 @@ class PaymentPageSelection extends StatelessWidget {
               context.read<PaymentBloc>().selectPayment(PaymentType.cashRegister,authState);
               },
             icon: IziIcons.registerMachine,
-            color: IziColors.greenBurgerKing,
+            color: IziColors.secondary,
             text: LocaleKeys.payment_buttons_checkout.tr(),
         )
       ],
