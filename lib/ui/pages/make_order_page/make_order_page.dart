@@ -42,6 +42,7 @@ class _MakeOrderPageState extends State<MakeOrderPage> {
                 title: LocaleKeys.warningCashRegisters_title.tr(),
                 description: ""
             )).then((value){
+              context.read<PageUtilsBloc>().closeScreenActive();
               GoRouter.of(context).goNamed(RoutesKeys.home);
             });
           }
