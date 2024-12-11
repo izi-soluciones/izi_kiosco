@@ -258,13 +258,10 @@ class PaymentBloc extends Cubit<PaymentState> {
         emit(state.copyWith(status: PaymentStatus.processingOrder));
         Comanda comanda =
             await _comandaRepository.markAsCreated(state.paymentObj?.id ?? 0);
-        if (comanda.numero is int) {
+        if (comanda.custom is Map && comanda.custom["simphony"]?["header"]?["checkNumber"]!=null) {
           _printRolloOrder(authState,
-              orderNumber: (comanda.numero as int),
-              customOrderNumber:
-                  comanda.custom is Map && comanda.custom["numeroCustom"] is int
-                      ? comanda.custom["numeroCustom"]
-                      : null);
+              orderNumber: (comanda.custom["simphony"]["header"]["checkNumber"] as int),
+              customOrderNumber:null);
         }
         emit(state.copyWith(
             step: 5,

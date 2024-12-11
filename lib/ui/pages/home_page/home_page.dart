@@ -75,40 +75,36 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<AuthBloc, AuthState>(builder: (context, state) {
-      return LayoutBuilder(
-        builder: (context,layout) {
-          return Stack(
-            children: [
-              const Center(
-                child: SizedBox(
-                  width: 30,
-                  height: 30,
-                  child: CircularProgressIndicator(
-                    color: IziColors.primary,
+      return  Listener(
+        onPointerDown: (val){
+          setState(() {
+            showVideo=false;
+            _initVideo(context: context);
+            GoRouter.of(context).goNamed(RoutesKeys.makeOrder);
+            context.read<PageUtilsBloc>().initScreenActive();
+          });
+        },
+        child: Stack(
+              children: [
+                const Center(
+                  child: SizedBox(
+                    width: 30,
+                    height: 30,
+                    child: CircularProgressIndicator(
+                      color: IziColors.primary,
+                    ),
                   ),
                 ),
-              ),
-              if (showVideo && _controller!=null && _controller?.value.isInitialized==true)
-                Positioned.fill(
-                  child: Listener(
-                    onPointerDown: (val){
-                      setState(() {
-                        showVideo=false;
-                        _initVideo(context: context);
-                        GoRouter.of(context).goNamed(RoutesKeys.makeOrder);
-                        context.read<PageUtilsBloc>().initScreenActive();
-                      });
-                    },
-                    child:  FittedBox(
+                if (showVideo && _controller!=null && _controller?.value.isInitialized==true)
+                  Positioned.fill(
+                    child: FittedBox(
                         alignment: Alignment.center,
                         fit: BoxFit.cover,child: SizedBox(
                         height: _controller?.value.size.height,
                         width: _controller?.value.size.width,child: VideoPlayer(_controller!))),
-                  ),
-                )
-            ],
-          );
-        }
+                  )
+              ],
+            ),
       );
     });
   }
