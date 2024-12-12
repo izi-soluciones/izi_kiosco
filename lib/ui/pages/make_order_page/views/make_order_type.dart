@@ -64,11 +64,11 @@ class _MakeOrderTypeState extends State<MakeOrderType> {
                               Row(
                                 children: [
                                   Expanded(
-                                      child: _buttonSelect(IziIcons.hereOrder, LocaleKeys.makeOrder_body_eatHere.tr(), false)
+                                      child: _buttonSelect(IziIcons.bkComerAqui, LocaleKeys.makeOrder_body_eatHere.tr(), false)
                                   ),
                                   const SizedBox(width: 24,),
                                   Expanded(
-                                      child: _buttonSelect(IziIcons.takeAwayOrder, LocaleKeys.makeOrder_body_takeAway.tr(), true)
+                                      child: _buttonSelect(IziIcons.bkParaLlevar, LocaleKeys.makeOrder_body_takeAway.tr(), true)
                                   )
                                 ],
                               ),

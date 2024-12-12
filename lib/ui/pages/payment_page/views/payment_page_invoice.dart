@@ -49,6 +49,14 @@ class _PaymentPageInvoiceState extends State<PaymentPageInvoice> {
 
   int qrLock = 0;
   int qrRemaining = 0;
+  @override
+  void initState() {
+    businessNameController.text = widget.state.businessName.value;
+    phoneController.text = widget.state.phoneNumber.value;
+    documentNumberController.text = widget.state.documentNumber.value;
+    complementController.text = widget.state.complement.value;
+    super.initState();
+  }
 
 
   @override
@@ -63,12 +71,12 @@ class _PaymentPageInvoiceState extends State<PaymentPageInvoice> {
               IziHeaderKiosk(onBack: () {
                 context.read<PaymentBloc>().changeStep(1);
               }),
-              ConstrainedBox(
-                constraints: const BoxConstraints(
-                  maxWidth: 600,
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(
+                    maxWidth: 600,
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [

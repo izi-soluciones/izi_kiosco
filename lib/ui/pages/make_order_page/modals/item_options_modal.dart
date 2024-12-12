@@ -1,3 +1,4 @@
+import 'package:collection/collection.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -118,7 +119,7 @@ class _ItemOptionsModalState extends State<ItemOptionsModal> {
                                   ),
                                   child: ExpansionTile(
                                     key: titleKeys[entry.key],
-                                    initiallyExpanded: e1.isObligatorio,
+                                    initiallyExpanded: e1.isObligatorio || e1.caracteristicas.firstWhereOrNull((element) => element.check)!=null,
                                     tilePadding: const EdgeInsets.symmetric(horizontal: 32,vertical: 8),
                                     title: IziText.titleSmall(color: entry.key==indexRequired?IziColors.red:IziColors.dark, text: e1.nombre+(e1.isObligatorio?"*":"")),
                                     children:

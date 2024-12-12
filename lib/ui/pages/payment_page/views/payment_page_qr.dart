@@ -78,7 +78,7 @@ class _PaymentPageQRState extends State<PaymentPageQR> {
                           color: IziColors.dark,
                           text: LocaleKeys.payment_titles_qrPayment.tr()),
                       const SizedBox(
-                        height: 8,
+                        height: 32,
                       ),
                       IziText.titleSmall(
                           textAlign: TextAlign.center,
@@ -92,6 +92,7 @@ class _PaymentPageQRState extends State<PaymentPageQR> {
             ),
           ],
         ),
+        const SizedBox(height: 16,),
         Flexible(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxHeight: 600),
@@ -173,9 +174,15 @@ class _PaymentPageQRState extends State<PaymentPageQR> {
     if (widget.state.qrCharge?.qrUrl != null) {
       return kIsWeb
           ? Center(
-            child: AspectRatio(
-                aspectRatio: 1,
-                child: WebImage(imageUrl: widget.state.qrCharge!.qrUrl!, )),
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              clipBehavior: Clip.antiAlias,
+              child: AspectRatio(
+                  aspectRatio: 1,
+                  child: WebImage(imageUrl: widget.state.qrCharge!.qrUrl!, )),
+            ),
           )
           : Image.network(widget.state.qrCharge!.qrUrl!, fit: BoxFit.contain);
     }

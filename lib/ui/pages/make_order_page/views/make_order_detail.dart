@@ -129,7 +129,7 @@ class _MakeOrderDetailState extends State<MakeOrderDetail> {
     context.read<MakeOrderBloc>().changeStepStatus(2);
   }
 
-  _item(BuildContext context,Item item, int indexCategory,
+  Widget _item(BuildContext context,Item item,
       int indexItem) {
     return SizedBox(
       width: 150,
@@ -139,7 +139,7 @@ class _MakeOrderDetailState extends State<MakeOrderDetail> {
             padding: const EdgeInsets.only(top: 5, right: 5),
             child: IziCard(
               onPressed: () {
-                _editItem(context, item, indexCategory, indexItem);
+                _editItem(context, item,indexItem);
               },
               child: Padding(
                 padding:
@@ -188,7 +188,7 @@ class _MakeOrderDetailState extends State<MakeOrderDetail> {
               onTap: () {
                 context
                     .read<MakeOrderBloc>()
-                    .removeItem(indexCategory, indexItem);
+                    .removeItem(indexItem);
               },
               child: Container(
                 decoration: const BoxDecoration(
@@ -216,28 +216,17 @@ class _MakeOrderDetailState extends State<MakeOrderDetail> {
         child: RowContainer(
           gap: 16,
           crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: widget.state.itemsSelected.asMap().entries.map((e) {
-            return RowContainer(
-              gap: 16,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                ...e.value.items.asMap().entries.map(
-                  (i) {
-                    return _item(
-                      context,
-                        i.value,
-                        e.key,
-                        i.key);
-                  },
-                )
-              ],
-            );
+          children: widget.state.itemsSelected.asMap().entries.map((i) {
+            return _item(
+                context,
+                i.value,
+                i.key);
           }).toList(),
         ),
       ),
     );
   }
-  _editItem(BuildContext context, Item item, int indexC, int indexI) {
+  _editItem(BuildContext context, Item item, int indexI) {
 
     CustomAlerts.defaultAlert(
         defaultScroll: false,
@@ -252,7 +241,7 @@ class _MakeOrderDetailState extends State<MakeOrderDetail> {
         var itemNew = result;
         context
             .read<MakeOrderBloc>()
-            .updateItemSelected(itemNew, indexC, indexI);
+            .updateItemSelected(itemNew, indexI);
       }
     });
     return;
@@ -261,10 +250,8 @@ class _MakeOrderDetailState extends State<MakeOrderDetail> {
 
   num _getTotal() {
     num total = 0;
-    for (var e in widget.state.itemsSelected) {
-      for (var i in e.items) {
-        total += i.cantidad * i.precioUnitario + i.precioModificadores;
-      }
+    for (var i in widget.state.itemsSelected) {
+      total += i.cantidad * i.precioUnitario + i.precioModificadores;
     }
     return total;
   }

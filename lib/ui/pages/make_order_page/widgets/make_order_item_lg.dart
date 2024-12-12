@@ -38,6 +38,7 @@ class MakeOrderItemLg extends StatelessWidget {
                     AspectRatio(
                       aspectRatio: 1,
                       child: Ink(
+                        padding: const EdgeInsets.all(10),
                         color: IziColors.greyBurgerKing,
                         child:
                         item.imagen==null || item.imagen?.isEmpty==true?

@@ -39,11 +39,9 @@ class _MakeOrderConfirmState extends State<MakeOrderConfirm> {
   bool loadingEmit = false;
   @override
   void initState() {
-    for (var c in widget.state.itemsSelected) {
-      List.generate(c.items.length, (index) {
-        controllers.add(TextEditingController());
-      });
-    }
+    List.generate(widget.state.itemsSelected.length, (index) {
+      controllers.add(TextEditingController());
+    });
     super.initState();
   }
 
@@ -52,19 +50,17 @@ class _MakeOrderConfirmState extends State<MakeOrderConfirm> {
     return BlocListener<MakeOrderBloc, MakeOrderState>(
         listener: (context, state) {
           int cIndex = 0;
-          for (var c in state.itemsSelected) {
-            for (var i in c.items) {
-              if (cIndex >= controllers.length - 1) {
-                controllers.add(TextEditingController());
-              }
-              if (controllers[cIndex].text == i.cantidad.toString()) {
-                cIndex++;
-                continue;
-              }
-              controllers[cIndex].text =
-                  i.cantidad > 0 ? i.cantidad.toString() : "0";
-              cIndex++;
+          for (var i in state.itemsSelected) {
+            if (cIndex >= controllers.length - 1) {
+              controllers.add(TextEditingController());
             }
+            if (controllers[cIndex].text == i.cantidad.toString()) {
+              cIndex++;
+              continue;
+            }
+            controllers[cIndex].text =
+            i.cantidad > 0 ? i.cantidad.toString() : "0";
+            cIndex++;
           }
         },
         child: Stack(
@@ -173,29 +169,19 @@ class _MakeOrderConfirmState extends State<MakeOrderConfirm> {
       background: IziColors.greyBurgerKing,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: state.itemsSelected.asMap().entries.map((e) {
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              ...e.value.items.asMap().entries.map(
-                (i) {
-                  cIndex++;
-                  return Container(
-                    decoration: BoxDecoration(
-                      border: e.key<state.itemsSelected.length-1 || i.key<e.value.items.length-1?const Border(bottom: BorderSide(color: IziColors.grey35,width: 1)):null
-                    ),
-                    child: _item(
-                      context,
-                        i.value,
-                        cIndex < controllers.length - 1
-                            ? controllers[cIndex]
-                            : null,
-                        e.key,
-                        i.key),
-                  );
-                },
-              )
-            ],
+        children: state.itemsSelected.asMap().entries.map((i) {
+          cIndex++;
+          return Container(
+            decoration: BoxDecoration(
+                border: i.key<state.itemsSelected.length-1?const Border(bottom: BorderSide(color: IziColors.grey35,width: 1)):null
+            ),
+            child: _item(
+                context,
+                i.value,
+                cIndex < controllers.length - 1
+                    ? controllers[cIndex]
+                    : null,
+                i.key),
           );
         }).toList(),
       ),
@@ -245,11 +231,11 @@ class _MakeOrderConfirmState extends State<MakeOrderConfirm> {
     );
   }
 
-  _item(BuildContext context,Item item, TextEditingController? controller, int indexCategory,
+  _item(BuildContext context,Item item, TextEditingController? controller,
       int indexItem) {
     return InkWell(
       onTap: () {
-        _editItem(context, item, indexCategory, indexItem);
+        _editItem(context, item, indexItem);
       },
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
@@ -379,9 +365,10 @@ class _MakeOrderConfirmState extends State<MakeOrderConfirm> {
                 buttonOnPressed: () {
                   context
                       .read<MakeOrderBloc>()
-                      .removeItem(indexCategory, indexItem);
-                  if (widget.state.itemsSelected.length == 1 &&
-                      widget.state.itemsSelected[0].items.length == 1) {
+                      .removeItem(indexItem);
+                  if (
+                  context
+                      .read<MakeOrderBloc>().state.itemsSelected.isEmpty) {
                     context.read<MakeOrderBloc>().changeStepStatus(1);
                   }
                 })
@@ -432,16 +419,14 @@ class _MakeOrderConfirmState extends State<MakeOrderConfirm> {
 
   num _getTotal(MakeOrderState state) {
     num total = 0;
-    for (var e in state.itemsSelected) {
-      for (var i in e.items) {
-        total += i.cantidad * i.precioUnitario + i.precioModificadores;
-      }
+    for (var i in state.itemsSelected) {
+      total += i.cantidad * i.precioUnitario + i.precioModificadores;
     }
     return total;
   }
 
 
-  _editItem(BuildContext context, Item item, int indexC, int indexI) {
+  _editItem(BuildContext context, Item item, int indexI) {
 
     CustomAlerts.defaultAlert(
         defaultScroll: false,
@@ -456,7 +441,7 @@ class _MakeOrderConfirmState extends State<MakeOrderConfirm> {
         var itemNew = result;
         context
             .read<MakeOrderBloc>()
-            .updateItemSelected(itemNew, indexC, indexI);
+            .updateItemSelected(itemNew, indexI);
       }
     });
     return;

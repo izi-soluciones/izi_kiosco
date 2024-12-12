@@ -141,23 +141,14 @@ class Routes {
               name: RoutesKeys.makeOrder,
               path: RoutesKeys.makeOrderLink,
               pageBuilder: (BuildContext context, GoRouterState state) {
-                String? tableId;
-                int? numberDiners;
                 bool fromTables = false;
                 if (state.extra is Map) {
-                  tableId = (state.extra as Map)["tableId"];
-                  numberDiners = (state.extra as Map)["numberDiners"];
                   fromTables = (state.extra as Map)["fromTables"] ?? false;
                 }
+                context.read<MakeOrderBloc>().initOrder();
+                context.read<MakeOrderBloc>().init(context.read<AuthBloc>().state);
                 return NoTransitionPage(
-                    child: BlocProvider(
-                  create: (context) => MakeOrderBloc(
-                      ComandaRepositoryHttp(), BusinessRepositoryHttp(),
-                      numberDiners: numberDiners,
-                      tableId: tableId,)
-                    ..init(context.read<AuthBloc>().state),
-                  child: MakeOrderPage(fromTables: fromTables),
-                ));
+                    child:MakeOrderPage(fromTables: fromTables));
               },
             ),
             GoRoute(

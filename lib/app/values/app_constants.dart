@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:izi_design_system/tokens/izi_icons.dart';
 
 class AppConstants{
   static num paginationSize = 15;
@@ -25,16 +26,15 @@ class AppConstants{
 
 
   static const categoryIcons=[
-    CategoryIcons(["postre","alfajores"], Icons.bakery_dining_outlined),
-    CategoryIcons(["sandwich","sándwich"], Icons.fastfood_outlined),
-    CategoryIcons(["hamburguesa",'burguer'], Icons.fastfood_outlined),
-    CategoryIcons(["combo","pastas"], Icons.restaurant_menu),
-    CategoryIcons(["desayuno"], Icons.free_breakfast_outlined),
-    CategoryIcons(["extras"], Icons.plus_one),
-    CategoryIcons(["jugo","bebidas","gaseosas"], Icons.local_drink_outlined),
-    CategoryIcons(["car"], Icons.directions_car),
-    CategoryIcons(["niños"], Icons.child_care_outlined),
-    CategoryIcons(["otras"], Icons.restaurant)
+    CategoryIcons(["Comer"], IziIcons.bkComerAqui),
+    CategoryIcons(["pollo"], IziIcons.bkComboPollo),
+    CategoryIcons(["parrilla"], IziIcons.bkComboParrilla),
+    CategoryIcons(["sueltas"], IziIcons.bkSueltas),
+    CategoryIcons(["postres"], IziIcons.bkPostres),
+    CategoryIcons(["ensaladas"], IziIcons.bkEnsaladas),
+    CategoryIcons(["descuento"], IziIcons.bkCoreDescuento),
+    CategoryIcons(["adicionales"], IziIcons.bkComplementos),
+    CategoryIcons(["kids"], IziIcons.bkComplementos),
   ];
 }
 class CategoryIcons{

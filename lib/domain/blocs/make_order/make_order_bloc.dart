@@ -20,8 +20,8 @@ part 'make_order_state.dart';
 class MakeOrderBloc extends Cubit<MakeOrderState> {
   final ComandaRepository _comandaRepository;
   final BusinessRepository _businessRepository;
-  MakeOrderBloc(this._comandaRepository,this._businessRepository, {String? tableId, int? numberDiners})
-      : super(MakeOrderState.init(tableId, numberDiners));
+  MakeOrderBloc(this._comandaRepository,this._businessRepository)
+      : super(MakeOrderState.init());
 
   init(AuthState authState) async {
     try {
@@ -104,18 +104,28 @@ class MakeOrderBloc extends Cubit<MakeOrderState> {
     emit(state.copyWith(indexCategory: index));
   }
 
-  removeItem(int indexC, int indexItem) {
-    List<CategoryOrder> categories = List.from(state.itemsSelected);
+  removeItem(int indexItem) {
+    List<Item> categories = List.from(state.itemsSelected);
+    categories.removeAt(indexItem);
+    emit(state.copyWith(itemsSelected: categories));
+  }
+  reloadItems() {
+    List<Item> categories = [];
     for (var i = 0; i < state.itemsSelected.length; i++) {
-      categories[i] = state.itemsSelected[i].copyWith();
-    }
-    categories[indexC].items.removeAt(indexItem);
-    if (categories[indexC].items.isEmpty) {
-      categories.removeAt(indexC);
+      var item = state.itemsSelected[i].copyWith();
+      num pM = 0;
+      for (var m in item.modificadores) {
+        for (var c in m.caracteristicas) {
+          if (c.check) {
+            pM += c.modPrecio * item.cantidad;
+          }
+        }
+      }
+      item.precioModificadores = pM;
+      categories.add(item);
     }
     emit(state.copyWith(itemsSelected: categories));
   }
-
   addItem({int? index, required Item item}) {
     num pM = 0;
     for (var m in item.modificadores) {
@@ -126,81 +136,53 @@ class MakeOrderBloc extends Cubit<MakeOrderState> {
       }
     }
     item.precioModificadores = pM;
-    List<CategoryOrder> categories = List.from(state.itemsSelected);
-    for (var i = 0; i < state.itemsSelected.length; i++) {
-      categories[i] = state.itemsSelected[i].copyWith();
-    }
-    var indexCat =
-        categories.indexWhere((element) => element.id == item.categoriaId);
-    if (indexCat == -1) {
-      categories.add(CategoryOrder(
-          nombre: item.categoria ?? "", id: item.categoriaId, items: [item]));
-    } else {
-      int? indexItem;
-      for (var iOld = 0; iOld < categories[indexCat].items.length; iOld++) {
-        if (categories[indexCat].items[iOld].id != item.id) {
-          continue;
-        }
-        var same = true;
-        for (int i = 0; i < item.modificadores.length; i++) {
-          for (int m = 0;
-              m < item.modificadores[i].caracteristicas.length;
-              m++) {
-            if (item.modificadores[i].caracteristicas[m].check !=
-                categories[indexCat]
-                    .items[iOld]
-                    .modificadores[i]
-                    .caracteristicas[m]
-                    .check) {
-              same = false;
-              break;
-            }
+    List<Item> categories = List.from(state.itemsSelected);
+    int? indexItem;
+    for (var iOld = 0; iOld < categories.length; iOld++) {
+      if (categories[iOld].id != item.id) {
+        continue;
+      }
+      var same = true;
+      for (int i = 0; i < item.modificadores.length; i++) {
+        for (int m = 0;
+        m < item.modificadores[i].caracteristicas.length;
+        m++) {
+          if (item.modificadores[i].caracteristicas[m].check !=
+              categories[iOld]
+                  .modificadores[i]
+                  .caracteristicas[m]
+                  .check) {
+            same = false;
+            break;
           }
         }
-        if (same) {
-          indexItem = iOld;
-          break;
+      }
+      if (same) {
+        indexItem = iOld;
+        break;
+      }
+    }
+    if (indexItem != null) {
+      item.cantidad = categories[indexItem].cantidad + 1;
+      num pM = 0;
+      for (var m in item.modificadores) {
+        for (var c in m.caracteristicas) {
+          if(c.check){
+            pM += c.modPrecio * item.cantidad;
+          }
         }
       }
-      if (indexItem != null) {
-        item.cantidad = categories[indexCat].items[indexItem].cantidad + 1;
-        num pM = 0;
-        item.modificadores.map((m) {
-          m.caracteristicas.map((c) {
-            pM += c.modPrecio * item.cantidad;
-          });
-        });
-        item.precioModificadores = pM;
-        categories[indexCat].items[indexItem] = item;
-      } else {
-        categories[indexCat].items.add(item);
-      }
+      item.precioModificadores = pM;
+      categories[indexItem] = item;
+    } else {
+      categories.add(item);
     }
     emit(state.copyWith(itemsSelected: categories));
   }
 
   resetItems(){
-    List<CategoryOrder> categories = [];
+    List<Item> categories = [];
     emit(state.copyWith(itemsSelected: categories,indexCategory: 0));
-  }
-
-  reloadItems() {
-    List<CategoryOrder> categories = List.from(state.itemsSelected);
-    for (var i = 0; i < state.itemsSelected.length; i++) {
-      categories[i] = state.itemsSelected[i].copyWith();
-      for (var item in categories[i].items) {
-        num pM = 0;
-        for (var m in item.modificadores) {
-          for (var c in m.caracteristicas) {
-            if (c.check) {
-              pM += c.modPrecio * item.cantidad;
-            }
-          }
-        }
-        item.precioModificadores = pM;
-      }
-    }
-    emit(state.copyWith(itemsSelected: categories));
   }
 
   changeDiscountAmount(num? amount) {
@@ -241,10 +223,7 @@ class MakeOrderBloc extends Cubit<MakeOrderState> {
       if(tableIndex!=-1){
         table=state.tables[tableIndex];
       }
-      List<Item> items=[];
-      for(var c in state.itemsSelected){
-        items.addAll(c.items);
-      }
+      List<Item> items=state.itemsSelected;
       NewOrderDto newOrderDto = NewOrderDto(
           caja: cashRegister?.id,
           cantidadComensales: state.numberDiners,
@@ -284,6 +263,10 @@ class MakeOrderBloc extends Cubit<MakeOrderState> {
   resetOrder(){
     emit(state.copyWith(numberDiners: ()=>null,tableId: ()=>null,itemsSelected: [],discountAmount: 0));
   }
+
+  initOrder(){
+    emit(MakeOrderState.init());
+  }
   printRollo(AuthState authState)async{
     var invoice = await _comandaRepository.getInvoice(1842665);
     var tmp = await PrintTemplate.invoice80(invoice, authState.currentContribuyente!, authState.currentSucursal!);
@@ -298,15 +281,30 @@ class MakeOrderBloc extends Cubit<MakeOrderState> {
   resetItemModal(){
     emit(state.copyWith(itemModal: ()=>null));
   }
-  updateItemSelected(Item itemNew, int indexC, indexI) {
-    List<CategoryOrder> categories = List.from(state.itemsSelected);
+  updateItemSelected(Item itemNew, indexI) {
+    List<Item> categories = List.from(state.itemsSelected);
+
     for (var i = 0; i < state.itemsSelected.length; i++) {
-      categories[i] = state.itemsSelected[i].copyWith();
-      for (var j = 0; j < categories[i].items.length; j++) {
-        if (i == indexC && indexI == j) {
-          categories[i].items[j] = itemNew;
+      var same = true;
+      if(categories[i].id==itemNew.id){
+        for (int j = 0; j < itemNew.modificadores.length; j++) {
+          for (int m = 0;
+          m < itemNew.modificadores[j].caracteristicas.length;
+          m++) {
+            if (itemNew.modificadores[j].caracteristicas[m].check !=
+                categories[i]
+                    .modificadores[j]
+                    .caracteristicas[m]
+                    .check) {
+              same = false;
+              break;
+            }
+          }
         }
-        final item = categories[i].items[j];
+      }
+      if (same && i!=indexI && categories[i].id==itemNew.id) {
+        var item = categories[i];
+        item.cantidad = categories[i].cantidad + itemNew.cantidad;
         num pM = 0;
         for (var m in item.modificadores) {
           for (var c in m.caracteristicas) {
@@ -316,7 +314,24 @@ class MakeOrderBloc extends Cubit<MakeOrderState> {
           }
         }
         item.precioModificadores = pM;
+        categories[i] = item;
+        categories.removeAt(indexI);
+        break;
       }
+      categories[i] = state.itemsSelected[i];
+      if (i == indexI) {
+        categories[i] = itemNew;
+      }
+      final item = categories[i];
+      num pM = 0;
+      for (var m in item.modificadores) {
+        for (var c in m.caracteristicas) {
+          if (c.check) {
+            pM += c.modPrecio * item.cantidad;
+          }
+        }
+      }
+      item.precioModificadores = pM;
     }
     emit(state.copyWith(itemsSelected: categories));
   }

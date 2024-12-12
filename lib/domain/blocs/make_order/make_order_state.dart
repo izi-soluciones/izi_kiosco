@@ -15,7 +15,7 @@ class MakeOrderState extends Equatable{
   final MakeOrderStatus status;
   final List<CategoryOrder> categories;
 
-  final List<CategoryOrder> itemsSelected;
+  final List<Item> itemsSelected;
 
   final List<Item> itemsFeatured;
 
@@ -43,8 +43,8 @@ class MakeOrderState extends Equatable{
 
   const MakeOrderState({required this.itemModal,required this.takeAway,required this.step,required this.itemsFeatured,this.order,this.errorDescription,required this.cashRegisters,required this.tables,this.tableId,this.numberDiners,this.offsetDiscount,required this.discountAmount,required this.status,this.currentCurrency, required this.categories, required this.indexCategory,required this.itemsSelected});
 
-  factory MakeOrderState.init(String? tableId,int? numberDiners){
-    List<CategoryOrder> initSelectItems=[];
+  factory MakeOrderState.init(){
+    List<Item> initSelectItems=[];
     return MakeOrderState(
         status: MakeOrderStatus.waitingGet,
         categories: const [],
@@ -64,7 +64,7 @@ class MakeOrderState extends Equatable{
     MakeOrderStatus? status,
     List<CategoryOrder>? categories,
     int? indexCategory,
-    List<CategoryOrder>? itemsSelected,
+    List<Item>? itemsSelected,
     Currency? currentCurrency,
     num? discountAmount,
     MakeOrderDiscountOffset? Function()? offsetDiscount,

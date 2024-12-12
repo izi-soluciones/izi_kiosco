@@ -120,7 +120,7 @@ class _MakeOrderSelectState extends State<MakeOrderSelect> {
           defaultScroll: false,
           padding: EdgeInsets.zero,
           context: context,
-          dismissible: false,
+          dismissible: true,
           child: ItemOptionsModal(
               item: items[index], state: widget.makeOrderState))
           .then((result) {
@@ -135,7 +135,7 @@ class _MakeOrderSelectState extends State<MakeOrderSelect> {
   
   IconData _selectIconCategory(String name){
     if(name.isEmpty){
-      return IziIcons.client;
+      return IziIcons.bkDestacados;
     }
     for(var ci in AppConstants.categoryIcons){
       if(ci.name.indexWhere((element) {
@@ -160,7 +160,7 @@ class _MakeOrderSelectState extends State<MakeOrderSelect> {
                   context.read<MakeOrderBloc>().changeCategory(e.key);
                 },
                 title: e.value.nombre.isEmpty
-                    ? LocaleKeys.makeOrder_body_featured.tr()
+                    ? LocaleKeys.makeOrder_body_featured.tr().toUpperCase()
                     : e.value.nombre,
                 count: e.value.items.length,
                 active: widget.makeOrderState.indexCategory == e.key);

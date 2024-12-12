@@ -35,7 +35,7 @@ class _SplashPageState extends State<SplashPage> {
   Widget build(BuildContext context) {
     final size=MediaQuery.of(context).size;
     return Scaffold(
-        backgroundColor: IziColors.lightGrey30,
+        backgroundColor: IziColors.white,
         body: Stack(
             children: _buildItems(size)
         )
@@ -61,7 +61,7 @@ class _SplashPageState extends State<SplashPage> {
           child: Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                  color: IziColors.lightGrey30,
+                  color: IziColors.white,
                   borderRadius: BorderRadius.circular(108)
               ),
               child: Lottie.asset(AssetsKeys.splashScreenJson,width: 108,repeat: false,)

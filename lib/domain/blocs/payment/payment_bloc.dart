@@ -445,6 +445,8 @@ class PaymentBloc extends Cubit<PaymentState> {
           payment: newPayment);
       await _saveAndListenPaymentOrder(authState, charge);
       CardPayment cardPayment;
+
+      emit(state.copyWith(status: PaymentStatus.cardProcessing));
       if (linkser) {
         cardPayment = await _comandaRepository.callCardPayment(
             amount: _getIntFromDecimal(
