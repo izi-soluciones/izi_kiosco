@@ -76,6 +76,7 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return BlocBuilder<AuthBloc, AuthState>(builder: (context, state) {
       return  Listener(
+        behavior: HitTestBehavior.opaque,
         onPointerDown: (val){
           setState(() {
             showVideo=false;
@@ -86,12 +87,14 @@ class _HomePageState extends State<HomePage> {
         },
         child: Stack(
               children: [
-                const Center(
-                  child: SizedBox(
-                    width: 30,
-                    height: 30,
-                    child: CircularProgressIndicator(
-                      color: IziColors.primary,
+                const Positioned.fill(
+                  child: Center(
+                    child: SizedBox(
+                      width: 30,
+                      height: 30,
+                      child: CircularProgressIndicator(
+                        color: IziColors.primary,
+                      ),
                     ),
                   ),
                 ),

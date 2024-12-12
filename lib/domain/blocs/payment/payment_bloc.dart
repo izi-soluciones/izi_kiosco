@@ -824,7 +824,7 @@ class PaymentBloc extends Cubit<PaymentState> {
           );
         } else {
           timer = Timer(
-            const Duration(seconds: 60),
+            const Duration(seconds: 300),
             () async {
               emit(state.copyWith(step: 5, status: PaymentStatus.paymentProcessed));
               timerSuccess = Timer(
