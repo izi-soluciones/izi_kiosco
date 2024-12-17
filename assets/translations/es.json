@@ -463,7 +463,7 @@
     "productsScanned": "Productos escaneados",
     "unitPrice": "Precio unitario",
     "totalPrice": "Precio total",
-    "areYouSureBack": "¿Esta seguro de cancelar la venta?",
+    "areYouSureBack": "¿Esta seguro de cancelar la orden?",
     "areYouSureInitAgain": "¿Esta seguro de borrar los items registrados?",
     "unitPriceAbr": "P. Unitario",
     "totalPriceAbr": "P. Total",
@@ -495,7 +495,7 @@
       "confirmOrder": "Confirmación de la orden",
       "confirmOrderTakeWay": "Orden para llevar",
       "confirmOrderEatHere": "Orden para comer aquí",
-      "featured": "Recomendados",
+      "featured": "Destacados",
       "selectWhere": "Selecciona dónde comerás hoy",
       "eatHere": "Para comer aquí",
       "takeAway": "Para llevar"

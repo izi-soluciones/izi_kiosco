@@ -43,6 +43,17 @@ class MakeOrderBloc extends Cubit<MakeOrderState> {
       );
 
       List<Item> listItems = await _comandaRepository.getSaleItems(catalog: authState.currentSucursal?.catalogo??"");
+
+
+      listItems.sort(
+            (a, b){
+              var splitA = a.codigoBarras?.split("-");
+              var splitB = b.codigoBarras?.split("-");
+              var valA = int.tryParse(splitA?.firstOrNull??"") ?? 10000000;
+              var valB = int.tryParse(splitB?.firstOrNull??"") ?? 10000000;
+              return valA.compareTo(valB);
+            },
+      );
       for (var cat in list) {
         List<Item> itemsCat = [];
         for (var i in listItems) {
@@ -56,12 +67,21 @@ class MakeOrderBloc extends Cubit<MakeOrderState> {
       list.removeWhere((element) => element.items.isEmpty);
       List<Item> itemsFeatured=[];
       itemsFeatured=listItems.where((element) => element.customItem is Map && element.customItem?["kiosco"]?["destacado"]==true).toList();
-
+      itemsFeatured.sort(
+            (a, b){
+          var splitA = a.codigoBarras?.split("-");
+          var splitB = b.codigoBarras?.split("-");
+          var valA = int.tryParse(splitA?.lastOrNull??"") ?? 10000000;
+          var valB = int.tryParse(splitB?.lastOrNull??"") ?? 10000000;
+          return valA.compareTo(valB);
+        },
+      );
       list.sort(
         (a, b) {
           return a.nombre.toLowerCase().compareTo(b .nombre.toLowerCase());
         },
       );
+      list.sort((a,b)=>a.prioridad?.compareTo(b.prioridad??1000)??1000);
       if(itemsFeatured.isNotEmpty){
         list.insert(0, CategoryOrder(nombre: "", items: itemsFeatured));
       }

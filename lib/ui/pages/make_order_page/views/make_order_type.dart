@@ -6,7 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:izi_design_system/atoms/izi_card.dart';
 import 'package:izi_design_system/atoms/izi_typography.dart';
 import 'package:izi_design_system/tokens/colors.dart';
-import 'package:izi_design_system/tokens/izi_icons.dart';
+import 'package:izi_kiosco/app/values/assets_keys.dart';
 import 'package:izi_kiosco/app/values/locale_keys.g.dart';
 import 'package:izi_kiosco/app/values/routes_keys.dart';
 import 'package:izi_kiosco/domain/blocs/make_order/make_order_bloc.dart';
@@ -64,11 +64,11 @@ class _MakeOrderTypeState extends State<MakeOrderType> {
                               Row(
                                 children: [
                                   Expanded(
-                                      child: _buttonSelect(IziIcons.bkComerAqui, LocaleKeys.makeOrder_body_eatHere.tr(), false)
+                                      child: _buttonSelect(AssetsKeys.eatHereGraphic, LocaleKeys.makeOrder_body_eatHere.tr(), false)
                                   ),
                                   const SizedBox(width: 24,),
                                   Expanded(
-                                      child: _buttonSelect(IziIcons.bkParaLlevar, LocaleKeys.makeOrder_body_takeAway.tr(), true)
+                                      child: _buttonSelect(AssetsKeys.takeAwayGraphic, LocaleKeys.makeOrder_body_takeAway.tr(), true)
                                   )
                                 ],
                               ),
@@ -87,7 +87,7 @@ class _MakeOrderTypeState extends State<MakeOrderType> {
     );
   }
 
-  _buttonSelect(IconData icon,String text, bool takeAway){
+  _buttonSelect(String image,String text, bool takeAway){
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.center,
@@ -101,13 +101,9 @@ class _MakeOrderTypeState extends State<MakeOrderType> {
               context.read<MakeOrderBloc>().changeStepStatus(1);
             },
             child: FractionallySizedBox(
-              widthFactor: 0.6,
-              child: FittedBox(
-                child: Icon(
-                  icon,
-                  weight: 0.5,
-                  color: IziColors.primary,
-                ),
+              widthFactor: 0.9,
+              child: Image.asset(
+                image,fit: BoxFit.contain,
               ),
             ),
           ),

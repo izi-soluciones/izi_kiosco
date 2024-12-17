@@ -20,6 +20,8 @@ class AssetsKeys{
   static const String barCodeJson="assets/graphics/barcode.json";
   static const String homeTitleSvg="assets/graphics/ordena.svg";
   static const String cardPOSSvg="assets/graphics/cardPOS.svg";
+  static const String eatHereGraphic="assets/graphics/eatHere.png";
+  static const String takeAwayGraphic="assets/graphics/takeAway.png";
 
 
 
