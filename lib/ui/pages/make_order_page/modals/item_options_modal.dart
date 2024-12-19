@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:izi_design_system/atoms/izi_radio_button.dart';
 import 'package:izi_design_system/atoms/izi_typography.dart';
 import 'package:izi_design_system/molecules/izi_btn.dart';
+import 'package:izi_design_system/molecules/izi_snack_bar.dart';
 import 'package:izi_design_system/molecules/izi_switch.dart';
 import 'package:izi_design_system/tokens/colors.dart';
 import 'package:izi_design_system/tokens/types.dart';
@@ -65,6 +66,7 @@ class _ItemOptionsModalState extends State<ItemOptionsModal> {
         });
         if(titleKeys[i].currentContext!=null){
           Scrollable.ensureVisible(titleKeys[i].currentContext!);
+          context.read<PageUtilsBloc>().showSnackBar(snackBar: SnackBarInfo(text: "Selecciona la variable ${itemEdit?.modificadores[i].nombre}", snackBarType: SnackBarType.warning));
         }
         return false;
       }

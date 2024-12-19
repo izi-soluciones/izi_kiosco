@@ -261,10 +261,10 @@ class PaymentBloc extends Cubit<PaymentState> {
         if (comanda.custom is Map && comanda.custom["simphony"]?["header"]?["checkNumber"]!=null) {
           _printRolloOrder(authState,
               orderNumber: (comanda.custom["simphony"]["header"]["checkNumber"] as int),
-              customOrderNumber:null);
+              customOrderNumber:null,errorSimphony: comanda.custom["errorSimphony"]==true);
         }
         emit(state.copyWith(
-            step: 5,
+            step: comanda.custom is Map && comanda.custom["errorSimphony"]==true?6:5,
             status: PaymentStatus.paymentProcessed,
             paymentType: paymentType));
         timerSuccess = Timer(
@@ -799,7 +799,7 @@ class PaymentBloc extends Cubit<PaymentState> {
                   orderNumber: event["numeroOrden"],
                   customOrderNumber: event["numeroCustom"] is int
                       ? event["numeroCustom"]
-                      : null);
+                      : null, errorSimphony: event["errorSimphony"] is bool?event["errorSimphony"]:false);
             }
             if (kIsWeb) {
               await Future.delayed(const Duration(seconds: 1));
@@ -863,13 +863,14 @@ class PaymentBloc extends Cubit<PaymentState> {
   }
 
   _printRolloOrder(AuthState authState,
-      {required int orderNumber, int? customOrderNumber}) async {
+      {required int orderNumber, int? customOrderNumber, bool? errorSimphony}) async {
     var tmp = await PrintTemplate.order80(
         orderNumber,
         customOrderNumber,
         authState.currentContribuyente!,
         authState.currentSucursal!,
-        state.paymentObj);
+        state.paymentObj,
+        errorSimphony ?? false);
     var printUtils = PrintUtils();
     await printUtils.print(tmp);
   }

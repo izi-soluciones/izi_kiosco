@@ -18,8 +18,17 @@ class PrintTemplate {
       int? customOrderNumber,
       Contribuyente contribuyente,
       Sucursal sucursal,
-      PaymentObj? paymentObj) async {
+      PaymentObj? paymentObj,
+      bool errorSimphony) async {
     List<IziPrintItem> items = [];
+    if(errorSimphony){
+      items.add(IziPrintText(
+          text: "OCURRIO UN ERROR AL PROCESAR LA ORDEN ACERCATE CON ESTE TICKET PARA COMPLETAR TU ORDEN EN CAJAS",
+          size: IziPrintSize.md,
+          align: IziPrintAlign.center,
+          bold: true));
+      items.add(IziPrintSeparator());
+    }
     items.add(IziPrintText(
         text: contribuyente.razonSocial ?? "",
         size: IziPrintSize.md,
