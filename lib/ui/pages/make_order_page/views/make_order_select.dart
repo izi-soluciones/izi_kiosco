@@ -76,6 +76,10 @@ class _MakeOrderSelectState extends State<MakeOrderSelect> {
                 .toLowerCase()
                 .contains(searchInput.text.toLowerCase()))
         .toList();
+    int columns = 3;
+    if(widget.makeOrderState.categories.length>widget.makeOrderState.indexCategory){
+      columns=widget.makeOrderState.categories[widget.makeOrderState.indexCategory].columns?? 3;
+    }
     return LayoutBuilder(builder: (context, layout) {
       return IziScroll(
         scrollController: scrollControllerLg,
@@ -85,9 +89,9 @@ class _MakeOrderSelectState extends State<MakeOrderSelect> {
               : layout.maxWidth > 1250
               ? 5
               : layout.maxWidth > 950
-              ? 3
+              ? columns
               : layout.maxWidth > 700
-              ? 3
+              ? columns
               : layout.maxWidth > 450
               ? 2
               : 1)).ceil(),

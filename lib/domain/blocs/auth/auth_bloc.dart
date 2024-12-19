@@ -76,24 +76,6 @@ class AuthBloc extends Cubit<AuthState> {
               0;
           Contribuyente contribuyente = await _authRepository
               .getCurrentContribuyenteById(contribuyenteId);
-          Sucursal? sucursal;
-          int? sucursalId = await BusinessUtils.getSucursalId();
-          if (sucursalId != null) {
-            if (contribuyente.sucursales?.isNotEmpty ?? false) {
-              int sucIndex = contribuyente.sucursales
-                      ?.indexWhere((element) => element.id == sucursalId) ??
-                  -1;
-              if (sucIndex != -1) {
-                sucursal = contribuyente.sucursales?.elementAtOrNull(sucIndex);
-              } else {
-                sucursal = contribuyente.sucursales?.firstOrNull;
-              }
-            }
-          }
-          if (sucursal != null) {
-            await BusinessUtils.saveSucursalId(sucursal.id ?? 0);
-          }
-          await BusinessUtils.saveContribuyenteId(contribuyente.id ?? 0);
 
           List<Device> devices = await _authRepository
               .getDevicesByContribuyente(contribuyente.id ?? 0);
@@ -111,6 +93,24 @@ class AuthBloc extends Cubit<AuthState> {
             await BusinessUtils.deleteDeviceId();
             device=null;
           }
+          Sucursal? sucursal;
+          int? sucursalId = device?.sucursal ?? await BusinessUtils.getSucursalId();
+          if (sucursalId != null) {
+            if (contribuyente.sucursales?.isNotEmpty ?? false) {
+              int sucIndex = contribuyente.sucursales
+                      ?.indexWhere((element) => element.id == sucursalId) ??
+                  -1;
+              if (sucIndex != -1) {
+                sucursal = contribuyente.sucursales?.elementAtOrNull(sucIndex);
+              } else {
+                sucursal = contribuyente.sucursales?.firstOrNull;
+              }
+            }
+          }
+          if (sucursal != null) {
+            await BusinessUtils.saveSucursalId(sucursal.id ?? 0);
+          }
+          await BusinessUtils.saveContribuyenteId(contribuyente.id ?? 0);
           File? video;
           if(device != null){
             try{

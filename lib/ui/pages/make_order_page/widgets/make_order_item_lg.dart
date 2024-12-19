@@ -47,12 +47,12 @@ class MakeOrderItemLg extends StatelessWidget {
                           imageBuilder: (context, imageProvider) {
                             return Ink.image(
                               image: imageProvider,
-                              fit: BoxFit.cover,
+                              fit: BoxFit.contain,
                             );
                           },
 
                           imageUrl: item.imagen??"",
-                          fit: BoxFit.cover,
+                          fit: BoxFit.contain,
                           placeholder: (context, url) {
                             return const Center(child: CircularProgressIndicator(strokeWidth: 2,color: IziColors.dark));
                           },
