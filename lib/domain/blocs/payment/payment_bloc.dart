@@ -505,13 +505,13 @@ class PaymentBloc extends Cubit<PaymentState> {
 
   Future<bool> makeCardPayment(AuthState authState,
       {bool atc = false, bool linkser = false, bool contactless = true}) async {
-    if (_validateInputs() &&
+    if ((authState.currentContribuyente?.habilitadoFacturacion!=true)||(_validateInputs() &&
         (atc || linkser) &&
-        state.paymentObj?.isComanda == true) {
+        state.paymentObj?.isComanda == true)) {
       return await _makeCardOrderPayment(authState,
           atc: atc, contactless: contactless, linkser: linkser);
-    } else if (_validateInputs() &&
-        (atc || linkser) &&
+    } else if ((authState.currentContribuyente?.habilitadoFacturacion!=true)||(_validateInputs() && authState.currentContribuyente?.habilitadoFacturacion==true &&
+        (atc || linkser)) &&
         state.paymentObj?.isComanda == false) {
       return await _makeCardRetailPayment(authState,
           atc: atc, contactless: contactless, linkser: linkser);
@@ -651,7 +651,7 @@ class PaymentBloc extends Cubit<PaymentState> {
   Timer? timerSuccess;
   Future<bool> generateQR(AuthState authState) async {
     try {
-      if (_validateInputs()) {
+      if (_validateInputs() || authState.currentContribuyente?.habilitadoFacturacion!=true) {
         emit(state.copyWith(step: 3));
         if (state.paymentObj?.isComanda == true) {
           return await _generateOrderQR(authState);

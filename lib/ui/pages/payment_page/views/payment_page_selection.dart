@@ -12,6 +12,7 @@ import 'package:izi_kiosco/domain/blocs/page_utils/page_utils_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/payment/payment_bloc.dart';
 import 'package:izi_kiosco/ui/general/izi_header_kiosk.dart';
 import 'package:izi_kiosco/ui/modals/warning_modal.dart';
+import 'package:izi_kiosco/ui/pages/payment_page/modals/card_type_atc_modal.dart';
 import 'package:izi_kiosco/ui/pages/payment_page/widgets/payment_method_btn.dart';
 import 'package:izi_kiosco/ui/utils/custom_alerts.dart';
 import 'package:izi_kiosco/ui/utils/flex_container.dart';
@@ -88,7 +89,7 @@ class PaymentPageSelection extends StatelessWidget {
       children: [
         PaymentMethodBtn(
             onPressed: (){
-              context.read<PaymentBloc>().selectPayment(PaymentType.qr,authState);
+              _selectPayment(PaymentType.qr,context);
               },
             icon: IziIcons.qrCode,
             color: IziColors.primaryDarken,
@@ -97,7 +98,7 @@ class PaymentPageSelection extends StatelessWidget {
         if(authState.currentDevice?.config.ipAtc!=null||authState.currentDevice?.config.ipLinkser!=null )
           PaymentMethodBtn(
             onPressed: (){
-              context.read<PaymentBloc>().selectPayment(PaymentType.card,authState);
+              _selectPayment(PaymentType.card,context);
             },
             color: IziColors.secondaryDarken,
             icon: IziIcons.card,
@@ -106,7 +107,7 @@ class PaymentPageSelection extends StatelessWidget {
         if(state.paymentObj?.isComanda==true)
         PaymentMethodBtn(
             onPressed: (){
-              context.read<PaymentBloc>().selectPayment(PaymentType.cashRegister,authState);
+              _selectPayment(PaymentType.cashRegister,context);
               },
             icon: IziIcons.registerMachine,
             color: IziColors.darkGrey,
@@ -114,5 +115,69 @@ class PaymentPageSelection extends StatelessWidget {
         )
       ],
     );
+  }
+
+
+  _selectPayment(PaymentType paymentType,BuildContext context){
+    var authState = context.read<AuthBloc>().state;
+    if(authState.currentContribuyente?.habilitadoFacturacion==true){
+      context.read<PaymentBloc>().selectPayment(paymentType,authState);
+    }
+    else{
+      switch(paymentType){
+        case PaymentType.card:
+          _paymentCard(context);
+          break;
+        case PaymentType.qr:
+          context.read<PaymentBloc>().generateQR(context.read<AuthBloc>().state);
+          break;
+        default:
+          break;
+      }
+    }
+  }
+
+  _paymentCard(BuildContext context) {
+    if (context.read<AuthBloc>().state.currentDevice?.config.ipLinkser !=
+        null) {
+      _paymentCardLinkser(context);
+    } else if (context.read<AuthBloc>().state.currentDevice?.config.ipAtc !=
+        null) {
+      _paymentCardATC(context);
+    }
+  }
+
+  _paymentCardLinkser(BuildContext context) async {
+    context.read<PageUtilsBloc>().closeScreenActive();
+    context
+        .read<PaymentBloc>()
+        .makeCardPayment(context.read<AuthBloc>().state, linkser: true).then((status){
+      if (!status) {
+        context.read<PageUtilsBloc>().initScreenActive();
+      }
+    });
+  }
+
+  _paymentCardATC(BuildContext context) async {
+    CustomAlerts.defaultAlert(
+        context: context,
+        dismissible: true,
+        defaultScroll: false,
+        child: CardTypeAtcModal(
+            amount: (state.paymentObj?.amount ?? 0)))
+        .then((value) async {
+      if (value is int) {
+        context.read<PageUtilsBloc>().closeScreenActive();
+        context.read<PaymentBloc>().makeCardPayment(
+            context.read<AuthBloc>().state,
+            atc: true,
+            contactless: value == 1 ? false : true).then((status){
+
+          if (!status) {
+            context.read<PageUtilsBloc>().initScreenActive();
+          }
+        });
+      }
+    });
   }
 }
