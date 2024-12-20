@@ -545,6 +545,11 @@ class PrintTemplate {
           }
         }
       }
+      items.add(IziPrintSeparator(dotted: true));
+      items.add(IziPrintText(
+          text: "WIFI WHOPPER, Ingrese a bf.bolivia.net\nUsuario:bkgreentower Contraseña: bk525145",
+          size: IziPrintSize.sm,
+          align: IziPrintAlign.center));
       items.add(IziPrintSeparator());
       items.add(IziPrintText(
           text: "Generada a través de iZi",
