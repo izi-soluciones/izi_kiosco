@@ -540,6 +540,7 @@ class _PaymentPageInvoiceState extends State<PaymentPageInvoice> {
 
   _paymentCardLinkser(BuildContext context) async {
     context.read<PageUtilsBloc>().closeScreenActive();
+    context.read<PaymentBloc>().closeScreenActive();
     var status = await context
         .read<PaymentBloc>()
         .makeCardPayment(context.read<AuthBloc>().state, linkser: true);
@@ -547,7 +548,7 @@ class _PaymentPageInvoiceState extends State<PaymentPageInvoice> {
       return;
     }
     if (!status) {
-      context.read<PageUtilsBloc>().initScreenActive();
+      context.read<PaymentBloc>().initScreenActiveInvoiced();
     }
   }
 
@@ -561,6 +562,7 @@ class _PaymentPageInvoiceState extends State<PaymentPageInvoice> {
         .then((value) async {
       if (value is int) {
         context.read<PageUtilsBloc>().closeScreenActive();
+        context.read<PaymentBloc>().closeScreenActive();
         var status = await context.read<PaymentBloc>().makeCardPayment(
             context.read<AuthBloc>().state,
             atc: true,
@@ -569,7 +571,7 @@ class _PaymentPageInvoiceState extends State<PaymentPageInvoice> {
           return;
         }
         if (!status) {
-          context.read<PageUtilsBloc>().initScreenActive();
+          context.read<PaymentBloc>().initScreenActiveInvoiced();
         }
       }
     });

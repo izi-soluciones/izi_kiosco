@@ -90,11 +90,12 @@ class DioClient {
   }
   Future<Response> delete({
     required String uri,
+    Map<String, dynamic>? queryParameters,
     Options? options,
   }) async {
     //error
     var response =
-    await _dio.delete(uri, options: options);
+    await _dio.delete(uri, options: options,queryParameters: queryParameters);
     return response;
   }
 

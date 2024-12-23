@@ -5,8 +5,10 @@ import 'package:go_router/go_router.dart';
 import 'package:izi_design_system/molecules/izi_snack_bar.dart';
 import 'package:izi_kiosco/app/values/locale_keys.g.dart';
 import 'package:izi_kiosco/app/values/routes_keys.dart';
+import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/page_utils/page_utils_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/payment/payment_bloc.dart';
+import 'package:izi_kiosco/ui/general/izi_screen_inactive.dart';
 import 'package:izi_kiosco/ui/modals/warning_config_modal.dart';
 import 'package:izi_kiosco/ui/pages/payment_page/views/payment_page_card.dart';
 import 'package:izi_kiosco/ui/pages/payment_page/views/payment_page_invoice.dart';
@@ -36,6 +38,8 @@ class PaymentPage extends StatelessWidget {
               description: LocaleKeys.warningCashRegisters_description.tr()
           )).then((value){
             context.read<PageUtilsBloc>().closeScreenActive();
+            context.read<PaymentBloc>().closeScreenActive();
+            context.read<PaymentBloc>().cancelSimphony(context.read<AuthBloc>().state);
             GoRouter.of(context).goNamed(RoutesKeys.home);
           });
         }
@@ -45,6 +49,8 @@ class PaymentPage extends StatelessWidget {
               description: LocaleKeys.warningActivity_description.tr()
           )).then((value){
             context.read<PageUtilsBloc>().closeScreenActive();
+            context.read<PaymentBloc>().closeScreenActive();
+            context.read<PaymentBloc>().cancelSimphony(context.read<AuthBloc>().state);
             GoRouter.of(context).goNamed(RoutesKeys.home);
           });
         }
@@ -52,7 +58,7 @@ class PaymentPage extends StatelessWidget {
 
         if(state.status== PaymentStatus.cardError){
           context.read<PageUtilsBloc>().closeLoading();
-          context.read<PageUtilsBloc>().initScreenActiveInvoiced();
+          context.read<PaymentBloc>().initScreenActiveInvoiced();
           context.read<PageUtilsBloc>().showSnackBar(
               snackBar: SnackBarInfo(
                   text: LocaleKeys.payment_messages_errorCard.tr(),
@@ -63,9 +69,11 @@ class PaymentPage extends StatelessWidget {
           context.read<PageUtilsBloc>().unlockPage();
           context.read<PageUtilsBloc>().closeLoading();
           context.read<PageUtilsBloc>().closeScreenActive();
+          context.read<PaymentBloc>().closeScreenActive();
           if(GoRouter.of(context).canPop()){
             GoRouter.of(context).pop();
           }else{
+            context.read<PaymentBloc>().cancelSimphony(context.read<AuthBloc>().state);
             GoRouter.of(context).goNamed(RoutesKeys.home);
           }
           context.read<PageUtilsBloc>().showSnackBar(
@@ -81,10 +89,12 @@ class PaymentPage extends StatelessWidget {
         }
         if(state.status == PaymentStatus.processingInvoice){
           context.read<PageUtilsBloc>().closeScreenActive();
+          context.read<PaymentBloc>().closeScreenActive();
           context.read<PageUtilsBloc>().showLoading(LocaleKeys.payment_messages_processingInvoice.tr());
         }
         if(state.status == PaymentStatus.processingOrder){
           context.read<PageUtilsBloc>().closeScreenActive();
+          context.read<PaymentBloc>().closeScreenActive();
           context.read<PageUtilsBloc>().showLoading(LocaleKeys.payment_messages_processingOrder.tr());
         }
         if(state.status== PaymentStatus.paymentProcessed || state.status== PaymentStatus.cardProcessed){
@@ -95,26 +105,39 @@ class PaymentPage extends StatelessWidget {
         }
       },
       builder: (context, state) {
-        return PageView(
-          physics: const NeverScrollableScrollPhysics(),
-          controller: _pageController,
+        return Listener(
+          onPointerDown: (event) {
+            context.read<PaymentBloc>().updateScreenActive();
+          },
+          child: Stack(
+            children: [
+              Positioned.fill(
+                child: PageView(
+                  physics: const NeverScrollableScrollPhysics(),
+                  controller: _pageController,
 
-          children: [
-            //0
-            const PaymentShimmerPaymentMethod(),
-            //1
-            PaymentPageSelection(state: state),
-            //2
-            PaymentPageInvoice(state: state),
-            //3
-            PaymentPageQR(state: state),
-            //4
-            PaymentPageCard(state: state),
-            //5
-            PaymentPageOrderComplete(state: state,),
-            //6
-            const PaymentPageOrderError(),
-          ],
+                  children: [
+                    //0
+                    const PaymentShimmerPaymentMethod(),
+                    //1
+                    PaymentPageSelection(state: state),
+                    //2
+                    PaymentPageInvoice(state: state),
+                    //3
+                    PaymentPageQR(state: state),
+                    //4
+                    PaymentPageCard(state: state),
+                    //5
+                    PaymentPageOrderComplete(state: state,),
+                    //6
+                    const PaymentPageOrderError(),
+                  ],
+                ),
+              ),
+              if(!state.screenActive)
+                const Positioned.fill(child: IziScreenInactive(cancelSimphony: true))
+            ],
+          ),
         );
       },
     );

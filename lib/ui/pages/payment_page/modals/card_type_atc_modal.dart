@@ -8,7 +8,7 @@ import 'package:izi_design_system/molecules/izi_btn.dart';
 import 'package:izi_design_system/tokens/colors.dart';
 import 'package:izi_design_system/tokens/types.dart';
 import 'package:izi_kiosco/app/values/app_constants.dart';
-import 'package:izi_kiosco/domain/blocs/page_utils/page_utils_bloc.dart';
+import 'package:izi_kiosco/domain/blocs/payment/payment_bloc.dart';
 import 'package:izi_kiosco/ui/utils/money_formatter.dart';
 import 'package:izi_kiosco/ui/utils/responsive_utils.dart';
 
@@ -70,7 +70,7 @@ class _CardTypeAtcModalState extends State<CardTypeAtcModal> {
             buttonType: ButtonType.terciary,
             buttonSize: ButtonSize.large,
             buttonOnPressed: (){
-              context.read<PageUtilsBloc>().updateScreenActive();
+              context.read<PaymentBloc>().updateScreenActive();
               Navigator.pop(context);
             })
       ],
@@ -80,7 +80,7 @@ class _CardTypeAtcModalState extends State<CardTypeAtcModal> {
   Widget _buttonPayment(BuildContext context,{required String title,required IconData icon,required int type,required ResponsiveUtils ru}){
     return InkWell(
       onTap: (){
-        context.read<PageUtilsBloc>().updateScreenActive();
+        context.read<PaymentBloc>().updateScreenActive();
         Navigator.pop(context,type);
       },
       child: IziCard(

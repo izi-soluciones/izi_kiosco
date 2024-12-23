@@ -69,8 +69,10 @@ class PaymentPageSelection extends StatelessWidget {
         context: context,
         child: WarningModal(
             onAccept: ()async{
-              GoRouter.of(context).goNamed(RoutesKeys.home);
               context.read<PageUtilsBloc>().closeScreenActive();
+              context.read<PaymentBloc>().closeScreenActive();
+              context.read<PaymentBloc>().cancelSimphony(context.read<AuthBloc>().state);
+              GoRouter.of(context).goNamed(RoutesKeys.home);
             },
             title: LocaleKeys.makeOrderRetail_scan_areYouSureBack.tr()
         )

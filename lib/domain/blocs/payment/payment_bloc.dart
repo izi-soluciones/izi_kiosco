@@ -38,13 +38,48 @@ class PaymentBloc extends Cubit<PaymentState> {
   StreamSubscription? qrStream;
   final BusinessRepository _businessRepository;
   final SocketRepository _socketRepository;
+  Timer? timer;
   PaymentBloc(
       this._comandaRepository, this._businessRepository, this._socketRepository)
       : super(PaymentState.init());
 
+
+  initScreenActiveInvoiced(){
+    if(timer!=null){
+      timer!.cancel();
+    }
+    emit(state.copyWith(screenActive: true));
+    timer = Timer(Duration(seconds: AppConstants.timerTimeSecondsInvoiced), () {
+      if(!isClosed){
+        emit(state.copyWith(screenActive: false));
+      }
+    });
+  }
+
+  updateScreenActive(){
+    if(timer!=null) {
+      timer!.cancel();
+      emit(state.copyWith(screenActive: true));
+      timer = Timer(Duration(seconds: AppConstants.timerTimeSecondsInvoiced), () {
+        if(!isClosed){
+          emit(state.copyWith(screenActive: false));
+        }
+      });
+    }
+  }
+  closeScreenActive(){
+    if(timer!=null){
+      timer!.cancel();
+
+    }
+    timer=null;
+    emit(state.copyWith(screenActive: true));
+  }
+
   initOrder(
       {required PaymentObj paymentObj, required AuthState authState}) async {
     try {
+      initScreenActiveInvoiced();
       bool usaSiat = false;
       int casaMatrizIndex = authState.currentContribuyente?.sucursales
               ?.indexWhere((element) =>
@@ -895,5 +930,16 @@ class PaymentBloc extends Cubit<PaymentState> {
 
   int _getIntFromDecimal(double num) {
     return (num * 100).toInt();
+  }
+
+
+  cancelSimphony(AuthState authState)async{
+    try{
+      await _comandaRepository.cancelOrderSimphony(
+          comanda: state.paymentObj?.id??0,
+          contribuyente: authState.currentContribuyente?.id??0
+      );
+    }
+    catch(_){}
   }
 }

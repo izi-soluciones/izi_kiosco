@@ -404,7 +404,6 @@ class _MakeOrderConfirmState extends State<MakeOrderConfirm> {
                   name: e.nombre)
               ).toList()
           );
-          context.read<PageUtilsBloc>().initScreenActiveInvoiced();
           GoRouter.of(this.context).goNamed(RoutesKeys.payment,
               extra: paymentObj, pathParameters: {"id": value.id.toString()});
         } else {

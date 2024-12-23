@@ -12,9 +12,11 @@ import 'package:izi_kiosco/app/values/locale_keys.g.dart';
 import 'package:izi_kiosco/app/values/routes_keys.dart';
 import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/page_utils/page_utils_bloc.dart';
+import 'package:izi_kiosco/domain/blocs/payment/payment_bloc.dart';
 
 class IziScreenInactive extends StatefulWidget {
-  const IziScreenInactive({super.key});
+  final bool cancelSimphony;
+  const IziScreenInactive({super.key,this.cancelSimphony =false});
 
   @override
   State<IziScreenInactive> createState() => _IziScreenInactiveState();
@@ -29,6 +31,9 @@ class _IziScreenInactiveState extends State<IziScreenInactive> {
     timer = Timer(Duration(seconds: time), () {
       context.read<PageUtilsBloc>().closeScreenActive();
       GoRouter.of(context).goNamed(RoutesKeys.home);
+      if(widget.cancelSimphony){
+        context.read<PaymentBloc>().cancelSimphony(context.read<AuthBloc>().state);
+      }
     });
     super.initState();
   }

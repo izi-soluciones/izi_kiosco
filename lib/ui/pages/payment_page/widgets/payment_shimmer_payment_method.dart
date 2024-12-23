@@ -5,7 +5,9 @@ import 'package:go_router/go_router.dart';
 import 'package:izi_design_system/tokens/colors.dart';
 import 'package:izi_kiosco/app/values/locale_keys.g.dart';
 import 'package:izi_kiosco/app/values/routes_keys.dart';
+import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/page_utils/page_utils_bloc.dart';
+import 'package:izi_kiosco/domain/blocs/payment/payment_bloc.dart';
 import 'package:izi_kiosco/ui/general/izi_header_kiosk.dart';
 import 'package:izi_kiosco/ui/modals/warning_modal.dart';
 import 'package:izi_kiosco/ui/utils/custom_alerts.dart';
@@ -98,8 +100,10 @@ class PaymentShimmerPaymentMethod extends StatelessWidget {
         context: context,
         child: WarningModal(
             onAccept: ()async{
-              GoRouter.of(context).goNamed(RoutesKeys.home);
               context.read<PageUtilsBloc>().closeScreenActive();
+              context.read<PaymentBloc>().closeScreenActive();
+              context.read<PaymentBloc>().cancelSimphony(context.read<AuthBloc>().state);
+              GoRouter.of(context).goNamed(RoutesKeys.home);
             },
             title: LocaleKeys.makeOrderRetail_scan_areYouSureBack.tr()
         )

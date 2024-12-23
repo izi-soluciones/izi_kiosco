@@ -55,4 +55,6 @@ abstract class ComandaRepository{
   Future<SaleLink> createSaleLink(NewSaleLinkDto newSaleLinkDto);
   Future<Charge> generatePaymentAttempt(PaymentAttemptDto paymentAttemptDto);
 
+  Future<void> cancelOrderSimphony({required int comanda, required int contribuyente});
+
 }

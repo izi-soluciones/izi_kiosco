@@ -72,6 +72,7 @@ class PaymentState extends Equatable {
   final PaymentObj? paymentObj;
 
   final bool usaSiat;
+  final bool screenActive;
 
   const PaymentState(
       {
@@ -103,6 +104,7 @@ class PaymentState extends Equatable {
         this.qrAmount,
         this.qrCharge,
         this.qrWait = false,
+        required this.screenActive,
         this.qrPaymentKey});
 
   factory PaymentState.init() => PaymentState(
@@ -115,6 +117,7 @@ class PaymentState extends Equatable {
       documentTypes: const [],
       economicActivity: "",
       usaSiat: false,
+      screenActive:true,
       queryBusinessList: const [],
       payments: [
         Payment(),
@@ -163,6 +166,7 @@ class PaymentState extends Equatable {
         bool? qrWait,
         bool? qrLoading,
       Sucursal? casaMatriz,
+      bool?  screenActive,
       PaymentObj? paymentObj}) {
     return PaymentState(
         casaMatriz: casaMatriz ?? this.casaMatriz,
@@ -193,12 +197,14 @@ class PaymentState extends Equatable {
       qrPaymentKey: qrPaymentKey == -1?null: qrPaymentKey ?? this.qrPaymentKey,
       qrLoading: qrLoading ?? this.qrLoading,
       qrWait: qrWait ?? this.qrWait,
-      paymentObj: paymentObj ?? this.paymentObj
+      paymentObj: paymentObj ?? this.paymentObj,
+        screenActive: screenActive ?? this.screenActive
     );
   }
 
   @override
   List<Object?> get props => [
+    screenActive,
         status,
         step,
         paymentObj,
