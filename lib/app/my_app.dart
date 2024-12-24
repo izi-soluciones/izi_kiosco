@@ -64,7 +64,7 @@ class MyApp extends StatelessWidget {
           create: (context) => _auth..verify(),
         ),
         BlocProvider(
-          create: (context) => PageUtilsBloc(),
+          create: (context) => PageUtilsBloc(BusinessRepositoryHttp()),
         ),
       ],
       child: MaterialApp.router(

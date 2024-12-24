@@ -5,6 +5,8 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:izi_design_system/molecules/izi_snack_bar.dart';
 import 'package:izi_kiosco/app/values/app_constants.dart';
+import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
+import 'package:izi_kiosco/domain/repositories/business_repository.dart';
 part 'page_utils_state.dart';
 
 
@@ -13,7 +15,11 @@ class PageUtilsBloc extends Cubit<PageUtilsState>{
   Timer? timer;
 
 
-  PageUtilsBloc():super(PageUtilsState.defaultState());
+  Timer? timerHelp;
+  final BusinessRepository _businessRepository;
+
+
+  PageUtilsBloc(this._businessRepository):super(PageUtilsState.defaultState());
 
 
   void showSnackBar({required SnackBarInfo snackBar}){
@@ -99,5 +105,18 @@ class PageUtilsBloc extends Cubit<PageUtilsState>{
     bool? configuration
 }){
     emit(state.copyWith(configurationMenuOpen: configuration));
+  }
+  askHelp(AuthState authState){
+    try{
+      _businessRepository.askHelp(authState.currentSucursal?.id??0,authState.currentDevice?.nombre??"");
+      if(timerHelp!=null){
+        timerHelp!.cancel();
+      }
+      emit(state.copyWith(helpActive: false,dateHelp: ()=>DateTime.now()));
+      timerHelp = Timer(Duration(seconds: AppConstants.timerHelp), () {
+        emit(state.copyWith(helpActive: true,dateHelp: ()=>null));
+      });
+    }
+    catch(e){}
   }
 }

@@ -52,7 +52,7 @@ class MakeOrderRetailBloc extends Cubit<MakeOrderRetailState> {
         return;
       }
 
-      if (authState.currentDevice?.config.actividadEconomica ==null) {
+      if (authState.currentDevice?.config.actividadEconomica ==null && authState.currentContribuyente?.habilitadoFacturacion==true) {
         emit(state.copyWith(status: MakeOrderRetailStatus.errorActivity));
         emit(state.copyWith(status: MakeOrderRetailStatus.waitingGet));
         return;
@@ -105,7 +105,7 @@ class MakeOrderRetailBloc extends Cubit<MakeOrderRetailState> {
           monedaId: state.currentCurrency?.id ?? AppConstants.defaultCurrencyId,
           contribuyente: authState.currentContribuyente!.id!,
           sucursal: authState.currentSucursal!.id!,
-          actividadEconomica: authState.currentDevice!.config.actividadEconomica!,
+          actividadEconomica: authState.currentDevice?.config.actividadEconomica,
           almacen: authState.currentDevice!.config.almacen!,
           listaItems: state.itemsSelected,
           moneda: state.currentCurrency?.simbolo == "Bs"? "BOB": state.currentCurrency?.simbolo ?? "",

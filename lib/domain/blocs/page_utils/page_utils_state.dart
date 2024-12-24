@@ -14,6 +14,8 @@ class PageUtilsState extends Equatable{
   final bool configurationMenuOpen;
 
   final bool screenActive;
+  final bool helpActive;
+  final DateTime? dateHelp;
 
 
   const PageUtilsState(
@@ -25,7 +27,9 @@ class PageUtilsState extends Equatable{
         required this.lock,
         required this.configurationMenuOpen,
         this.titleLoading,
-        required this.screenActive
+        required this.screenActive,
+        required this.helpActive,
+        this.dateHelp
     });
 
   PageUtilsState.defaultState():
@@ -35,6 +39,8 @@ class PageUtilsState extends Equatable{
         currentLocation="/",
         lock=false,
   screenActive=true,
+  dateHelp=null,
+        helpActive=true,
   configurationMenuOpen=false,
         snackBar=SnackBarInfo(
             text: "",
@@ -65,7 +71,9 @@ class PageUtilsState extends Equatable{
     bool? configurationMenuOpen,
     String? Function()? titleLoading,
     bool? screenActive,
-    String? currentLocation,}){
+    bool? helpActive,
+    String? currentLocation,
+    DateTime? Function()?  dateHelp}){
     return PageUtilsState(
         snackBarState: snackBarState??this.snackBarState,
         snackBar: snackBar??this.snackBar,
@@ -74,7 +82,9 @@ class PageUtilsState extends Equatable{
         currentLocation: currentLocation??this.currentLocation,
       timer: timer??this.timer,
       titleLoading: titleLoading !=null?titleLoading(): this.titleLoading,
-      screenActive: screenActive ?? this.screenActive
+      screenActive: screenActive ?? this.screenActive,
+        helpActive: helpActive ?? this.helpActive,
+      dateHelp: dateHelp!=null?dateHelp():this.dateHelp
     );
   }
 
@@ -87,6 +97,7 @@ class PageUtilsState extends Equatable{
     currentLocation,
     configurationMenuOpen,
     titleLoading,
-    screenActive
+    screenActive,helpActive,
+    dateHelp
   ];
 }

@@ -4,7 +4,7 @@ class NewSaleLinkDto {
   int contribuyente;
   String moneda;
   int monedaId;
-  String actividadEconomica;
+  String? actividadEconomica;
   String almacen;
   List<Item> listaItems;
   int sucursal;

@@ -403,7 +403,7 @@ packages:
       path: "/Users/macbookm2pro/Documents/izi/izi-design-system-flutter"
       relative: false
     source: path
-    version: "0.0.1"
+    version: "0.0.2"
   js:
     dependency: transitive
     description:

@@ -9,6 +9,7 @@ import 'package:izi_design_system/atoms/izi_typography.dart';
 import 'package:izi_design_system/tokens/colors.dart';
 import 'package:izi_kiosco/app/values/app_constants.dart';
 import 'package:izi_kiosco/app/values/locale_keys.g.dart';
+import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/payment/payment_bloc.dart';
 import 'package:izi_kiosco/ui/general/izi_header_kiosk.dart';
 import 'package:izi_kiosco/ui/utils/money_formatter.dart';
@@ -60,7 +61,7 @@ class _PaymentPageQRState extends State<PaymentPageQR> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         IziHeaderKiosk(onBack: () {
-          context.read<PaymentBloc>().cancelQR();
+          context.read<PaymentBloc>().cancelQR(context.read<AuthBloc>().state);
         }),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,

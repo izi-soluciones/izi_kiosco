@@ -153,4 +153,32 @@ class BusinessRepositoryHttp extends BusinessRepository{
     }
     throw response.data;
   }
+
+  @override
+  Future<void> askHelp(int sucursal,String name) async{
+    try {
+      String path =
+          "/custom/ayuda-kiosko";
+      var response = await _dioClient.post(
+          uri: path,
+          body: {
+            "sucursal":sucursal,
+            "nombre": name
+          },
+          options: Options(responseType: ResponseType.json));
+      if (response.statusCode != 200) {
+        if (response.data?["status"] ?? false) {
+          throw response.data?["data"];
+        }
+        throw response.data;
+      }
+    } on DioException catch (e) {
+      if (e.response?.data is String) {
+        throw e.response?.data;
+      }
+      throw e.error ?? "Network Error";
+    } catch (error) {
+      throw error.toString();
+    }
+  }
 }

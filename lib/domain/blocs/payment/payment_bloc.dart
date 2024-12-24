@@ -99,27 +99,34 @@ class PaymentBloc extends Cubit<PaymentState> {
           await _businessRepository.getPaymentMethods();
       String? economicActivity;
 
-      if (authState.currentContribuyente?.config?["aERestaurante"] != null) {
-        if (authState.currentContribuyente?.config?["aERestaurante"] is num) {
-          economicActivity = authState
-              .currentContribuyente?.config?["aERestaurante"]
-              ?.toString();
-        } else if (authState.currentContribuyente?.config?["aERestaurante"]
-            is String) {
-          economicActivity =
-              authState.currentContribuyente?.config?["aERestaurante"];
-        } else if (authState.currentContribuyente?.config?["aERestaurante"]
-                is Map &&
-            authState.currentContribuyente?.config?["aERestaurante"]
-                    ?["codigoCaeb"] !=
-                null) {
-          economicActivity = authState
-              .currentContribuyente?.config?["aERestaurante"]?["codigoCaeb"];
+      if(authState.currentContribuyente?.habilitadoFacturacion==true){
+        if(authState.currentDevice?.config.isRetail==true){
+          economicActivity = authState.currentDevice?.config.actividadEconomica;
         }
-      }
+        else{
+          if (authState.currentContribuyente?.config?["aERestaurante"] != null) {
+            if (authState.currentContribuyente?.config?["aERestaurante"] is num) {
+              economicActivity = authState
+                  .currentContribuyente?.config?["aERestaurante"]
+                  ?.toString();
+            } else if (authState.currentContribuyente?.config?["aERestaurante"]
+            is String) {
+              economicActivity =
+              authState.currentContribuyente?.config?["aERestaurante"];
+            } else if (authState.currentContribuyente?.config?["aERestaurante"]
+            is Map &&
+                authState.currentContribuyente?.config?["aERestaurante"]
+                ?["codigoCaeb"] !=
+                    null) {
+              economicActivity = authState
+                  .currentContribuyente?.config?["aERestaurante"]?["codigoCaeb"];
+            }
+          }
+        }
 
-      if (authState.currentContribuyente?.config?["aERestaurante"] == null) {
-        return emit(state.copyWith(status: PaymentStatus.errorActivity));
+        if (economicActivity==null) {
+          return emit(state.copyWith(status: PaymentStatus.errorActivity));
+        }
       }
 
       emit(state.copyWith(
@@ -278,12 +285,14 @@ class PaymentBloc extends Cubit<PaymentState> {
         );
         return;
       }
-      emit(state.copyWith(
-          paymentType: paymentType,
-          step: 2,
-          qrWait: false,
-          qrLoading: false,
-          qrCharge: () => null));
+      if(authState.currentContribuyente?.habilitadoFacturacion==true){
+        emit(state.copyWith(
+            paymentType: paymentType,
+            step: 2,
+            qrWait: false,
+            qrLoading: false,
+            qrCharge: () => null));
+      }
     } catch (e) {
       log(e.toString());
       emit(state.copyWith(status: PaymentStatus.markCreateError));
@@ -422,7 +431,12 @@ class PaymentBloc extends Cubit<PaymentState> {
       }
     } catch (e) {
       log(e.toString());
-      emit(state.copyWith(status: PaymentStatus.cardError,step: 2));
+      if(authState.currentContribuyente?.habilitadoFacturacion==true){
+        emit(state.copyWith(status: PaymentStatus.cardError,step: 2));
+      }
+      else{
+        emit(state.copyWith(status: PaymentStatus.cardError,step: 1));
+      }
       emit(state.copyWith(status: PaymentStatus.successGet));
       return false;
     }
@@ -497,7 +511,12 @@ class PaymentBloc extends Cubit<PaymentState> {
       }
     } catch (e) {
       log(e.toString());
-      emit(state.copyWith(status: PaymentStatus.cardError,step: 2));
+      if(authState.currentContribuyente?.habilitadoFacturacion==true){
+        emit(state.copyWith(status: PaymentStatus.cardError,step: 2));
+      }
+      else{
+        emit(state.copyWith(status: PaymentStatus.cardError,step: 1));
+      }
       emit(state.copyWith(status: PaymentStatus.successGet));
       return false;
     }
@@ -666,7 +685,12 @@ class PaymentBloc extends Cubit<PaymentState> {
           qrLoading: false,
           qrCharge: () => null,
           status: PaymentStatus.qrError));
-      emit(state.copyWith(step: 2, status: PaymentStatus.successGet));
+      if(authState.currentContribuyente?.habilitadoFacturacion==true){
+        emit(state.copyWith(step: 2, status: PaymentStatus.successGet));
+      }
+      else{
+        emit(state.copyWith(step: 1, status: PaymentStatus.successGet));
+      }
       return false;
     }
   }
@@ -859,8 +883,13 @@ class PaymentBloc extends Cubit<PaymentState> {
         documentNumber: state.documentNumber.changeLoading(false)));
   }
 
-  cancelQR(){
-    emit(state.copyWith(step: 2,qrLoading: false,qrCharge: ()=>null));
+  cancelQR(AuthState authState){
+    if(authState.currentContribuyente?.habilitadoFacturacion==true){
+      emit(state.copyWith(step: 2,qrLoading: false,qrCharge: ()=>null));
+    }
+    else{
+      emit(state.copyWith(step: 1,qrLoading: false,qrCharge: ()=>null));
+    }
   }
 
   _printRolloOrder(AuthState authState,

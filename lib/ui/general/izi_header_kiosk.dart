@@ -3,6 +3,8 @@ import 'package:izi_design_system/molecules/izi_btn_icon.dart';
 import 'package:izi_design_system/tokens/colors.dart';
 import 'package:izi_design_system/tokens/izi_icons.dart';
 import 'package:izi_design_system/tokens/types.dart';
+import 'package:izi_kiosco/ui/modals/help_modal.dart';
+import 'package:izi_kiosco/ui/utils/custom_alerts.dart';
 import 'package:izi_kiosco/ui/utils/responsive_utils.dart';
 class IziHeaderKiosk extends StatelessWidget {
   final VoidCallback? onBack;
@@ -29,11 +31,18 @@ class IziHeaderKiosk extends StatelessWidget {
                 buttonType: ButtonType.outline,
                 buttonSize: ButtonSize.medium,
                 buttonOnPressed: () {
-
+                  _openHelp(context);
                 }),
           )
         ],
       );
 
+  }
+  _openHelp(BuildContext context){
+    CustomAlerts.defaultAlert(
+      dismissible: true,
+        padding: EdgeInsets.zero,
+        context: context,
+        child: const HelpModal());
   }
 }

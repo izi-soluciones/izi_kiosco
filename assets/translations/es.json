@@ -477,6 +477,15 @@
     "waitingPurchase": "Procesando compra"
   }
 },
+  "helpModal": {
+    "title": "¿Necesitas ayuda?",
+    "buttons": {
+      "call": "Llamar a un asesor"
+    },
+    "messages": {
+      "messageSent": "Mensaje de ayuda enviado"
+    }
+  },
   "makeOrder": {
     "title": "Nueva orden",
     "drawer": "Nueva orden",

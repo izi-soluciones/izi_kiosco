@@ -22,6 +22,7 @@ import 'package:izi_kiosco/domain/blocs/page_utils/page_utils_bloc.dart';
 import 'package:izi_kiosco/domain/models/item.dart';
 import 'package:izi_kiosco/domain/models/payment_obj.dart';
 import 'package:izi_kiosco/domain/models/sale_link.dart';
+import 'package:izi_kiosco/ui/modals/help_modal.dart';
 import 'package:izi_kiosco/ui/modals/warning_modal.dart';
 import 'package:izi_kiosco/ui/utils/custom_alerts.dart';
 import 'package:izi_kiosco/ui/utils/dynamic_list.dart';
@@ -306,10 +307,22 @@ class _MakeOrderRetailScanState extends State<MakeOrderRetailScan> {
               buttonIcon: IziIcons.help,
               buttonType: ButtonType.outline,
               buttonSize: ButtonSize.medium,
-              buttonOnPressed: () {}),
+              buttonOnPressed: () {
+                _openHelp(context);
+              }),
         )
       ],
     );
+  }
+
+  _openHelp(BuildContext context){
+    CustomAlerts.defaultAlert(
+        dismissible: true,
+        padding: EdgeInsets.zero,
+        context: context,
+        child: const HelpModal()).then((value){
+          focusNodeKeyboard.requestFocus();
+    });
   }
   _footer(ResponsiveUtils ru) {
     double size = 24;
