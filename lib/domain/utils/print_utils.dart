@@ -259,6 +259,7 @@ class PrintUtils {
   }
 
   Future _pdfPrint(List<IziPrintItem> values) async {
+    log("pdfPrint");
     const double xs = 6;
     const double sm = 7;
     const double md = 12;

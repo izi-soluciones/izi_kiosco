@@ -524,13 +524,13 @@ class PaymentBloc extends Cubit<PaymentState> {
 
   Future<bool> makeCardPayment(AuthState authState,
       {bool atc = false, bool linkser = false, bool contactless = true}) async {
-    if ((authState.currentContribuyente?.habilitadoFacturacion!=true)||(_validateInputs() &&
-        (atc || linkser) &&
-        state.paymentObj?.isComanda == true)) {
+    if ((authState.currentContribuyente?.habilitadoFacturacion!=true||(_validateInputs() &&
+        (atc || linkser))) &&
+        state.paymentObj?.isComanda == true) {
       return await _makeCardOrderPayment(authState,
           atc: atc, contactless: contactless, linkser: linkser);
-    } else if ((authState.currentContribuyente?.habilitadoFacturacion!=true)||(_validateInputs() && authState.currentContribuyente?.habilitadoFacturacion==true &&
-        (atc || linkser)) &&
+    } else if (((authState.currentContribuyente?.habilitadoFacturacion!=true)||(_validateInputs() &&
+        (atc || linkser))) &&
         state.paymentObj?.isComanda == false) {
       return await _makeCardRetailPayment(authState,
           atc: atc, contactless: contactless, linkser: linkser);
@@ -717,11 +717,9 @@ class PaymentBloc extends Cubit<PaymentState> {
     qrStream = _socketRepository.listenPayment(charge: charge).listen(
       (event) async {
         if (event is Map && event["statusVenta"] == "success") {
-          try {
             if (event["idFactura"] is int) {
               await _printRollo(authState, idInvoice: event["idFactura"]);
             }
-          } catch (_) {}
           if (timer != null) {
             timer!.cancel();
           }

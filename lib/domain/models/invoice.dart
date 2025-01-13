@@ -54,7 +54,7 @@ class Invoice {
   int? sucursalCompra;
   String? customCasosEspeciales;
   String? creado;
-  int? almacen;
+  String? almacen;
   int? usuarioCreacion;
   int? usuarioAnulacion;
   int? usuarioModificacion;

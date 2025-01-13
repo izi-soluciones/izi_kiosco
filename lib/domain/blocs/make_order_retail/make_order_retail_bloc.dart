@@ -107,6 +107,7 @@ class MakeOrderRetailBloc extends Cubit<MakeOrderRetailState> {
           sucursal: authState.currentSucursal!.id!,
           actividadEconomica: authState.currentDevice?.config.actividadEconomica,
           almacen: authState.currentDevice!.config.almacen!,
+          prefactura: authState.currentContribuyente!.habilitadoFacturacion!=true,
           listaItems: state.itemsSelected,
           moneda: state.currentCurrency?.simbolo == "Bs"? "BOB": state.currentCurrency?.simbolo ?? "",
       );

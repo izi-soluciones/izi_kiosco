@@ -8,6 +8,7 @@ class NewSaleLinkDto {
   String almacen;
   List<Item> listaItems;
   int sucursal;
+  bool prefactura;
 
   NewSaleLinkDto(
       {required this.monedaId,
@@ -15,6 +16,7 @@ class NewSaleLinkDto {
       required this.sucursal,
       required this.actividadEconomica,
       required this.almacen,
+        required this.prefactura,
       required this.listaItems,
       required this.moneda});
 
@@ -40,7 +42,7 @@ class NewSaleLinkDto {
         "customItem": item.customItem
       }).toList(),
       "sucursal": sucursal,
-      "tipoFactura": 1
+      "tipoFactura": prefactura?-1:1
     }
   };
 }

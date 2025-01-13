@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 class AppConstants{
   static num paginationSize = 15;
-  static int timerTimeSeconds=30;
+  static int timerTimeSeconds=300;
   static int timerTimeSecondsInvoiced=90;
   static int timerHelp=60;
   static int timerMessage=12;
