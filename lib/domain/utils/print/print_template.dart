@@ -19,7 +19,7 @@ class PrintTemplate {
       Contribuyente contribuyente,
       Sucursal sucursal,
       PaymentObj? paymentObj,
-      bool errorSimphony) async {
+      bool errorSimphony,bool eatOut) async {
     List<IziPrintItem> items = [];
     if(errorSimphony){
       items.add(IziPrintText(
@@ -97,6 +97,14 @@ class PrintTemplate {
       size: IziPrintSize.md,
       align: IziPrintAlign.center,
     ));
+    if(eatOut){
+      items.add(IziPrintSeparator());
+      items.add(IziPrintText(
+          text: "ORDEN PARA PAGAR EN CAJAS",
+          size: IziPrintSize.md,
+          align: IziPrintAlign.center,
+          bold: true));
+    }
     items.add(IziPrintSeparator());
     items.add(IziPrintText(
         text: "Generada a través de iZi",

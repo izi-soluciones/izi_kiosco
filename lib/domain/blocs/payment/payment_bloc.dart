@@ -261,7 +261,7 @@ class PaymentBloc extends Cubit<PaymentState> {
         if (comanda.custom is Map && comanda.custom["simphony"]?["header"]?["checkNumber"]!=null) {
           _printRolloOrder(authState,
               orderNumber: (comanda.custom["simphony"]["header"]["checkNumber"] as int),
-              customOrderNumber:null,errorSimphony: comanda.custom["errorSimphony"]==true);
+              customOrderNumber:null,errorSimphony: comanda.custom["errorSimphony"]==true,eatOut: true);
         }
         emit(state.copyWith(
             step: comanda.custom is Map && comanda.custom["errorSimphony"]==true?6:5,
@@ -799,10 +799,10 @@ class PaymentBloc extends Cubit<PaymentState> {
                   orderNumber: event["numeroOrden"],
                   customOrderNumber: event["numeroCustom"] is int
                       ? event["numeroCustom"]
-                      : null, errorSimphony: event["errorSimphony"] is bool?event["errorSimphony"]:false);
+                      : null, errorSimphony: event["errorSimphony"] is bool?event["errorSimphony"]:false, eatOut: false);
             }
             if (kIsWeb) {
-              await Future.delayed(const Duration(seconds: 1));
+              await Future.delayed(const Duration(milliseconds: 1500));
             }
             if (event["idFactura"] is int) {
               await _printRollo(authState, idInvoice: event["idFactura"]);
@@ -863,14 +863,15 @@ class PaymentBloc extends Cubit<PaymentState> {
   }
 
   _printRolloOrder(AuthState authState,
-      {required int orderNumber, int? customOrderNumber, bool? errorSimphony}) async {
+      {required int orderNumber, int? customOrderNumber, bool? errorSimphony, required bool eatOut}) async {
     var tmp = await PrintTemplate.order80(
         orderNumber,
         customOrderNumber,
         authState.currentContribuyente!,
         authState.currentSucursal!,
         state.paymentObj,
-        errorSimphony ?? false);
+        errorSimphony ?? false,
+    eatOut);
     var printUtils = PrintUtils();
     await printUtils.print(tmp);
   }

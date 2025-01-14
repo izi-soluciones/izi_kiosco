@@ -12,6 +12,7 @@ import 'package:izi_kiosco/domain/blocs/page_utils/page_utils_bloc.dart';
 import 'package:izi_kiosco/domain/models/item.dart';
 import 'package:izi_kiosco/ui/general/izi_scroll.dart';
 import 'package:izi_kiosco/ui/pages/make_order_page/modals/item_options_modal.dart';
+import 'package:izi_kiosco/ui/pages/make_order_page/widgets/carrousel_make_order.dart';
 import 'package:izi_kiosco/ui/pages/make_order_page/widgets/make_order_category.dart';
 import 'package:izi_kiosco/ui/pages/make_order_page/widgets/make_order_header_lg.dart';
 import 'package:izi_kiosco/ui/pages/make_order_page/widgets/make_order_item_lg.dart';
@@ -77,39 +78,49 @@ class _MakeOrderSelectState extends State<MakeOrderSelect> {
                 .contains(searchInput.text.toLowerCase()))
         .toList();
     int columns = 3;
+    List<String>? banners = widget.makeOrderState.categories[widget.makeOrderState.indexCategory].bannersKiosco;
     if(widget.makeOrderState.categories.length>widget.makeOrderState.indexCategory){
       columns=widget.makeOrderState.categories[widget.makeOrderState.indexCategory].columns?? 3;
     }
     return LayoutBuilder(builder: (context, layout) {
       return IziScroll(
         scrollController: scrollControllerLg,
-        child: AlignedGridView.count(
-          crossAxisCount: ((layout.maxWidth > 1500
-              ? 6
-              : layout.maxWidth > 1250
-              ? 5
-              : layout.maxWidth > 950
-              ? columns
-              : layout.maxWidth > 700
-              ? columns
-              : layout.maxWidth > 450
-              ? 2
-              : 1)).ceil(),
-          mainAxisSpacing: 16,
-          crossAxisSpacing: 16,
+        child: SingleChildScrollView(
           controller: scrollControllerLg,
-          padding:
-              const EdgeInsets.only(top: 16, right: 32, left: 32, bottom: 63),
-          itemCount: items.length,
-          itemBuilder: (BuildContext context, int index) {
-            return MakeOrderItemLg(
-              item: items[index],
-              onPressed: () {
-                _selectItem(items,index);
-              },
-              state: widget.makeOrderState,
-            );
-          },
+          child: Column(
+            children: [
+              if(banners!=null)
+              AspectRatio(aspectRatio: 16/9,child: CarrouselMakeOrder(imageUrls: banners)),
+              AlignedGridView.count(
+                shrinkWrap: true,
+                crossAxisCount: ((layout.maxWidth > 1500
+                    ? 6
+                    : layout.maxWidth > 1250
+                    ? 5
+                    : layout.maxWidth > 950
+                    ? columns
+                    : layout.maxWidth > 700
+                    ? columns
+                    : layout.maxWidth > 450
+                    ? 2
+                    : 1)).ceil(),
+                mainAxisSpacing: 16,
+                crossAxisSpacing: 16,
+                padding:
+                    const EdgeInsets.only(top: 16, right: 32, left: 32, bottom: 63),
+                itemCount: items.length,
+                itemBuilder: (BuildContext context, int index) {
+                  return MakeOrderItemLg(
+                    item: items[index],
+                    onPressed: () {
+                      _selectItem(items,index);
+                    },
+                    state: widget.makeOrderState,
+                  );
+                },
+              ),
+            ],
+          ),
         ),
       );
     });
