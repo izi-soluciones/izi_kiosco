@@ -35,6 +35,7 @@ class AppConstants{
     CategoryIcons(["descuento"], IziIcons.bkCoreDescuento),
     CategoryIcons(["adicionales"], IziIcons.bkComplementos),
     CategoryIcons(["kids"], IziIcons.bkSueltas),
+    CategoryIcons(["promociones"], IziIcons.bkPromo),
   ];
 }
 class CategoryIcons{
