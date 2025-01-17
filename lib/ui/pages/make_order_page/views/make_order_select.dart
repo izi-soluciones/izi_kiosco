@@ -86,13 +86,13 @@ class _MakeOrderSelectState extends State<MakeOrderSelect> {
       return IziScroll(
         scrollController: scrollControllerLg,
         child: SingleChildScrollView(
-          controller: scrollControllerLg,
           child: Column(
             children: [
               if(banners!=null)
               AspectRatio(aspectRatio: 16/9,child: CarrouselMakeOrder(imageUrls: banners)),
               AlignedGridView.count(
                 shrinkWrap: true,
+                controller: scrollControllerLg,
                 crossAxisCount: ((layout.maxWidth > 1500
                     ? 6
                     : layout.maxWidth > 1250
