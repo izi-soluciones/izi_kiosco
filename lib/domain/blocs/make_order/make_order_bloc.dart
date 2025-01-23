@@ -37,7 +37,7 @@ class MakeOrderBloc extends Cubit<MakeOrderState> {
 
       List<CategoryOrder> list = await _comandaRepository.getCategories(
           sucursal: authState.currentSucursal?.id ?? 0,
-          contribuyente: authState.currentSucursal?.id ?? 0);
+          contribuyente: authState.currentContribuyente?.id ?? 0);
       var indexAll = list.indexWhere((element) => element.nombre == " Todos");
       CategoryOrder? all;
       List<Item> itemsFeatured=[];
