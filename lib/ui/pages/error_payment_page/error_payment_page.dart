@@ -9,6 +9,7 @@ import 'package:izi_design_system/tokens/colors.dart';
 import 'package:izi_design_system/tokens/types.dart';
 import 'package:izi_kiosco/data/local/local_storage_card_errors.dart';
 import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
+import 'package:izi_kiosco/domain/blocs/page_utils/page_utils_bloc.dart';
 import 'package:izi_kiosco/domain/models/card_payment.dart';
 class ErrorPaymentPage extends StatefulWidget {
   const ErrorPaymentPage({super.key});
@@ -111,6 +112,7 @@ class _ErrorPaymentPageState extends State<ErrorPaymentPage> {
                   buttonSize: ButtonSize.medium,
                   buttonOnPressed: (){
                     context.read<AuthBloc>().logout();
+                    context.read<PageUtilsBloc>().closeScreenActive();
                   }
               ),
             )

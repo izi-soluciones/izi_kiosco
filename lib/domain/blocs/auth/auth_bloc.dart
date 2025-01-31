@@ -19,7 +19,6 @@ import 'dart:developer' as developer;
 
 import 'package:izi_kiosco/domain/repositories/auth_repository.dart';
 import 'package:izi_kiosco/domain/repositories/business_repository.dart';
-import 'package:izi_kiosco/domain/utils/download_utils.dart';
 import 'package:izi_kiosco/domain/utils/print_utils.dart';
 
 part 'auth_state.dart';
@@ -113,12 +112,12 @@ class AuthBloc extends Cubit<AuthState> {
           }
           File? video;
           if(device != null){
-            try{
-              if(device.config.video !=null){
-                video = await DownloadUtils().downloadFile(device.config.video!);
-              }
-            }
-            catch(e){developer.log(e.toString());}
+            // try{
+            //   if(device.config.video !=null){
+            //     video = await DownloadUtils().downloadFile(device.config.video!);
+            //   }
+            // }
+            // catch(e){developer.log(e.toString());}
           }
 
           for (var d in devices) {
