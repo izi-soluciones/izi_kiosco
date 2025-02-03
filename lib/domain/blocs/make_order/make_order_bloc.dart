@@ -1,7 +1,9 @@
 import 'dart:developer';
 import 'package:collection/collection.dart';
 import 'package:equatable/equatable.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:izi_kiosco/app/values/app_constants.dart';
 import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
 import 'package:izi_kiosco/domain/dto/new_order_dto.dart';
@@ -108,7 +110,30 @@ class MakeOrderBloc extends Cubit<MakeOrderState> {
             cashRegisters: cashRegisters,
             currentCurrency: currentCurrency));
       }
+      else{
+
+        Fluttertoast.showToast(
+            msg: "isClosed",
+            toastLength: Toast.LENGTH_SHORT,
+            gravity: ToastGravity.BOTTOM,
+            timeInSecForIosWeb: 5,
+            backgroundColor: Colors.black,
+            textColor: Colors.white,
+            fontSize: 16.0,
+            webBgColor: "rgba(0, 0, 0, 0.8)"
+        );
+      }
     } catch (e) {
+      Fluttertoast.showToast(
+          msg: e.toString(),
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.BOTTOM,
+          timeInSecForIosWeb: 5,
+          backgroundColor: Colors.black,
+          textColor: Colors.white,
+          fontSize: 16.0,
+          webBgColor: "rgba(0, 0, 0, 0.8)"
+      );
       log(e.toString());
 
       emit(state.copyWith(status: MakeOrderStatus.errorGet));

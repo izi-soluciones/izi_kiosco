@@ -70,6 +70,7 @@ dependencies:
   printing: ^5.10.0
   video_player: ^2.8.2
   flutter_svg: ^2.0.10
+  fluttertoast: 8.2.4
 
 dev_dependencies:
   flutter_test:
