@@ -85,7 +85,7 @@ class MakeOrderRetailBloc extends Cubit<MakeOrderRetailState> {
       if (itemSaved == -1) {
         var itemAdd = item.copyWith();
         itemAdd.cantidad = 1;
-        list.add(itemAdd);
+        list.insert(0,itemAdd);
       } else {
         var itemAdd =list[itemSaved].copyWith();
         itemAdd.cantidad = itemAdd.cantidad + 1;
@@ -119,5 +119,11 @@ class MakeOrderRetailBloc extends Cubit<MakeOrderRetailState> {
       emit(state.copyWith(status: MakeOrderRetailStatus.successGet));
       return null;
     }
+  }
+
+  removeItem(Item item){
+    List<Item> list = List.of(state.itemsSelected);
+    list.removeWhere((element) => element.id == item.id);
+    emit(state.copyWith(itemsSelected: list));
   }
 }

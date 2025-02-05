@@ -9,6 +9,7 @@ import 'package:izi_design_system/tokens/izi_icons.dart';
 import 'package:izi_kiosco/app/values/assets_keys.dart';
 import 'package:izi_kiosco/app/values/locale_keys.g.dart';
 import 'package:izi_kiosco/app/values/routes_keys.dart';
+import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/make_order_retail/make_order_retail_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/page_utils/page_utils_bloc.dart';
 import 'package:izi_kiosco/ui/pages/make_order_page/widgets/make_order_header_lg.dart';
@@ -23,6 +24,7 @@ class MakeOrderRetailInit extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ru = ResponsiveUtils(context);
+    final canInvoice=context.read<AuthBloc>().state.currentContribuyente?.habilitadoFacturacion==true;
     return Stack(
       children: [
         Positioned.fill(
@@ -56,17 +58,18 @@ class MakeOrderRetailInit extends StatelessWidget {
                                   IziIcons.barCode,
                                   "1. ${LocaleKeys.makeOrderRetail_init_scanProducts.tr()}",
                                   ru),
+                              if(canInvoice)
                               _infoItem(
                                   IziIcons.invoice2,
                                   "2. ${LocaleKeys.makeOrderRetail_init_enterInvoiceData.tr()}",
                                   ru),
                               _infoItem(
                                   IziIcons.paymentMethod,
-                                  "3. ${LocaleKeys.makeOrderRetail_init_selectPaymentMethod.tr()}",
+                                  "${canInvoice?3:2}. ${LocaleKeys.makeOrderRetail_init_selectPaymentMethod.tr()}",
                                   ru),
                               _infoItem(
                                   IziIcons.purchase,
-                                  "4. ${LocaleKeys.makeOrderRetail_init_retirePurchase.tr()}",
+                                  "${canInvoice?4:3}. ${LocaleKeys.makeOrderRetail_init_retirePurchase.tr()}",
                                   ru)
                             ],
                           ),

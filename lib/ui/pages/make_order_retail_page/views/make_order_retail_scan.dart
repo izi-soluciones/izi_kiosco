@@ -142,6 +142,7 @@ class _MakeOrderRetailScanState extends State<MakeOrderRetailScan> {
                             : LocaleKeys.makeOrderRetail_scan_totalPriceAbr
                                 .tr(),
                         fontWeight: FontWeight.w500)),
+                const SizedBox(width: 32,)
               ],
             ),
             Flexible(
@@ -246,7 +247,7 @@ class _MakeOrderRetailScanState extends State<MakeOrderRetailScan> {
                               fontFamily:
                                   IziTypographyConfig.familyHindSiliguri,
                               color: IziColors.primaryDarken,
-                              fontWeight: FontWeight.w400,
+                              fontWeight: FontWeight.w600,
                             )),
                       ]))
                 ],
@@ -275,6 +276,17 @@ class _MakeOrderRetailScanState extends State<MakeOrderRetailScan> {
                   text: (item.precioUnitario * item.cantidad).moneyFormat(
                       currency: widget.state.currentCurrency?.simbolo),
                   fontWeight: FontWeight.w500),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+            child: IziBtnIcon(
+              buttonOnPressed: (){
+                context.read<MakeOrderRetailBloc>().removeItem(item);
+              },
+              buttonSize: ButtonSize.small,
+              buttonType: ButtonType.terciary,
+              buttonIcon: IziIcons.close,
             ),
           ),
         ],
