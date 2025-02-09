@@ -164,6 +164,7 @@ class MakeOrderBloc extends Cubit<MakeOrderState> {
         categories[indexCat].items.add(item);
       }
     }
+    print(categories.length);
     emit(state.copyWith(itemsSelected: categories));
   }
 
@@ -270,7 +271,17 @@ class MakeOrderBloc extends Cubit<MakeOrderState> {
   }
 
   resetOrder(){
-    emit(state.copyWith(numberDiners: ()=>null,tableId: ()=>null,itemsSelected: [],discountAmount: 0));
+    emit(state.copyWith(
+        numberDiners: ()=>null,
+        tableId: ()=>null,
+        itemsSelected: [],
+        discountAmount: 0,
+        itemModal: ()=>null,
+        status: MakeOrderStatus.waitingGet,
+        indexCategory: 0,
+
+        step: 0)
+    );
   }
   printRollo(AuthState authState)async{
     var invoice = await _comandaRepository.getInvoice(1842665);
