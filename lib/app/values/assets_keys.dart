@@ -12,9 +12,12 @@ class AssetsKeys{
   static const String iziWebUrl="https://izisoluciones.com/";
 
   static const String iziLogo="assets/izi_logo.png";
+  static const String texasLogoBlanco="assets/icons/logo_blanco.png";
   static const String cityGraphic="assets/graphics/city_1.png";
   static const String iziSound="assets/sounds/izi_sound.wav";
   static const String symbioticLogo="assets/icons/isoSym.png";
+  static const String homeGraphic="assets/graphics/home_image.png";
+  static const String texasGraphic="assets/graphics/TEXAS.jpg";
 
 
 

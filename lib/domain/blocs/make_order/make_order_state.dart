@@ -45,39 +45,6 @@ class MakeOrderState extends Equatable{
 
   factory MakeOrderState.init(String? tableId,int? numberDiners,Comanda? order){
     List<CategoryOrder> initSelectItems=[];
-    if(order!=null){
-      for(var item in order.listaItems){
-        var itemNew=Item(
-            cantidad: item.cantidad ?? 0,
-            codigo: item.codigo,
-            customItem: item.customItem,
-            descripcion: item.descripcion,
-            detalle: item.detalle,
-            imagen: item.imagen,
-            modificadores: item.modificadoresEdit is List? (item.modificadoresEdit as List).map((e) => Modifier.fromJson(e)).toList():[],
-            modificadoresRaw: item.modificadoresEdit,
-            precioModificadores: item.precioModificadores??0,
-            nombre: item.nombre,
-            valor: item.valor,
-            activo: true,
-            id: item.item??0,
-            precioUnitario: item.precioUnitario??0,
-            categoria: item.categoria,
-            categoriaId: item.categoriaId,
-            centroProduccion: 1,
-            codigoBarras: ""
-        );
-
-        int indexCategory= initSelectItems.indexWhere((element) => element.id==item.categoriaId);
-        if(indexCategory==-1){
-          initSelectItems.add(CategoryOrder(
-              nombre: itemNew.categoria??"", id:itemNew.categoriaId, items:[itemNew]));
-        }
-        else{
-          initSelectItems[indexCategory].items.add(itemNew);
-        }
-      }
-    }
     return MakeOrderState(
         status: MakeOrderStatus.waitingGet,
         categories: const [],

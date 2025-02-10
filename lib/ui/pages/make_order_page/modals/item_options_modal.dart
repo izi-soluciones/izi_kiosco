@@ -232,6 +232,7 @@ class _ItemOptionsModalState extends State<ItemOptionsModal> {
                   buttonText: LocaleKeys.makeOrder_buttons_accept.tr(),
                   buttonType: ButtonType.primary,
                   buttonSize: ButtonSize.medium,
+                  color: IziColors.orangeTexas,
                   buttonOnPressed: (){
                     if(_verifyRequired()){
                       Navigator.pop(context,itemEdit);

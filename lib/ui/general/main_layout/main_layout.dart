@@ -230,7 +230,6 @@ class MainLayout extends StatelessWidget {
             item: item, state: context.read<MakeOrderBloc>().state))
         .then((result) {
       if (result is Item) {
-        print(result);
         var itemNew = result;
         itemNew.cantidad = 1;
         context.read<MakeOrderBloc>().addItem(item: itemNew);

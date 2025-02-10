@@ -34,11 +34,13 @@ class AppConstants{
     CategoryIcons(["jugo","bebidas","gaseosas"], Icons.local_drink_outlined),
     CategoryIcons(["car"], Icons.directions_car),
     CategoryIcons(["niños"], Icons.child_care_outlined),
-    CategoryIcons(["otras"], Icons.restaurant)
+    CategoryIcons(["otras"], Icons.restaurant),
+    CategoryIcons(["bbq ribs"], Icons.restaurant)
   ];
 }
 class CategoryIcons{
   final List<String> name;
   final IconData icon;
-  const CategoryIcons(this.name,this.icon);
+  final String? image;
+  const CategoryIcons(this.name,this.icon,{this.image});
 }

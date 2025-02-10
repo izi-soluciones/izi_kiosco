@@ -533,6 +533,7 @@ class _PaymentPageQrState extends State<PaymentPageQr> {
                           ? "${LocaleKeys.payment_buttons_regenerateQR.tr()} ${qrLock > 0 ? qrLock : ""}"
                           : LocaleKeys.payment_buttons_generateQr.tr(),
                       buttonType: ButtonType.secondary,
+                      color: IziColors.orangeTexas,
                       buttonSize:
                           ru.gtXs() ? ButtonSize.large : ButtonSize.medium,
                       loading:
@@ -555,6 +556,7 @@ class _PaymentPageQrState extends State<PaymentPageQr> {
                         ? "${LocaleKeys.payment_buttons_regenerateQR.tr()} ${qrLock > 0 ? qrLock : ""}"
                         : LocaleKeys.payment_buttons_generateQr.tr(),
                     buttonType: ButtonType.secondary,
+                    color: IziColors.orangeTexas,
                     buttonSize: ru.gtXs() ? ButtonSize.large : ButtonSize.medium,
                     loading: widget.state.status == PaymentStatus.waitingInvoice,
                     buttonOnPressed: qrLock > 0 || widget.state.qrLoading
@@ -579,6 +581,7 @@ class _PaymentPageQrState extends State<PaymentPageQr> {
                   child: IziBtn(
                       buttonText: LocaleKeys.payment_buttons_paymentWithCardPOs.tr(),
                       buttonType: ButtonType.primary,
+                      color: IziColors.orangeTexas,
                       buttonSize:
                       ru.gtXs() ? ButtonSize.large : ButtonSize.medium,
                       buttonOnPressed: () async {
@@ -589,6 +592,7 @@ class _PaymentPageQrState extends State<PaymentPageQr> {
                 IziBtn(
                     buttonText: LocaleKeys.payment_buttons_paymentWithCardPOs.tr(),
                     buttonType: ButtonType.primary,
+                    color: IziColors.orangeTexas,
                     buttonSize:
                     ru.gtXs() ? ButtonSize.large : ButtonSize.medium,
                     buttonOnPressed: () async {

@@ -17,6 +17,7 @@ class Item {
   num? valor;
   num precioModificadores;
   String? detalle;
+  bool habilitadoKiosco;
 
   Item(
       {required this.cantidad,
@@ -36,6 +37,7 @@ class Item {
       required this.categoriaId,
       required this.centroProduccion,
         this.precioModificadores = 0,
+        required this.habilitadoKiosco,
       required this.codigoBarras});
   factory Item.fromJson(Map<dynamic, dynamic> json) {
     List listModificadores =
@@ -52,13 +54,14 @@ class Item {
         modificadores:
             listModificadores.map((e) => Modifier.fromJson(e)).toList(),
         modificadoresRaw: json["modificadores"],
-        precioUnitario: json["precioUnitario"],
+        precioUnitario: json["precioUnitario"] ?? 0,
         activo: json["activo"] ?? false,
         categoria: json["categoria"],
         categoriaId: json["categoriaId"],
         centroProduccion: json["centroProduccion"],
         codigoBarras: json["codigoBarras"],
         id: json["id"] ?? 0,
+        habilitadoKiosco: json["habilitadoKiosco"] ?? false,
         valor: json["valor"]);
   }
 
@@ -79,6 +82,7 @@ class Item {
       categoria: categoria,
       categoriaId: categoriaId,
       centroProduccion: centroProduccion,
+      habilitadoKiosco: habilitadoKiosco,
       codigoBarras: codigoBarras);
 
   Map<String,dynamic> toJson(){

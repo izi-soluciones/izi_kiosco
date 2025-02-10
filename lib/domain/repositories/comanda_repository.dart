@@ -4,10 +4,11 @@ import 'package:izi_kiosco/domain/dto/new_order_dto.dart';
 import 'package:izi_kiosco/domain/dto/paid_charge_dto.dart';
 import 'package:izi_kiosco/domain/dto/payment_dto.dart';
 import 'package:izi_kiosco/domain/models/card_payment.dart';
-import 'package:izi_kiosco/domain/models/category_order.dart';
+import 'package:izi_kiosco/domain/models/category.dart';
 import 'package:izi_kiosco/domain/models/charge.dart';
 import 'package:izi_kiosco/domain/models/comanda.dart';
 import 'package:izi_kiosco/domain/models/invoice.dart';
+import 'package:izi_kiosco/domain/models/item.dart';
 import 'package:izi_kiosco/domain/models/payment.dart';
 import 'package:izi_kiosco/domain/models/consumption_point.dart';
 import 'package:izi_kiosco/domain/models/room.dart';
@@ -23,7 +24,8 @@ abstract class ComandaRepository{
   Future<void> removePayment({required int paymentId});
   Future<Charge> generatePayment({required int contribuyenteId, required PaymentDto payment});
   Future<void> markInternal({required InternalMovementDto internalMovementDto});
-  Future<List<CategoryOrder>> getCategories({required int sucursal,required int contribuyente});
+  Future<List<Category>> getCategories({required int sucursal,required int contribuyente});
+  Future<List<Item>> getItems({required int sucursal,required int contribuyente});
 
 
   Future<List<ConsumptionPoint>> getConsumptionPoints(int sucursal, int contribuyente,{String? roomId});

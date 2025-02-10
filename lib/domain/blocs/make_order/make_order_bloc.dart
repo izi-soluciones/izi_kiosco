@@ -6,6 +6,7 @@ import 'package:izi_kiosco/app/values/app_constants.dart';
 import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
 import 'package:izi_kiosco/domain/dto/new_order_dto.dart';
 import 'package:izi_kiosco/domain/models/cash_register.dart';
+import 'package:izi_kiosco/domain/models/category.dart';
 import 'package:izi_kiosco/domain/models/category_order.dart';
 import 'package:izi_kiosco/domain/models/comanda.dart';
 import 'package:izi_kiosco/domain/models/consumption_point.dart';
@@ -35,16 +36,21 @@ class MakeOrderBloc extends Cubit<MakeOrderState> {
       
       
 
-      List<CategoryOrder> list = await _comandaRepository.getCategories(
+      List<Category> listCategories = await _comandaRepository.getCategories(
           sucursal: authState.currentSucursal?.id ?? 0,
           contribuyente: authState.currentContribuyente?.id ?? 0);
-      var indexAll = list.indexWhere((element) => element.nombre == " Todos");
-      CategoryOrder? all;
+
+      List<Item> listItems = await _comandaRepository.getItems(
+          sucursal: authState.currentSucursal?.id ?? 0,
+          contribuyente: authState.currentContribuyente?.id ?? 0);
+
+      List<CategoryOrder> list = listCategories.map((e) => CategoryOrder(nombre: e.name, image: e.image,items: listItems.where((element) => element.categoriaId==e.id && element.habilitadoKiosco).toList())).toList();
+
+
+      list = list.where((element) => element.items.isNotEmpty).toList();
       List<Item> itemsFeatured=[];
-      if (indexAll != -1) {
-        all = list.removeAt(indexAll);
-        itemsFeatured=all.items.where((element) => element.customItem is Map && element.customItem?["kiosco"]?["destacado"]==true).toList();
-      }
+      itemsFeatured=listItems.where((element) => element.customItem is Map && element.customItem?["kiosco"]?["destacado"]==true).toList();
+
       list.sort(
         (a, b) {
           return a.nombre.toLowerCase().compareTo(b .nombre.toLowerCase());
@@ -164,7 +170,6 @@ class MakeOrderBloc extends Cubit<MakeOrderState> {
         categories[indexCat].items.add(item);
       }
     }
-    print(categories.length);
     emit(state.copyWith(itemsSelected: categories));
   }
 

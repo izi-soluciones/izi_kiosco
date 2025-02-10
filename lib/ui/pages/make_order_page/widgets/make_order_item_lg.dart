@@ -125,6 +125,7 @@ class MakeOrderItemLg extends StatelessWidget {
                       IziBtnIcon(
                           buttonIcon: IziIcons.plusB,
                           buttonType: ButtonType.secondary,
+                          color: IziColors.orangeTexas,
                           buttonSize: ButtonSize.medium,
                           buttonOnPressed: onPressed
                       ),

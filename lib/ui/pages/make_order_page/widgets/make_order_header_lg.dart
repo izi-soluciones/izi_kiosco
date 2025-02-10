@@ -9,7 +9,8 @@ import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
 
 class MakeOrderHeaderLg extends StatelessWidget {
   final VoidCallback? onPop;
-  const MakeOrderHeaderLg({super.key,this.onPop});
+  final Widget? icon;
+  const MakeOrderHeaderLg({super.key,this.onPop,this.icon});
 
   @override
   Widget build(BuildContext context) {
@@ -39,7 +40,7 @@ class MakeOrderHeaderLg extends StatelessWidget {
                 context.read<AuthBloc>().state.currentContribuyente?.logo != null
                     ? SizedBox(
                     height: 100,
-                    child: CachedNetworkImage(
+                    child: icon ?? CachedNetworkImage(
                       imageUrl:
                       "${dotenv.env[EnvKeys.apiUrl]}/contribuyentes/${context.read<AuthBloc>().state.currentContribuyente?.id}/logo",
                       fit: BoxFit.fitHeight,

@@ -4,7 +4,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:go_router/go_router.dart';
 import 'package:izi_design_system/tokens/izi_icons.dart';
-import 'package:izi_kiosco/app/values/app_constants.dart';
 import 'package:izi_kiosco/app/values/locale_keys.g.dart';
 import 'package:izi_kiosco/app/values/routes_keys.dart';
 import 'package:izi_kiosco/domain/blocs/make_order/make_order_bloc.dart';
@@ -90,7 +89,7 @@ class _MakeOrderSelectState extends State<MakeOrderSelect> {
               ? 4
               : layout.maxWidth > 450
               ? 2
-              : 1)/(widget.makeOrderState.indexCategory==0?2:1)).ceil(),
+              : 1)/(widget.makeOrderState.indexCategory==0 && widget.makeOrderState.categories.firstOrNull?.nombre.isEmpty==true?2:1)).ceil(),
           mainAxisSpacing: 16,
           crossAxisSpacing: 16,
           controller: scrollControllerLg,
@@ -132,20 +131,7 @@ class _MakeOrderSelectState extends State<MakeOrderSelect> {
       });
     }
   }
-  
-  IconData _selectIconCategory(String name){
-    if(name.isEmpty){
-      return IziIcons.client;
-    }
-    for(var ci in AppConstants.categoryIcons){
-      if(ci.name.indexWhere((element) {
-        return name.toLowerCase().contains(element);
-      })!=-1){
-        return ci.icon;
-      }
-    }
-    return IziIcons.list;
-  }
+
 
   Widget _headerLarge() {
     return SingleChildScrollView(
@@ -155,7 +141,8 @@ class _MakeOrderSelectState extends State<MakeOrderSelect> {
           gap: 16,
           children: widget.makeOrderState.categories.asMap().entries.map((e) {
             return MakeOrderCategory(
-                icon: _selectIconCategory(e.value.nombre.toLowerCase()),
+              icon: e.value.nombre.isEmpty?IziIcons.client:null,
+                image: e.value.image,
                 onPressed: () {
                   context.read<MakeOrderBloc>().changeCategory(e.key);
                 },

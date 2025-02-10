@@ -7,6 +7,7 @@ import 'package:izi_design_system/atoms/izi_card.dart';
 import 'package:izi_design_system/atoms/izi_typography.dart';
 import 'package:izi_design_system/tokens/colors.dart';
 import 'package:izi_design_system/tokens/izi_icons.dart';
+import 'package:izi_kiosco/app/values/assets_keys.dart';
 import 'package:izi_kiosco/app/values/locale_keys.g.dart';
 import 'package:izi_kiosco/app/values/routes_keys.dart';
 import 'package:izi_kiosco/domain/blocs/make_order/make_order_bloc.dart';
@@ -30,60 +31,69 @@ class _MakeOrderTypeState extends State<MakeOrderType> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              MakeOrderHeaderLg(onPop: () {
-                GoRouter.of(context).goNamed(RoutesKeys.home);
-                context.read<PageUtilsBloc>().closeScreenActive();
-              }),
-              const SizedBox(
-                height: 60,
-              ),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Column(
-                    children: [
-                      Expanded(
-                        child: ConstrainedBox(
-                          constraints: const BoxConstraints(maxWidth: 650),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              IziText.titleBig(
-                                  color: IziColors.darkGrey,
-                                  textAlign: TextAlign.left,
-                                  text: "${LocaleKeys
-                                      .makeOrder_body_selectWhere
-                                      .tr()}:",
-                                  fontWeight: FontWeight.w500),
-                              const SizedBox(
-                                height: 60,
-                              ),
-                              Row(
-                                children: [
-                                  Expanded(
-                                      child: _buttonSelect(IziIcons.hereOrder, LocaleKeys.makeOrder_body_eatHere.tr(), false)
-                                  ),
-                                  const SizedBox(width: 24,),
-                                  Expanded(
-                                      child: _buttonSelect(IziIcons.takeAwayOrder, LocaleKeys.makeOrder_body_takeAway.tr(), true)
-                                  )
-                                ],
-                              ),
-                              const SizedBox(
-                                height: 30,
-                              ),
-                            ],
+    return Container(
+      color: IziColors.primary,
+      child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                MakeOrderHeaderLg(onPop: () {
+                  GoRouter.of(context).goNamed(RoutesKeys.home);
+                  context.read<PageUtilsBloc>().closeScreenActive();
+                },icon: const SizedBox.shrink()),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Image.asset(AssetsKeys.texasLogoBlanco,width: 300,),
+                  ],
+                ),
+                const SizedBox(
+                  height: 60,
+                ),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Column(
+                      children: [
+                        Expanded(
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(maxWidth: 650),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                IziText.titleBig(
+                                    color: IziColors.white,
+                                    textAlign: TextAlign.left,
+                                    text: "${LocaleKeys
+                                        .makeOrder_body_selectWhere
+                                        .tr()}:",
+                                    fontWeight: FontWeight.w500),
+                                const SizedBox(
+                                  height: 60,
+                                ),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                        child: _buttonSelect(IziIcons.hereOrder, LocaleKeys.makeOrder_body_eatHere.tr(), false)
+                                    ),
+                                    const SizedBox(width: 24,),
+                                    Expanded(
+                                        child: _buttonSelect(IziIcons.takeAwayOrder, LocaleKeys.makeOrder_body_takeAway.tr(), true)
+                                    )
+                                  ],
+                                ),
+                                const SizedBox(
+                                  height: 30,
+                                ),
+                              ],
+                            ),
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+      ),
     );
   }
 
@@ -112,7 +122,7 @@ class _MakeOrderTypeState extends State<MakeOrderType> {
           ),
         ),
         const SizedBox(height: 12,),
-        IziText.titleBig(color: IziColors.darkGrey85, text: text,maxLines: 5,textAlign: TextAlign.center)
+        IziText.titleBig(color: IziColors.white, text: text,maxLines: 5,textAlign: TextAlign.center)
       ],
     );
   }

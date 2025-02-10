@@ -15,7 +15,7 @@ class MakeOrderAmountBtn extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       elevation: 0,
-      color: onPressed==null?IziColors.lightGrey:IziColors.secondary,
+      color: onPressed==null?IziColors.lightGrey:IziColors.orangeTexas,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(6),
       ),

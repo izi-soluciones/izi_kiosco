@@ -11,10 +11,11 @@ import 'package:izi_kiosco/domain/dto/new_order_dto.dart';
 import 'package:izi_kiosco/domain/dto/paid_charge_dto.dart';
 import 'package:izi_kiosco/domain/dto/payment_dto.dart';
 import 'package:izi_kiosco/domain/models/card_payment.dart';
-import 'package:izi_kiosco/domain/models/category_order.dart';
+import 'package:izi_kiosco/domain/models/category.dart';
 import 'package:izi_kiosco/domain/models/charge.dart';
 import 'package:izi_kiosco/domain/models/comanda.dart';
 import 'package:izi_kiosco/domain/models/invoice.dart';
+import 'package:izi_kiosco/domain/models/item.dart';
 import 'package:izi_kiosco/domain/models/payment.dart';
 import 'package:izi_kiosco/domain/models/consumption_point.dart';
 import 'package:izi_kiosco/domain/models/room.dart';
@@ -353,18 +354,17 @@ class ComandaRepositoryHttp extends ComandaRepository {
   }
 
   @override
-  Future<List<CategoryOrder>> getCategories(
+  Future<List<Category>> getCategories(
       {required int sucursal, required int contribuyente}) async {
     try {
       String path =
-          "/contribuyentes/$contribuyente/sucursales/$sucursal/inventario/recetas/categorias";
+          "/contribuyentes/$contribuyente/categorias-inventario";
       var response = await _dioClient.get(
           uri: path,
-          options: Options(responseType: ResponseType.json),
-          queryParameters: {"habilitadoKiosco": 1});
+          options: Options(responseType: ResponseType.json));
       if (response.statusCode == 200) {
         return List.from(response.data)
-            .map((e) => CategoryOrder.fromJson(e))
+            .map((e) => Category.fromJson(e))
             .toList();
       } else {
         throw response.data;
@@ -617,6 +617,35 @@ class ComandaRepositoryHttp extends ComandaRepository {
         if (response.data?["status"] ?? false) {
           throw response.data?["data"];
         }
+        throw response.data;
+      }
+    } on DioException catch (e) {
+      if (e.response?.data is String) {
+        throw e.response?.data;
+      }
+      throw e.error ?? "Network Error";
+    } catch (error) {
+      throw error.toString();
+    }
+  }
+
+  @override
+  Future<List<Item>> getItems({required int sucursal, required int contribuyente}) async{
+    try {
+      String path =
+          "/items-inventarios";
+      var response = await _dioClient.get(
+          uri: path,
+          options: Options(responseType: ResponseType.json),
+      queryParameters: {
+            "seVende": true,
+        "sucursal": sucursal
+      });
+      if (response.statusCode == 200) {
+        return List.from(response.data)
+            .map((e) => Item.fromJson(e))
+            .toList();
+      } else {
         throw response.data;
       }
     } on DioException catch (e) {
