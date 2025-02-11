@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:izi_design_system/tokens/colors.dart';
 import 'package:izi_kiosco/data/repositories/auth/auth_repository_http.dart';
 import 'package:izi_kiosco/data/repositories/business/business_repository_http.dart';
 import 'package:izi_kiosco/data/repositories/comanda/comanda_repository_http.dart';
@@ -149,6 +150,7 @@ class Routes {
                           orderId: orderId,
                           authState: context.read<AuthBloc>().state),
                     child: Scaffold(
+                        backgroundColor: IziColors.lightGrey30,
                         body: PaymentPage()),
                   ),
                 );

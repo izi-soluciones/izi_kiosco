@@ -14,7 +14,7 @@ class PaymentShimmerPaymentMethod extends StatelessWidget {
         Container(
           width: double.infinity,
             decoration: const BoxDecoration(
-                color: Colors.white,
+                color: IziColors.lightGrey30,
                 border:
                 Border(bottom: BorderSide(color: IziColors.grey25, width: 1))),
             padding: const EdgeInsets.symmetric(vertical: 32),

@@ -1,11 +1,7 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:izi_design_system/tokens/colors.dart';
 import 'package:izi_design_system/tokens/izi_icons.dart';
-import 'package:izi_kiosco/app/values/env_keys.dart';
-import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
+import 'package:izi_kiosco/app/values/assets_keys.dart';
 
 class MakeOrderHeaderLg extends StatelessWidget {
   final VoidCallback? onPop;
@@ -37,21 +33,14 @@ class MakeOrderHeaderLg extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                context.read<AuthBloc>().state.currentContribuyente?.logo != null
-                    ? SizedBox(
+                icon??SizedBox(
                     height: 100,
-                    child: icon ?? CachedNetworkImage(
-                      imageUrl:
-                      "${dotenv.env[EnvKeys.apiUrl]}/contribuyentes/${context.read<AuthBloc>().state.currentContribuyente?.id}/logo",
-                      fit: BoxFit.fitHeight,
-                      placeholder: (context, url) => const Center(
-                          child: CircularProgressIndicator(
-                              strokeWidth: 2, color: IziColors.dark)),
-                      errorWidget: (context, url, error) {
-                        return const SizedBox.shrink();
-                      },
-                    ))
-                    : const SizedBox.shrink(),
+                    width: 150,
+                    child: Image.asset(
+                      AssetsKeys.texasLogoColor,
+                      fit: BoxFit.fitWidth,
+                    )
+                )
               ],
             ),
           )

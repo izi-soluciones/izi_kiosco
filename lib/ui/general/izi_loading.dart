@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:izi_design_system/atoms/izi_typography.dart';
 import 'package:izi_design_system/tokens/colors.dart';
 import 'package:izi_kiosco/app/values/assets_keys.dart';
-import 'package:lottie/lottie.dart';
 
 class IziLoading extends StatelessWidget {
   final String title;
@@ -28,7 +27,8 @@ class IziLoading extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                  Lottie.asset(AssetsKeys.iziLoadingJson,width: 100,repeat: true,),
+                Image.asset(AssetsKeys.texasLogoColor,width: 100,),
+                const SizedBox(height: 16,),
                 IziText.title(color: IziColors.darkGrey, text: title,fontWeight: FontWeight.w400),
                 const SizedBox(height: 8,),
                 const SizedBox(

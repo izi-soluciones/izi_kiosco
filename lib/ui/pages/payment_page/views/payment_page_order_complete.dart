@@ -1,18 +1,15 @@
+// ignore: unused_import
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:go_router/go_router.dart';
 import 'package:izi_design_system/atoms/izi_typography.dart';
 import 'package:izi_design_system/molecules/izi_btn.dart';
 import 'package:izi_design_system/tokens/colors.dart';
 import 'package:izi_design_system/tokens/types.dart';
 import 'package:izi_kiosco/app/values/assets_keys.dart';
-import 'package:izi_kiosco/app/values/env_keys.dart';
 import 'package:izi_kiosco/app/values/locale_keys.g.dart';
 import 'package:izi_kiosco/app/values/routes_keys.dart';
-import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/payment/payment_bloc.dart';
 import 'package:lottie/lottie.dart';
 
@@ -25,21 +22,14 @@ class PaymentPageOrderComplete extends StatelessWidget {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        context.read<AuthBloc>().state.currentContribuyente?.logo != null
-            ? SizedBox(
+        SizedBox(
             height: 150,
-            child: CachedNetworkImage(
-              imageUrl:
-              "${dotenv.env[EnvKeys.apiUrl]}/contribuyentes/${context.read<AuthBloc>().state.currentContribuyente?.id}/logo",
-              fit: BoxFit.fitHeight,
-              placeholder: (context, url) => const Center(
-                  child: CircularProgressIndicator(
-                      strokeWidth: 2, color: IziColors.dark)),
-              errorWidget: (context, url, error) {
-                return const SizedBox.shrink();
-              },
-            ))
-            : const SizedBox.shrink(),
+            width: 150,
+            child: Image.asset(
+              AssetsKeys.texasLogoColor,
+              fit: BoxFit.fitWidth,
+            )
+        ),
         const SizedBox(height: 32,),
         IziText.titleBig(color: IziColors.darkGrey, text: state.paymentType==PaymentType.cashRegister?LocaleKeys.payment_subtitles_successOrder.tr():LocaleKeys.payment_subtitles_successPayment.tr(),fontWeight: FontWeight.w600),
         Lottie.asset(AssetsKeys.okAnimationJson,width: 250,repeat: false,),

@@ -25,7 +25,7 @@ class PaymentHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
         decoration: const BoxDecoration(
-            color: Colors.white,
+            color: IziColors.lightGrey30,
             border:
                 Border(bottom: BorderSide(color: IziColors.grey25, width: 1))),
         padding: const EdgeInsets.symmetric(vertical: 32),
