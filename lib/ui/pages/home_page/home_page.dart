@@ -47,7 +47,7 @@ class _HomePageState extends State<HomePage> {
         _controller?.dispose();
       }
       var authState = (context ?? this.context).read<AuthBloc>().state;
-      Future.delayed(const Duration(seconds: 3)).then((value) {
+      Future.delayed(const Duration(seconds: 30)).then((value) {
         if(!mounted){
           return;
         }
