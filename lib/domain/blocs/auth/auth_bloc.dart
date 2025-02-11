@@ -64,6 +64,9 @@ class AuthBloc extends Cubit<AuthState> {
         LoginResponse loginResponse = await _authRepository.login(loginRequest);
         token = loginResponse.token;
         await TokenUtils.saveToken(token);
+        if(loginResponse.refreshToken!=null){
+          await TokenUtils.saveRefreshToken(loginResponse.refreshToken!);
+        }
       }
       if (token != null && storageUser != null) {
         User user = await _authRepository.getCurrentUserById(storageUser.id);
