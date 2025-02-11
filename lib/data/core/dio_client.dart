@@ -120,6 +120,7 @@ class AppInterceptor extends InterceptorsWrapper {
     if (err.response?.statusCode == 401 || err.response?.statusCode == 403) {
       try {
         String? newToken = await _getNewToken();
+        print(err.response?.statusCode);
         if (newToken != null) {
           final RequestOptions newRequest = err.requestOptions;
           newRequest.headers["Authorization"] = "Bearer $newToken";
@@ -164,7 +165,7 @@ Future<String?> _getNewToken()async{
     }
     return null;
   }
-  catch(_){
+  catch(e){
     return null;
   }
 }

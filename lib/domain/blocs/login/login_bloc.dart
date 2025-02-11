@@ -23,6 +23,9 @@ class LoginBloc extends Cubit<LoginState>{
         emit(state.copyWith(status: LoginStatus.waitingLogin));
         LoginResponse loginResponse=await _authRepository.login(loginRequest);
         await TokenUtils.saveToken(loginResponse.token);
+        if(loginResponse.refreshToken!=null){
+          await TokenUtils.saveRefreshToken(loginResponse.refreshToken!);
+        }
         await UserUtils.saveUser(loginResponse.user);
         await LocalStorageCredentials.saveCredentials(state.password.value, state.user.value);
         emit(state.copyWith(status: LoginStatus.successLogin));
