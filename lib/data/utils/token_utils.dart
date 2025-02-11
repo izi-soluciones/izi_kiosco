@@ -14,4 +14,18 @@ class TokenUtils{
     SharedPreferences prefs=await SharedPreferences.getInstance();
     await prefs.remove("token");
   }
+
+  static Future<void> saveRefreshToken(String token)async{
+    SharedPreferences prefs=await SharedPreferences.getInstance();
+    await prefs.setString("rt", token);
+  }
+  static Future<String?> getRefreshToken()async{
+    SharedPreferences prefs=await SharedPreferences.getInstance();
+    String? token=prefs.getString("rt");
+    return token;
+  }
+  static Future<void> deleteRefreshToken()async{
+    SharedPreferences prefs=await SharedPreferences.getInstance();
+    await prefs.remove("rt");
+  }
 }

@@ -10,7 +10,7 @@ class DioClient {
   DioClient() {
     _dio.options = BaseOptions(
         baseUrl: dotenv.env[EnvKeys.apiUrl] ?? "");
-    _dio.interceptors.add(AppInterceptor());
+    _dio.interceptors.add(AppInterceptor(_dio));
   }
 
   Future<Response> postFile({
@@ -49,7 +49,7 @@ class DioClient {
       dio = Dio();
       dio.options = BaseOptions(
           baseUrl: baseUrl);
-      dio.interceptors.add(AppInterceptor());
+      dio.interceptors.add(AppInterceptor(dio));
     }
 
     //error
@@ -82,7 +82,7 @@ class DioClient {
       dio = Dio();
       dio.options = BaseOptions(
           baseUrl: baseUrl);
-      dio.interceptors.add(AppInterceptor());
+      dio.interceptors.add(AppInterceptor(dio));
     }
     var response =
     await dio.put(uri, queryParameters: queryParameters, options: options,data: body);
@@ -101,7 +101,8 @@ class DioClient {
 }
 
 class AppInterceptor extends InterceptorsWrapper {
-  AppInterceptor();
+  final Dio dio;
+  AppInterceptor(this.dio);
   @override
   Future onRequest(
       RequestOptions options, RequestInterceptorHandler handler) async {
@@ -116,4 +117,58 @@ class AppInterceptor extends InterceptorsWrapper {
     options.headers.addAll({"Connection": "Keep-Alive",});
     return handler.next(options);
   }
+
+  @override
+  void onError(DioException err, ErrorInterceptorHandler handler) async {
+    if (err.response?.statusCode == 401 || err.response?.statusCode == 403) {
+      try {
+        String? newToken = await _getNewToken();
+        if (newToken != null) {
+          final RequestOptions newRequest = err.requestOptions;
+          newRequest.headers["Authorization"] = "Bearer $newToken";
+          final Response response = await dio.fetch(newRequest);
+          handler.resolve(response);
+          return;
+        }
+      } catch (e) {
+        handler.next(err);
+      }
+    }
+    handler.next(err);
+  }
+
 }
+Future<String?> _getNewToken()async{
+  try{
+    String? refreshToken = await TokenUtils.getRefreshToken();
+    if(refreshToken!=null){
+
+      final Dio dioNewToken = Dio();
+      dioNewToken.options = BaseOptions(
+          baseUrl: dotenv.env[EnvKeys.apiUrl] ?? "");
+      var response =
+      await dioNewToken.post("/auth/refrescar-token", options: Options(
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer $refreshToken"
+          }
+      ));
+      if (response.statusCode == 200) {
+        Map<String,dynamic> decoded=response.data;
+        var newToken= decoded["token"];
+        var newRefreshToken= decoded["refreshToken"];
+        await TokenUtils.saveRefreshToken(newRefreshToken);
+        await TokenUtils.saveToken(newToken);
+        return newToken;
+      }
+      else{
+        return null;
+      }
+    }
+    return null;
+  }
+  catch(e){
+    return null;
+  }
+}
+
