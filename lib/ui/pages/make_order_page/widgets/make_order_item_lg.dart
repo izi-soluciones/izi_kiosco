@@ -8,6 +8,7 @@ import 'package:izi_design_system/tokens/types.dart';
 import 'package:izi_kiosco/domain/blocs/make_order/make_order_bloc.dart';
 import 'package:izi_kiosco/domain/models/item.dart';
 import 'package:izi_kiosco/ui/utils/money_formatter.dart';
+import 'package:izi_kiosco/ui/utils/responsive_utils.dart';
 
 class MakeOrderItemLg extends StatelessWidget {
 
@@ -18,6 +19,7 @@ class MakeOrderItemLg extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ru = ResponsiveUtils(context);
     return Material(
       elevation: 0,
       color: IziColors.white,
@@ -73,55 +75,29 @@ class MakeOrderItemLg extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               IziText.titleSmall(height: 1.1,maxLines: 3,color: IziColors.dark, text: item.nombre,textAlign: TextAlign.start),
+                              if(item.descripcion!=null)
                               const SizedBox(height: 4,),
+                              if(item.descripcion!=null)
                               IziText.label(maxLines: 5,color: IziColors.darkGrey85, text: item.descripcion??"",textAlign: TextAlign.start,fontWeight: FontWeight.w400),
 
                             ],
                           ),
 
                           IziText.titleSmall(color: IziColors.darkGrey, text: item.precioUnitario.moneyFormat(currency: state.currentCurrency?.simbolo), fontWeight: FontWeight.w400,textAlign: TextAlign.start),
+                          if(ru.isVertical() && ru.gtSm())
                           const SizedBox(height: 10,),
 
                         ],
                       ),
                     )
                   ],
-                )
-                ,Padding(
+                ),
+                if(ru.isVertical() && ru.gtSm())
+                  Padding(
                   padding: const EdgeInsets.only(bottom: 16,left: 16,right: 16),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
-                      /*ConstrainedBox(
-                                    constraints: const BoxConstraints(
-                                        maxWidth: 100
-                                    ),
-                                    child: IziInput(
-                                      autoSelect: true,
-                                      controller: TextEditingController(text: itemAdded.cantidad.toString())..selection=TextSelection.fromPosition(TextPosition(offset: itemAdded.cantidad.toString().length)),
-                                      textAlign: TextAlign.center,
-                                      inputHintText: "0",
-                                      inputType: InputType.incremental,
-                                      minValue: 1,
-                                      maxValue: 999999999,
-                                      inputSize: InputSize.extraSmall,
-                                      value: itemAdded.cantidad.toString(),
-                                      onChanged: (value, valueRaw) {
-                                        itemAdded.cantidad = num.tryParse(value) ??1;
-                                        context.read<MakeOrderBloc>().reloadItems();
-                                      },
-                                    ),
-                                  ),
-                                if(itemAdded!=null)
-                                  InkWell(
-                                    onTap: (){
-                                      _removeItem(itemAdded.id,context);
-                                    },
-                                    child: const Padding(
-                                      padding: EdgeInsets.all(2.5),
-                                      child: Icon(IziIcons.close,size: 20,color: IziColors.darkGrey,),
-                                    ),
-                                  ),*/
                       IziBtnIcon(
                           buttonIcon: IziIcons.plusB,
                           buttonType: ButtonType.secondary,

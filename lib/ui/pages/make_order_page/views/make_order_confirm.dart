@@ -24,6 +24,7 @@ import 'package:izi_kiosco/ui/pages/make_order_page/widgets/make_order_amount_bt
 import 'package:izi_kiosco/ui/pages/make_order_page/widgets/make_order_header_lg.dart';
 import 'package:izi_kiosco/ui/utils/custom_alerts.dart';
 import 'package:izi_kiosco/ui/utils/money_formatter.dart';
+import 'package:izi_kiosco/ui/utils/responsive_utils.dart';
 
 class MakeOrderConfirm extends StatefulWidget {
   final MakeOrderState state;
@@ -49,6 +50,7 @@ class _MakeOrderConfirmState extends State<MakeOrderConfirm> {
 
   @override
   Widget build(BuildContext context) {
+    final ru = ResponsiveUtils(context);
     return BlocListener<MakeOrderBloc, MakeOrderState>(
         listener: (context, state) {
           int cIndex = 0;
@@ -75,7 +77,7 @@ class _MakeOrderConfirmState extends State<MakeOrderConfirm> {
                 children: [
                   MakeOrderHeaderLg(onPop: () {
                     context.read<MakeOrderBloc>().changeStepStatus(1);
-                  }),
+                  },hideLogo: !ru.isVertical()),
                   const SizedBox(
                     height: 40,
                   ),
@@ -205,36 +207,39 @@ class _MakeOrderConfirmState extends State<MakeOrderConfirm> {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Row(
-            children: [
-              Expanded(
-                flex: 5,
-                child: IziBtn(
-                    buttonText: LocaleKeys.makeOrder_buttons_addMore.tr(),
-                    buttonType: ButtonType.outline,
-                    buttonSize: ButtonSize.large,
-                    buttonOnPressed: () {
-                      context.read<MakeOrderBloc>().changeStepStatus(1);
-                    }),
-              ),
-              const SizedBox(
-                width: 8,
-              ),
-              Expanded(
-                  flex: 8,
-                  child: MakeOrderAmountBtn(
-                      onPressed: _getTotal(state) > 0
-                          ? () {
-                              _emitOrder(context);
-                            }
-                          : null,
-                      text: LocaleKeys.makeOrder_buttons_confirmAndPay.tr(),
-                      amount: (_getTotal(state) - state.discountAmount)
-                          .moneyFormat(
-                              currency: state.currentCurrency?.simbolo)))
-            ],
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 1080),
+            child: Row(
+              children: [
+                Expanded(
+                  flex: 5,
+                  child: IziBtn(
+                      buttonText: LocaleKeys.makeOrder_buttons_addMore.tr(),
+                      buttonType: ButtonType.outline,
+                      buttonSize: ButtonSize.large,
+                      buttonOnPressed: () {
+                        context.read<MakeOrderBloc>().changeStepStatus(1);
+                      }),
+                ),
+                const SizedBox(
+                  width: 8,
+                ),
+                Expanded(
+                    flex: 8,
+                    child: MakeOrderAmountBtn(
+                        onPressed: _getTotal(state) > 0
+                            ? () {
+                                _emitOrder(context);
+                              }
+                            : null,
+                        text: LocaleKeys.makeOrder_buttons_confirmAndPay.tr(),
+                        amount: (_getTotal(state) - state.discountAmount)
+                            .moneyFormat(
+                                currency: state.currentCurrency?.simbolo)))
+              ],
+            ),
           ),
           const SizedBox(
             height: 16,

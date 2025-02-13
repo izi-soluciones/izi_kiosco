@@ -50,8 +50,10 @@ class _MakeOrderSelectState extends State<MakeOrderSelect> {
         MakeOrderHeaderLg(onPop: () {
           GoRouter.of(context).goNamed(RoutesKeys.home);
           context.read<PageUtilsBloc>().closeScreenActive();
-        }),
-        _headerLarge(),
+        },
+          hideLogo: !ru.isVertical() || ru.lwSm(),
+        ),
+        _headerLarge(ru),
         Expanded(
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -77,20 +79,20 @@ class _MakeOrderSelectState extends State<MakeOrderSelect> {
                 .contains(searchInput.text.toLowerCase()))
         .toList();
     return LayoutBuilder(builder: (context, layout) {
+      bool isFeatured = widget.makeOrderState.itemsFeatured.isNotEmpty && widget.makeOrderState.indexCategory==0;
+      int isHorizontal = !ru.isVertical()?1:0;
       return IziScroll(
         scrollController: scrollControllerLg,
         child: AlignedGridView.count(
-          crossAxisCount: ((layout.maxWidth > 1500
-              ? 6
+          crossAxisCount: layout.maxWidth > 1500
+              ? (isFeatured?4:6)+isHorizontal
               : layout.maxWidth > 1250
-              ? 5
-              : layout.maxWidth > 950
-              ? 4
-              : layout.maxWidth > 700
-              ? 4
-              : layout.maxWidth > 450
-              ? 2
-              : 1)/(widget.makeOrderState.indexCategory==0?2:1)).ceil(),
+              ? (isFeatured?3:5)+isHorizontal
+              : layout.maxWidth > 1000
+              ? (isFeatured?2:4)+isHorizontal
+              : layout.maxWidth > 800
+              ? (isFeatured?2:3)+isHorizontal
+              : 2,
           mainAxisSpacing: 16,
           crossAxisSpacing: 16,
           controller: scrollControllerLg,
@@ -147,14 +149,15 @@ class _MakeOrderSelectState extends State<MakeOrderSelect> {
     return IziIcons.list;
   }
 
-  Widget _headerLarge() {
+  Widget _headerLarge(ResponsiveUtils ru) {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 32),
+      padding: EdgeInsets.symmetric(horizontal: 16, vertical: ru.isVertical()?32:16),
       child: RowContainer(
           gap: 16,
           children: widget.makeOrderState.categories.asMap().entries.map((e) {
             return MakeOrderCategory(
+                isHorizontal: !ru.isVertical(),
                 icon: _selectIconCategory(e.value.nombre.toLowerCase()),
                 onPressed: () {
                   context.read<MakeOrderBloc>().changeCategory(e.key);

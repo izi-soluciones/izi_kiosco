@@ -10,10 +10,12 @@ import 'package:izi_kiosco/domain/blocs/page_utils/page_utils_bloc.dart';
 import 'package:izi_kiosco/ui/modals/warning_config_modal.dart';
 import 'package:izi_kiosco/ui/pages/make_order_page/views/make_order_confirm.dart';
 import 'package:izi_kiosco/ui/pages/make_order_page/views/make_order_detail.dart';
+import 'package:izi_kiosco/ui/pages/make_order_page/views/make_order_detail_vertical.dart';
 import 'package:izi_kiosco/ui/pages/make_order_page/views/make_order_select.dart';
 import 'package:izi_kiosco/ui/pages/make_order_page/views/make_order_type.dart';
 import 'package:izi_kiosco/ui/pages/make_order_page/widgets/make_order_shimmer.dart';
 import 'package:izi_kiosco/ui/utils/custom_alerts.dart';
+import 'package:izi_kiosco/ui/utils/responsive_utils.dart';
 
 class MakeOrderPage extends StatefulWidget {
   final bool fromTables;
@@ -27,6 +29,7 @@ class _MakeOrderPageState extends State<MakeOrderPage> {
   PageController pageController = PageController();
   @override
   Widget build(BuildContext context) {
+    final ru = ResponsiveUtils(context);
     return BlocConsumer<MakeOrderBloc, MakeOrderState>(
       listenWhen: (previous, current) {
         return previous.status!=current.status || previous.step != current.step;
@@ -61,23 +64,37 @@ class _MakeOrderPageState extends State<MakeOrderPage> {
           physics: const NeverScrollableScrollPhysics(),
           children: [
             MakeOrderType(state: state),
-            Column(
-                children: [
-                  Expanded(
-                    child: state.status == MakeOrderStatus.waitingGet
-                        ? MakeOrderShimmer(state: state,)
-                        : MakeOrderSelect(
-                        makeOrderState: state,
-                        fromTables: widget.fromTables
-                    ),
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                      children: [
+                        Expanded(
+                          child: state.status == MakeOrderStatus.waitingGet
+                              ? MakeOrderShimmer(state: state,)
+                              : MakeOrderSelect(
+                              makeOrderState: state,
+                              fromTables: widget.fromTables
+                          ),
+                        ),
+                        if(ru.isVertical())
+                        SizedBox(
+                          height: 280,
+                          child: MakeOrderDetail(
+                              state: state
+                          ),
+                        )
+                      ]),
+                ),
+                if(!ru.isVertical())
+                SizedBox(
+                  width: 400,
+                  child: MakeOrderDetailVertical(
+                      state: state
                   ),
-                  SizedBox(
-                    height: 280,
-                    child: MakeOrderDetail(
-                        state: state
-                    ),
-                  ),
-                ]),
+                ),
+              ],
+            ),
             MakeOrderConfirm(state: state)
           ],
         );

@@ -12,6 +12,7 @@ import 'package:izi_kiosco/app/values/routes_keys.dart';
 import 'package:izi_kiosco/domain/blocs/make_order/make_order_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/page_utils/page_utils_bloc.dart';
 import 'package:izi_kiosco/ui/pages/make_order_page/widgets/make_order_header_lg.dart';
+import 'package:izi_kiosco/ui/utils/responsive_utils.dart';
 
 class MakeOrderType extends StatefulWidget {
   final MakeOrderState state;
@@ -30,6 +31,7 @@ class _MakeOrderTypeState extends State<MakeOrderType> {
 
   @override
   Widget build(BuildContext context) {
+    final ru= ResponsiveUtils(context);
     return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -40,61 +42,71 @@ class _MakeOrderTypeState extends State<MakeOrderType> {
               const SizedBox(
                 height: 60,
               ),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Column(
-                    children: [
-                      Expanded(
-                        child: ConstrainedBox(
-                          constraints: const BoxConstraints(maxWidth: 650),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              IziText.titleBig(
-                                  color: IziColors.darkGrey,
-                                  textAlign: TextAlign.left,
-                                  text: "${LocaleKeys
-                                      .makeOrder_body_selectWhere
-                                      .tr()}:",
-                                  fontWeight: FontWeight.w500),
-                              const SizedBox(
-                                height: 60,
-                              ),
-                              Row(
-                                children: [
-                                  Expanded(
-                                      child: _buttonSelect(IziIcons.hereOrder, LocaleKeys.makeOrder_body_eatHere.tr(), false)
+              Flexible(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Flexible(
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 650),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            IziText.titleBig(
+                                color: IziColors.darkGrey,
+                                textAlign: TextAlign.left,
+                                text: "${LocaleKeys
+                                    .makeOrder_body_selectWhere
+                                    .tr()}:",
+                                fontWeight: FontWeight.w500),
+                            const SizedBox(
+                              height: 60,
+                            ),
+                            Flexible(
+                              child: ConstrainedBox(
+                                constraints: BoxConstraints(maxHeight: ru.gtSm() && ru.isVertical()?500:400),
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 32.0),
+                                  child: Row(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Expanded(
+                                          child: _buttonSelect(IziIcons.hereOrder, LocaleKeys.makeOrder_body_eatHere.tr(), false,ru)
+                                      ),
+                                      const SizedBox(width: 24,),
+                                      Expanded(
+                                          child: _buttonSelect(IziIcons.takeAwayOrder, LocaleKeys.makeOrder_body_takeAway.tr(), true,ru)
+                                      )
+                                    ],
                                   ),
-                                  const SizedBox(width: 24,),
-                                  Expanded(
-                                      child: _buttonSelect(IziIcons.takeAwayOrder, LocaleKeys.makeOrder_body_takeAway.tr(), true)
-                                  )
-                                ],
+                                ),
                               ),
-                              const SizedBox(
-                                height: 30,
-                              ),
-                            ],
-                          ),
+                            ),
+                            const SizedBox(
+                              height: 30,
+                            ),
+                          ],
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
+              ),
+              const SizedBox(
+                height: 60,
               ),
             ],
     );
   }
 
-  _buttonSelect(IconData icon,String text, bool takeAway){
+  _buttonSelect(IconData icon,String text, bool takeAway, ResponsiveUtils ru){
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
-      crossAxisAlignment: CrossAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        AspectRatio(
-            aspectRatio: 0.8,
+        Expanded(
           child: IziCard(
+            padding: const EdgeInsets.all(16),
             onPressed: (){
               context.read<MakeOrderBloc>().changeTakeAway(takeAway);
               context.read<MakeOrderBloc>().changeStepStatus(1);
@@ -112,7 +124,9 @@ class _MakeOrderTypeState extends State<MakeOrderType> {
           ),
         ),
         const SizedBox(height: 12,),
-        IziText.titleBig(color: IziColors.darkGrey85, text: text,maxLines: 5,textAlign: TextAlign.center)
+        ru.gtSm()?
+        IziText.titleBig(color: IziColors.darkGrey85, text: text,maxLines: 1,textAlign: TextAlign.center):
+        IziText.titleMedium(color: IziColors.darkGrey85, text: text,maxLines: 1,textAlign: TextAlign.center,fontWeight: FontWeight.w600),
       ],
     );
   }

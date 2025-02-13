@@ -7,9 +7,11 @@ class MakeOrderAmountBtn extends StatelessWidget {
   final String text;
   final VoidCallback? onPressed;
   final String amount;
+  final bool medium;
+  final bool noAmount;
 
   const MakeOrderAmountBtn({super.key,required this.onPressed,
-  required this.text,required this.amount});
+  required this.text,required this.amount,this.medium=false,this.noAmount=false});
 
   @override
   Widget build(BuildContext context) {
@@ -22,12 +24,14 @@ class MakeOrderAmountBtn extends StatelessWidget {
       child: InkWell(
         onTap: onPressed,
         child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 30),
+          padding: EdgeInsets.symmetric(vertical: medium?10:18, horizontal: 30),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            mainAxisAlignment: noAmount?MainAxisAlignment.center:MainAxisAlignment.spaceBetween,
             children: [
+              if(!noAmount)
               IziText.buttonBig(color: onPressed==null?IziColors.grey55:IziColors.white, text: amount, fontWeight: FontWeight.w600),
-              const SizedBox(width: 40,),
+              if(!noAmount)
+                const SizedBox(width: 40,),
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [

@@ -117,6 +117,6 @@ class PageUtilsBloc extends Cubit<PageUtilsState>{
         emit(state.copyWith(helpActive: true,dateHelp: ()=>null));
       });
     }
-    catch(e){}
+    catch(_){}
   }
 }

@@ -9,19 +9,31 @@ class MakeOrderCategory extends StatelessWidget {
   final VoidCallback onPressed;
   final bool small;
   final IconData icon;
-  const MakeOrderCategory({super.key,this.small=false,required this.onPressed,required this.title,required this.count,required this.active,required this.icon});
+  final bool isHorizontal;
+  const MakeOrderCategory({super.key,this.isHorizontal=false,this.small=false,required this.onPressed,required this.title,required this.count,required this.active,required this.icon});
 
   @override
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onPressed,
       child: Ink(
-        padding: const EdgeInsets.fromLTRB(32,10,32,5),
+        padding: isHorizontal?const EdgeInsets.symmetric(horizontal: 16,vertical: 8):const EdgeInsets.fromLTRB(32,10,32,5),
         decoration: BoxDecoration(
           color: active? IziColors.dark:IziColors.grey25,
           borderRadius: BorderRadius.circular(8)
         ),
-        child: Column(
+        child: isHorizontal?
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon,color: active?IziColors.white:IziColors.dark,size: 24,weight: 1),
+            const SizedBox(width: 16,),
+            IziText.bodyBig(color: active?IziColors.white:IziColors.dark,textAlign: TextAlign.center, text: title, fontWeight: FontWeight.w600,maxLines: 3),
+          ],
+        ):
+        Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.center,
           mainAxisAlignment: MainAxisAlignment.center,

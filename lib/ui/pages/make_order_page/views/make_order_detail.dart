@@ -54,6 +54,7 @@ class _MakeOrderDetailState extends State<MakeOrderDetail> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      if(ru.gtXs())
                       IziText.titleSmall(
                           color: IziColors.darkGrey, text: "Mi orden:"),
                       Expanded(
@@ -73,12 +74,48 @@ class _MakeOrderDetailState extends State<MakeOrderDetail> {
                         fontWeight: FontWeight.w400),
                   ),
                 )),
-          _totalOrder()
+          ru.width>630?
+          _totalOrder():_totalOrderVertical(ru)
         ],
       ),
     );
   }
-
+  _totalOrderVertical(ResponsiveUtils ru) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          IziBtn(
+              buttonText: LocaleKeys.makeOrder_buttons_initAgain.tr(),
+              buttonType: ButtonType.outline,
+              buttonSize: ButtonSize.medium,
+              buttonOnPressed: () {
+                //context.read<MakeOrderBloc>().printRollo(context.read<AuthBloc>().state);
+                context.read<MakeOrderBloc>().resetItems();
+              }),
+          const SizedBox(
+            height: 8,
+          ),
+          MakeOrderAmountBtn(
+              medium:true,
+              noAmount: ru.width<500,
+              onPressed: _getTotal() > 0
+                  ? () {
+                _next(context);
+              }
+                  : null,
+              text: LocaleKeys.makeOrder_buttons_confirm.tr(),
+              amount: (_getTotal() - widget.state.discountAmount).moneyFormat(
+                  currency: widget.state.currentCurrency?.simbolo)
+          ),
+          const SizedBox(
+            height: 16,
+          ),
+        ],
+      ),
+    );
+  }
   _totalOrder() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
