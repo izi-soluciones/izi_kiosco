@@ -539,7 +539,7 @@ class _PaymentPageInvoiceState extends State<PaymentPageInvoice> {
       return;
     }
     if (!status) {
-      context.read<PageUtilsBloc>().initScreenActive();
+      context.read<PageUtilsBloc>().initScreenActiveInvoiced(context.read<AuthBloc>().state);
     }
   }
 
@@ -561,7 +561,7 @@ class _PaymentPageInvoiceState extends State<PaymentPageInvoice> {
           return;
         }
         if (!status) {
-          context.read<PageUtilsBloc>().initScreenActive();
+          context.read<PageUtilsBloc>().initScreenActiveInvoiced(context.read<AuthBloc>().state);
         }
       }
     });

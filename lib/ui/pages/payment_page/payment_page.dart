@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:izi_design_system/molecules/izi_snack_bar.dart';
 import 'package:izi_kiosco/app/values/locale_keys.g.dart';
 import 'package:izi_kiosco/app/values/routes_keys.dart';
+import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/page_utils/page_utils_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/payment/payment_bloc.dart';
 import 'package:izi_kiosco/ui/modals/warning_config_modal.dart';
@@ -52,7 +53,7 @@ class PaymentPage extends StatelessWidget {
 
         if(state.status== PaymentStatus.cardError){
           context.read<PageUtilsBloc>().closeLoading();
-          context.read<PageUtilsBloc>().initScreenActiveInvoiced();
+          context.read<PageUtilsBloc>().initScreenActiveInvoiced(context.read<AuthBloc>().state);
           context.read<PageUtilsBloc>().showSnackBar(
               snackBar: SnackBarInfo(
                   text: LocaleKeys.payment_messages_errorCard.tr(),

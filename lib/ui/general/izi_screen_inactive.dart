@@ -25,7 +25,7 @@ class _IziScreenInactiveState extends State<IziScreenInactive> {
   late int time;
   @override
   void initState() {
-    time=context.read<AuthBloc>().state.currentDevice?.config.timeMessage ?? AppConstants.timerMessage;
+    time=context.read<AuthBloc>().state.currentDevice?.config.timeConfirmation ?? AppConstants.timerMessage;
     timer = Timer(Duration(seconds: time), () {
       context.read<PageUtilsBloc>().closeScreenActive();
       GoRouter.of(context).goNamed(RoutesKeys.home);

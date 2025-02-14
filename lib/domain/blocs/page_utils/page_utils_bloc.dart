@@ -53,23 +53,23 @@ class PageUtilsBloc extends Cubit<PageUtilsState>{
       });
     }
   }
-  initScreenActiveInvoiced(){
+  initScreenActiveInvoiced(AuthState authState){
     if(timer!=null){
       timer!.cancel();
     }
     emit(state.copyWith(screenActive: true));
-    seconds = AppConstants.timerTimeSecondsInvoiced;
-    timer = Timer(Duration(seconds: AppConstants.timerTimeSecondsInvoiced), () {
+    seconds = authState.currentDevice?.config.timePayment?? AppConstants.timerTimeSecondsInvoiced;
+    timer = Timer(Duration(seconds: seconds), () {
       emit(state.copyWith(screenActive: false));
     });
   }
-  initScreenActive(){
+  initScreenActive(AuthState authState){
     try{
 
       if(timer!=null){
         timer!.cancel();
       }
-      seconds = AppConstants.timerTimeSeconds;
+      seconds = authState.currentDevice?.config.timeOrder??AppConstants.timerTimeSeconds;
       emit(state.copyWith(screenActive: true));
       timer = Timer(Duration(seconds: AppConstants.timerTimeSeconds), () {
         emit(state.copyWith(screenActive: false));

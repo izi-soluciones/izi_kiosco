@@ -12,6 +12,7 @@ import 'package:go_router/go_router.dart';
 import 'package:izi_design_system/atoms/izi_typography.dart';
 import 'package:izi_design_system/tokens/colors.dart';
 import 'package:izi_design_system/tokens/izi_icons.dart';
+import 'package:izi_kiosco/app/values/app_constants.dart';
 import 'package:izi_kiosco/app/values/assets_keys.dart';
 import 'package:izi_kiosco/app/values/env_keys.dart';
 import 'package:izi_kiosco/app/values/locale_keys.g.dart';
@@ -55,7 +56,7 @@ class _HomePageState extends State<HomePage> {
 
   var showVideo = false;
 
-  _initVideo({BuildContext? context}){
+  _initVideo({BuildContext? context})async {
     try{
 
       if(_controller!=null){
@@ -63,31 +64,32 @@ class _HomePageState extends State<HomePage> {
         _controller?.dispose();
       }
       var authState = (context ?? this.context).read<AuthBloc>().state;
-      Future.delayed(const Duration(seconds: 5)).then((value) {
-        if(!mounted){
-          return;
-        }
+      if(!mounted){
+        return;
+      }
+      if(authState.currentDevice?.config.timeVideo!=0){
+        await Future.delayed(Duration(seconds: authState.currentDevice?.config.timeVideo ?? AppConstants.timerVideo));
+      }
 
 
-        if (kIsWeb && authState.currentDevice?.config.video !=null) {
-          _controller = VideoPlayerController.networkUrl(
-              Uri.parse(authState.currentDevice?.config.video??""))
-            ..setLooping(true)
-            ..initialize().then((_) {
-              setState(() {
-                showVideo = true;
-              });
-            })..play();
-        } else if (authState.video != null) {
-          _controller = VideoPlayerController.file(authState.video!)
-            ..setLooping(true)
-            ..initialize().then((_) {
-              setState(() {
-                showVideo = true;
-              });
-            })..play();
-        }
-      });
+      if (kIsWeb && authState.currentDevice?.config.video !=null) {
+        _controller = VideoPlayerController.networkUrl(
+            Uri.parse(authState.currentDevice?.config.video??""))
+          ..setLooping(true)
+          ..initialize().then((_) {
+            setState(() {
+              showVideo = true;
+            });
+          })..play();
+      } else if (authState.video != null) {
+        _controller = VideoPlayerController.file(authState.video!)
+          ..setLooping(true)
+          ..initialize().then((_) {
+            setState(() {
+              showVideo = true;
+            });
+          })..play();
+      }
     }
     catch(e){
       log(e.toString());
@@ -102,7 +104,32 @@ class _HomePageState extends State<HomePage> {
         builder: (context,layout) {
           return Stack(
             children: [
-              GestureDetector(
+
+              state.currentDevice?.config.timeVideo==0 && state.currentDevice?.config.video != null?
+              Positioned.fill(
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () {
+                    if(context.read<AuthBloc>().state.currentDevice?.config.isRetail==true){
+
+                      GoRouter.of(context).goNamed(RoutesKeys.makeOrderRetail);
+                    }
+                    else{
+                      GoRouter.of(context).goNamed(RoutesKeys.makeOrder);
+                    }
+                    context.read<PageUtilsBloc>().initScreenActive(context.read<AuthBloc>().state);
+                  },
+                  child: const Center(
+                    child: SizedBox(
+                      width: 30,
+                      height: 30,
+                      child: CircularProgressIndicator(
+                        color: IziColors.primary,
+                      ),
+                    ),
+                  ),
+                ),
+              ):GestureDetector(
                 behavior: HitTestBehavior.opaque,
                 onTap: () {
                   if(context.read<AuthBloc>().state.currentDevice?.config.isRetail==true){
@@ -112,7 +139,7 @@ class _HomePageState extends State<HomePage> {
                   else{
                     GoRouter.of(context).goNamed(RoutesKeys.makeOrder);
                   }
-                  context.read<PageUtilsBloc>().initScreenActive();
+                  context.read<PageUtilsBloc>().initScreenActive(context.read<AuthBloc>().state);
                 },
                 child: Padding(
                   padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 32),
@@ -126,7 +153,7 @@ class _HomePageState extends State<HomePage> {
                           onTapUp: (details) {
                             timer?.cancel();
                             if (errorPressed) {
-                              context.read<PageUtilsBloc>().initScreenActive();
+                              context.read<PageUtilsBloc>().initScreenActive(context.read<AuthBloc>().state);
                               GoRouter.of(context)
                                   .pushNamed(RoutesKeys.errorPayments);
                             }
@@ -244,7 +271,7 @@ class _HomePageState extends State<HomePage> {
                         showVideo=false;
                         _initVideo(context: context);
                         GoRouter.of(context).goNamed(RoutesKeys.makeOrder);
-                        context.read<PageUtilsBloc>().initScreenActive();
+                        context.read<PageUtilsBloc>().initScreenActive(context.read<AuthBloc>().state);
                       });
                     },
                     child: Column(

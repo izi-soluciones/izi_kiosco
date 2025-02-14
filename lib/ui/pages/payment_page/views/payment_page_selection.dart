@@ -153,7 +153,7 @@ class PaymentPageSelection extends StatelessWidget {
         .read<PaymentBloc>()
         .makeCardPayment(context.read<AuthBloc>().state, linkser: true).then((status){
       if (!status) {
-        context.read<PageUtilsBloc>().initScreenActive();
+        context.read<PageUtilsBloc>().initScreenActiveInvoiced(context.read<AuthBloc>().state);
       }
     });
   }
@@ -174,7 +174,7 @@ class PaymentPageSelection extends StatelessWidget {
             contactless: value == 1 ? false : true).then((status){
 
           if (!status) {
-            context.read<PageUtilsBloc>().initScreenActive();
+            context.read<PageUtilsBloc>().initScreenActiveInvoiced(context.read<AuthBloc>().state);
           }
         });
       }

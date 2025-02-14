@@ -421,11 +421,11 @@ class _MakeOrderConfirmState extends State<MakeOrderConfirm> {
                   name: e.nombre)
               ).toList()
           );
-          context.read<PageUtilsBloc>().initScreenActiveInvoiced();
+          context.read<PageUtilsBloc>().initScreenActiveInvoiced(context.read<AuthBloc>().state);
           GoRouter.of(this.context).goNamed(RoutesKeys.payment,
               extra: paymentObj, pathParameters: {"id": value.id.toString()});
         } else {
-          context.read<PageUtilsBloc>().initScreenActive();
+          context.read<PageUtilsBloc>().initScreenActive(context.read<AuthBloc>().state);
         }
       },
     );
