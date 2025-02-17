@@ -54,7 +54,7 @@ class _MakeOrderDetailState extends State<MakeOrderDetail> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      if(ru.gtXs())
+                      if(ru.width>630)
                       IziText.titleSmall(
                           color: IziColors.darkGrey, text: "Mi orden:"),
                       Expanded(
