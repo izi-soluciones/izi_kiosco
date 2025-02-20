@@ -67,6 +67,7 @@ class PaymentPageSelection extends StatelessWidget {
 
     CustomAlerts.defaultAlert(
         context: context,
+        dismissible: true,
         child: WarningModal(
             onAccept: ()async{
               GoRouter.of(context).goNamed(RoutesKeys.home);
