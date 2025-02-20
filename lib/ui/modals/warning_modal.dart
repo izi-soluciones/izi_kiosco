@@ -1,5 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:izi_design_system/atoms/izi_img/izi_img.dart';
 import 'package:izi_design_system/atoms/izi_typography.dart';
 import 'package:izi_design_system/molecules/izi_btn.dart';
@@ -8,6 +9,7 @@ import 'package:izi_design_system/tokens/colors.dart';
 import 'package:izi_design_system/tokens/izi_icons.dart';
 import 'package:izi_design_system/tokens/types.dart';
 import 'package:izi_kiosco/app/values/locale_keys.g.dart';
+import 'package:izi_kiosco/domain/blocs/page_utils/page_utils_bloc.dart';
 class WarningModal extends StatefulWidget {
   final Future Function() onAccept;
   final String title;
@@ -26,63 +28,70 @@ class _WarningModalState extends State<WarningModal> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        IziImg.alertWarning(width: 72.3),
-        const SizedBox(
-          height: 24,
-        ),
-
-        IziText.titleSmall(
-            text: widget.title,
-            maxLines: 5,
-            mobile: true,
-            textAlign: TextAlign.center,
-            color: IziColors.dark),
-        const SizedBox(
-          height: 24,
-        ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            IziBtn(
-              buttonOnPressed: ()async{
-                setState(() {
-                  loading=true;
-                });
-                await widget.onAccept().then((value) =>
-                    Navigator.pop(context));
-                setState(() {
-                  loading=false;
-                });
-              },
-              loading: loading,
-              buttonSize: ButtonSize.medium,
-              buttonText: LocaleKeys.general_buttons_yesSure.tr(),
-              buttonType: ButtonType.primary,
-            ),
-          ],
-        ),
-        const SizedBox(
-          height: 30,
-        ),
-        Padding(
-          padding: const EdgeInsets.only(left: 20, right: 20),
-          child: IziBtnLinkIcon(
-            filterText: LocaleKeys.general_buttons_cancel.tr(),
-            color: IziColors.grey,
-            icon: IziIcons.leftB,
-            filterTextOnPress: loading
-                ? () {}
-                : () {
-              Navigator.pop(context);
-            },
+    return BlocListener<PageUtilsBloc,PageUtilsState>(
+      listener: (context, state) {
+        if(state.screenActive==false){
+          Navigator.pop(context);
+        }
+      },
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          IziImg.alertWarning(width: 72.3),
+          const SizedBox(
+            height: 24,
           ),
-        ),
-      ],
+
+          IziText.titleSmall(
+              text: widget.title,
+              maxLines: 5,
+              mobile: true,
+              textAlign: TextAlign.center,
+              color: IziColors.dark),
+          const SizedBox(
+            height: 24,
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              IziBtn(
+                buttonOnPressed: ()async{
+                  setState(() {
+                    loading=true;
+                  });
+                  await widget.onAccept().then((value) =>
+                      Navigator.pop(context));
+                  setState(() {
+                    loading=false;
+                  });
+                },
+                loading: loading,
+                buttonSize: ButtonSize.medium,
+                buttonText: LocaleKeys.general_buttons_yesSure.tr(),
+                buttonType: ButtonType.primary,
+              ),
+            ],
+          ),
+          const SizedBox(
+            height: 30,
+          ),
+          Padding(
+            padding: const EdgeInsets.only(left: 20, right: 20),
+            child: IziBtnLinkIcon(
+              filterText: LocaleKeys.general_buttons_cancel.tr(),
+              color: IziColors.grey,
+              icon: IziIcons.leftB,
+              filterTextOnPress: loading
+                  ? () {}
+                  : () {
+                Navigator.pop(context);
+              },
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
