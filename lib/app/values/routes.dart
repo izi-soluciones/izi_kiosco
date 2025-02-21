@@ -7,6 +7,7 @@ import 'package:izi_kiosco/data/repositories/comanda/comanda_repository_http.dar
 import 'package:izi_kiosco/data/repositories/socket/socket_repository_http.dart';
 import 'package:izi_kiosco/domain/blocs/add_kiosk/add_kiosk_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
+import 'package:izi_kiosco/domain/blocs/home/home_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/login/login_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/make_order/make_order_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/make_order_retail/make_order_retail_bloc.dart';
@@ -111,8 +112,11 @@ class Routes {
               name: RoutesKeys.home,
               path: RoutesKeys.homeLink,
               pageBuilder: (BuildContext context, GoRouterState state) {
-                return const NoTransitionPage(
-                    child: HomePage());
+                return NoTransitionPage(
+                    child: BlocProvider(
+                      create: (context) => HomeBloc(BusinessRepositoryHttp())..verifyServerPos(context.read<AuthBloc>().state),
+                      child:const HomePage(),
+                    ));
               },
             ),
             GoRoute(

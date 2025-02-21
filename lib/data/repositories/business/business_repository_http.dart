@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:izi_kiosco/data/core/dio_client.dart';
 import 'package:izi_kiosco/domain/models/cash_register.dart';
 import 'package:izi_kiosco/domain/models/contribuyente.dart';
@@ -155,7 +156,7 @@ class BusinessRepositoryHttp extends BusinessRepository{
   }
 
   @override
-  Future<void> askHelp(int sucursal,String name) async{
+  Future<void> askHelp(int sucursal,String nombre) async{
     try {
       String path =
           "/custom/ayuda-kiosko";
@@ -163,7 +164,7 @@ class BusinessRepositoryHttp extends BusinessRepository{
           uri: path,
           body: {
             "sucursal":sucursal,
-            "nombre": name
+            "nombre": nombre
           },
           options: Options(responseType: ResponseType.json));
       if (response.statusCode != 200) {
@@ -179,6 +180,20 @@ class BusinessRepositoryHttp extends BusinessRepository{
       throw e.error ?? "Network Error";
     } catch (error) {
       throw error.toString();
+    }
+  }
+
+  @override
+  Future<bool> verifyConnectionPos() async{
+    String path = "/verify-connection";
+    var response = await _dioClient.get(
+        uri: path,
+        baseUrl: dotenv.env["ATC_SERVER_URL"],
+        options: Options(responseType: ResponseType.json,));
+    if (response.statusCode == 200) {
+      return response.data is Map && response.data["connection"] ==true?true:false;
+    } else {
+      throw response.data;
     }
   }
 }

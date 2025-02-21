@@ -16,4 +16,6 @@ abstract class BusinessRepository{
   Future<List<EconomicActivity>> getEconomicActivities({required int contribuyenteId,required int sucursalId});
   Future<List<Contribuyente>> queryBusinessSearch({required String query, required int contribuyenteId});
   Future<void> askHelp(int sucursal,String nombre);
+
+  Future<bool> verifyConnectionPos();
 }

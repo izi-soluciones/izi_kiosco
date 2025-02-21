@@ -3,6 +3,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:izi_design_system/molecules/izi_snack_bar.dart';
 import 'package:izi_design_system/tokens/theme.dart';
 import 'package:izi_kiosco/app/utils/app_behavior.dart';
 import 'package:izi_kiosco/app/utils/go_router_refresh_stream.dart';
@@ -14,7 +15,9 @@ import 'package:izi_kiosco/data/repositories/comanda/comanda_repository_http.dar
 import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/make_order/make_order_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/page_utils/page_utils_bloc.dart';
+import 'package:izi_kiosco/ui/general/izi_loading.dart';
 import 'package:izi_kiosco/ui/pages/splash_page/splash_page.dart';
+import 'package:izi_kiosco/ui/utils/responsive_utils.dart';
 
 class MyApp extends StatelessWidget {
   late final route = GoRouter(
@@ -66,6 +69,10 @@ class MyApp extends StatelessWidget {
         BlocProvider(
           create: (context) => PageUtilsBloc(BusinessRepositoryHttp()),
         ),
+        BlocProvider(
+            create: (context) => MakeOrderBloc(
+                ComandaRepositoryHttp(),
+                BusinessRepositoryHttp())),
       ],
       child: MaterialApp.router(
         localizationsDelegates: context.localizationDelegates,
@@ -80,6 +87,7 @@ class MyApp extends StatelessWidget {
         title: "iZi Kiosco",
         theme: iziThemeData(),
         builder: (context, child) {
+          final ru = ResponsiveUtils(context);
           return BlocBuilder<AuthBloc, AuthState>(
             buildWhen: (previous, current) {
               return previous.status != current.status;
@@ -96,12 +104,118 @@ class MyApp extends StatelessWidget {
                     child: state.status == AuthStatus.init ||
                             state.status == AuthStatus.waitingChange
                         ? SplashPage()
-                        : MultiBlocProvider(providers: [
-                            BlocProvider(
-                                create: (context) => MakeOrderBloc(
-                                    ComandaRepositoryHttp(),
-                                    BusinessRepositoryHttp())),
-                          ], child: child ?? const Scaffold())),
+                        : Stack(
+                      children: [
+                        child ?? const Scaffold(),
+                        BlocBuilder<PageUtilsBloc, PageUtilsState>(
+                            buildWhen: (previous, current) {
+                              return previous.titleLoading !=
+                                  current.titleLoading;
+                            }, builder: (context, state) {
+                          if (state.titleLoading != null) {
+                            return Positioned.fill(
+                                child: IziLoading(
+                                    title: state.titleLoading!));
+                          }
+                          return const SizedBox.shrink();
+                        }),
+                        BlocBuilder<PageUtilsBloc, PageUtilsState>(
+                            buildWhen: (previous, current) {
+                              return previous.snackBarState !=
+                                  current.snackBarState;
+                            }, builder: (context, state) {
+                          return Positioned.fill(
+                            child: Column(
+                              children: [
+                                if(ru.gtXs())
+                                  Material(
+                                    color: Colors.transparent,
+                                    elevation: 0,
+                                    child: AnimatedSwitcher(
+                                      duration:
+                                      const Duration(milliseconds: 200),
+                                      reverseDuration:
+                                      const Duration(milliseconds: 200),
+                                      transitionBuilder:
+                                          (child, animation) =>
+                                          SlideTransition(
+                                            position: Tween<Offset>(
+                                              begin: const Offset(0, -1),
+                                              end: const Offset(0, 0),
+                                            ).animate(animation),
+                                            child: child,
+                                          ),
+                                      child: state.snackBarState?IziSnackBar(
+                                        snackBarPosition:
+                                        SnackBarPosition.bottom,
+                                        snackBarInfo: state.snackBar,
+                                        onClickClose: () {
+                                          context
+                                              .read<PageUtilsBloc>()
+                                              .hideSnackBar();
+                                        },
+                                        active: state.snackBarState,
+                                      ):const SizedBox.shrink(),
+                                    ),
+                                  ),
+                                Expanded(child: AnimatedSwitcher(
+                                  duration: const Duration(milliseconds: 200),
+                                  reverseDuration: const Duration(milliseconds:200),
+                                  transitionBuilder: (child,animation)=>SlideTransition(
+                                    position: Tween<Offset>(
+                                      begin: const Offset(0, 1),
+                                      end: const Offset(0, 0),
+                                    ).animate(animation),
+                                    child: child,
+                                  ),
+                                  child: GestureDetector(
+                                    behavior: HitTestBehavior.opaque,
+                                    onTap: (){
+                                      context.read<PageUtilsBloc>().hideSnackBar();
+                                    },
+                                    child: state.snackBarState?
+                                    Container()
+                                        :const SizedBox.shrink(),
+                                  ),
+                                )),
+
+                                if(ru.isXs())
+                                  Material(
+                                    color: Colors.transparent,
+                                    elevation: 0,
+                                    child: AnimatedContainer(
+                                      duration: const Duration(milliseconds: 200),
+                                      height: state.snackBarState?50:0,
+                                      child: AnimatedSwitcher(
+                                        duration: const Duration(milliseconds: 200),
+                                        reverseDuration: const Duration(milliseconds:200),
+                                        transitionBuilder: (child,animation)=>SlideTransition(
+                                          position: Tween<Offset>(
+                                            begin: const Offset(0, 1),
+                                            end: const Offset(0, 0),
+                                          ).animate(animation),
+                                          child: child,
+                                        ),
+                                        child: state.snackBarState?
+                                        IziSnackBar(
+                                          snackBarPosition: SnackBarPosition.bottom,
+                                          snackBarInfo: state.snackBar,
+                                          active:state.snackBarState,
+                                          onClickClose: (){
+                                            context.read<PageUtilsBloc>().hideSnackBar();
+                                          },
+                                        )
+                                            :const SizedBox.shrink(),
+                                      ),
+                                    ),
+                                  )
+                              ],
+                            ),
+                          );
+
+                        })
+                      ],
+                    ),),
               );
             },
           );
