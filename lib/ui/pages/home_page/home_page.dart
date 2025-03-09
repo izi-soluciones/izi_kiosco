@@ -72,6 +72,10 @@ class _HomePageState extends State<HomePage> {
         await Future.delayed(Duration(seconds: authState.currentDevice?.config.timeVideo ?? AppConstants.timerVideo));
       }
 
+      if(!mounted){
+        return;
+      }
+
 
       if (kIsWeb && authState.currentDevice?.config.video !=null) {
         _controller = VideoPlayerController.networkUrl(
@@ -278,7 +282,6 @@ class _HomePageState extends State<HomePage> {
                           onPointerDown: (val){
                             setState(() {
                               showVideo=false;
-                              _initVideo(context: context);
                               GoRouter.of(context).goNamed(RoutesKeys.makeOrder);
                               context.read<PageUtilsBloc>().initScreenActive(context.read<AuthBloc>().state);
                             });
