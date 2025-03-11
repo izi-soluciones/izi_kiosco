@@ -50,13 +50,14 @@ class ComandaRepositoryHttp extends ComandaRepository {
   }
   @override
   Future<List<Item>> getSaleItems(
-  {required String catalog}) async {
+  {String? catalog,List<String>? items}) async {
     String path = "/items-inventarios";
     var response = await _dioClient.get(
         uri: path,
         queryParameters: {
-          "catalogo": catalog,
-          "habilitadoKiosco": 1,
+          if(catalog!=null)"catalogo": catalog,
+          if(items!=null)"listaItemsIds": items,
+          if(items==null)"habilitadoKiosco": 1,
           "seVende": true
         },
         options: Options(

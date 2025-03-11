@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:izi_kiosco/data/core/dio_client.dart';
 import 'package:izi_kiosco/domain/models/cash_register.dart';
+import 'package:izi_kiosco/domain/models/catalog.dart';
 import 'package:izi_kiosco/domain/models/contribuyente.dart';
 import 'package:izi_kiosco/domain/models/currency.dart';
 import 'package:izi_kiosco/domain/models/document_type.dart';
@@ -195,5 +196,24 @@ class BusinessRepositoryHttp extends BusinessRepository{
     } else {
       throw response.data;
     }
+  }
+
+  @override
+  Future<Catalog> getCatalog({required String id}) async{
+    String path = "/catalogos/$id";
+    var response = await _dioClient.get(
+        uri: path,
+        queryParameters: {
+          "categorias": true,
+        },
+        options: Options(responseType: ResponseType.json));
+    if (response.statusCode == 200) {
+      return Catalog.fromJson(response.data ?? {});
+    } else {
+      if(response.data?["status"] ?? false){
+        throw response.data?["data"];
+      }
+    }
+    throw response.data;
   }
 }

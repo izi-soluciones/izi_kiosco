@@ -6,6 +6,7 @@ import 'package:izi_kiosco/app/values/app_constants.dart';
 import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
 import 'package:izi_kiosco/domain/dto/new_order_dto.dart';
 import 'package:izi_kiosco/domain/models/cash_register.dart';
+import 'package:izi_kiosco/domain/models/catalog.dart';
 import 'package:izi_kiosco/domain/models/category_order.dart';
 import 'package:izi_kiosco/domain/models/comanda.dart';
 import 'package:izi_kiosco/domain/models/consumption_point.dart';
@@ -32,42 +33,71 @@ class MakeOrderBloc extends Cubit<MakeOrderState> {
       if (indexCurrency != -1) {
         currentCurrency = authState.currencies.elementAtOrNull(indexCurrency);
       }
-
-
-
-      List<CategoryOrder> list = await _comandaRepository.getCategories(
-        sucursal: 0,
-          contribuyente: authState.currentContribuyente?.id ?? 0);
-      list.sort(
-            (a, b) => a.nombre.compareTo(b.nombre),
-      );
-
-      List<Item> listItems = await _comandaRepository.getSaleItems(catalog: authState.currentSucursal?.catalogo??"");
-      for (var cat in list) {
-        List<Item> itemsCat = [];
-        for (var i in listItems) {
-          if (i.categoriaId == cat.id && i.categoriaId != null) {
-            i.categoria = cat.nombre;
-            itemsCat.add(i);
-          }
-        }
-        cat.items = itemsCat;
-      }
-      list.removeWhere((element) => element.items.isEmpty);
+      List<CategoryOrder> list =[];
       List<Item> itemsFeatured=[];
-      itemsFeatured=listItems.where((element) => element.customItem is Map && element.customItem?["kiosco"]?["destacado"]==true).toList();
-      list.sort(
-        (a, b) {
-          return a.nombre.toLowerCase().compareTo(b .nombre.toLowerCase());
-        },
-      );
-      if(itemsFeatured.isNotEmpty){
-        list.insert(0, CategoryOrder(nombre: "", items: itemsFeatured));
+      if(authState.currentDevice?.catalogo!=null){
+        Catalog catalog = await _businessRepository.getCatalog(id: authState.currentDevice!.catalogo!);
+        Set<String> itemsIdsSet = {};
+        for(var c in catalog.categories){
+          itemsIdsSet.addAll(c.items);
+        }
+        List<String> itemsIds = itemsIdsSet.toList();
+        int size=100;
+        int lastIndex=0;
+        List<Item> listItems =[];
+        while(true){
+          var end =lastIndex+size;
+          if(end>itemsIds.length){
+            end = itemsIds.length;
+          }
+          var idsSplit = itemsIds.sublist(lastIndex,end);
+          lastIndex = end;
+          if(idsSplit.isEmpty){
+            break;
+          }
+          var items = await _comandaRepository.getSaleItems(items: idsSplit);
+          listItems.addAll(items);
+        }
+        for(var c in catalog.categories){
+          List<Item> items = listItems
+              .where((obj) => c.items.contains(obj.id))
+              .toList();
+          items.sort((a, b) => c.items.indexOf(a.id).compareTo(c.items.indexOf(b.id)));
+          list.add(CategoryOrder(nombre: c.category?.nombre ?? "",items: items));
+        }
+
+
       }
-      /*if (all != null) {
-        all.nombre = all.nombre.trim();
-        list.insert(0, all);
-      }*/
+      else{
+        list = await _comandaRepository.getCategories(
+            sucursal: 0,
+            contribuyente: authState.currentContribuyente?.id ?? 0);
+        list.sort(
+              (a, b) => a.nombre.compareTo(b.nombre),
+        );
+
+        List<Item> listItems = await _comandaRepository.getSaleItems(catalog: authState.currentSucursal?.catalogo??"");
+        for (var cat in list) {
+          List<Item> itemsCat = [];
+          for (var i in listItems) {
+            if (i.categoriaId == cat.id && i.categoriaId != null) {
+              i.categoria = cat.nombre;
+              itemsCat.add(i);
+            }
+          }
+          cat.items = itemsCat;
+        }
+        list.removeWhere((element) => element.items.isEmpty);
+        itemsFeatured=listItems.where((element) => element.customItem is Map && element.customItem?["kiosco"]?["destacado"]==true).toList();
+        list.sort(
+              (a, b) {
+            return a.nombre.toLowerCase().compareTo(b .nombre.toLowerCase());
+          },
+        );
+        if(itemsFeatured.isNotEmpty){
+          list.insert(0, CategoryOrder(nombre: "", items: itemsFeatured));
+        }
+      }
       List<CashRegister> cashRegisters =
       await _businessRepository.getCashRegisters(
           contribuyenteId: authState.currentContribuyente?.id ?? 0,

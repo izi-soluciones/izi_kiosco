@@ -7,6 +7,7 @@ class Device {
   bool activo;
   bool enUso;
   String? sucursalName;
+  String? catalogo;
 
   Device(
       {required this.id,
@@ -16,6 +17,7 @@ class Device {
       required this.config,
       this.sucursalName,
       required this.enUso,
+        required this.catalogo,
       required this.activo});
 
   factory Device.fromJson(Map json) => Device(
@@ -25,6 +27,7 @@ class Device {
       caja: json["caja"],
       config: ConfigDevice.fromJson(json["config"]),
       activo: json["activo"] ?? false,
+      catalogo: json["catalogo"],
       enUso: json["enUso"] ?? false);
 
   @override

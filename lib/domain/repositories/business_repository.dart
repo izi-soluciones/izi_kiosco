@@ -1,4 +1,5 @@
 import 'package:izi_kiosco/domain/models/cash_register.dart';
+import 'package:izi_kiosco/domain/models/catalog.dart';
 import 'package:izi_kiosco/domain/models/contribuyente.dart';
 import 'package:izi_kiosco/domain/models/currency.dart';
 import 'package:izi_kiosco/domain/models/document_type.dart';
@@ -18,4 +19,5 @@ abstract class BusinessRepository{
   Future<void> askHelp(int sucursal,String nombre);
 
   Future<bool> verifyConnectionPos();
+  Future<Catalog> getCatalog({required String id});
 }
