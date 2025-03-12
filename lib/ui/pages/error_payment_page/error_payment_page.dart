@@ -11,6 +11,7 @@ import 'package:izi_design_system/molecules/izi_input.dart';
 import 'package:izi_design_system/molecules/izi_snack_bar.dart';
 import 'package:izi_design_system/tokens/colors.dart';
 import 'package:izi_design_system/tokens/types.dart';
+import 'package:izi_kiosco/app/values/locale_keys.g.dart';
 import 'package:izi_kiosco/data/local/local_storage_card_errors.dart';
 import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/page_utils/page_utils_bloc.dart';
@@ -128,6 +129,19 @@ class _ErrorPaymentPageState extends State<ErrorPaymentPage> {
                         buttonOnPressed: (){
                           context.read<PageUtilsBloc>().closeScreenActive();
                           context.read<AuthBloc>().logout();
+                        }
+                    ),
+                  ),
+
+                  Padding(
+                    padding: const EdgeInsets.all(32),
+                    child: IziBtn(
+                        buttonText: "Recargar",
+                        buttonType: ButtonType.terciary,
+                        buttonSize: ButtonSize.medium,
+                        buttonOnPressed: (){
+                          GoRouter.of(context).goNamed(LocaleKeys.home);
+                          context.read<AuthBloc>().verify();
                         }
                     ),
                   )
