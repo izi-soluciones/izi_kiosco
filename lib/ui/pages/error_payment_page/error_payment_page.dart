@@ -115,7 +115,7 @@ class _ErrorPaymentPageState extends State<ErrorPaymentPage> {
                         buttonSize: ButtonSize.medium,
                         buttonOnPressed: (){
                           context.read<PageUtilsBloc>().closeScreenActive();
-                          GoRouter.of(context).pop();
+                          GoRouter.of(context).goNamed(LocaleKeys.home);
                         }
                     ),
                   ),
@@ -260,12 +260,31 @@ class _ErrorPaymentPageState extends State<ErrorPaymentPage> {
               ],
             ),
             const SizedBox(height: 20),
-            IziBtn(
-                buttonSize: ButtonSize.medium,
-                expandText: true,
-                buttonType: ButtonType.secondary,
-                buttonOnPressed: () => _submitPin(),
-                buttonText:  "Confirmar"
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                IziBtn(
+                    buttonSize: ButtonSize.medium,
+                    buttonType: ButtonType.secondary,
+                    buttonOnPressed: () => _submitPin(),
+                    buttonText:  "Confirmar"
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                IziBtn(
+                    buttonSize: ButtonSize.medium,
+                    buttonType: ButtonType.terciary,
+                    buttonOnPressed: () {
+                      context.read<PageUtilsBloc>().closeScreenActive();
+                      GoRouter.of(context).goNamed(LocaleKeys.home);
+                    },
+                    buttonText:  "Cacelar"
+                ),
+              ],
             ),
           ],
         ),

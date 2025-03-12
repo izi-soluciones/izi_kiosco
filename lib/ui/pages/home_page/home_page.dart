@@ -159,22 +159,10 @@ class _HomePageState extends State<HomePage> {
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            GestureDetector(
-                                onTapDown: (details) {
-                                  _startTimer();
-                                },
-                                onTapUp: (details) {
-                                  timer?.cancel();
-                                  if (errorPressed) {
-                                    context.read<PageUtilsBloc>().initScreenActive(context.read<AuthBloc>().state);
-                                    GoRouter.of(context)
-                                        .pushNamed(RoutesKeys.errorPayments);
-                                  }
-                                },
-                                child: IziText.titleBig(
-                                    color: IziColors.primary,
-                                    text: LocaleKeys.home_subtitles_iziSlogan.tr(),
-                                    fontWeight: FontWeight.w400)),
+                            IziText.titleBig(
+                                color: IziColors.primary,
+                                text: LocaleKeys.home_subtitles_iziSlogan.tr(),
+                                fontWeight: FontWeight.w400),
                             const SizedBox(height: 32,),
                             Expanded(
                               child: Column(
@@ -345,7 +333,26 @@ class _HomePageState extends State<HomePage> {
                         ),
                       ),
                     if (showError)
-                    Positioned(child: widgetError())
+                    Positioned(child: widgetError()),
+                    Positioned(
+                      top: 0,
+                        left: 0,
+                        child: GestureDetector(
+                          behavior: HitTestBehavior.opaque,
+                            onTapDown: (details) {
+                              _startTimer();
+                            },
+                            onTapUp: (details) {
+                              timer?.cancel();
+                              if (errorPressed) {
+                                context.read<PageUtilsBloc>().initScreenActive(context.read<AuthBloc>().state);
+                                GoRouter.of(context)
+                                    .goNamed(RoutesKeys.errorPayments);
+                              }
+                            },
+                            child: const SizedBox(width: 100,height: 100,)
+                        )
+                    )
                   ],
                 ),
               ),
