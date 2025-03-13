@@ -30,7 +30,7 @@ class MakeOrderRetailBloc extends Cubit<MakeOrderRetailState> {
       }
 
       List<Item> list = await _comandaRepository.getSaleItems(
-        catalog: authState.currentSucursal?.catalogo ?? ""
+        catalog: authState.currentSucursal?.catalogo ?? "", sortByPriority: false
       );
 
 

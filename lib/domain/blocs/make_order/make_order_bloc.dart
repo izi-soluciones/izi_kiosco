@@ -42,7 +42,7 @@ class MakeOrderBloc extends Cubit<MakeOrderState> {
             (a, b) => a.nombre.compareTo(b.nombre),
       );
 
-      List<Item> listItems = await _comandaRepository.getSaleItems(catalog: authState.currentSucursal?.catalogo??"");
+      List<Item> listItems = await _comandaRepository.getSaleItems(catalog: authState.currentSucursal?.catalogo??"",sortByPriority: authState.currentDevice?.config.sortByPriority==true);
       for (var cat in list) {
         List<Item> itemsCat = [];
         for (var i in listItems) {
