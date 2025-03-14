@@ -49,6 +49,7 @@ class ConfigDevice {
   final int? timeConfirmation;
   final int? timePayment;
   final String? pin;
+  final bool? sortByPriority;
 
   const ConfigDevice(
       {this.ipAtc,
@@ -62,7 +63,8 @@ class ConfigDevice {
       this.ipLinkser,
       this.video,
         required this.pin,
-      required this.demo});
+      required this.demo,
+      required this.sortByPriority});
 
   factory ConfigDevice.fromJson(dynamic json) {
     Map? jsonObj = json is Map ? json : null;
@@ -89,6 +91,8 @@ class ConfigDevice {
       jsonObj?["tiempoOrden"] is int ? jsonObj!["tiempoOrden"] : null,
       pin:
       jsonObj?["pin"] is String ? jsonObj!["pin"] : null,
+      sortByPriority:
+      jsonObj?["ordenarPrioridad"] is bool ? jsonObj!["ordenarPrioridad"] : null,
     );
     return config;
   }

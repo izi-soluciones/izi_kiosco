@@ -17,42 +17,52 @@ import 'package:izi_kiosco/domain/models/room.dart';
 import 'package:izi_kiosco/domain/dto/internal_movement_dto.dart';
 import 'package:izi_kiosco/domain/models/sale_link.dart';
 
-abstract class ComandaRepository{
-
-  Future<List<Comanda>> getComandas({required FiltersComanda filters,required int page});
+abstract class ComandaRepository {
+  Future<List<Comanda>> getComandas(
+      {required FiltersComanda filters, required int page});
   Future<Comanda> getComanda({required int orderId});
-  Future<void> emit({required InvoiceDto invoice,required int orderId});
-  Future<void> emitContingencia({required InvoiceDto invoice,required int orderId});
-  Future<Payment> addPayment({required Payment payment,required int orderId,required int contribuyente});
+  Future<void> emit({required InvoiceDto invoice, required int orderId});
+  Future<void> emitContingencia(
+      {required InvoiceDto invoice, required int orderId});
+  Future<Payment> addPayment(
+      {required Payment payment,
+      required int orderId,
+      required int contribuyente});
   Future<void> removePayment({required int paymentId});
-  Future<Charge> generatePayment({required int contribuyenteId, required PaymentDto payment});
+  Future<Charge> generatePayment(
+      {required int contribuyenteId, required PaymentDto payment});
   Future<void> markInternal({required InternalMovementDto internalMovementDto});
-  Future<List<CategoryOrder>> getCategories({required int sucursal,required int contribuyente});
+  Future<List<CategoryOrder>> getCategories(
+      {required int sucursal, required int contribuyente});
 
-
-  Future<List<ConsumptionPoint>> getConsumptionPoints(int sucursal, int contribuyente,{String? roomId});
+  Future<List<ConsumptionPoint>> getConsumptionPoints(
+      int sucursal, int contribuyente,
+      {String? roomId});
   Future<List<Room>> getRooms(int sucursal, int contribuyente);
-  Future<void> freeConsumptionPoint({required String id,required int sucursal,required int contribuyente});
+  Future<void> freeConsumptionPoint(
+      {required String id, required int sucursal, required int contribuyente});
 
   Future<void> cancelOrder({required int orderId});
   Future<Comanda> emitOrder({required NewOrderDto newOrder});
   Future<Comanda> emitOrderPre({required NewOrderDto newOrder});
   Future<Comanda> editOrder({required NewOrderDto newOrder});
-  Future<Invoice> invoicePreOrder({required InvoiceDto invoice,required int orderId});
+  Future<Invoice> invoicePreOrder(
+      {required InvoiceDto invoice, required int orderId});
 
-  Future<CardPayment> callCardPayment({required int amount,required String ip});
-  Future<CardPayment> callCardPaymentATC({required String amount,required String ip,required bool contactless});
-
+  Future<CardPayment> callCardPayment(
+      {required int amount, required String ip});
+  Future<CardPayment> callCardPaymentATC(
+      {required String amount, required String ip, required bool contactless});
 
   Future<Comanda> markAsCreated(int orderId);
 
   Future<Invoice> getInvoice(int invoiceId);
   Future<void> createPaidCharge(PaidChargeDto paidChargeDto);
-  Future<void> markPaymentATC(String token,String chargeUuid,int? internalId);
+  Future<void> markPaymentATC(String token, String chargeUuid, int? internalId);
 
-  Future<List<Item>> getSaleItems({String? catalog,List<String>? items});
+  Future<List<Item>> getSaleItems(
+      {String? catalog, List<String>? items, required bool sortByPriority});
 
   Future<SaleLink> createSaleLink(NewSaleLinkDto newSaleLinkDto);
   Future<Charge> generatePaymentAttempt(PaymentAttemptDto paymentAttemptDto);
-
 }

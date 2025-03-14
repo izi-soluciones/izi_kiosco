@@ -56,7 +56,7 @@ class MakeOrderBloc extends Cubit<MakeOrderState> {
           if(idsSplit.isEmpty){
             break;
           }
-          var items = await _comandaRepository.getSaleItems(items: idsSplit);
+          var items = await _comandaRepository.getSaleItems(items: idsSplit,sortByPriority: false);
           listItems.addAll(items);
         }
         for(var c in catalog.categories){
@@ -70,25 +70,26 @@ class MakeOrderBloc extends Cubit<MakeOrderState> {
 
       }
       else{
+        
         list = await _comandaRepository.getCategories(
-            sucursal: 0,
-            contribuyente: authState.currentContribuyente?.id ?? 0);
-        list.sort(
-              (a, b) => a.nombre.compareTo(b.nombre),
-        );
+        sucursal: 0,
+          contribuyente: authState.currentContribuyente?.id ?? 0);
+      list.sort(
+            (a, b) => a.nombre.compareTo(b.nombre),
+      );
 
-        List<Item> listItems = await _comandaRepository.getSaleItems(catalog: authState.currentSucursal?.catalogo??"");
-        for (var cat in list) {
-          List<Item> itemsCat = [];
-          for (var i in listItems) {
-            if (i.categoriaId == cat.id && i.categoriaId != null) {
-              i.categoria = cat.nombre;
-              itemsCat.add(i);
-            }
+      List<Item> listItems = await _comandaRepository.getSaleItems(catalog: authState.currentSucursal?.catalogo??"",sortByPriority: authState.currentDevice?.config.sortByPriority==true);
+      for (var cat in list) {
+        List<Item> itemsCat = [];
+        for (var i in listItems) {
+          if (i.categoriaId == cat.id && i.categoriaId != null) {
+            i.categoria = cat.nombre;
+            itemsCat.add(i);
           }
-          cat.items = itemsCat;
         }
-        list.removeWhere((element) => element.items.isEmpty);
+        cat.items = itemsCat;
+      }
+      list.removeWhere((element) => element.items.isEmpty);
         itemsFeatured=listItems.where((element) => element.customItem is Map && element.customItem?["kiosco"]?["destacado"]==true).toList();
         list.sort(
               (a, b) {

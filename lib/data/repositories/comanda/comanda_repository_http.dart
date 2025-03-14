@@ -48,30 +48,34 @@ class ComandaRepositoryHttp extends ComandaRepository {
       throw response.data;
     }
   }
+
   @override
   Future<List<Item>> getSaleItems(
-  {String? catalog,List<String>? items}) async {
+      {String? catalog,
+      required bool sortByPriority,
+      List<String>? items}) async {
     String path = "/items-inventarios";
     var response = await _dioClient.get(
         uri: path,
         queryParameters: {
-          if(catalog!=null)"catalogo": catalog,
-          if(items!=null)"listaItemsIds": items,
-          if(items==null)"habilitadoKiosco": 1,
-          "seVende": true
+          if (catalog != null) "catalogo": catalog,
+          if (items != null) "listaItemsIds": items,
+          if (items == null) "habilitadoKiosco": 1,
+          "seVende": true,
+          if (sortByPriority) "sortPrioridadKiosco": sortByPriority,
         },
         options: Options(
           responseType: ResponseType.json,
         ));
     if (response.statusCode == 200) {
-      List<Item> list = List.from(response.data)
-        .map((e) => Item.fromJson(e))
-        .toList();
+      List<Item> list =
+          List.from(response.data).map((e) => Item.fromJson(e)).toList();
       return list;
     } else {
       throw response.data;
     }
   }
+
   @override
   Future<List<ConsumptionPoint>> getConsumptionPoints(
       int sucursal, int contribuyente,
@@ -118,8 +122,10 @@ class ComandaRepositoryHttp extends ComandaRepository {
     }
     throw response.data;
   }
+
   @override
-  Future<Invoice> invoicePreOrder({required InvoiceDto invoice, required int orderId}) async {
+  Future<Invoice> invoicePreOrder(
+      {required InvoiceDto invoice, required int orderId}) async {
     try {
       String path = "/comandas/pre-comanda/$orderId/facturar";
       var response = await _dioClient.post(
@@ -128,8 +134,7 @@ class ComandaRepositoryHttp extends ComandaRepository {
           options: Options(responseType: ResponseType.json));
       if (response.statusCode == 200) {
         return Invoice.fromJson(response.data);
-      }
-      else{
+      } else {
         if (response.data?["status"] ?? false) {
           throw response.data?["data"];
         }
@@ -193,6 +198,7 @@ class ComandaRepositoryHttp extends ComandaRepository {
       throw error.toString();
     }
   }
+
   @override
   Future<void> emitContingencia(
       {required InvoiceDto invoice, required int orderId}) async {
@@ -407,12 +413,14 @@ class ComandaRepositoryHttp extends ComandaRepository {
   Future<List<CategoryOrder>> getCategories(
       {required int sucursal, required int contribuyente}) async {
     try {
-      String path =
-          "/categorias";
+      String path = "/categorias";
       var response = await _dioClient.get(
           uri: path,
           options: Options(responseType: ResponseType.json),
-          queryParameters: {"habilitadoKiosco": 1,"contribuyenteId": contribuyente});
+          queryParameters: {
+            "habilitadoKiosco": 1,
+            "contribuyenteId": contribuyente
+          });
       if (response.statusCode == 200) {
         return List.from(response.data)
             .map((e) => CategoryOrder.fromJson(e))
@@ -452,6 +460,7 @@ class ComandaRepositoryHttp extends ComandaRepository {
       throw error.toString();
     }
   }
+
   @override
   Future<Comanda> emitOrderPre({required NewOrderDto newOrder}) async {
     try {
@@ -474,6 +483,7 @@ class ComandaRepositoryHttp extends ComandaRepository {
       throw error.toString();
     }
   }
+
   @override
   Future<Comanda> editOrder({required NewOrderDto newOrder}) async {
     try {
@@ -501,8 +511,10 @@ class ComandaRepositoryHttp extends ComandaRepository {
       throw error.toString();
     }
   }
+
   @override
-  Future<Charge> generatePaymentAttempt(PaymentAttemptDto paymentAttemptDto) async {
+  Future<Charge> generatePaymentAttempt(
+      PaymentAttemptDto paymentAttemptDto) async {
     try {
       String path = "/solicitudes-cobro/intento-pago";
       var response = await _dioClient.post(
@@ -510,7 +522,7 @@ class ComandaRepositoryHttp extends ComandaRepository {
           options: Options(responseType: ResponseType.json),
           body: paymentAttemptDto.toJson());
       if (response.statusCode == 200) {
-        return Charge.fromJsonAttempt(response.data,paymentAttemptDto.uuid);
+        return Charge.fromJsonAttempt(response.data, paymentAttemptDto.uuid);
       } else {
         throw response.data;
       }
@@ -525,21 +537,22 @@ class ComandaRepositoryHttp extends ComandaRepository {
   }
 
   @override
-  Future<CardPayment> callCardPayment({required int amount,required String ip}) async{
+  Future<CardPayment> callCardPayment(
+      {required int amount, required String ip}) async {
     try {
       String path = "/sale";
       var response = await _dioClient.get(
           uri: path,
           baseUrl: "http://$ip:8000",
-          queryParameters: {
-            "monto": amount.toString(),
-            "cod_moneda": "068"
-          },
-          options: Options(responseType: ResponseType.json,receiveTimeout: const Duration(seconds: 60),sendTimeout: const Duration(seconds: 60)));
-    if (response.statusCode == 200) {
-        if(response.data is String){
-          var res=jsonDecode(response.data);
-          if(res["estado"]=="False"){
+          queryParameters: {"monto": amount.toString(), "cod_moneda": "068"},
+          options: Options(
+              responseType: ResponseType.json,
+              receiveTimeout: const Duration(seconds: 60),
+              sendTimeout: const Duration(seconds: 60)));
+      if (response.statusCode == 200) {
+        if (response.data is String) {
+          var res = jsonDecode(response.data);
+          if (res["estado"] == "False") {
             return CardPayment.fromJson(res);
           }
           throw response.data;
@@ -554,23 +567,19 @@ class ComandaRepositoryHttp extends ComandaRepository {
       }
       throw e.error ?? "Network Error";
     } catch (error) {
-
       throw error.toString();
     }
   }
 
   @override
-  Future<Comanda> markAsCreated(int orderId) async{
+  Future<Comanda> markAsCreated(int orderId) async {
     try {
-      String path =
-          "/comandas/pre-comanda/$orderId/crear";
+      String path = "/comandas/pre-comanda/$orderId/crear";
       var response = await _dioClient.post(
-          uri: path,
-          options: Options(responseType: ResponseType.json));
+          uri: path, options: Options(responseType: ResponseType.json));
       if (response.statusCode == 200) {
         return Comanda.fromJson(response.data);
-      }
-      else{
+      } else {
         if (response.data?["status"] ?? false) {
           throw response.data?["data"];
         }
@@ -587,17 +596,16 @@ class ComandaRepositoryHttp extends ComandaRepository {
   }
 
   @override
-  Future<Invoice> getInvoice(int invoiceId) async{
+  Future<Invoice> getInvoice(int invoiceId) async {
     try {
-      String path =
-          "/facturas/$invoiceId";
+      String path = "/facturas/$invoiceId";
       var response = await _dioClient.get(
-          uri: path,
-          options: Options(responseType: ResponseType.json));
-      if (response.statusCode == 200 && response.data is Map && response.data["factura"]!=null) {
+          uri: path, options: Options(responseType: ResponseType.json));
+      if (response.statusCode == 200 &&
+          response.data is Map &&
+          response.data["factura"] != null) {
         return Invoice.fromJson(response.data["factura"]);
-      }
-      else{
+      } else {
         if (response.data?["status"] ?? false) {
           throw response.data?["data"];
         }
@@ -614,10 +622,9 @@ class ComandaRepositoryHttp extends ComandaRepository {
   }
 
   @override
-  Future<void> createPaidCharge(PaidChargeDto paidChargeDto) async{
+  Future<void> createPaidCharge(PaidChargeDto paidChargeDto) async {
     try {
-      String path =
-          "/solicitudes-cobro/cobro-pagado";
+      String path = "/solicitudes-cobro/cobro-pagado";
       var response = await _dioClient.post(
           uri: path,
           body: paidChargeDto.toJson(),
@@ -639,23 +646,28 @@ class ComandaRepositoryHttp extends ComandaRepository {
   }
 
   @override
-  Future<CardPayment> callCardPaymentATC({required String amount,required String ip,required bool contactless}) async{
+  Future<CardPayment> callCardPaymentATC(
+      {required String amount,
+      required String ip,
+      required bool contactless}) async {
     try {
       String path;
-      if(contactless){
+      if (contactless) {
         path = "/v2/ctl/$ip/$amount/0";
-      }
-      else{
+      } else {
         path = "/v2/chip/$ip/$amount/0";
       }
       var response = await _dioClient.get(
           uri: path,
           baseUrl: dotenv.env[EnvKeys.atcServerPOS],
-          options: Options(responseType: ResponseType.json,receiveTimeout: const Duration(seconds: 60),sendTimeout: const Duration(seconds: 60)));
+          options: Options(
+              responseType: ResponseType.json,
+              receiveTimeout: const Duration(seconds: 60),
+              sendTimeout: const Duration(seconds: 60)));
       if (response.statusCode == 200) {
-        if(response.data is String){
-          var res=jsonDecode(response.data);
-          if(res["status"]==true && res["data"]!=null){
+        if (response.data is String) {
+          var res = jsonDecode(response.data);
+          if (res["status"] == true && res["data"] != null) {
             return CardPayment.fromJsonATC(res["data"]);
           }
           throw response.data;
@@ -670,21 +682,20 @@ class ComandaRepositoryHttp extends ComandaRepository {
       }
       throw e.error ?? "Network Error";
     } catch (error) {
-
       throw error.toString();
     }
   }
 
   @override
-  Future<void> markPaymentATC(String token, String chargeUuid,int? internalId) async{
+  Future<void> markPaymentATC(
+      String token, String chargeUuid, int? internalId) async {
     try {
-      String path =
-          "/solicitudes-cobro/$chargeUuid/notificacion-pos";
+      String path = "/solicitudes-cobro/$chargeUuid/notificacion-pos";
       var response = await _dioClient.post(
           uri: path,
           body: {
-            "token":token,
-            if(internalId!=null) "internalId": internalId
+            "token": token,
+            if (internalId != null) "internalId": internalId
           },
           options: Options(responseType: ResponseType.json));
       if (response.statusCode != 200) {
