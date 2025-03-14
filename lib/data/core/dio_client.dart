@@ -102,6 +102,7 @@ class DioClient {
 
 class AppInterceptor extends InterceptorsWrapper {
   final Dio dio;
+  final int maxRetries = 3;
   AppInterceptor(this.dio);
   @override
   Future onRequest(
@@ -115,17 +116,21 @@ class AppInterceptor extends InterceptorsWrapper {
       options.headers.addAll({"contribuyente": contribuyente});
     }
     options.headers.addAll({"Connection": "Keep-Alive",});
+    options.extra["retry_count"] = options.extra["retry_count"] ?? 0;
     return handler.next(options);
   }
 
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) async {
-    if (err.response?.statusCode == 401 || err.response?.statusCode == 403) {
+    RequestOptions requestOptions = err.requestOptions;
+    int retryCount = requestOptions.extra["retry_count"] ?? 0;
+    if ((err.response?.statusCode == 401 || err.response?.statusCode == 403) && retryCount < maxRetries) {
       try {
         String? newToken = await _getNewToken();
         if (newToken != null) {
           final RequestOptions newRequest = err.requestOptions;
           newRequest.headers["Authorization"] = "Bearer $newToken";
+          requestOptions.extra["retry_count"] = retryCount + 1;
           final Response response = await dio.fetch(newRequest);
           handler.resolve(response);
           return;
