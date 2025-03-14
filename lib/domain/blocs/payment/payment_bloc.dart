@@ -26,6 +26,7 @@ import 'package:izi_kiosco/domain/models/payment_obj.dart';
 import 'package:izi_kiosco/domain/repositories/business_repository.dart';
 import 'package:izi_kiosco/domain/repositories/comanda_repository.dart';
 import 'package:izi_kiosco/domain/repositories/socket_repository.dart';
+import 'package:izi_kiosco/domain/utils/crash_report.dart';
 import 'package:izi_kiosco/domain/utils/input_obj.dart';
 import 'package:izi_kiosco/domain/utils/print/print_template.dart';
 import 'package:izi_kiosco/domain/utils/print_utils.dart';
@@ -416,6 +417,7 @@ class PaymentBloc extends Cubit<PaymentState> {
         }
       }
       if (!success) {
+        CrashReport.report("Error complete payment POS", cardPayment.toJson().toString());
         await LocalStorageCardErrors.saveCardErrors(
             jsonEncode(cardPayment.toJson()));
         emit(state.copyWith(step: 6, status: PaymentStatus.paymentProcessed));
@@ -496,6 +498,7 @@ class PaymentBloc extends Cubit<PaymentState> {
         }
       }
       if (!success) {
+        CrashReport.report("Error complete payment POS", cardPayment.toJson().toString());
         await LocalStorageCardErrors.saveCardErrors(
             jsonEncode(cardPayment.toJson()));
         emit(state.copyWith(step: 6, status: PaymentStatus.paymentProcessed));

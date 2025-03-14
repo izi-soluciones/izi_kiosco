@@ -4,6 +4,7 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
 import 'package:izi_kiosco/domain/repositories/business_repository.dart';
+import 'package:izi_kiosco/domain/utils/crash_report.dart';
 part 'home_state.dart';
 
 
@@ -41,12 +42,16 @@ class HomeBloc extends Cubit<HomeState>{
         _subscription?.cancel();
         return;
       }
+      if(!isConnected){
+        CrashReport.report("Error connection POS", "POS not connected");
+      }
       emit(state.copyWith(statusServer: true,statusServerPos: isConnected));
     } catch (e) {
       if(isClosed){
         _subscription?.cancel();
         return;
       }
+      CrashReport.report("Error connection Server POS", "Server POS is not init");
       emit(state.copyWith(statusServer: false,statusServerPos: true));
     }
   }

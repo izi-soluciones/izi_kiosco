@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "130455241774",
+    "project_id": "izi-kiosk-prod",
+    "storage_bucket": "izi-kiosk-prod.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:130455241774:android:4de7e71fbe64391654cbbf",
+        "android_client_info": {
+          "package_name": "com.izisoluciones.kiosco.izi_kiosco"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBBNISJd8yJVJyni-cXqhaktBYkLQPj6Lk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
