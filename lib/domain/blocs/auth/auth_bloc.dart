@@ -73,6 +73,7 @@ class AuthBloc extends Cubit<AuthState> {
         User user = await _authRepository.getCurrentUserById(storageUser.id);
         List<Contribuyente> contribuyentes;
         contribuyentes = await _authRepository.getContribuyentes();
+        contribuyentes = contribuyentes.where((element) => element.config is Map && element.config["beta"]==true).toList();
         if (contribuyentes.isNotEmpty) {
           int contribuyenteId = (await BusinessUtils.getContribuyenteId()) ??
               contribuyentes.first.id ??
@@ -155,15 +156,30 @@ class AuthBloc extends Cubit<AuthState> {
       } else {
         await TokenUtils.deleteToken();
         await UserUtils.deleteUser();
+        await BusinessUtils.deleteContribuyenteId();
+        await BusinessUtils.deleteSucursalId();
         await LocalStorageCredentials.deleteCredentials();
         emit(state.copyWith(status: AuthStatus.noAuth));
       }
     } catch (error) {
-      developer.log(error.toString());
-      await TokenUtils.deleteToken();
-      await UserUtils.deleteUser();
-      await LocalStorageCredentials.deleteCredentials();
-      emit(state.copyWith(status: AuthStatus.noAuth));
+
+      CredentialStorage? credentials;
+      try{
+        credentials = await LocalStorageCredentials.getCredentials();
+      }
+      catch(_){}
+      if (credentials != null){
+        emit(state.copyWith(status: AuthStatus.errorAuth));
+      }
+      else{
+        developer.log(error.toString());
+        await TokenUtils.deleteToken();
+        await UserUtils.deleteUser();
+        await BusinessUtils.deleteContribuyenteId();
+        await BusinessUtils.deleteSucursalId();
+        await LocalStorageCredentials.deleteCredentials();
+        emit(state.copyWith(status: AuthStatus.noAuth));
+      }
     }
   }
 

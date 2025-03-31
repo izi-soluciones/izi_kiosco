@@ -1,6 +1,6 @@
 part of 'auth_bloc.dart';
 
-enum AuthStatus{init,noAuth,okAuth,noContribuyente,noEmailCheck,waitingChange,successChange,firstContribuyente}
+enum AuthStatus{init,noAuth,okAuth,noContribuyente,noEmailCheck,waitingChange,successChange,firstContribuyente, errorAuth}
 
 class AuthState extends Equatable{
 

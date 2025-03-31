@@ -3,8 +3,12 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:izi_design_system/atoms/izi_typography.dart';
+import 'package:izi_design_system/molecules/izi_btn.dart';
 import 'package:izi_design_system/molecules/izi_snack_bar.dart';
+import 'package:izi_design_system/tokens/colors.dart';
 import 'package:izi_design_system/tokens/theme.dart';
+import 'package:izi_design_system/tokens/types.dart';
 import 'package:izi_kiosco/app/utils/app_behavior.dart';
 import 'package:izi_kiosco/app/utils/go_router_refresh_stream.dart';
 import 'package:izi_kiosco/app/values/routes.dart';
@@ -103,7 +107,9 @@ class MyApp extends StatelessWidget {
                         ),
                     child: state.status == AuthStatus.init ||
                             state.status == AuthStatus.waitingChange
-                        ? SplashPage()
+                        ? SplashPage():
+                      state.status == AuthStatus.errorAuth
+                        ? _errorAuth()
                         : Stack(
                       children: [
                         child ?? const Scaffold(),
@@ -220,6 +226,31 @@ class MyApp extends StatelessWidget {
             },
           );
         },
+      ),
+    );
+  }
+
+  Widget _errorAuth(){
+    return Scaffold(
+      body: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          IziText.titleSmall(color: IziColors.darkGrey, text:"Ocurrio un error"),
+          const SizedBox(height: 16,),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              IziBtn(
+                  buttonText: "Recargar",
+                  buttonType: ButtonType.primary,
+                  buttonSize: ButtonSize.medium,
+                  buttonOnPressed: (){
+                    _auth.verify();
+                  }
+              ),
+            ],
+          )
+        ],
       ),
     );
   }
