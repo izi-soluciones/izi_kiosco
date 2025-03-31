@@ -665,12 +665,15 @@ class ComandaRepositoryHttp extends ComandaRepository {
               receiveTimeout: const Duration(seconds: 60),
               sendTimeout: const Duration(seconds: 60)));
       if (response.statusCode == 200) {
+        var res = {};
         if (response.data is String) {
-          var res = jsonDecode(response.data);
-          if (res["status"] == true && res["data"] != null) {
-            return CardPayment.fromJsonATC(res["data"]);
-          }
-          throw response.data;
+           res = jsonDecode(response.data);
+        }
+        if(response.data is Map){
+          res = response.data;
+        }
+        if (res["status"] == true && res["data"] != null) {
+          return CardPayment.fromJsonATC(res["data"]);
         }
         throw response.data;
       } else {
