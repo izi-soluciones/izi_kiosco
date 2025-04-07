@@ -40,7 +40,8 @@ class DioClient {
     required String uri,
     Map<String, dynamic>? queryParameters,
     Options? options,
-    String? baseUrl
+    String? baseUrl,
+    CancelToken? cancelToken
   }) async {
 
     Dio dio  = _dio;
@@ -54,7 +55,7 @@ class DioClient {
 
     //error
     var response =
-        await dio.get(uri, queryParameters: queryParameters, options: options);
+        await dio.get(uri, queryParameters: queryParameters, options: options,cancelToken: cancelToken);
     return response;
   }
   Future<Response> post({

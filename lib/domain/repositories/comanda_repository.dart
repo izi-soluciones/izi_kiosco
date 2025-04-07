@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:izi_kiosco/domain/dto/filters_comanda.dart';
 import 'package:izi_kiosco/domain/dto/invoice_dto.dart';
 import 'package:izi_kiosco/domain/dto/new_order_dto.dart';
@@ -41,7 +42,7 @@ abstract class ComandaRepository{
   Future<Invoice> invoicePreOrder({required InvoiceDto invoice,required int orderId});
 
   Future<CardPayment> callCardPayment({required int amount,required String ip});
-  Future<CardPayment> callCardPaymentATC({required String amount,required String ip,required bool contactless});
+  Future<CardPayment> callCardPaymentATC({required String amount,required String ip,required bool contactless, required CancelToken cancelToken});
 
 
   Future<Comanda> markAsCreated(int orderId);

@@ -237,6 +237,8 @@ abstract class  LocaleKeys {
   static const payment_body_weNotifyWhatsapp = 'payment.body.weNotifyWhatsapp';
   static const payment_body_waitingTime = 'payment.body.waitingTime';
   static const payment_body_canRetirePurchase = 'payment.body.canRetirePurchase';
+  static const payment_body_someProblem = 'payment.body.someProblem';
+  static const payment_body_areYouSureCancel = 'payment.body.areYouSureCancel';
   static const payment_body = 'payment.body';
   static const payment_buttons_qr = 'payment.buttons.qr';
   static const payment_buttons_card = 'payment.buttons.card';
@@ -247,6 +249,7 @@ abstract class  LocaleKeys {
   static const payment_buttons_cancelPurchase = 'payment.buttons.cancelPurchase';
   static const payment_buttons_callHelp = 'payment.buttons.callHelp';
   static const payment_buttons_makeAnotherPurchase = 'payment.buttons.makeAnotherPurchase';
+  static const payment_buttons_cancelPayment = 'payment.buttons.cancelPayment';
   static const payment_buttons = 'payment.buttons';
   static const payment_inputs_complement_label = 'payment.inputs.complement.label';
   static const payment_inputs_complement = 'payment.inputs.complement';

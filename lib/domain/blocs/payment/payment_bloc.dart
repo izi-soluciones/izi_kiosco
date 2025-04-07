@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:developer';
 import 'dart:math' as math;
 import 'package:collection/collection.dart';
+import 'package:dio/dio.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -38,6 +39,7 @@ class PaymentBloc extends Cubit<PaymentState> {
   StreamSubscription? qrStream;
   final BusinessRepository _businessRepository;
   final SocketRepository _socketRepository;
+  CancelToken cancelToken = CancelToken();
   PaymentBloc(
       this._comandaRepository, this._businessRepository, this._socketRepository)
       : super(PaymentState.init());
@@ -380,6 +382,7 @@ class PaymentBloc extends Cubit<PaymentState> {
           cardPayment = await _comandaRepository.callCardPaymentATC(
               amount: (state.paymentObj?.amount ?? 0).moneyFormat(),
               ip: authState.currentDevice!.config.ipAtc!,
+              cancelToken: cancelToken,
               contactless: contactless);
         } catch (e) {
           if (authState.currentDevice?.config.demo == true) {
@@ -457,6 +460,7 @@ class PaymentBloc extends Cubit<PaymentState> {
           cardPayment = await _comandaRepository.callCardPaymentATC(
               amount: (state.paymentObj?.amount ?? 0).moneyFormat(),
               ip: authState.currentDevice!.config.ipAtc!,
+              cancelToken: cancelToken,
               contactless: contactless);
         } catch (e) {
           if (authState.currentDevice?.config.demo == true) {
@@ -896,5 +900,10 @@ class PaymentBloc extends Cubit<PaymentState> {
 
   int _getIntFromDecimal(double num) {
     return (num * 100).toInt();
+  }
+
+  cancelPaymentCard(){
+    cancelToken.cancel();
+    cancelToken = CancelToken();
   }
 }

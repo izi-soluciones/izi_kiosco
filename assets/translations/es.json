@@ -299,7 +299,9 @@
       "goToCashRegisters": "Acercate a una de nuestras cajas para completar tu orden",
       "weNotifyWhatsapp": "Te avisaremos por Whatsapp cuando tu orden esté lista.",
       "waitingTime": "Tiempo de espera estimado: 5 minutos.",
-      "canRetirePurchase": "Puedes retirar tu compra"
+      "canRetirePurchase": "Puedes retirar tu compra",
+      "someProblem": "¿Ocurrió algun problema?",
+      "areYouSureCancel": "¿Cancelar el pago con tarjeta?"
     },
     "buttons": {
       "qr": "QR",
@@ -310,7 +312,8 @@
       "tryAgain": "Volver a intentar",
       "cancelPurchase": "Cancelar la compra",
       "callHelp": "Llamar al asistente",
-      "makeAnotherPurchase": "Realizar otra compra"
+      "makeAnotherPurchase": "Realizar otra compra",
+      "cancelPayment": "Cancelar Pago"
     },
     "inputs": {
       "complement": {

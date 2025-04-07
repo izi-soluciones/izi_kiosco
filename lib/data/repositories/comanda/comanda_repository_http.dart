@@ -639,7 +639,7 @@ class ComandaRepositoryHttp extends ComandaRepository {
   }
 
   @override
-  Future<CardPayment> callCardPaymentATC({required String amount,required String ip,required bool contactless}) async{
+  Future<CardPayment> callCardPaymentATC({required String amount,required String ip,required bool contactless, required CancelToken cancelToken}) async{
     try {
       String path;
       if(contactless){
@@ -650,8 +650,9 @@ class ComandaRepositoryHttp extends ComandaRepository {
       }
       var response = await _dioClient.get(
           uri: path,
+          cancelToken: cancelToken,
           baseUrl: dotenv.env[EnvKeys.atcServerPOS],
-          options: Options(responseType: ResponseType.json,receiveTimeout: const Duration(seconds: 60),sendTimeout: const Duration(seconds: 60)));
+          options: Options(responseType: ResponseType.json,receiveTimeout: const Duration(seconds: 300),sendTimeout: const Duration(seconds: 300)));
       if (response.statusCode == 200) {
         var res={};
         if(response.data is String){
