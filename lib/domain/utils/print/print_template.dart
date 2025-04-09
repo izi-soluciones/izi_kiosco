@@ -555,7 +555,7 @@ class PrintTemplate {
       }
       items.add(IziPrintSeparator(dotted: true));
       items.add(IziPrintText(
-          text: "WIFI WHOPPER, Ingrese a bf.bolivia.net\nUsuario:bkgreentower Contraseña: bk525145",
+          text: "WIFI WHOPPER, Ingrese a bf.bolivia.net\nUsuario:${sucursal.config is Map && sucursal.config["usuarioWifi"] is String?sucursal.config["usuarioWifi"]:"bkgreentower"} Contraseña: ${sucursal.config is Map && sucursal.config["passwordWifi"] is String?sucursal.config["passwordWifi"]:"bk525145"}",
           size: IziPrintSize.sm,
           align: IziPrintAlign.center));
       items.add(IziPrintSeparator());

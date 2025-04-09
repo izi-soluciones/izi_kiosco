@@ -1,4 +1,5 @@
 import 'package:izi_kiosco/domain/models/cash_register.dart';
+import 'package:izi_kiosco/domain/models/catalog.dart';
 import 'package:izi_kiosco/domain/models/contribuyente.dart';
 import 'package:izi_kiosco/domain/models/currency.dart';
 import 'package:izi_kiosco/domain/models/document_type.dart';
@@ -15,4 +16,5 @@ abstract class BusinessRepository{
   Future<List<DocumentType>> getDocumentTypes();
   Future<List<EconomicActivity>> getEconomicActivities({required int contribuyenteId,required int sucursalId});
   Future<List<Contribuyente>> queryBusinessSearch({required String query, required int contribuyenteId});
+  Future<Catalog> getCatalog({required String id});
 }

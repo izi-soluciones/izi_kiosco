@@ -46,7 +46,20 @@ class MakeOrderBloc extends Cubit<MakeOrderState> {
 
       List<Item> listItems = await _comandaRepository.getSaleItems(catalog: authState.currentSucursal?.catalogo??"");
 
+      String? priceList = authState.catalog?.listaPrecio;
 
+      if (priceList != null) {
+        for(var item in listItems){
+          PrecioVenta? aux = item.preciosVenta.firstWhereOrNull((element) {
+            return
+              element.listaPrecio == priceList;
+          });
+          if (aux != null) {
+            item.precioOriginal = item.precioUnitario;
+            item.precioUnitario = aux.precio;
+          }
+        }
+      }
       listItems.sort(
             (a, b){
               var splitA = a.codigoBarras?.split("-");

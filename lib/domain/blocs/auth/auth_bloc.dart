@@ -7,6 +7,7 @@ import 'package:izi_kiosco/data/local/local_storage_first_configuration.dart';
 import 'package:izi_kiosco/data/utils/business_utils.dart';
 import 'package:izi_kiosco/data/utils/token_utils.dart';
 import 'package:izi_kiosco/data/utils/user_utils.dart';
+import 'package:izi_kiosco/domain/models/catalog.dart';
 import 'package:izi_kiosco/domain/models/contribuyente.dart';
 import 'package:izi_kiosco/domain/models/currency.dart';
 import 'package:izi_kiosco/domain/models/device.dart';
@@ -130,6 +131,10 @@ class AuthBloc extends Cubit<AuthState> {
                 ?.nombre;
           }
 
+          Catalog? catalog;
+          if(sucursal?.catalogo!=null){
+            catalog = await _businessRepository.getCatalog(id: sucursal!.catalogo!);
+          }
           List<Currency> currencies = await _businessRepository.getCurrencies(
               contribuyenteId: contribuyente.id ?? 0);
 
@@ -147,6 +152,7 @@ class AuthBloc extends Cubit<AuthState> {
               currentDevice: device,
               currentSucursal: sucursal,
               video: video,
+              catalog: catalog,
               currentContribuyente: contribuyente));
           await LocalStorageFirstConfiguration.saveFirstConfiguration(true);
         } else {

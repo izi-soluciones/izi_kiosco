@@ -20,6 +20,9 @@ class AuthState extends Equatable{
   final StreamSubscription? invoiceSubscription;
   final bool terminalInit;
 
+
+  final Catalog? catalog;
+
   const AuthState({
     required this.currencies,
     required this.status,
@@ -33,7 +36,8 @@ class AuthState extends Equatable{
     required this.terminalInit,
     this.currentDevice,
     required this.devices,
-    required this.video
+    required this.video,
+    required this.catalog
   });
   factory AuthState.init()=>
       const AuthState(
@@ -42,7 +46,8 @@ class AuthState extends Equatable{
         terminalInit: false,
         currencies: [],
         devices: [],
-        video: null
+        video: null,
+        catalog: null
       );
 
   AuthState copyWith({
@@ -58,7 +63,8 @@ class AuthState extends Equatable{
     List<Currency>? currencies,
     List<Device>? devices,
     Device? currentDevice,
-    File? video
+    File? video,
+    Catalog? catalog
   }){
     return AuthState(
         currentContribuyente: currentContribuyente??this.currentContribuyente,
@@ -73,7 +79,8 @@ class AuthState extends Equatable{
       currencies: currencies ?? this.currencies,
       devices: devices ?? this.devices,
       currentDevice: currentDevice ?? this.currentDevice,
-      video: video ?? this.video
+      video: video ?? this.video,
+      catalog: catalog ?? this.catalog
     );
   }
   AuthState resetState(){
@@ -90,10 +97,11 @@ class AuthState extends Equatable{
       currencies: [],
       devices: [],
       currentDevice: null,
-      video: null
+      video: null,
+      catalog: null
     );
   }
   @override
-  List<Object?> get props => [video,currentDevice,devices,terminalInit,currentContribuyente,status,currentUser,contribuyentes,currentSucursal,invoiceSubscription,currentPos,loadingContribuyente,currencies];
+  List<Object?> get props => [catalog,video,currentDevice,devices,terminalInit,currentContribuyente,status,currentUser,contribuyentes,currentSucursal,invoiceSubscription,currentPos,loadingContribuyente,currencies];
 
 }

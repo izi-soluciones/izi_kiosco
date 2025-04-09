@@ -18,6 +18,9 @@ class Item {
   num precioModificadores;
   String? detalle;
   List<Ingredient> ingredientes;
+  List<PrecioVenta> preciosVenta;
+  num? precioOriginal;
+
 
   Item(
       {required this.cantidad,
@@ -38,6 +41,7 @@ class Item {
       required this.centroProduccion,
         required this.ingredientes,
         this.precioModificadores = 0,
+        required this.preciosVenta,
       required this.codigoBarras});
   factory Item.fromJson(Map<dynamic, dynamic> json) {
     List listModificadores =
@@ -66,6 +70,7 @@ class Item {
         centroProduccion: json["centroProduccion"],
         codigoBarras: json["codigoBarras"],
         id: json["id"] ?? 0,
+        preciosVenta: json["preciosVenta"] is List? List.from(json["preciosVenta"]).where((element) => element is Map && element["listaPrecio"] is String && element["precio"] is num).map((e) => PrecioVenta(listaPrecio: e["listaPrecio"], precio: e["precio"])).toList():[] ,
         valor: json["valor"]);
   }
 
@@ -87,6 +92,7 @@ class Item {
       categoria: categoria,
       categoriaId: categoriaId,
       centroProduccion: centroProduccion,
+      preciosVenta: preciosVenta,
       codigoBarras: codigoBarras);
 
   Map<String,dynamic> toJson(){
@@ -310,4 +316,12 @@ class Ingredient {
     "customItem": customItem,
     "tipoUnidad": tipoUnidad
   };
+}
+
+
+class PrecioVenta{
+  String listaPrecio;
+  num precio;
+
+  PrecioVenta({required this.listaPrecio, required this.precio});
 }
