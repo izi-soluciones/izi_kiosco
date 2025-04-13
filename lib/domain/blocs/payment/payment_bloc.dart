@@ -738,6 +738,7 @@ class PaymentBloc extends Cubit<PaymentState> {
 
   bool isProcessedTimer =false;
   bool isProcessedNotif =false;
+  bool activeProcessTimer =false;
   _saveAndListenPaymentOrder(AuthState authState, Charge charge) async {
     var newOrderDto = NewOrderDto(
         caja: 0,
@@ -802,7 +803,9 @@ class PaymentBloc extends Cubit<PaymentState> {
     timerManual = Timer(
       const Duration(seconds: 10),
         () async{
-          if(!isClosed && state.paymentObj?.id!=null){
+
+          if(!isClosed && state.paymentObj?.id!=null && !activeProcessTimer){
+            activeProcessTimer=true;
             for(var i=0;i<100;i++){
               if(isProcessedNotif || isProcessedTimer || isClosed){
                 break;
