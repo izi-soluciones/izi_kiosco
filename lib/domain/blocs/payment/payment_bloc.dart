@@ -734,6 +734,10 @@ class PaymentBloc extends Cubit<PaymentState> {
     );
   }
 
+  Timer? timerManual;
+
+  bool isProcessedTimer =false;
+  bool isProcessedNotif =false;
   _saveAndListenPaymentOrder(AuthState authState, Charge charge) async {
     var newOrderDto = NewOrderDto(
         caja: 0,
@@ -794,9 +798,58 @@ class PaymentBloc extends Cubit<PaymentState> {
       },
     );
 
+    timerManual?.cancel();
+    timerManual = Timer(
+      const Duration(seconds: 10),
+        () async{
+          if(!isClosed && state.paymentObj?.id!=null){
+            for(var i=0;i<100;i++){
+              if(isProcessedNotif || isProcessedTimer || isClosed){
+                break;
+              }
+              var comanda = await _comandaRepository.getComanda(orderId: state.paymentObj!.id);
+              if(comanda.factura!=null && !isProcessedNotif && !isProcessedTimer){
+                isProcessedTimer=true;
+                num? numero = comanda.numero;
+                if (comanda.custom is Map && (comanda.custom["simphony"]?["header"]?["checkNumber"] != null)) {
+                  numero = comanda.custom["simphony"]["header"]["checkNumber"];
+                }
+                await _printRolloOrder(authState,
+                    orderNumber: comanda.numero?.toInt() ?? 0,
+                    customOrderNumber: numero?.toInt(),
+                    eatOut: false);
+                if (kIsWeb) {
+                  await Future.delayed(const Duration(milliseconds: 1500));
+                }
+                await _printRollo(authState, idInvoice: comanda.factura);
+                if (timer != null) {
+                  timer!.cancel();
+                }
+                if (qrStream != null) {
+                  _socketRepository.closeQrListening();
+                  qrStream?.cancel();
+                }
+                emit(state.copyWith(step: 5, status: PaymentStatus.paymentProcessed));
+                timerSuccess = Timer(
+                  const Duration(seconds: 10),
+                      () async {
+                    emit(state.copyWith(status: PaymentStatus.successInvoice));
+                  },
+                );
+              }
+              await Future.delayed(const Duration(seconds: 3));
+            }
+          }
+        }
+    );
+
     qrStream = _socketRepository.listenPayment(charge: charge).listen(
       (event) async {
+        if(isProcessedTimer){
+          return;
+        }
         if (event is Map && event["statusVenta"] == "success") {
+          isProcessedNotif=true;
           try {
             if (event["numeroOrden"] is int) {
               await _printRolloOrder(authState,
