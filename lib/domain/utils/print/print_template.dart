@@ -115,7 +115,7 @@ class PrintTemplate {
   }
 
   static Future<List<IziPrintItem>> invoice80(
-      Invoice invoice, Contribuyente contribuyente, Sucursal sucursal) async {
+      Invoice invoice, Contribuyente contribuyente, Sucursal sucursal, num? orderNumber) async {
     List<IziPrintItem> items = [];
     Map? configSiat = contribuyente.customData is Map &&
             invoice.customFactura is Map &&
@@ -558,6 +558,14 @@ class PrintTemplate {
           text: "WIFI WHOPPER, Ingrese a bf.bolivia.net\nUsuario:${sucursal.config is Map && sucursal.config["usuarioWifi"] is String?sucursal.config["usuarioWifi"]:"bkgreentower"} Contraseña: ${sucursal.config is Map && sucursal.config["passwordWifi"] is String?sucursal.config["passwordWifi"]:"bk525145"}",
           size: IziPrintSize.sm,
           align: IziPrintAlign.center));
+      if(orderNumber!=null){
+        items.add(IziPrintSeparator(dotted: true));
+        items.add(IziPrintText(
+            text: "Orden #$orderNumber",
+            size: IziPrintSize.sm,
+            bold: true,
+            align: IziPrintAlign.center));
+      }
       items.add(IziPrintSeparator());
       items.add(IziPrintText(
           text: "Generada a través de iZi",

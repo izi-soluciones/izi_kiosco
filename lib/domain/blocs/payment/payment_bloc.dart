@@ -698,7 +698,7 @@ class PaymentBloc extends Cubit<PaymentState> {
         if (event is Map && event["statusVenta"] == "success") {
           try {
             if (event["idFactura"] is int) {
-              await _printRollo(authState, idInvoice: event["idFactura"]);
+              await _printRollo(authState, idInvoice: event["idFactura"], orderNumber: null);
             }
           } catch (_) {}
           if (timer != null) {
@@ -846,7 +846,7 @@ class PaymentBloc extends Cubit<PaymentState> {
                 if (kIsWeb) {
                   await Future.delayed(const Duration(milliseconds: 1500));
                 }
-                await _printRollo(authState, idInvoice: comanda.factura);
+                await _printRollo(authState, idInvoice: comanda.factura, orderNumber: numero?.toInt()??comanda.numero?.toInt());
                 emit(state.copyWith(step: 5, status: PaymentStatus.paymentProcessed));
                 timerSuccess = Timer(
                   const Duration(seconds: 10),
@@ -881,7 +881,9 @@ class PaymentBloc extends Cubit<PaymentState> {
                 await Future.delayed(const Duration(milliseconds: 1500));
               }
               if (event["idFactura"] is int) {
-                await _printRollo(authState, idInvoice: event["idFactura"]);
+                await _printRollo(authState, idInvoice: event["idFactura"], orderNumber: event["numeroCustom"] is int
+                    ? event["numeroCustom"]
+                    : event["numeroOrden"]);
               }
             } catch (_) {}
             if (qrStream != null) {
@@ -938,7 +940,7 @@ class PaymentBloc extends Cubit<PaymentState> {
     await printUtils.print(tmp);
   }
 
-  _printRollo(AuthState authState, {int? idInvoice, Invoice? invoice}) async {
+  _printRollo(AuthState authState, {int? idInvoice, Invoice? invoice, required num? orderNumber}) async {
     if (idInvoice == null && invoice == null) {
       return;
     }
@@ -946,7 +948,7 @@ class PaymentBloc extends Cubit<PaymentState> {
       invoice = await _comandaRepository.getInvoice(idInvoice);
     }
     var tmp = await PrintTemplate.invoice80(
-        invoice!, authState.currentContribuyente!, authState.currentSucursal!);
+        invoice!, authState.currentContribuyente!, authState.currentSucursal!, orderNumber);
     var printUtils = PrintUtils();
     await printUtils.print(tmp);
   }
