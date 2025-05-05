@@ -4,7 +4,7 @@ class CashRegister {
   bool estado;
   bool abierta;
 
-  int? userOpen;
+  String? userOpen;
 
   CashRegister(
       {required this.id,

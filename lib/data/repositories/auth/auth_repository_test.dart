@@ -22,7 +22,7 @@ class AuthRepositoryTest extends AuthRepository{
   }
 
   @override
-  Future<User> getCurrentUserById(int idUser)async {
+  Future<User> getCurrentUserById(String idUser)async {
     throw "error";
   }
 
@@ -47,6 +47,12 @@ class AuthRepositoryTest extends AuthRepository{
   @override
   Future<void> addDevice(AddKioskDto addKioskDto) {
     // TODO: implement addDevice
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<List<Sucursal>> getSucursales(int idContribuyente) {
+    // TODO: implement getSucursales
     throw UnimplementedError();
   }
 

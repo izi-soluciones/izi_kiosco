@@ -38,7 +38,7 @@ class UserInformationPage extends StatelessWidget {
                   children: [
                     IziText.body(text: LocaleKeys.user_information_body_user_label.tr(), color:IziColors.grey, fontWeight: FontWeight.w500),
                     const SizedBox(height: 4,),
-                    IziText.body(text: "${state.currentUser?.nombres??""} ${state.currentUser?.apPaterno??""} ${state.currentUser?.apMaterno??""}" , color:IziColors.dark, fontWeight: FontWeight.w500),
+                    IziText.body(text: "${state.currentUser?.nombres??""} ${state.currentUser?.apellidos??""}" , color:IziColors.dark, fontWeight: FontWeight.w500),
                     const SizedBox(height: 16,),
                     IziText.body(text: LocaleKeys.user_information_body_email_label.tr(), color:IziColors.grey, fontWeight: FontWeight.w500),
                     const SizedBox(height: 4,),

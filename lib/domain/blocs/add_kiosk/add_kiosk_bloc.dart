@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
@@ -21,6 +23,7 @@ class AddKioskBloc extends Cubit<AddKioskState>{
       emit(state.copyWith(status: AddKioskStatus.okCashRegister,cashRegisters: cashRegisters));
     }
     catch(e){
+      log(e.toString());
       emit(state.copyWith(status: AddKioskStatus.errorCashRegister));
       emit(state.copyWith(status: AddKioskStatus.init));
     }

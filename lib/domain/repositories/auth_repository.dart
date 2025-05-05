@@ -11,7 +11,8 @@ abstract class AuthRepository{
 
   Future<List<Contribuyente>> getContribuyentes();
   Future<Contribuyente> getCurrentContribuyenteById(int idContribuyente);
-  Future<User> getCurrentUserById(int idUser);
+  Future<List<Sucursal> > getSucursales(int idContribuyente);
+  Future<User> getCurrentUserById(String idUser);
   Future<List<Device>> getDevicesByContribuyente(int idContribuyente);
 
   Future<void> enableDevice(int idDevice);

@@ -80,6 +80,8 @@ class AuthBloc extends Cubit<AuthState> {
               0;
           Contribuyente contribuyente = await _authRepository
               .getCurrentContribuyenteById(contribuyenteId);
+          List<Sucursal> sucursales = await _authRepository.getSucursales(contribuyenteId);
+          contribuyente.sucursales = sucursales;
           Sucursal? sucursal;
           int? sucursalId = await BusinessUtils.getSucursalId();
           if (sucursalId != null) {
@@ -225,6 +227,8 @@ class AuthBloc extends Cubit<AuthState> {
         loadingContribuyente: true, status: AuthStatus.waitingChange));
     Contribuyente contribuyente = await _authRepository
         .getCurrentContribuyenteById(contribuyenteUpdate.id ?? 0);
+    List<Sucursal> sucursales = await _authRepository.getSucursales(contribuyenteUpdate.id ?? 0);
+    contribuyente.sucursales = sucursales;
     List<Device> devices = await _authRepository
         .getDevicesByContribuyente(contribuyenteUpdate.id ?? 0);
     for (var d in devices) {

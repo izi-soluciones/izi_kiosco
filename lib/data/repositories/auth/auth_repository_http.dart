@@ -59,8 +59,8 @@ class AuthRepositoryHttp extends AuthRepository{
   }
 
   @override
-  Future<User> getCurrentUserById(int idUser)async {
-    String path = "/usuarios/$idUser";
+  Future<User> getCurrentUserById(String idUser)async {
+    String path = "/usuarios/perfil";
     var response=await _dioClient.get(
         uri: path,
         options:Options(responseType: ResponseType.json));
@@ -151,6 +151,22 @@ class AuthRepositoryHttp extends AuthRepository{
     }
     catch(e){
       throw(e.toString());
+    }
+  }
+
+  @override
+  Future<List<Sucursal>> getSucursales(int idContribuyente) async{
+    String path="/contribuyentes/$idContribuyente/sucursales-permitidas";
+    var response=await _dioClient.get(
+        uri: path,
+        options: Options(responseType: ResponseType.json)
+    );
+    if(response.statusCode==200)
+    {
+      return List.from(response.data).map((e) => Sucursal.fromJson(e)).toList();
+    }
+    else{
+      throw response.data;
     }
   }
 

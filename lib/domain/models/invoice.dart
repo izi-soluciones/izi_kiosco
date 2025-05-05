@@ -39,7 +39,7 @@ class Invoice {
   num? montoTotal;
   String? pdfCarta;
   String? pdfRollo;
-  int? usuarioPreCreacion;
+  String? usuarioPreCreacion;
   int? numero;
   int? numeroPrefactura;
   String? autorizacion;
@@ -55,11 +55,11 @@ class Invoice {
   String? customCasosEspeciales;
   String? creado;
   String? almacen;
-  int? usuarioCreacion;
-  int? usuarioAnulacion;
-  int? usuarioModificacion;
-  int? usuarioCobro;
-  int? usuarioPago;
+  String? usuarioCreacion;
+  String? usuarioAnulacion;
+  String? usuarioModificacion;
+  String? usuarioCobro;
+  String? usuarioPago;
   String? usuarioPreCreacionNombre;
   String? usuarioCreacionNombre;
   String? usuarioAnulacionNombre;

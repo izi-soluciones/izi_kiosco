@@ -60,7 +60,7 @@ class ComandaRepositoryHttp extends ComandaRepository {
         queryParameters: {
           if (catalog != null) "catalogo": catalog,
           if (items != null) "listaItemsIds": items,
-          if (items == null) "habilitadoKiosco": 1,
+          if (items == null) "habilitadoKiosco": true,
           "seVende": true,
           if (sortByPriority) "sortPrioridadKiosco": sortByPriority,
         },

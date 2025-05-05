@@ -962,16 +962,21 @@ class PaymentBloc extends Cubit<PaymentState> {
   }
 
   _printRollo(AuthState authState, {int? idInvoice, Invoice? invoice}) async {
-    if (idInvoice == null && invoice == null) {
-      return;
+    try{
+      if (idInvoice == null && invoice == null) {
+        return;
+      }
+      if (idInvoice != null) {
+        invoice = await _comandaRepository.getInvoice(idInvoice);
+      }
+      var tmp = await PrintTemplate.invoice80(
+          invoice!, authState.currentContribuyente!, authState.currentSucursal!);
+      var printUtils = PrintUtils();
+      await printUtils.print(tmp);
     }
-    if (idInvoice != null) {
-      invoice = await _comandaRepository.getInvoice(idInvoice);
+    catch(e){
+      log(e.toString());
     }
-    var tmp = await PrintTemplate.invoice80(
-        invoice!, authState.currentContribuyente!, authState.currentSucursal!);
-    var printUtils = PrintUtils();
-    await printUtils.print(tmp);
   }
 
   double _roundToNDecimals(num num, int n) {
