@@ -18,7 +18,9 @@ class BusinessRepositoryHttp extends BusinessRepository{
     String path = "/contribuyentes/$contribuyenteId/sucursales/$sucursalId/cajas";
     var response = await _dioClient.get(
         uri: path,
-        options: Options(responseType: ResponseType.json));
+        options: Options(responseType: ResponseType.json,headers: {
+      "Izi-Sucursal":sucursalId
+    }));
     if (response.statusCode == 200) {
       return List.from(response.data)
           .map((e) => CashRegister.fromJson(e))

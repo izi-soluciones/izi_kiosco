@@ -2,8 +2,7 @@ class User {
   User({
     this.uuid,
     required this.nombres,
-    required this.apPaterno,
-    required this.apMaterno,
+    required this.apellidos,
     this.correoElectronico,
     this.documentoIdentidad,
     this.legalCheck,
@@ -15,26 +14,24 @@ class User {
   });
   String? uuid;
   String nombres;
-  String apPaterno;
-  String apMaterno;
+  String apellidos;
   String? correoElectronico;
   String? documentoIdentidad;
-  int? legalCheck;
-  int? emailCheck;
-  int id;
+  bool? legalCheck;
+  bool? emailCheck;
+  String id;
   int? avatar;
-  int? estado;
+  bool? estado;
   num? salario;
 
   factory User.fromJson(Map<String, dynamic> json)=>User(
     uuid : json['uuid'],
     nombres : json['nombres'],
-    apPaterno : json['apPaterno'],
-    apMaterno : json['apMaterno'],
+    apellidos : json['apellidos'],
     correoElectronico : json['correoElectronico'],
     documentoIdentidad : json['documentoIdentidad'],
-    legalCheck : json['legalCheck'] is bool?json["legalCheck"]?1:0:json["legalCheck"],
-    emailCheck : json['emailCheck'] is bool?json["emailCheck"]?1:0:json["emailCheck"],
+    legalCheck : json['legalCheck'] is bool?json["legalCheck"]:false,
+    emailCheck : json['emailCheck'] is bool?json["emailCheck"]:false,
     id : json['id'],
     avatar : json['avatar'],
     estado : json['estado'],
@@ -45,8 +42,7 @@ class User {
     final data = <String, dynamic>{};
     data['uuid'] = uuid;
     data['nombres'] = nombres;
-    data['apPaterno'] = apPaterno;
-    data['apMaterno'] = apMaterno;
+    data['apellidos'] = apellidos;
     data['correoElectronico'] = correoElectronico;
     data['documentoIdentidad'] = documentoIdentidad;
     data['legalCheck'] = legalCheck;
@@ -59,8 +55,7 @@ class User {
   Map<String, dynamic> toJsonUpdate() {
     final data = <String, dynamic>{};
     data['nombres'] = nombres;
-    data['apPaterno'] = apPaterno;
-    data['apMaterno'] = apMaterno;
+    data['apellidos'] = apellidos;
     return data;
   }
 }

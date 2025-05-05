@@ -113,8 +113,12 @@ class AppInterceptor extends InterceptorsWrapper {
     } else {
       final token = await TokenUtils.getToken();
       final contribuyente = await BusinessUtils.getContribuyenteId();
+      final sucursal = await BusinessUtils.getSucursalId();
       options.headers.addAll({"Authorization": "Bearer $token"});
-      options.headers.addAll({"contribuyente": contribuyente});
+      options.headers.addAll({"Izi-Contribuyente": contribuyente});
+      if(sucursal!=null && options.headers["Izi-Sucursal"]==null){
+        options.headers.addAll({"Izi-Sucursal": sucursal});
+      }
     }
     options.headers.addAll({"Connection": "Keep-Alive",});
     return handler.next(options);
@@ -146,7 +150,7 @@ Future<String?> _getNewToken()async{
       dioNewToken.options = BaseOptions(
           baseUrl: dotenv.env[EnvKeys.apiUrl] ?? "");
       var response =
-      await dioNewToken.post("/auth/refrescar-token", options: Options(
+      await dioNewToken.post("/refrescar-token", options: Options(
           headers: {
             "Content-Type": "application/json",
             "Authorization": "Bearer $refreshToken"

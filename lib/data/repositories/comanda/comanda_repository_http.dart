@@ -56,7 +56,7 @@ class ComandaRepositoryHttp extends ComandaRepository {
         uri: path,
         queryParameters: {
           "catalogo": catalog,
-          "habilitadoKiosco": 1,
+          "habilitadoKiosco": true,
           "parametrosIngredientes": true,
           "seVende": true
         },
