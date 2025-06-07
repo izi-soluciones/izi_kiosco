@@ -166,11 +166,24 @@ class AuthBloc extends Cubit<AuthState> {
         emit(state.copyWith(status: AuthStatus.noAuth));
       }
     } catch (error) {
-      developer.log(error.toString());
-      await TokenUtils.deleteToken();
-      await UserUtils.deleteUser();
-      await LocalStorageCredentials.deleteCredentials();
-      emit(state.copyWith(status: AuthStatus.noAuth));
+
+      CredentialStorage? credentials;
+      try{
+        credentials = await LocalStorageCredentials.getCredentials();
+      }
+      catch(_){}
+      if (credentials != null){
+        emit(state.copyWith(status: AuthStatus.errorAuth));
+      }
+      else{
+        developer.log(error.toString());
+        await TokenUtils.deleteToken();
+        await UserUtils.deleteUser();
+        await BusinessUtils.deleteContribuyenteId();
+        await BusinessUtils.deleteSucursalId();
+        await LocalStorageCredentials.deleteCredentials();
+        emit(state.copyWith(status: AuthStatus.noAuth));
+      }
     }
   }
 
