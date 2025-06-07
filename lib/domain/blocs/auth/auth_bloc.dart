@@ -50,7 +50,7 @@ class AuthBloc extends Cubit<AuthState> {
     emit(state.resetState());
   }
 
-  Future<void> verify() async {
+  Future<void> verify({int intent=1}) async {
     try {
       PrintUtils().printTest();
       emit(state.copyWith(status: AuthStatus.init));
@@ -173,7 +173,10 @@ class AuthBloc extends Cubit<AuthState> {
       }
       catch(_){}
       if (credentials != null){
-        emit(state.copyWith(status: AuthStatus.errorAuth));
+        emit(state.copyWith(status: AuthStatus.init));
+        developer.log("Esperando $intent segundos para reintentar");
+        await Future.delayed(Duration(seconds: intent));
+        verify(intent: intent+1);
       }
       else{
         developer.log(error.toString());
