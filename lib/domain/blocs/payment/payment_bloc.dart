@@ -947,7 +947,7 @@ class PaymentBloc extends Cubit<PaymentState> {
     if (idInvoice != null) {
       invoice = await _comandaRepository.getInvoice(idInvoice);
     }
-    var tmp = await PrintTemplate.invoice80(
+    var tmp = await PrintTemplate.invoiceCompact(
         invoice!, authState.currentContribuyente!, authState.currentSucursal!, orderNumber);
     var printUtils = PrintUtils();
     await printUtils.print(tmp);
