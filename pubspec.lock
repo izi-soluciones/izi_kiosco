@@ -229,10 +229,10 @@ packages:
     dependency: "direct main"
     description:
       name: easy_localization
-      sha256: de63e3b422adfc97f256cbb3f8cf12739b6a4993d390f3cadb3f51837afaefe5
+      sha256: "0f5239c7b8ab06c66440cfb0e9aa4b4640429c6668d5a42fe389c5de42220b12"
       url: "https://pub.dev"
     source: hosted
-    version: "3.0.3"
+    version: "3.0.7+1"
   easy_logger:
     dependency: transitive
     description:

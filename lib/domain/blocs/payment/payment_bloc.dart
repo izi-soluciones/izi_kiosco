@@ -969,8 +969,18 @@ class PaymentBloc extends Cubit<PaymentState> {
       if (idInvoice != null) {
         invoice = await _comandaRepository.getInvoice(idInvoice);
       }
-      var tmp = await PrintTemplate.invoice80(
+      List<IziPrintItem> tmp;
+      if(authState.currentSucursal?.config is Map &&
+      (authState.currentSucursal?.config as Map)["tipoFacturaVentas"] == "compacto"
+      ){
+        tmp= await PrintTemplate.invoiceCompact(
           invoice!, authState.currentContribuyente!, authState.currentSucursal!);
+      }
+      else{
+        tmp= await PrintTemplate.invoice80(
+          invoice!, authState.currentContribuyente!, authState.currentSucursal!);
+      }
+       
       var printUtils = PrintUtils();
       await printUtils.print(tmp);
     }

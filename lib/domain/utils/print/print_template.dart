@@ -546,6 +546,60 @@ class PrintTemplate {
     return items;
   }
 
+static Future<List<IziPrintItem>> invoiceCompact(
+      Invoice invoice, Contribuyente contribuyente, Sucursal sucursal) async {
+    List<IziPrintItem> items = [];
+    items.add(IziPrintText(text: contribuyente.nombre??"", size: IziPrintSize.md,bold: true,align: IziPrintAlign.center));
+    items.add(IziPrintText(text: contribuyente.razonSocial??"", size: IziPrintSize.sm,bold: false,align: IziPrintAlign.center));
+    items.add(IziPrintText(text: contribuyente.nit??"", size: IziPrintSize.sm,bold: false,align: IziPrintAlign.center));
+    items.add(IziPrintText(text: sucursal.nombre??"", size: IziPrintSize.sm,bold: true,align: IziPrintAlign.center));
+
+
+    items.add(IziPrintText(text: "NOMBRE: ${invoice.razonSocial}", size: IziPrintSize.sm,align: IziPrintAlign.left));
+    items.add(IziPrintText(text: "NIT/CI/CEX: ${invoice.comprador}", size: IziPrintSize.sm,align: IziPrintAlign.left));
+    items.add(IziPrintText(text: "FACTURA N°: ${invoice.numero}", size: IziPrintSize.sm,align: IziPrintAlign.left));
+    items.add(IziPrintText(text: "FECHA: ${DateTime.parse(invoice.fecha).toLocal().dateFormat(DateFormatterType.dateHour)}", size: IziPrintSize.sm,align: IziPrintAlign.left));
+    items.add(IziPrintText(text: "IMPORTE Bs: ${invoice.montoTotalImpuesto}", size: IziPrintSize.sm,align: IziPrintAlign.left,bold: true));
+    items.add(IziPrintLineWrap(lines: 1));
+
+        if (invoice.prefactura != 1 && invoice.customFactura is Map &&
+                  invoice.customFactura["siat"] is Map) {
+          var nit = invoice.emisor;
+          var cuf = invoice.customFactura is Map &&
+                  invoice.customFactura["siat"] is Map
+              ? invoice.customFactura["siat"]["cuf"]
+              : null;
+          var number = invoice.numero;
+          String siatQRUrl;
+          if (contribuyente.customData is Map &&
+              contribuyente.customData["configSiat"] is Map &&
+              contribuyente.customData["configSiat"]["codigoAmbiente"] == 1) {
+            siatQRUrl =
+                "https://siat.impuestos.gob.bo/consulta/QR?nit=$nit&cuf=$cuf&numero=$number&t=2";
+          } else {
+            siatQRUrl =
+                "https://pilotosiat.impuestos.gob.bo/consulta/QR?nit=$nit&cuf=$cuf&numero=$number&t=2";
+          }
+          items.add(IziPrintQR(siatQRUrl, size: 2));
+    items.add(IziPrintLineWrap(lines: 1));
+          items.add(IziPrintText(text: "Visualice su factura desde el QR", size: IziPrintSize.sm,align: IziPrintAlign.center));
+          items.add(IziPrintText(text: "Forma de pago: ${invoice.terminosPago}", size: IziPrintSize.sm,align: IziPrintAlign.center));
+        }else if(invoice.pdfRollo!=null){
+          items.add(IziPrintQR(invoice.pdfCarta!, size: 2));
+    items.add(IziPrintLineWrap(lines: 1));
+          items.add(IziPrintText(text: "Visualice su factura desde el QR", size: IziPrintSize.sm,align: IziPrintAlign.center));
+          items.add(IziPrintText(text: "Forma de pago: ${invoice.terminosPago}", size: IziPrintSize.sm,align: IziPrintAlign.center));
+        }
+      items.add(IziPrintSeparator());
+      items.add(IziPrintText(
+          text: "Generada a través de iZi",
+          size: IziPrintSize.sm,
+          bold: true,
+          align: IziPrintAlign.center));
+    
+    return items;
+  }
+
   static final _wordMap = {
     0: 'cero',
     1: 'uno',
