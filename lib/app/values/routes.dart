@@ -2,16 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:izi_design_system/tokens/colors.dart';
-import 'package:izi_kiosco/data/repositories/auth/auth_repository_http.dart';
-import 'package:izi_kiosco/data/repositories/business/business_repository_http.dart';
-import 'package:izi_kiosco/data/repositories/comanda/comanda_repository_http.dart';
-import 'package:izi_kiosco/data/repositories/socket/socket_repository_http.dart';
+import 'package:izi_kiosco/data/repositories/auth/auth_repository_offline.dart';
+import 'package:izi_kiosco/data/repositories/business/business_repository_offline.dart';
+import 'package:izi_kiosco/data/repositories/comanda/comanda_repository_offline.dart';
+import 'package:izi_kiosco/data/repositories/socket/socket_repository_offline.dart';
 import 'package:izi_kiosco/domain/blocs/add_kiosk/add_kiosk_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/login/login_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/make_order/make_order_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/make_order_retail/make_order_retail_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/payment/payment_bloc.dart';
+import 'package:izi_kiosco/domain/dto/new_order_dto.dart';
 import 'package:izi_kiosco/domain/models/payment_obj.dart';
 import 'package:izi_kiosco/ui/general/main_layout/main_layout.dart';
 import 'package:izi_kiosco/ui/pages/add_kiosk_page/add_kiosk_page.dart';
@@ -39,7 +40,7 @@ class Routes {
         pageBuilder: (BuildContext context, GoRouterState state) {
           return NoTransitionPage(
             child: BlocProvider(
-              create: (context) => LoginBloc(AuthRepositoryHttp()),
+              create: (context) => LoginBloc(AuthRepositoryOffline()),
               child: MainLayout(
                   currentLocation: state.fullPath ?? "",
                   hideDrawer: true,
@@ -76,7 +77,7 @@ class Routes {
                 onPop: null,
                 child: BlocProvider(
                     create: (context) => AddKioskBloc(
-                        AuthRepositoryHttp(), BusinessRepositoryHttp()),
+                        AuthRepositoryOffline(), BusinessRepositoryOffline()),
                     child: const AddKioskPage())),
           );
         },
@@ -131,7 +132,7 @@ class Routes {
                 return NoTransitionPage(
                     child: BlocProvider(
                       create: (context) => MakeOrderRetailBloc(
-                          ComandaRepositoryHttp(), BusinessRepositoryHttp())
+                          ComandaRepositoryOffline(), BusinessRepositoryOffline())
                         ..init(context.read<AuthBloc>().state),
                       child: const MakeOrderRetailPage(),
                     ));
@@ -155,14 +156,16 @@ class Routes {
               name: RoutesKeys.payment,
               path: RoutesKeys.paymentLink,
               pageBuilder: (BuildContext context, GoRouterState state) {
-                if (state.extra is PaymentObj) {
-                  PaymentObj paymentObj = state.extra as PaymentObj;
+                if (state.extra is Map) {
+                  PaymentObj paymentObj = (state.extra as Map)["paymentObj"] as PaymentObj;
+                  NewOrderDto newOrderDto = (state.extra as Map)["newOrderDto"] as NewOrderDto;
                   return NoTransitionPage(
                     child: BlocProvider(
-                      create: (context) => PaymentBloc(ComandaRepositoryHttp(),
-                          BusinessRepositoryHttp(), SocketRepositoryHttp())
+                      create: (context) => PaymentBloc(ComandaRepositoryOffline(),
+                          BusinessRepositoryOffline(), SocketRepositoryOffline())
                         ..initOrder(
                             paymentObj: paymentObj,
+                            newOrderDto: newOrderDto,
                             authState: context.read<AuthBloc>().state),
                       child: Scaffold(
                         backgroundColor: IziColors.lightGrey30,

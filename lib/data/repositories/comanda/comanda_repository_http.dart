@@ -560,7 +560,7 @@ class ComandaRepositoryHttp extends ComandaRepository {
   }
 
   @override
-  Future<Comanda> markAsCreated(int orderId) async{
+  Future<Comanda> markAsCreated(int orderId, {NewOrderDto? newOrder}) async{
     try {
       String path =
           "/comandas/pre-comanda/$orderId/crear";

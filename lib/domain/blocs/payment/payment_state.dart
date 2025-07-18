@@ -71,6 +71,9 @@ class PaymentState extends Equatable {
 
   final PaymentObj? paymentObj;
 
+
+  final NewOrderDto? newOrderDto;
+
   final bool usaSiat;
 
   const PaymentState(
@@ -99,6 +102,7 @@ class PaymentState extends Equatable {
       this.documentType,
       required this.withException,
       required this.phoneNumber,
+      this.newOrderDto,
         required this.qrLoading,
         this.qrAmount,
         this.qrCharge,
@@ -107,6 +111,7 @@ class PaymentState extends Equatable {
 
   factory PaymentState.init() => PaymentState(
       status: PaymentStatus.waitingGet,
+      newOrderDto: null,
       paymentObj: null,
       cashRegisters: const [],
       cashAmount: 0,
@@ -163,7 +168,9 @@ class PaymentState extends Equatable {
         bool? qrWait,
         bool? qrLoading,
       Sucursal? casaMatriz,
-      PaymentObj? paymentObj}) {
+      PaymentObj? paymentObj,
+      NewOrderDto? newOrderDto
+      }) {
     return PaymentState(
         casaMatriz: casaMatriz ?? this.casaMatriz,
         status: status ?? this.status,
@@ -193,7 +200,8 @@ class PaymentState extends Equatable {
       qrPaymentKey: qrPaymentKey == -1?null: qrPaymentKey ?? this.qrPaymentKey,
       qrLoading: qrLoading ?? this.qrLoading,
       qrWait: qrWait ?? this.qrWait,
-      paymentObj: paymentObj ?? this.paymentObj
+      paymentObj: paymentObj ?? this.paymentObj,
+      newOrderDto: newOrderDto ?? this.newOrderDto
     );
   }
 

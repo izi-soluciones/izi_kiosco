@@ -14,8 +14,11 @@ import 'package:izi_kiosco/app/utils/go_router_refresh_stream.dart';
 import 'package:izi_kiosco/app/values/routes.dart';
 import 'package:izi_kiosco/app/values/routes_keys.dart';
 import 'package:izi_kiosco/data/repositories/auth/auth_repository_http.dart';
+import 'package:izi_kiosco/data/repositories/auth/auth_repository_offline.dart';
 import 'package:izi_kiosco/data/repositories/business/business_repository_http.dart';
+import 'package:izi_kiosco/data/repositories/business/business_repository_offline.dart';
 import 'package:izi_kiosco/data/repositories/comanda/comanda_repository_http.dart';
+import 'package:izi_kiosco/data/repositories/comanda/comanda_repository_offline.dart';
 import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/make_order/make_order_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/page_utils/page_utils_bloc.dart';
@@ -59,7 +62,7 @@ class MyApp extends StatelessWidget {
   );
 
   final AuthBloc _auth =
-      AuthBloc(AuthRepositoryHttp(), BusinessRepositoryHttp());
+      AuthBloc(AuthRepositoryOffline(), BusinessRepositoryOffline());
 
   MyApp({Key? key}) : super(key: key);
   @override
@@ -108,8 +111,8 @@ class MyApp extends StatelessWidget {
                         : MultiBlocProvider(providers: [
                             BlocProvider(
                                 create: (context) => MakeOrderBloc(
-                                    ComandaRepositoryHttp(),
-                                    BusinessRepositoryHttp())),
+                                    ComandaRepositoryOffline(),
+                                    BusinessRepositoryOffline())),
                           ], child: BlocBuilder<PageUtilsBloc, PageUtilsState>(
                         buildWhen: (previous, current) {
                           return previous.snackBarState !=

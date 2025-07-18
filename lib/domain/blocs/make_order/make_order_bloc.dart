@@ -264,7 +264,7 @@ class MakeOrderBloc extends Cubit<MakeOrderState> {
     emit(state.copyWith(takeAway: takeAway));
   }
 
-  Future<Comanda?> emitOrder(AuthState authState)async{
+  Future<NewOrderDto?> emitOrder(AuthState authState)async{
     try{
       int cajaUsuarioIndex=state.cashRegisters.indexWhere((element) => authState.currentDevice?.caja==element.id && element.abierta==true);
       CashRegister? cashRegister;
@@ -306,7 +306,7 @@ class MakeOrderBloc extends Cubit<MakeOrderState> {
         emit(state.copyWith(status: MakeOrderStatus.successEmit));
         emit(state.copyWith(status: MakeOrderStatus.successGet));
       }
-      return comanda;
+      return newOrderDto;
     }
     catch(err){
       log(err.toString());

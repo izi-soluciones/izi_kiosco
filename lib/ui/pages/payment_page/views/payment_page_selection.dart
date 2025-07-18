@@ -87,24 +87,24 @@ class PaymentPageSelection extends StatelessWidget {
       crossAxisAlignment: WrapCrossAlignment.center,
       alignment: WrapAlignment.center,
       children: [
-        PaymentMethodBtn(
-            onPressed: (){
-              context.read<PaymentBloc>().selectPayment(PaymentType.qr,authState);
-              },
-            icon: IziIcons.qrCode,
-            color: IziColors.primary,
-            text: LocaleKeys.payment_buttons_qr.tr(),
-        ),
-        if(authState.currentDevice?.config.ipAtc!=null||authState.currentDevice?.config.ipLinkser!=null )
-          PaymentMethodBtn(
-            onPressed: (){
-              context.read<PaymentBloc>().selectPayment(PaymentType.card,authState);
-            },
-            color: IziColors.primary,
-            icon: IziIcons.card,
-            text: LocaleKeys.payment_buttons_card.tr(),
-          ),
-        if(state.paymentObj?.isComanda==true)
+        // PaymentMethodBtn(
+        //     onPressed: (){
+        //       context.read<PaymentBloc>().selectPayment(PaymentType.qr,authState);
+        //       },
+        //     icon: IziIcons.qrCode,
+        //     color: IziColors.primary,
+        //     text: LocaleKeys.payment_buttons_qr.tr(),
+        // ),
+        // if(authState.currentDevice?.config.ipAtc!=null||authState.currentDevice?.config.ipLinkser!=null )
+        //   PaymentMethodBtn(
+        //     onPressed: (){
+        //       context.read<PaymentBloc>().selectPayment(PaymentType.card,authState);
+        //     },
+        //     color: IziColors.primary,
+        //     icon: IziIcons.card,
+        //     text: LocaleKeys.payment_buttons_card.tr(),
+        //   ),
+        // if(state.paymentObj?.isComanda==true)
         PaymentMethodBtn(
             onPressed: (){
               context.read<PaymentBloc>().selectPayment(PaymentType.cashRegister,authState);

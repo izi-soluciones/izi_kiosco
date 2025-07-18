@@ -45,7 +45,7 @@ class PaymentBloc extends Cubit<PaymentState> {
       : super(PaymentState.init());
 
   initOrder(
-      {required PaymentObj paymentObj, required AuthState authState}) async {
+      {required PaymentObj paymentObj, required AuthState authState, required NewOrderDto newOrderDto}) async {
     try {
       bool usaSiat = false;
       int casaMatrizIndex = authState.currentContribuyente?.sucursales
@@ -135,6 +135,7 @@ class PaymentBloc extends Cubit<PaymentState> {
           currentCurrency: currentCurrency,
           usaSiat: usaSiat,
           paymentObj: paymentObj,
+          newOrderDto: newOrderDto,
           documentTypes: documentTypes,
           documentType: documentType,
           cashRegisters: cashRegisters,
@@ -259,7 +260,7 @@ class PaymentBloc extends Cubit<PaymentState> {
       if (paymentType == PaymentType.cashRegister) {
         emit(state.copyWith(status: PaymentStatus.processingOrder));
         Comanda comanda =
-            await _comandaRepository.markAsCreated(state.paymentObj?.id ?? 0);
+            await _comandaRepository.markAsCreated(state.paymentObj?.id ?? 0, newOrder: state.newOrderDto);
         if (comanda.custom is Map && comanda.custom["simphony"]?["header"]?["checkNumber"]!=null) {
           _printRolloOrder(authState,
               orderNumber: (comanda.custom["simphony"]["header"]["checkNumber"] as int),

@@ -15,6 +15,7 @@ import 'package:izi_kiosco/app/values/routes_keys.dart';
 import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/make_order/make_order_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/page_utils/page_utils_bloc.dart';
+import 'package:izi_kiosco/domain/dto/new_order_dto.dart';
 import 'package:izi_kiosco/domain/models/comanda.dart';
 import 'package:izi_kiosco/domain/models/item.dart';
 import 'package:izi_kiosco/domain/models/payment_obj.dart';
@@ -392,21 +393,28 @@ class _MakeOrderConfirmState extends State<MakeOrderConfirm> {
         .then(
       (value) {
         context.read<PageUtilsBloc>().closeLoading();
-        if (value is Comanda) {
+        if (value is NewOrderDto) {
+          num montoTotal = 0;
+          for(var i in value.listaItems){
+            montoTotal += i.cantidad*i.precioUnitario + i.precioModificadores;
+          }
           var paymentObj = PaymentObj(
-              id: value.id,
-              custom: value.custom is Map? value.custom : {},
-              amount: value.montoTotal??0,
+              id: 1,
+              custom: {},
+              amount: montoTotal,
               isComanda: true,
               items: value.listaItems.map((e) => ItemPaymentObj(
-                  quantity: e.cantidad ?? 0,
-                  custom: e.modificadores,
+                  quantity: e.cantidad,
+                  custom: {},
                   name: e.nombre)
               ).toList()
           );
           context.read<PageUtilsBloc>().initScreenActiveInvoiced();
           GoRouter.of(this.context).goNamed(RoutesKeys.payment,
-              extra: paymentObj, pathParameters: {"id": value.id.toString()});
+              extra: {
+                "paymentObj":paymentObj,
+                "newOrderDto":value
+              }, pathParameters: {"id": value.id.toString()});
         } else {
           context.read<PageUtilsBloc>().initScreenActive();
         }

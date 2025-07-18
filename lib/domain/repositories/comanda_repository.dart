@@ -45,7 +45,7 @@ abstract class ComandaRepository{
   Future<CardPayment> callCardPaymentATC({required String amount,required String ip,required bool contactless, required CancelToken cancelToken});
 
 
-  Future<Comanda> markAsCreated(int orderId);
+  Future<Comanda> markAsCreated(int orderId, {NewOrderDto? newOrder});
 
   Future<Invoice> getInvoice(int invoiceId);
   Future<void> createPaidCharge(PaidChargeDto paidChargeDto);
