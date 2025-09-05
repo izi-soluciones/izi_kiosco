@@ -332,7 +332,7 @@ class MakeOrderBloc extends Cubit<MakeOrderState> {
     emit(state.copyWith(numberDiners: ()=>null,tableId: ()=>null,itemsSelected: [],discountAmount: 0));
   }
   printRollo(AuthState authState)async{
-    var invoice = await _comandaRepository.getInvoice(16906313);
+    var invoice = await _comandaRepository.getInvoice(16906318);
     var tmp = await PrintTemplate.printInvoice(authState.currentContribuyente!, authState.currentSucursal!,invoice);
     var printUtils = PrintUtils();
     await printUtils.print(tmp);

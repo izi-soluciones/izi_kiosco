@@ -54,7 +54,7 @@ class IziPrintColumn {
 
 enum IziPrintAlign { left, center, right }
 
-enum IziPrintSize { xs, sm, md, lg, xl }
+enum IziPrintSize { xs, sm, sml, md, lg, xl }
 
 class IziPrintRow extends IziPrintItem {
   List<IziPrintColumn> values;
@@ -153,6 +153,8 @@ class PrintUtils {
         case IziPrintSize.xs:
           return SunmiFontSize.XS;
         case IziPrintSize.sm:
+          return SunmiFontSize.SM;
+        case IziPrintSize.sml:
           return SunmiFontSize.SM;
         case IziPrintSize.md:
           return SunmiFontSize.MD;
@@ -262,6 +264,7 @@ class PrintUtils {
     log("pdfPrint");
     const double xs = 6;
     const double sm = 7;
+    const double sml = 9;
     const double md = 12;
     const double lg = 14;
     const double xl = 16;
@@ -271,6 +274,8 @@ class PrintUtils {
           return xs;
         case IziPrintSize.sm:
           return sm;
+        case IziPrintSize.sml:
+          return sml;
         case IziPrintSize.md:
           return md;
         case IziPrintSize.lg:

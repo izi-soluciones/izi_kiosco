@@ -106,11 +106,18 @@ static List<IziPrintItem> invoice80Co(
   items.add(IziPrintSeparator()); // Separador debajo del header
 
   // Filas de la tabla
+  bool hasE = false;
   for (Items item in invoice.listaItems ?? []) {
     // Obtener el ID del primer impuesto para la columna 'ID'
-    String impuestoId = "—";
-    if (item.parametrosFacturacion?.co?.impuestosCalculados?.isNotEmpty == true) {
-      impuestoId = item.parametrosFacturacion!.co!.impuestosCalculados.keys.first;
+    String impuestoId = "";
+    if (item.parametrosFacturacion?.co?.impuestosCalculados.isNotEmpty == true) {
+      item.parametrosFacturacion?.co?.impuestosCalculados.forEach((key, value) { 
+        impuestoId += key;
+      });
+    }
+    if(impuestoId.isEmpty){
+      impuestoId = "E";
+      hasE=true;
     }
 
     items.add(IziPrintRow([
@@ -126,22 +133,22 @@ static List<IziPrintItem> invoice80Co(
   // Esta sección ya usaba filas, lo cual es correcto.
   // Solo se ajustan los textos si es necesario.
   items.add(IziPrintRow([
-    IziPrintColumn(text: "Valor Artículos", width: 70,
+    IziPrintColumn(text: "Valor Artículos", width: 50,
         align: IziPrintAlign.right,),
     IziPrintColumn(
       text: "${invoice.customFactura["CO"]?["montoItems"] ?? 0}",
-        width: 30,
+        width: 50,
         align: IziPrintAlign.right,
     ),
   ], size: IziPrintSize.sm, bold: false));
   
   if (invoice.descuentos != null && invoice.descuentos! > 0) {
     items.add(IziPrintRow([
-      IziPrintColumn(text: "DESCUENTO", width: 70,
+      IziPrintColumn(text: "DESCUENTO", width: 50,
         align: IziPrintAlign.right,),
       IziPrintColumn(
         text: "${invoice.descuentos}",
-        width: 30,
+        width: 50,
         align: IziPrintAlign.right,
       ),
     ], size: IziPrintSize.sm, bold: false));
@@ -149,14 +156,14 @@ static List<IziPrintItem> invoice80Co(
 
   // TOTAL final
   items.add(IziPrintRow([
-    IziPrintColumn(text: "TOTAL", width: 70,
+    IziPrintColumn(text: "TOTAL", width: 50,
         align: IziPrintAlign.right,),
     IziPrintColumn(
       text: "${invoice.montoTotal}",
-        width: 30,
+        width: 50,
         align: IziPrintAlign.right,
     ),
-  ], size: IziPrintSize.sm, bold: true));
+  ], size: IziPrintSize.sml, bold: true));
 
   items.add(IziPrintLineWrap(lines: 2)); 
 
@@ -171,20 +178,29 @@ static List<IziPrintItem> invoice80Co(
 
   // Encabezado del resumen de impuestos
   items.add(IziPrintRow([
-    IziPrintColumn(text: 'ID', width: 5),
+    IziPrintColumn(text: 'ID', width: 3),
     IziPrintColumn(text: 'Impuesto', width: 15),
     IziPrintColumn(text: 'Valor', width: 10, align: IziPrintAlign.right),
   ], size: IziPrintSize.xs, bold: true));
 
   items.add(IziPrintLineWrap(lines: 1)); 
 
+
+  if(hasE){
+
+      items.add(IziPrintRow([
+        IziPrintColumn(text: "E", width: 3),
+        IziPrintColumn(text: 'EXCLUIDO', width: 15),
+        IziPrintColumn(text: 0.toStringAsFixed(2), width: 10, align: IziPrintAlign.right),
+      ], size: IziPrintSize.xs));
+  }
   if (invoice.customFactura["CO"]?["impuestos"] != null) {
     double totalIva = 0;
     (invoice.customFactura["CO"]!["impuestos"] as Map).forEach((id, im) {
       final monto = im?["monto"] ?? 0.0;
       totalIva += monto;
       items.add(IziPrintRow([
-        IziPrintColumn(text: id, width: 5),
+        IziPrintColumn(text: id, width: 3),
         IziPrintColumn(text: im?['nombre'] ?? '', width: 15),
         IziPrintColumn(text: monto.toStringAsFixed(2), width: 10, align: IziPrintAlign.right),
       ], size: IziPrintSize.xs));

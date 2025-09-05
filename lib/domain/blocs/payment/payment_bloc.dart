@@ -1052,7 +1052,16 @@ class PaymentBloc extends Cubit<PaymentState> {
       resonsabilidadIva:  ivaResponsability,
       tipoPersona:  personType,
       resposabilidadFiscal:  taxResponsability,
+
     );
+    if(newOrderDto.custom?.pagadorData?.nit?.isEmpty==true || newOrderDto.custom?.pagadorData?.nit== "0"){
+        newOrderDto.custom?.pagadorData?.nit = "222222222222";
+        newOrderDto.custom?.pagadorData?.razonSocial = "CONSUMIDOR FINAL";
+        newOrderDto.custom?.pagadorData?.co?.tipoPersona = "PERSONA_NATURAL";
+        newOrderDto.custom?.pagadorData?.co?.resonsabilidadIva = "COMUN";
+        newOrderDto.custom?.pagadorData?.co?.resposabilidadFiscal = "ORDINARIO";
+        newOrderDto.custom?.pagadorData?.co?.tipoIdentificacion = "CC";
+    } 
 
     
   }

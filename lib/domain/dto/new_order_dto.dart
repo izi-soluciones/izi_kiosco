@@ -47,10 +47,10 @@ class NewOrderDtoCustomPagadorData {
   }
 }
 class NewOrderDtoCustomPagadorDataCo {
-  final String? tipoIdentificacion;
-  final String? resonsabilidadIva;
-  final String? tipoPersona;
-  final String? resposabilidadFiscal;
+  String? tipoIdentificacion;
+  String? resonsabilidadIva;
+  String? tipoPersona;
+  String? resposabilidadFiscal;
 
   NewOrderDtoCustomPagadorDataCo({
     required this.tipoIdentificacion,
