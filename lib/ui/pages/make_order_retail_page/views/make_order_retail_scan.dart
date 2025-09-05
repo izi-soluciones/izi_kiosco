@@ -261,7 +261,7 @@ class _MakeOrderRetailScanState extends State<MakeOrderRetailScan> {
               child: IziText.body(
                   textAlign: TextAlign.center,
                   color: IziColors.grey,
-                  text: item.precioUnitario.moneyFormat(
+                  text: item.taxPrice.moneyFormat(
                       currency: widget.state.currentCurrency?.simbolo),
                   fontWeight: FontWeight.w500),
             ),
@@ -273,7 +273,7 @@ class _MakeOrderRetailScanState extends State<MakeOrderRetailScan> {
               child: IziText.body(
                   textAlign: TextAlign.center,
                   color: IziColors.grey,
-                  text: (item.precioUnitario * item.cantidad).moneyFormat(
+                  text: (item.taxPrice).moneyFormat(
                       currency: widget.state.currentCurrency?.simbolo),
                   fontWeight: FontWeight.w500),
             ),
@@ -425,7 +425,7 @@ class _MakeOrderRetailScanState extends State<MakeOrderRetailScan> {
     });
   }
   num _total(){
-    return widget.state.itemsSelected.fold(0.0, (previousValue, element) => previousValue + (element.cantidad*element.precioUnitario));
+    return widget.state.itemsSelected.fold(0.0, (previousValue, element) => previousValue + element.taxPrice);
   }
 
 

@@ -36,7 +36,7 @@ class NewSaleLinkDto {
       "listaItems": listaItems.map((item) => {
         "item": item.id,
         "cantidad": item.cantidad,
-        "precioUnitario": item.precioUnitario + item.precioModificadores / item.cantidad,
+        "precioUnitario": item.taxPrice,
         "articulo": item.nombre,
         "codigoInventario": item.codigo,
         "customItem": item.customItem

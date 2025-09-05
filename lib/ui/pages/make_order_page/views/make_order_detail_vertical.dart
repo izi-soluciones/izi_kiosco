@@ -270,7 +270,7 @@ class _MakeOrderDetailStateVertical extends State<MakeOrderDetailVertical> {
     num total = 0;
     for (var e in widget.state.itemsSelected) {
       for (var i in e.items) {
-        total += i.cantidad * i.precioUnitario + i.precioModificadores;
+        total += i.taxPrice;
       }
     }
     return total;

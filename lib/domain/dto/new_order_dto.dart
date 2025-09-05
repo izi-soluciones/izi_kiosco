@@ -1,5 +1,74 @@
+import 'package:izi_kiosco/domain/models/document_type.dart';
 import 'package:izi_kiosco/domain/models/item.dart';
 import 'package:izi_kiosco/domain/utils/date_formatter.dart';
+
+
+class NewOrderDtoCustom {
+  NewOrderDtoCustomPagadorData? pagadorData;
+  int? deviceId;
+
+  NewOrderDtoCustom({
+    this.pagadorData,
+    this.deviceId,
+  });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'pagadorData': pagadorData?.toJson(),
+      'deviceId': deviceId,
+    };
+  }
+}
+class NewOrderDtoCustomPagadorData {
+  String? nit;
+  String? complemento;
+  DocumentType? tipoDocumento;
+  String? razonSocial;
+  String? telefonoComprador;
+  NewOrderDtoCustomPagadorDataCo? co;
+
+  NewOrderDtoCustomPagadorData({
+    this.nit,
+    this.complemento,
+    this.razonSocial,
+    this.telefonoComprador,
+    this.co
+  });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'nit': nit,
+      'complemento': complemento,
+      'razonSocial': razonSocial,
+      'telefonoComprador': telefonoComprador,
+      'tipoDocumento': tipoDocumento?.toJson(),
+      "CO": co?.toJson()
+    };
+  }
+}
+class NewOrderDtoCustomPagadorDataCo {
+  final String? tipoIdentificacion;
+  final String? resonsabilidadIva;
+  final String? tipoPersona;
+  final String? resposabilidadFiscal;
+
+  NewOrderDtoCustomPagadorDataCo({
+    required this.tipoIdentificacion,
+    required this.resonsabilidadIva,
+    required this.tipoPersona,
+    required this.resposabilidadFiscal,
+  });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'tipoIdentificacion': tipoIdentificacion,
+      'resonsabilidadIva': resonsabilidadIva,
+      'tipoPersona': tipoPersona,
+      'resposabilidadFiscal': resposabilidadFiscal,
+    };
+  }
+}
+
 
 class NewOrderDto {
   int? caja;
@@ -20,7 +89,7 @@ class NewOrderDto {
 
   num total;
 
-  Map? custom;
+  NewOrderDtoCustom? custom;
 
   String? clienteNombre;
 
@@ -67,7 +136,7 @@ class NewOrderDto {
         "tipoMovimiento": "gasto-prod-venta"
       };
   Map<String, dynamic> toJsonEdit() => {
-    "custom": custom,
+    "custom": custom?.toJson(),
     "fecha": fecha.dateFormat(DateFormatterType.dataWithHour),
     "clienteNombre": clienteNombre
   };

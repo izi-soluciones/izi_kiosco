@@ -368,8 +368,7 @@ class _MakeOrderConfirmState extends State<MakeOrderConfirm> {
             IziText.body(
                 textAlign: TextAlign.center,
                 color: IziColors.grey,
-                text: (item.precioModificadores +
-                    item.cantidad * item.precioUnitario)
+                text: item.taxPrice
                     .moneyFormat(currency: widget.state.currentCurrency?.simbolo),
                 fontWeight: FontWeight.w500),
             const SizedBox(
@@ -438,7 +437,7 @@ class _MakeOrderConfirmState extends State<MakeOrderConfirm> {
     num total = 0;
     for (var e in state.itemsSelected) {
       for (var i in e.items) {
-        total += i.cantidad * i.precioUnitario + i.precioModificadores;
+        total += i.taxPrice;
       }
     }
     return total;

@@ -3,12 +3,16 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:izi_kiosco/data/core/dio_client.dart';
 import 'package:izi_kiosco/domain/models/cash_register.dart';
 import 'package:izi_kiosco/domain/models/catalog.dart';
-import 'package:izi_kiosco/domain/models/contribuyente.dart';
 import 'package:izi_kiosco/domain/models/currency.dart';
+import 'package:izi_kiosco/domain/models/customer.dart';
 import 'package:izi_kiosco/domain/models/document_type.dart';
 import 'package:izi_kiosco/domain/models/economic_activity.dart';
+import 'package:izi_kiosco/domain/models/identification_type.dart';
+import 'package:izi_kiosco/domain/models/iva_responsability.dart';
 import 'package:izi_kiosco/domain/models/payment.dart';
 import 'package:izi_kiosco/domain/models/payment_method.dart';
+import 'package:izi_kiosco/domain/models/person_type.dart';
+import 'package:izi_kiosco/domain/models/tax_responsability.dart';
 import 'package:izi_kiosco/domain/repositories/business_repository.dart';
 class BusinessRepositoryHttp extends BusinessRepository{
   final DioClient _dioClient = DioClient();
@@ -137,7 +141,7 @@ class BusinessRepositoryHttp extends BusinessRepository{
   }
 
   @override
-  Future<List<Contribuyente>> queryBusinessSearch({required String query, required int contribuyenteId}) async{
+  Future<List<Customer>> queryBusinessSearch({required String query, required int contribuyenteId}) async{
     String path = "/nit";
     var response = await _dioClient.get(
         uri: path,
@@ -148,7 +152,7 @@ class BusinessRepositoryHttp extends BusinessRepository{
         options: Options(responseType: ResponseType.json));
     if (response.statusCode == 200) {
         return List.from(response.data)
-            .map((e) => Contribuyente.fromJson(e))
+            .map((e) => Customer.fromJson(e))
             .toList();
     } else {
       if(response.data?["status"] ?? false){
@@ -211,6 +215,78 @@ class BusinessRepositoryHttp extends BusinessRepository{
         options: Options(responseType: ResponseType.json));
     if (response.statusCode == 200) {
       return Catalog.fromJson(response.data ?? {});
+    } else {
+      if(response.data?["status"] ?? false){
+        throw response.data?["data"];
+      }
+    }
+    throw response.data;
+  }
+
+  @override
+  Future<List<IdentificationType>> getIdentificationType()async {
+    String path = "/integraciones/12/parametros/tipos-identificacion";
+    var response = await _dioClient.get(
+        uri: path,
+        options: Options(responseType: ResponseType.json));
+    if (response.statusCode == 200) {
+      return List.from(response.data["datos"])
+          .map((e) => IdentificationType.fromJson(e))
+          .toList();
+    } else {
+      if(response.data?["status"] ?? false){
+        throw response.data?["data"];
+      }
+    }
+    throw response.data;
+  }
+
+  @override
+  Future<List<IvaResponsability>> getIvaResponsability() async{
+    String path = "/integraciones/12/parametros/responsabilidades-iva";
+    var response = await _dioClient.get(
+        uri: path,
+        options: Options(responseType: ResponseType.json));
+    if (response.statusCode == 200) {
+      return List.from(response.data["datos"])
+          .map((e) => IvaResponsability.fromJson(e))
+          .toList();
+    } else {
+      if(response.data?["status"] ?? false){
+        throw response.data?["data"];
+      }
+    }
+    throw response.data;
+  }
+
+  @override
+  Future<List<PersonType>> getPersonType() async{
+    String path = "/integraciones/12/parametros/tipos-persona";
+    var response = await _dioClient.get(
+        uri: path,
+        options: Options(responseType: ResponseType.json));
+    if (response.statusCode == 200) {
+      return List.from(response.data["datos"])
+          .map((e) => PersonType.fromJson(e))
+          .toList();
+    } else {
+      if(response.data?["status"] ?? false){
+        throw response.data?["data"];
+      }
+    }
+    throw response.data;
+  }
+
+  @override
+  Future<List<TaxResponsability>> getTaxResponsability() async{
+    String path = "/integraciones/12/parametros/responsabilidades-fiscales";
+    var response = await _dioClient.get(
+        uri: path,
+        options: Options(responseType: ResponseType.json));
+    if (response.statusCode == 200) {
+      return List.from(response.data["datos"])
+          .map((e) => TaxResponsability.fromJson(e))
+          .toList();
     } else {
       if(response.data?["status"] ?? false){
         throw response.data?["data"];

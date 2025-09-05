@@ -136,7 +136,7 @@ class _MakeOrderItemOptionsState extends State<MakeOrderItemOptions> {
                                     textAlign: TextAlign.center),
                                 IziText.body(
                                     color: IziColors.grey,
-                                    text: widget.item.precioUnitario
+                                    text: widget.item.taxPrice
                                         .moneyFormat(
                                             currency: widget.state
                                                 .currentCurrency?.simbolo),

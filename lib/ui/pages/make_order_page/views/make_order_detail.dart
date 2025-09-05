@@ -9,6 +9,7 @@ import 'package:izi_design_system/tokens/colors.dart';
 import 'package:izi_design_system/tokens/izi_icons.dart';
 import 'package:izi_design_system/tokens/types.dart';
 import 'package:izi_kiosco/app/values/locale_keys.g.dart';
+import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/make_order/make_order_bloc.dart';
 import 'package:izi_kiosco/domain/models/item.dart';
 import 'package:izi_kiosco/ui/general/izi_scroll.dart';
@@ -131,8 +132,8 @@ class _MakeOrderDetailState extends State<MakeOrderDetail> {
                     buttonType: ButtonType.outline,
                     buttonSize: ButtonSize.large,
                     buttonOnPressed: () {
-                      //context.read<MakeOrderBloc>().printRollo(context.read<AuthBloc>().state);
-                      context.read<MakeOrderBloc>().resetItems();
+                      context.read<MakeOrderBloc>().printRollo(context.read<AuthBloc>().state);
+                      //context.read<MakeOrderBloc>().resetItems();
                     }),
               ),
               const SizedBox(
@@ -299,7 +300,7 @@ class _MakeOrderDetailState extends State<MakeOrderDetail> {
     num total = 0;
     for (var e in widget.state.itemsSelected) {
       for (var i in e.items) {
-        total += i.cantidad * i.precioUnitario + i.precioModificadores;
+        total += i.taxPrice;
       }
     }
     return total;

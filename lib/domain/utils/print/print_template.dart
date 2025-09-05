@@ -13,6 +13,230 @@ import 'package:izi_kiosco/domain/utils/print_utils.dart';
 import 'package:izi_kiosco/ui/utils/money_formatter.dart';
 
 class PrintTemplate {
+
+  static Future<List<IziPrintItem>>  printInvoice(
+  Contribuyente contribuyente,
+  Sucursal sucursal,
+  Invoice factura,)async {
+    if(contribuyente.habilitadoFacturacion == true && contribuyente.config["paisId"]=="CO"){
+      return invoice80Co(contribuyente,sucursal,factura);
+    }
+    return await invoice80(contribuyente,sucursal,factura);
+  }
+
+static List<IziPrintItem> invoice80Co(
+  Contribuyente contribuyente,
+  Sucursal sucursal,
+  Invoice invoice,
+) {
+  final List<IziPrintItem> items = [];
+
+  // ======== CABECERA (Ajustada al estilo HTML) ========
+  items.add(IziPrintText(
+    text: contribuyente.razonSocial?? "", // Usar razonSocial del contribuyente
+    size: IziPrintSize.lg,
+    bold: true,
+    align: IziPrintAlign.center,
+  ));
+  items.add(IziPrintText(
+    text: "NIT: ${contribuyente.nit}",
+    size: IziPrintSize.sm,
+    align: IziPrintAlign.center,
+  ));
+  if (sucursal.direccion != null) { // Añadido desde plantilla HTML
+    items.add(IziPrintText(
+      text: sucursal.direccion!,
+      size: IziPrintSize.sm,
+      align: IziPrintAlign.center,
+    ));
+  }
+  items.add(IziPrintSeparator(dotted: true)); // Separador dash
+
+  items.add(IziPrintText(
+    text: "FACTURA", // Título del documento
+    size: IziPrintSize.md, // Más grande
+    bold: true,
+    align: IziPrintAlign.center,
+  ));
+  items.add(IziPrintLineWrap(lines: 1)); 
+  items.add(IziPrintText(
+    text: "Representación gráfica de la factura electrónica",
+    size: IziPrintSize.xs,
+    align: IziPrintAlign.center,
+  ));
+  items.add(IziPrintLineWrap(lines: 1)); 
+
+  // Número y Fecha (Añadido desde plantilla HTML)
+  items.add(IziPrintText(
+    text: "Número de factura: ${(invoice.customFactura["CO"]?["prefix"] ?? "") + (invoice.numero?.toString())}",
+    size: IziPrintSize.sm,
+    bold: true,
+    align: IziPrintAlign.center,
+  ));
+  items.add(IziPrintLineWrap(lines: 1)); 
+   items.add(IziPrintText(
+    text: "Fecha: ${DateTime.parse(invoice.fecha).toLocal().dateFormat(DateFormatterType.dateHour)}",
+    size: IziPrintSize.sm,
+    align: IziPrintAlign.center,
+  ));
+
+  items.add(IziPrintSeparator());
+
+  // ======== CLIENTE ========
+  items.add(IziPrintText(
+    text: "NOMBRE/RAZÓN SOCIAL: ${invoice.razonSocial}",
+    size: IziPrintSize.sm,
+    align: IziPrintAlign.center,
+  ));
+  items.add(IziPrintText(
+    text: "${invoice.customFactura["CO"]?["tipoIdentificacion"] ?? 'DOCUMENTO'}: ${invoice.comprador}",
+    size: IziPrintSize.sm,
+    align: IziPrintAlign.center,
+  ));
+  items.add(IziPrintSeparator());
+
+  // ======== DETALLE ITEMS (REESTRUCTURADO COMO TABLA) ========
+  // Encabezado de la tabla
+  items.add(IziPrintRow([
+    IziPrintColumn(text: 'Cant.', width: 4),
+    IziPrintColumn(text: 'Detalle', width: 12),
+    IziPrintColumn(text: 'Subtotal', width: 8, align: IziPrintAlign.right),
+    IziPrintColumn(text: 'ID', width: 4, align: IziPrintAlign.center),
+  ], size: IziPrintSize.sm, bold: true));
+  items.add(IziPrintSeparator()); // Separador debajo del header
+
+  // Filas de la tabla
+  for (Items item in invoice.listaItems ?? []) {
+    // Obtener el ID del primer impuesto para la columna 'ID'
+    String impuestoId = "—";
+    if (item.parametrosFacturacion?.co?.impuestosCalculados?.isNotEmpty == true) {
+      impuestoId = item.parametrosFacturacion!.co!.impuestosCalculados.keys.first;
+    }
+
+    items.add(IziPrintRow([
+      IziPrintColumn(text: item.cantidad.toString(), width: 4),
+      IziPrintColumn(text: item.articulo, width: 12),
+      IziPrintColumn(text: item.precioTotal.toString(), width: 8, align: IziPrintAlign.right),
+      IziPrintColumn(text: impuestoId, width: 4, align: IziPrintAlign.center),
+    ], size: IziPrintSize.xs));
+  }
+  items.add(IziPrintSeparator(dotted: true));
+
+  // ======== TOTALES ========
+  // Esta sección ya usaba filas, lo cual es correcto.
+  // Solo se ajustan los textos si es necesario.
+  items.add(IziPrintRow([
+    IziPrintColumn(text: "Valor Artículos", width: 70,
+        align: IziPrintAlign.right,),
+    IziPrintColumn(
+      text: "${invoice.customFactura["CO"]?["montoItems"] ?? 0}",
+        width: 30,
+        align: IziPrintAlign.right,
+    ),
+  ], size: IziPrintSize.sm, bold: false));
+  
+  if (invoice.descuentos != null && invoice.descuentos! > 0) {
+    items.add(IziPrintRow([
+      IziPrintColumn(text: "DESCUENTO", width: 70,
+        align: IziPrintAlign.right,),
+      IziPrintColumn(
+        text: "${invoice.descuentos}",
+        width: 30,
+        align: IziPrintAlign.right,
+      ),
+    ], size: IziPrintSize.sm, bold: false));
+  }
+
+  // TOTAL final
+  items.add(IziPrintRow([
+    IziPrintColumn(text: "TOTAL", width: 70,
+        align: IziPrintAlign.right,),
+    IziPrintColumn(
+      text: "${invoice.montoTotal}",
+        width: 30,
+        align: IziPrintAlign.right,
+    ),
+  ], size: IziPrintSize.sm, bold: true));
+
+  items.add(IziPrintLineWrap(lines: 2)); 
+
+  // ======== RESUMEN DE IMPUESTOS (Ajustado al formato HTML) ========
+  items.add(IziPrintText(
+    text: "RESUMEN DE IMPUESTOS",
+    size: IziPrintSize.xs,
+    bold: true,
+    align: IziPrintAlign.center,
+  ));
+  items.add(IziPrintLineWrap(lines: 1)); 
+
+  // Encabezado del resumen de impuestos
+  items.add(IziPrintRow([
+    IziPrintColumn(text: 'ID', width: 5),
+    IziPrintColumn(text: 'Impuesto', width: 15),
+    IziPrintColumn(text: 'Valor', width: 10, align: IziPrintAlign.right),
+  ], size: IziPrintSize.xs, bold: true));
+
+  items.add(IziPrintLineWrap(lines: 1)); 
+
+  if (invoice.customFactura["CO"]?["impuestos"] != null) {
+    double totalIva = 0;
+    (invoice.customFactura["CO"]!["impuestos"] as Map).forEach((id, im) {
+      final monto = im?["monto"] ?? 0.0;
+      totalIva += monto;
+      items.add(IziPrintRow([
+        IziPrintColumn(text: id, width: 5),
+        IziPrintColumn(text: im?['nombre'] ?? '', width: 15),
+        IziPrintColumn(text: monto.toStringAsFixed(2), width: 10, align: IziPrintAlign.right),
+      ], size: IziPrintSize.xs));
+    });
+
+    // Línea de total IVA
+    items.add(IziPrintRow([
+      IziPrintColumn(text: '', width: 20),
+      IziPrintColumn(text: 'Total: ${totalIva.toStringAsFixed(2)}', width: 10, align: IziPrintAlign.right),
+    ], size: IziPrintSize.xs, bold: true));
+  }
+
+  items.add(IziPrintSeparator());
+
+  // ======== FOOTER (Corregido y ajustado) ========
+  final cufe = invoice.customFactura["CO"]?["factura"]?["cufe"];
+  if (cufe != null) {
+    items.add(IziPrintText(
+      text: "Autorización: ${invoice.customFactura["CO"]?["resolution"] ?? ''}",
+      size: IziPrintSize.xs,
+      align: IziPrintAlign.center,
+    ));
+  items.add(IziPrintLineWrap(lines: 1)); 
+
+    items.add(IziPrintQR(
+      "https://catalogo-vpfe.dian.gov.co/User/SearchDocument?DocumentKey=$cufe",
+      size: 2,
+    ));
+  items.add(IziPrintLineWrap(lines: 1)); 
+
+    items.add(IziPrintText(
+      text: "CUFE: $cufe",
+      size: IziPrintSize.xs,
+      align: IziPrintAlign.center,
+    ));
+  }
+  
+  items.add(IziPrintSeparator());
+  items.add(IziPrintText(
+    text: "Generada a través de iZi",
+    size: IziPrintSize.xs,
+    bold: true,
+    align: IziPrintAlign.center,
+  ));
+
+
+  // Espacio final
+  items.add(IziPrintLineWrap(lines: 3));
+
+  return items;
+}
+  
   static Future<List<IziPrintItem>> order80(
       int orderNumber,
       int? customOrderNumber,
@@ -97,19 +321,16 @@ class PrintTemplate {
     return items;
   }
 
-  static Future<List<IziPrintItem>> invoice80(
-      Invoice invoice, Contribuyente contribuyente, Sucursal sucursal) async {
+  static Future<List<IziPrintItem>> invoice80(Contribuyente contribuyente, Sucursal sucursal,
+      Invoice invoice) async {
     List<IziPrintItem> items = [];
     Map? configSiat = contribuyente.customData is Map &&
-            invoice.customFactura is Map &&
             invoice.customFactura["siat"] is Map &&
             contribuyente.customData["configSiat"] is Map
         ? contribuyente.customData["configSiat"]
         : null;
-    Map? datosSiat =
-        invoice.customFactura is Map ? invoice.customFactura["siat"] : null;
-    List listCE = invoice.customFactura is Map &&
-            invoice.customFactura["camposExtra"] is List
+    Map? datosSiat = invoice.customFactura["siat"];
+    List listCE = invoice.customFactura["camposExtra"] is List
         ? invoice.customFactura["camposExtra"]
         : [];
     Uint8List? image;
@@ -244,7 +465,6 @@ class PrintTemplate {
       }
       var esCi = true;
       var complemento = esCi &&
-              invoice.customFactura is Map &&
               invoice.customFactura["complemento"] != null
           ? " - ${invoice.customFactura["complemento"]}"
           : '';
@@ -486,8 +706,7 @@ class PrintTemplate {
         }
         if (invoice.prefactura != 1) {
           var nit = invoice.emisor;
-          var cuf = invoice.customFactura is Map &&
-                  invoice.customFactura["siat"] is Map
+          var cuf = invoice.customFactura["siat"] is Map
               ? invoice.customFactura["siat"]["cuf"]
               : null;
           var number = invoice.numero;
@@ -562,11 +781,10 @@ static Future<List<IziPrintItem>> invoiceCompact(
     items.add(IziPrintText(text: "IMPORTE Bs: ${invoice.montoTotalImpuesto}", size: IziPrintSize.sm,align: IziPrintAlign.left,bold: true));
     items.add(IziPrintLineWrap(lines: 1));
 
-        if (invoice.prefactura != 1 && invoice.customFactura is Map &&
+        if (invoice.prefactura != 1 &&
                   invoice.customFactura["siat"] is Map) {
           var nit = invoice.emisor;
-          var cuf = invoice.customFactura is Map &&
-                  invoice.customFactura["siat"] is Map
+          var cuf = invoice.customFactura["siat"] is Map
               ? invoice.customFactura["siat"]["cuf"]
               : null;
           var number = invoice.numero;

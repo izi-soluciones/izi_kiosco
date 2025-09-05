@@ -19,6 +19,8 @@ import 'dart:developer' as developer;
 
 import 'package:izi_kiosco/domain/repositories/auth_repository.dart';
 import 'package:izi_kiosco/domain/repositories/business_repository.dart';
+import 'package:izi_kiosco/domain/strategies/taxes/taxes_strategy.dart';
+import 'package:izi_kiosco/domain/strategies/taxes/taxes_strategy_factory.dart';
 import 'package:izi_kiosco/domain/utils/download_utils.dart';
 import 'package:izi_kiosco/domain/utils/print_utils.dart';
 
@@ -80,6 +82,8 @@ class AuthBloc extends Cubit<AuthState> {
               0;
           Contribuyente contribuyente = await _authRepository
               .getCurrentContribuyenteById(contribuyenteId);
+          
+          TaxesStrategy taxesStrategy = TaxesStrategyFactory.taxes(contribuyente);
           List<Sucursal> sucursales = await _authRepository.getSucursales(contribuyenteId);
           contribuyente.sucursales = sucursales;
           Sucursal? sucursal;
@@ -149,6 +153,7 @@ class AuthBloc extends Cubit<AuthState> {
               devices: devices,
               currentDevice: device,
               currentSucursal: sucursal,
+              taxesStrategy: taxesStrategy,
               video: video,
               currentContribuyente: contribuyente));
           await LocalStorageFirstConfiguration.saveFirstConfiguration(true);
@@ -242,10 +247,14 @@ class AuthBloc extends Cubit<AuthState> {
       state.invoiceSubscription!.cancel();
     }
 
+
+    TaxesStrategy taxesStrategy = TaxesStrategyFactory.taxes(contribuyente);
+
     emit(state.copyWith(
         loadingContribuyente: false,
         status: AuthStatus.firstContribuyente,
         devices: devices,
+        taxesStrategy: taxesStrategy,
         currentContribuyente: contribuyente));
   }
 

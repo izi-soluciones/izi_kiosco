@@ -20,6 +20,8 @@ class AuthState extends Equatable{
   final StreamSubscription? invoiceSubscription;
   final bool terminalInit;
 
+  final TaxesStrategy? taxesStrategy;
+
   const AuthState({
     required this.currencies,
     required this.status,
@@ -33,7 +35,8 @@ class AuthState extends Equatable{
     required this.terminalInit,
     this.currentDevice,
     required this.devices,
-    required this.video
+    required this.video,
+    this.taxesStrategy
   });
   factory AuthState.init()=>
       const AuthState(
@@ -58,7 +61,8 @@ class AuthState extends Equatable{
     List<Currency>? currencies,
     List<Device>? devices,
     Device? currentDevice,
-    File? video
+    File? video,
+    TaxesStrategy? taxesStrategy
   }){
     return AuthState(
         currentContribuyente: currentContribuyente??this.currentContribuyente,
@@ -73,7 +77,8 @@ class AuthState extends Equatable{
       currencies: currencies ?? this.currencies,
       devices: devices ?? this.devices,
       currentDevice: currentDevice ?? this.currentDevice,
-      video: video ?? this.video
+      video: video ?? this.video,
+      taxesStrategy: taxesStrategy ?? this.taxesStrategy
     );
   }
   AuthState resetState(){
