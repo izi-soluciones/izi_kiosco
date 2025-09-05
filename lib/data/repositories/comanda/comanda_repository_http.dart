@@ -672,7 +672,7 @@ class ComandaRepositoryHttp extends ComandaRepository {
       if (e.response?.data is String) {
         throw e.response?.data;
       }
-      throw e.error ?? "Network Error";
+      throw e.error.toString()+e.response.toString()+e.message.toString()+e.stackTrace.toString();
     } catch (error) {
 
       throw error.toString();

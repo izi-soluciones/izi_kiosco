@@ -463,6 +463,8 @@ class PaymentBloc extends Cubit<PaymentState> {
               cancelToken: cancelToken,
               contactless: contactless);
         } catch (e) {
+          await LocalStorageCardErrors.saveCardErrors(
+            jsonEncode({DateTime.now().toString():e.toString()}));
           if (authState.currentDevice?.config.demo == true) {
             cardPayment =
                 CardPayment(response: "", cardNumber: "", date: "", hour: "");
