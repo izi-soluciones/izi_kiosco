@@ -138,20 +138,22 @@ class _PaymentPageInvoiceFormState extends State<PaymentPageInvoiceForm> {
 
   Widget _bo(ResponsiveUtils ru, BuildContext context){
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
 
         IziText.body(
             color: IziColors.darkGrey,
             text: LocaleKeys.payment_inputs_documentNumber_label.tr(),
             fontWeight: FontWeight.w400),
-        const SizedBox(
-          height: 4,
-        ),
+            const SizedBox(
+              height: 4,
+            ),
         if (ru.isXs())
          _documentType(ru, context),
-            const SizedBox(
-              height: 16,
-            ),
+        if (ru.isXs())
+          const SizedBox(
+            height: 16,
+          ),
           RowContainer(
             gap: 8,
             crossAxisAlignment: CrossAxisAlignment.start,
