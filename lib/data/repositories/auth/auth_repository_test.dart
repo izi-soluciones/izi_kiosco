@@ -55,6 +55,12 @@ class AuthRepositoryTest extends AuthRepository{
     // TODO: implement getSucursales
     throw UnimplementedError();
   }
+  
+  @override
+  Future<Device> getDevice(int deviceId) {
+    // TODO: implement getDevice
+    throw UnimplementedError();
+  }
 
 
 }

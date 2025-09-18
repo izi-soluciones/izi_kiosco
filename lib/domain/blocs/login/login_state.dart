@@ -6,34 +6,34 @@ class LoginState extends Equatable{
 
   final LoginStatus status;
 
-  final InputObj user;
-  final InputObj password;
+  final InputObj token;
+  final InputObj deviceId;
 
 
   const LoginState({
     required this.status,
-    required this.user,
-    required this.password
+    required this.token,
+    required this.deviceId
   });
 
 
 
   factory LoginState.init()=>LoginState(
     status: LoginStatus.init,
-    user: LoginInputs.userInput(),
-    password: LoginInputs.passwordInput()
+    token: LoginInputs.userInput(),
+    deviceId: LoginInputs.passwordInput()
   );
 
 
   LoginState copyWith({
     LoginStatus? status,
-    InputObj? user,
-    InputObj? password
+    InputObj? token,
+    InputObj? deviceId
   }){
     return LoginState(
       status: status??this.status,
-      user: user?? this.user,
-      password: password?? this.password
+      token: token?? this.token,
+      deviceId: deviceId?? this.deviceId
     );
 
   }
@@ -46,8 +46,8 @@ class LoginState extends Equatable{
   @override
   List<Object?> get props => [
     status,
-    user,
-    password
+    token,
+    deviceId
   ];
 
 

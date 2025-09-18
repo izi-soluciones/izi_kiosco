@@ -111,10 +111,8 @@ class AppInterceptor extends InterceptorsWrapper {
       options.headers.remove("no-auth");
     } else {
       final token = await TokenUtils.getToken();
-      final contribuyente = await BusinessUtils.getContribuyenteId();
       final sucursal = await BusinessUtils.getSucursalId();
-      options.headers.addAll({"Authorization": "Bearer $token"});
-      options.headers.addAll({"Izi-Contribuyente": contribuyente});
+      options.headers.addAll({"X-Public-Token": "Bearer $token"});
       if(sucursal!=null){
         options.headers.addAll({"Izi-Sucursal": sucursal});
       }
@@ -124,60 +122,5 @@ class AppInterceptor extends InterceptorsWrapper {
     return handler.next(options);
   }
 
-  @override
-  void onError(DioException err, ErrorInterceptorHandler handler) async {
-    RequestOptions requestOptions = err.requestOptions;
-    int retryCount = requestOptions.extra["retry_count"] ?? 0;
-    if ((err.response?.statusCode == 401 || err.response?.statusCode == 403) && retryCount < maxRetries) {
-      try {
-        String? newToken = await _getNewToken();
-        if (newToken != null) {
-          final RequestOptions newRequest = err.requestOptions;
-          newRequest.headers["Authorization"] = "Bearer $newToken";
-          requestOptions.extra["retry_count"] = retryCount + 1;
-          final Response response = await dio.fetch(newRequest);
-          handler.resolve(response);
-          return;
-        }
-      } catch (e) {
-        handler.next(err);
-      }
-    }
-    handler.next(err);
-  }
 
 }
-Future<String?> _getNewToken()async{
-  try{
-    String? refreshToken = await TokenUtils.getRefreshToken();
-    if(refreshToken!=null){
-
-      final Dio dioNewToken = Dio();
-      dioNewToken.options = BaseOptions(
-          baseUrl: dotenv.env[EnvKeys.apiUrl] ?? "");
-      var response =
-      await dioNewToken.post("/refrescar-token", options: Options(
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": "Bearer $refreshToken"
-          }
-      ));
-      if (response.statusCode == 200) {
-        Map<String,dynamic> decoded=response.data;
-        var newToken= decoded["token"];
-        var newRefreshToken= decoded["refreshToken"];
-        await TokenUtils.saveRefreshToken(newRefreshToken);
-        await TokenUtils.saveToken(newToken);
-        return newToken;
-      }
-      else{
-        return null;
-      }
-    }
-    return null;
-  }
-  catch(e){
-    return null;
-  }
-}
-

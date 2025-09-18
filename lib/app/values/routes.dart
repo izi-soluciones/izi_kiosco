@@ -14,15 +14,12 @@ import 'package:izi_kiosco/domain/blocs/make_order_retail/make_order_retail_bloc
 import 'package:izi_kiosco/domain/blocs/payment/payment_bloc.dart';
 import 'package:izi_kiosco/domain/models/payment_obj.dart';
 import 'package:izi_kiosco/ui/general/main_layout/main_layout.dart';
-import 'package:izi_kiosco/ui/pages/add_kiosk_page/add_kiosk_page.dart';
 import 'package:izi_kiosco/ui/pages/error_payment_page/error_payment_page.dart';
 import 'package:izi_kiosco/ui/pages/home_page/home_page.dart';
-import 'package:izi_kiosco/ui/pages/kiosk_list_page/kiosk_list_page.dart';
 import 'package:izi_kiosco/ui/pages/login_page/login_page.dart';
 import 'package:izi_kiosco/ui/pages/make_order_page/make_order_page.dart';
 import 'package:izi_kiosco/ui/pages/make_order_retail_page/make_order_retail_page.dart';
 import 'package:izi_kiosco/ui/pages/payment_page/payment_page.dart';
-import 'package:izi_kiosco/ui/pages/select_business_page/select_business_page.dart';
 import 'routes_keys.dart';
 
 class Routes {
@@ -47,51 +44,6 @@ class Routes {
                   onPop: null,
                   child: const LoginPage()),
             ),
-          );
-        },
-      ),
-      GoRoute(
-        name: RoutesKeys.kioskList,
-        path: RoutesKeys.kioskListLink,
-        pageBuilder: (BuildContext context, GoRouterState state) {
-          return NoTransitionPage(
-            child: MainLayout(
-                currentLocation: state.fullPath ?? "",
-                hideDrawer: true,
-                hideBottomNav: true,
-                onPop: null,
-                child: const KioskListPage()),
-          );
-        },
-      ),
-      GoRoute(
-        name: RoutesKeys.kioskNew,
-        path: RoutesKeys.kioskNewLink,
-        pageBuilder: (BuildContext context, GoRouterState state) {
-          return NoTransitionPage(
-            child: MainLayout(
-                currentLocation: state.fullPath ?? "",
-                hideDrawer: true,
-                hideBottomNav: true,
-                onPop: null,
-                child: BlocProvider(
-                    create: (context) => AddKioskBloc(
-                        AuthRepositoryHttp(), BusinessRepositoryHttp()),
-                    child: const AddKioskPage())),
-          );
-        },
-      ),
-      GoRoute(
-        name: RoutesKeys.configBusiness,
-        path: RoutesKeys.configBusinessLink,
-        pageBuilder: (BuildContext context, GoRouterState state) {
-          return NoTransitionPage(
-            child: MainLayout(
-                currentLocation: state.fullPath ?? "",
-                hideDrawer: true,
-                hideBottomNav: true,
-                onPop: null,
-                child: const SelectBusinessPage()),
           );
         },
       ),

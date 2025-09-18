@@ -24,37 +24,36 @@ class LoginForm extends StatelessWidget {
           IziText.titleBig(text: LocaleKeys.login_subtitles_enterIzi.tr(), color: IziColors.dark),
           const SizedBox(height: 25,),
           IziInput(
-              labelInput: LocaleKeys.login_inputs_user_label.tr(),
-              inputHintText: LocaleKeys.login_inputs_user_placeholder.tr(),
+              labelInput: LocaleKeys.login_inputs_token_label.tr(),
+              inputHintText: LocaleKeys.login_inputs_token_placeholder.tr(),
               autoFillHints: const [AutofillHints.email],
               onChanged: (value,_){
-                context.read<LoginBloc>().changeInputsValues(user:value);
+                context.read<LoginBloc>().changeInputsValues(token:value);
               },
               onEditingComplete: (){
-                context.read<LoginBloc>().validateInput(user:true);
+                context.read<LoginBloc>().validateInput(token:true);
               },
-              error: _getErrorsUser(),
-              inputType: InputType.email,
+              error: _getErrorsToken(),
+              inputType: InputType.normal,
           ),
           const SizedBox(height: 20,),
           IziInput(
-              labelInput: LocaleKeys.login_inputs_password_label.tr(),
-              inputHintText: LocaleKeys.login_inputs_password_placeholder.tr(),
-              autoFillHints: const [AutofillHints.password],
-              inputType: InputType.password,
+              labelInput: LocaleKeys.login_inputs_deviceId_label.tr(),
+              inputHintText: LocaleKeys.login_inputs_deviceId_placeholder.tr(),
+              inputType: InputType.number,
               validator: (value){
                 if(value == null || value.isEmpty){
-                  return LocaleKeys.login_inputs_password_errors_required.tr();
+                  return LocaleKeys.login_inputs_deviceId_errors_required.tr();
                 }
                 return null;
               },
               onChanged: (value,_){
-                context.read<LoginBloc>().changeInputsValues(password:value);
+                context.read<LoginBloc>().changeInputsValues(deviceId:value);
               },
               onEditingComplete: (){
-                context.read<LoginBloc>().validateInput(password:true);
+                context.read<LoginBloc>().validateInput(deviceId:true);
               },
-              error: _getErrorsPassword()
+              error: _getErrorsDeviceId()
           ),
           const SizedBox(height: 30,),
           IziBtn(
@@ -73,27 +72,27 @@ class LoginForm extends StatelessWidget {
   }
 
 
-  String? _getErrorsUser() {
-    if (state.user.inputError == InputError.required) {
-      return LocaleKeys.login_inputs_user_errors_required.tr();
+  String? _getErrorsToken() {
+    if (state.token.inputError == InputError.required) {
+      return LocaleKeys.login_inputs_token_errors_required.tr();
     }
-    if (state.user.inputError == InputError.invalid) {
-      return LocaleKeys.login_inputs_user_errors_invalid.tr();
+    if (state.token.inputError == InputError.invalid) {
+      return LocaleKeys.login_inputs_token_errors_invalid.tr();
     }
-    if(state.user.inputError!=null){
+    if(state.token.inputError!=null){
       return LocaleKeys.general_errors_input.tr();
     }
     return null;
   }
 
-  String? _getErrorsPassword() {
-    if (state.password.inputError == InputError.required) {
-      return LocaleKeys.login_inputs_password_errors_required.tr();
+  String? _getErrorsDeviceId() {
+    if (state.deviceId.inputError == InputError.required) {
+      return LocaleKeys.login_inputs_deviceId_errors_required.tr();
     }
-    if (state.password.inputError == InputError.invalid) {
-      return LocaleKeys.login_inputs_password_errors_invalid.tr();
+    if (state.deviceId.inputError == InputError.invalid) {
+      return LocaleKeys.login_inputs_deviceId_errors_invalid.tr();
     }
-    if(state.password.inputError!=null){
+    if(state.deviceId.inputError!=null){
       return LocaleKeys.general_errors_input.tr();
     }
     return null;

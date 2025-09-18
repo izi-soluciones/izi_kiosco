@@ -28,7 +28,7 @@ class AuthRepositoryHttp extends AuthRepository{
   }
   @override
   Future<Contribuyente> getCurrentContribuyenteById(int idContribuyente) async{
-    String path="/contribuyentes/$idContribuyente";
+    String path="/contribuyentes/$idContribuyente/simple";
     var response=await _dioClient.get(
         uri: path,
         options: Options(responseType: ResponseType.json)
@@ -167,6 +167,28 @@ class AuthRepositoryHttp extends AuthRepository{
     }
     else{
       throw response.data;
+    }
+  }
+  
+  @override
+  Future<Device> getDevice(int deviceId) async{
+    try{
+
+      String path="/dispositivos/$deviceId";
+      var response=await _dioClient.get(
+          uri: path,
+          options: Options(responseType: ResponseType.json)
+      );
+      if(response.statusCode==200)
+      {
+        return Device.fromJson(response.data);
+      }
+      else{
+        throw response.data;
+      }
+    }
+    catch(e){
+      throw(e.toString());
     }
   }
 

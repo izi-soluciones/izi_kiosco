@@ -71,20 +71,20 @@
       "noAccount": "¿No tienes una cuenta?"
     },
     "inputs": {
-      "user": {
-        "label": "Usuario",
-        "placeholder": "Ingresa tu usuario o correo electrónico",
+      "token": {
+        "label": "Token",
+        "placeholder": "Ingresa el token del usuario",
         "errors": {
-          "required": "Por favor ingresa tu email",
-          "invalid": "Formato de email no válido"
+          "required": "Por favor ingresa el token",
+          "invalid": "Token no válido"
         }
       },
-      "password": {
-        "label": "Contraseña",
-        "placeholder": "Ingresa tu contraseña",
+      "deviceId": {
+        "label": "Id del dispositivo",
+        "placeholder": "Ingresa el id del dispositivo",
         "errors": {
-          "required": "Por favor ingresa tu contraseña",
-          "invalid": "Formato de contraseña inválido"
+          "required": "Por favor ingresa el id del dispositivo",
+          "invalid": "Formato del id del dispositivo inválido"
         }
       }
     },

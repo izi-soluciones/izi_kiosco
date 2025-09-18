@@ -16,7 +16,7 @@ class BusinessRepositoryHttp extends BusinessRepository{
 
   @override
   Future<List<CashRegister>> getCashRegisters({required int contribuyenteId, required int sucursalId}) async{
-    String path = "/contribuyentes/$contribuyenteId/sucursales/$sucursalId/cajas";
+    String path = "/contribuyentes/$contribuyenteId/sucursales/$sucursalId/cajas/simple";
     var response = await _dioClient.get(
         uri: path,
         options: Options(responseType: ResponseType.json,headers: {

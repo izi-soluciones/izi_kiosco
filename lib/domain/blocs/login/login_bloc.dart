@@ -2,8 +2,10 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:izi_kiosco/data/local/local_storage_credentials.dart';
+import 'package:izi_kiosco/data/utils/business_utils.dart';
 import 'package:izi_kiosco/data/utils/token_utils.dart';
 import 'package:izi_kiosco/data/utils/user_utils.dart';
+import 'package:izi_kiosco/domain/models/device.dart';
 import 'package:izi_kiosco/domain/models/login/login_request.dart';
 import 'package:izi_kiosco/domain/models/login/login_response.dart';
 import 'package:izi_kiosco/domain/repositories/auth_repository.dart';
@@ -19,15 +21,10 @@ class LoginBloc extends Cubit<LoginState>{
   login()async{
     try{
       if(_validateInputs()){
-        LoginRequest loginRequest = _buildLoginRequest();
-        emit(state.copyWith(status: LoginStatus.waitingLogin));
-        LoginResponse loginResponse=await _authRepository.login(loginRequest);
-        await TokenUtils.saveToken(loginResponse.token);
-        if(loginResponse.refreshToken!=null){
-          await TokenUtils.saveRefreshToken(loginResponse.refreshToken!);
-        }
-        await UserUtils.saveUser(loginResponse.user);
-        await LocalStorageCredentials.saveCredentials(state.password.value, state.user.value);
+        await TokenUtils.saveToken(state.token.value);
+        final deviceId = int.parse(state.deviceId.value);
+        await BusinessUtils.saveDeviceId(deviceId);
+        await _authRepository.getDevice(deviceId);
         emit(state.copyWith(status: LoginStatus.successLogin));
       }
     }
@@ -40,56 +37,49 @@ class LoginBloc extends Cubit<LoginState>{
 
 
   changeInputsValues({
-    String? user,
-    String? password
+    String? token,
+    String? deviceId
 }){
-    if(user!=null){
+    if(token!=null){
       emit(state.copyWith(
-        user: state.user.changeValue(user)
+        token: state.token.changeValue(token)
       ));
     }
-    if(password!=null){
+    if(deviceId!=null){
       emit(state.copyWith(
-          password: state.password.changeValue(password)
+          deviceId: state.deviceId.changeValue(deviceId)
       ));
     }
   }
   validateInput({
-    bool user = false,
-    bool password = false
+    bool token = false,
+    bool deviceId = false
   }){
-    if(user){
+    if(token){
       emit(state.copyWith(
-          user: state.user.validateError()
+          token: state.token.validateError()
       ));
     }
-    if(password){
+    if(deviceId){
       emit(state.copyWith(
-          password: state.password.validateError()
+          deviceId: state.deviceId.validateError()
       ));
     }
   }
 
   bool _validateInputs(){
     emit(state.copyWith(
-        user: state.user.validateError(),
-        password: state.password.validateError()
+        token: state.token.validateError(),
+        deviceId: state.deviceId.validateError()
     ));
-    if(state.user.inputError !=null){
+    if(state.token.inputError !=null){
       return false;
     }
-    if(state.password.inputError !=null){
+    if(state.deviceId.inputError !=null){
       return false;
     }
 
     return true;
-  }
-
-  LoginRequest _buildLoginRequest(){
-    LoginRequest loginRequest = LoginRequest.init();
-    loginRequest.contrasena=state.password.value;
-    loginRequest.correoElectronico=state.user.value;
-    return loginRequest;
   }
 
 
