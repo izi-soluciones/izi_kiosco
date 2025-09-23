@@ -54,6 +54,12 @@ abstract class  LocaleKeys {
   static const login_buttons = 'login.buttons';
   static const login_body_noAccount = 'login.body.noAccount';
   static const login_body = 'login.body';
+  static const login_inputs_tokenCard_label = 'login.inputs.tokenCard.label';
+  static const login_inputs_tokenCard_placeholder = 'login.inputs.tokenCard.placeholder';
+  static const login_inputs_tokenCard_errors_required = 'login.inputs.tokenCard.errors.required';
+  static const login_inputs_tokenCard_errors_invalid = 'login.inputs.tokenCard.errors.invalid';
+  static const login_inputs_tokenCard_errors = 'login.inputs.tokenCard.errors';
+  static const login_inputs_tokenCard = 'login.inputs.tokenCard';
   static const login_inputs_token_label = 'login.inputs.token.label';
   static const login_inputs_token_placeholder = 'login.inputs.token.placeholder';
   static const login_inputs_token_errors_required = 'login.inputs.token.errors.required';

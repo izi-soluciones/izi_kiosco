@@ -412,6 +412,7 @@ class _MakeOrderConfirmState extends State<MakeOrderConfirm> {
         if (value is Comanda) {
           var paymentObj = PaymentObj(
               id: value.id,
+              uuid: value.uuid,
               custom: value.custom is Map? value.custom : {},
               amount: value.montoTotal??0,
               isComanda: true,

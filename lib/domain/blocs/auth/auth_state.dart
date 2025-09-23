@@ -17,6 +17,8 @@ class AuthState extends Equatable{
   final StreamSubscription? invoiceSubscription;
   final bool terminalInit;
 
+  final Catalog? catalog;
+
   const AuthState({
     required this.currencies,
     required this.status,
@@ -27,6 +29,7 @@ class AuthState extends Equatable{
     this.currentPos,
     required this.terminalInit,
     this.currentDevice,
+    this.catalog,
     required this.video
   });
   factory AuthState.init()=>
@@ -50,7 +53,8 @@ class AuthState extends Equatable{
     bool? terminalInit,
     List<Currency>? currencies,
     Device? currentDevice,
-    File? video
+    File? video,
+    Catalog? catalog
   }){
     return AuthState(
         currentContribuyente: currentContribuyente??this.currentContribuyente,
@@ -62,7 +66,8 @@ class AuthState extends Equatable{
       terminalInit: terminalInit ?? this.terminalInit,
       currencies: currencies ?? this.currencies,
       currentDevice: currentDevice ?? this.currentDevice,
-      video: video ?? this.video
+      video: video ?? this.video,
+      catalog: catalog ?? this.catalog
     );
   }
   AuthState resetState(){
@@ -76,10 +81,11 @@ class AuthState extends Equatable{
       terminalInit: false,
       currencies: [],
       currentDevice: null,
-      video: null
+      video: null,
+      catalog: null
     );
   }
   @override
-  List<Object?> get props => [video,currentDevice,terminalInit,currentContribuyente,status,currentSucursal,invoiceSubscription,currentPos,loadingContribuyente,currencies];
+  List<Object?> get props => [video,currentDevice,catalog,terminalInit,currentContribuyente,status,currentSucursal,invoiceSubscription,currentPos,loadingContribuyente,currencies];
 
 }

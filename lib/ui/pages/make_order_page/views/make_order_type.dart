@@ -12,6 +12,7 @@ import 'package:izi_kiosco/app/values/routes_keys.dart';
 import 'package:izi_kiosco/domain/blocs/make_order/make_order_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/page_utils/page_utils_bloc.dart';
 import 'package:izi_kiosco/ui/pages/make_order_page/widgets/make_order_header_lg.dart';
+import 'package:izi_kiosco/ui/utils/dynamic_list.dart';
 import 'package:izi_kiosco/ui/utils/responsive_utils.dart';
 
 class MakeOrderType extends StatefulWidget {
@@ -52,13 +53,19 @@ class _MakeOrderTypeState extends State<MakeOrderType> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
-                            IziText.titleBig(
-                                color: IziColors.darkGrey,
-                                textAlign: TextAlign.left,
-                                text: "${LocaleKeys
-                                    .makeOrder_body_selectWhere
-                                    .tr()}:",
-                                fontWeight: FontWeight.w500),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 16),
+                              child: IziText.titleBig(
+                                  color: IziColors.darkGrey,
+                                  mobile: ru.isXs(),
+                                  cropText: false,
+                                  textAlign: TextAlign.center,
+                                  maxLines: 2,
+                                  text: "${LocaleKeys
+                                      .makeOrder_body_selectWhere
+                                      .tr()}:",
+                                  fontWeight: FontWeight.w500),
+                            ),
                             const SizedBox(
                               height: 60,
                             ),
@@ -67,7 +74,8 @@ class _MakeOrderTypeState extends State<MakeOrderType> {
                                 constraints: BoxConstraints(maxHeight: ru.gtSm() && ru.isVertical()?500:400),
                                 child: Padding(
                                   padding: const EdgeInsets.symmetric(horizontal: 32.0),
-                                  child: Row(
+                                  child: DynamicList(
+                                    direction: ru.isXs()?DynamicListDirection.column:DynamicListDirection.row,
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       Expanded(

@@ -2,7 +2,7 @@ part of 'login_bloc.dart';
 
 class LoginInputs{
 
-  static InputObj userInput({String value =""}){
+  static InputObj tokenInput({String value =""}){
     return InputObj(
       value: value,
       validator: (val) {
@@ -14,7 +14,16 @@ class LoginInputs{
     );
   }
 
-  static InputObj passwordInput({String value =""}){
+  static InputObj tokenCardInput({String value =""}){
+    return InputObj(
+      value: value,
+      validator: (val) {
+        return null;
+      },
+    );
+  }
+
+  static InputObj deviceInput({String value =""}){
     return InputObj(
       value: value,
       validator: (val) {

@@ -7,6 +7,7 @@ import 'package:izi_kiosco/data/local/local_storage_first_configuration.dart';
 import 'package:izi_kiosco/data/utils/business_utils.dart';
 import 'package:izi_kiosco/data/utils/token_utils.dart';
 import 'package:izi_kiosco/data/utils/user_utils.dart';
+import 'package:izi_kiosco/domain/models/catalog.dart';
 import 'package:izi_kiosco/domain/models/contribuyente.dart';
 import 'package:izi_kiosco/domain/models/currency.dart';
 import 'package:izi_kiosco/domain/models/device.dart';
@@ -53,6 +54,7 @@ class AuthBloc extends Cubit<AuthState> {
       PrintUtils().printTest();
       
       String? token = Uri.base.queryParameters["token"] ?? await TokenUtils.getToken();
+      String? tokenCard = Uri.base.queryParameters["tokenCard"] ?? await TokenUtils.getTokenCard();
       int? deviceId = int.tryParse(Uri.base.queryParameters["dispositivo"] ?? "") ?? await BusinessUtils.getDeviceId();
       if (token == null || deviceId == null) {
         await TokenUtils.deleteToken();
@@ -63,6 +65,9 @@ class AuthBloc extends Cubit<AuthState> {
         return emit(state.copyWith(status: AuthStatus.noAuth));
       }
       await TokenUtils.saveToken(token);
+      if(tokenCard!=null){
+        await TokenUtils.saveTokenCard(tokenCard);
+      }
       await BusinessUtils.saveDeviceId(deviceId);
       emit(state.copyWith(status: AuthStatus.init));
       
@@ -100,6 +105,11 @@ class AuthBloc extends Cubit<AuthState> {
         await BusinessUtils.saveContribuyenteId(contribuyente.id ?? 0);
         File? video;
 
+        Catalog? catalog;
+          if(sucursal?.catalogo!=null){
+            catalog = await _businessRepository.getCatalog(id: sucursal!.catalogo!);
+          }
+
         try{
           if(device.config.video !=null){
             video = await DownloadUtils().downloadFile(device.config.video!);
@@ -118,6 +128,7 @@ class AuthBloc extends Cubit<AuthState> {
             status: AuthStatus.okAuth,
             currencies: currencies,
             currentDevice: device,
+            catalog: catalog,
             currentSucursal: sucursal,
             video: video,
             currentContribuyente: contribuyente));

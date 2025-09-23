@@ -18,6 +18,8 @@ class Item {
   num precioModificadores;
   String? detalle;
 
+  List<PrecioVenta> preciosVenta;
+
   Item(
       {required this.cantidad,
       required this.codigo,
@@ -35,6 +37,7 @@ class Item {
       required this.categoria,
       required this.categoriaId,
       required this.centroProduccion,
+      required this.preciosVenta,
         this.precioModificadores = 0,
       required this.codigoBarras});
   factory Item.fromJson(Map<dynamic, dynamic> json) {
@@ -58,6 +61,7 @@ class Item {
         categoriaId: json["categoria"]?["id"] ?? json["categoria"]?["_id"],
         centroProduccion: json["centroProduccion"],
         codigoBarras: json["codigoBarras"],
+        preciosVenta: json["preciosVenta"] is List? List.from(json["preciosVenta"]).where((element) => element is Map && element["listaPrecio"] is String && element["precio"] is num).map((e) => PrecioVenta(listaPrecio: e["listaPrecio"], precio: e["precio"])).toList():[] ,
         id: json["id"] ?? 0,
         valor: json["valor"]);
   }
@@ -78,6 +82,7 @@ class Item {
       precioUnitario: precioUnitario,
       categoria: categoria,
       categoriaId: categoriaId,
+      preciosVenta: preciosVenta,
       centroProduccion: centroProduccion,
       codigoBarras: codigoBarras);
 
@@ -96,21 +101,9 @@ class Item {
     }
     return {
       "cantidad": cantidad,
-      "codigo": codigo,
-      "categoriaId": categoriaId,
-      "categoria": categoria,
-      "customItem": customItem,
-      "descripcion": descripcion,
-      "imagen": imagen,
-      "modificadoresEdit": modificadores.map((e) => e.toJson()).toList(),
       if(detalle != null) "detalle":detalle,
       "modificadores": modificadoresNames,
-      "nombre": nombre,
-      "valor": precioUnitario*cantidad,
-      "item": id,
-      "precioUnitario": precioUnitario,
-      "precioTotal":precioUnitario*cantidad+precioModificadores,
-      "precioModificadores":precioModificadores
+      "item": id
     };
   }
 }
@@ -236,4 +229,11 @@ class ModifierIngredient {
     "item": item,
     "tipoUnidad": tipoUnidad
   };
+}
+
+class PrecioVenta{
+  String listaPrecio;
+  num precio;
+
+  PrecioVenta({required this.listaPrecio, required this.precio});
 }

@@ -36,8 +36,9 @@ class MakeOrderBloc extends Cubit<MakeOrderState> {
       }
       List<CategoryOrder> list =[];
       List<Item> itemsFeatured=[];
+      Catalog? catalog = authState.catalog;
       if(authState.currentDevice?.catalogo!=null){
-        Catalog catalog = await _businessRepository.getCatalog(id: authState.currentDevice!.catalogo!);
+        catalog = await _businessRepository.getCatalog(id: authState.currentDevice!.catalogo!);
         Set<String> itemsIdsSet = {};
         for(var c in catalog.categories){
           itemsIdsSet.addAll(c.items);
@@ -98,6 +99,20 @@ class MakeOrderBloc extends Cubit<MakeOrderState> {
         );
         if(itemsFeatured.isNotEmpty){
           list.insert(0, CategoryOrder(nombre: "", items: itemsFeatured));
+        }
+      }
+      String? priceList = catalog?.listaPrecio;
+      if (priceList != null) {
+        for(var c in list){
+          for(var item in c.items){
+            PrecioVenta? aux = item.preciosVenta.firstWhereOrNull((element) {
+              return
+                element.listaPrecio == priceList;
+            });
+            if (aux != null) {
+              item.precioUnitario = aux.precio;
+            }
+          }
         }
       }
       List<CashRegister> cashRegisters =
@@ -317,12 +332,12 @@ class MakeOrderBloc extends Cubit<MakeOrderState> {
   resetOrder(){
     emit(state.copyWith(numberDiners: ()=>null,tableId: ()=>null,itemsSelected: [],discountAmount: 0));
   }
-  printRollo(AuthState authState)async{
-    var invoice = await _comandaRepository.getInvoice(1842665);
-    var tmp = await PrintTemplate.invoice80(invoice, authState.currentContribuyente!, authState.currentSucursal!);
-    var printUtils = PrintUtils();
-    await printUtils.print(tmp);
-  }
+  // printRollo(AuthState authState)async{
+  //   var invoice = await _comandaRepository.getInvoice(1842665);
+  //   var tmp = await PrintTemplate.invoice80(invoice, authState.currentContribuyente!, authState.currentSucursal!);
+  //   var printUtils = PrintUtils();
+  //   await printUtils.print(tmp);
+  // }
 
 
   setItemModal(Item item){

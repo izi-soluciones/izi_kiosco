@@ -123,6 +123,7 @@ class _MakeOrderRetailScanState extends State<MakeOrderRetailScan> {
                   width: 80,
                 ),
                 const Expanded(flex: 8, child: SizedBox.shrink()),
+                if(ru.gtXs())
                 Expanded(
                     flex: 4,
                     child: IziText.body(
@@ -133,7 +134,7 @@ class _MakeOrderRetailScanState extends State<MakeOrderRetailScan> {
                             : LocaleKeys.makeOrderRetail_scan_unitPriceAbr.tr(),
                         fontWeight: FontWeight.w500)),
                 Expanded(
-                    flex: 4,
+                    flex: ru.gtXs()?4:8,
                     child: IziText.body(
                         color: IziColors.darkGrey,
                         textAlign: TextAlign.center,
@@ -227,7 +228,7 @@ class _MakeOrderRetailScanState extends State<MakeOrderRetailScan> {
                       color: IziColors.dark,
                       text: item.nombre,
                       fontWeight: FontWeight.w500,
-                      maxLines: 7),
+                      maxLines: 5),
                   const SizedBox(height: 8,),
                   RichText(
                       textAlign: TextAlign.left,
@@ -254,6 +255,7 @@ class _MakeOrderRetailScanState extends State<MakeOrderRetailScan> {
               ),
             ),
           ),
+          if(ru.gtXs())
           Expanded(
             flex: 4,
             child: Padding(
@@ -267,7 +269,7 @@ class _MakeOrderRetailScanState extends State<MakeOrderRetailScan> {
             ),
           ),
           Expanded(
-            flex: 4,
+            flex: ru.gtXs()?4:8,
             child: Padding(
               padding: const EdgeInsets.only(left: 8),
               child: IziText.body(

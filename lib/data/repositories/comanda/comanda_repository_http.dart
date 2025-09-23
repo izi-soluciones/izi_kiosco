@@ -5,6 +5,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:izi_kiosco/app/values/app_constants.dart';
 import 'package:izi_kiosco/app/values/env_keys.dart';
 import 'package:izi_kiosco/data/core/dio_client.dart';
+import 'package:izi_kiosco/data/utils/token_utils.dart';
 import 'package:izi_kiosco/domain/dto/filters_comanda.dart';
 import 'package:izi_kiosco/domain/dto/invoice_dto.dart';
 import 'package:izi_kiosco/domain/dto/new_order_dto.dart';
@@ -109,8 +110,8 @@ class ComandaRepositoryHttp extends ComandaRepository {
   }
 
   @override
-  Future<Comanda> getComanda({required int orderId}) async {
-    String path = "/comandas/$orderId";
+  Future<Comanda> getComanda({required String orderUuid}) async {
+    String path = "/comandas/uuid/$orderUuid";
     var response = await _dioClient.get(
         uri: path, options: Options(responseType: ResponseType.json));
     if (response.statusCode == 200) {
@@ -177,7 +178,7 @@ class ComandaRepositoryHttp extends ComandaRepository {
   @override
   Future<SaleLink> createSaleLink(NewSaleLinkDto newSaleLinkDto) async {
     try {
-      String path = "/solicitudes-cobro/enlace";
+      String path = "/solicitudes-cobro/enlace-kiosko";
       var response = await _dioClient.post(
           uri: path,
           body: newSaleLinkDto.toJson(),
@@ -269,7 +270,7 @@ class ComandaRepositoryHttp extends ComandaRepository {
   Future<Charge> generatePayment(
       {required int contribuyenteId, required PaymentDto payment}) async {
     try {
-      String path = "/solicitudes-cobro";
+      String path = "/solicitudes-cobro/kiosko";
       var response = await _dioClient.post(
           uri: path,
           body: payment.toJson(contribuyenteId),
@@ -416,11 +417,7 @@ class ComandaRepositoryHttp extends ComandaRepository {
       String path = "/categorias";
       var response = await _dioClient.get(
           uri: path,
-          options: Options(responseType: ResponseType.json),
-          queryParameters: {
-            "habilitadoKiosco": 1,
-            "contribuyenteId": contribuyente
-          });
+          options: Options(responseType: ResponseType.json));
       if (response.statusCode == 200) {
         return List.from(response.data)
             .map((e) => CategoryOrder.fromJson(e))
@@ -464,7 +461,7 @@ class ComandaRepositoryHttp extends ComandaRepository {
   @override
   Future<Comanda> emitOrderPre({required NewOrderDto newOrder}) async {
     try {
-      String path = "/comandas/pre-comanda/emitir";
+      String path = "/comandas/pre-comanda/emitir-public";
       var response = await _dioClient.post(
           uri: path,
           options: Options(responseType: ResponseType.json),
@@ -596,9 +593,9 @@ class ComandaRepositoryHttp extends ComandaRepository {
   }
 
   @override
-  Future<Invoice> getInvoice(int invoiceId) async {
+  Future<Invoice> getInvoice(String invoiceUuid) async {
     try {
-      String path = "/facturas/$invoiceId";
+      String path = "/facturas/uuid/$invoiceUuid";
       var response = await _dioClient.get(
           uri: path, options: Options(responseType: ResponseType.json));
       if (response.statusCode == 200 &&
@@ -690,9 +687,12 @@ class ComandaRepositoryHttp extends ComandaRepository {
   }
 
   @override
-  Future<void> markPaymentATC(
-      String token, String chargeUuid, int? internalId) async {
+  Future<void> markPaymentATC(String chargeUuid, int? internalId) async {
     try {
+      String? token = await TokenUtils.getTokenCard();
+      if(token==null){
+        throw "No existe un token"; 
+      }
       String path = "/solicitudes-cobro/$chargeUuid/notificacion-pos";
       var response = await _dioClient.post(
           uri: path,

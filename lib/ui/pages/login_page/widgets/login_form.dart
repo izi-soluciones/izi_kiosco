@@ -26,7 +26,6 @@ class LoginForm extends StatelessWidget {
           IziInput(
               labelInput: LocaleKeys.login_inputs_token_label.tr(),
               inputHintText: LocaleKeys.login_inputs_token_placeholder.tr(),
-              autoFillHints: const [AutofillHints.email],
               onChanged: (value,_){
                 context.read<LoginBloc>().changeInputsValues(token:value);
               },
@@ -35,6 +34,24 @@ class LoginForm extends StatelessWidget {
               },
               error: _getErrorsToken(),
               inputType: InputType.normal,
+          ),
+          const SizedBox(height: 20,),
+          IziInput(
+              labelInput: LocaleKeys.login_inputs_tokenCard_label.tr(),
+              inputHintText: LocaleKeys.login_inputs_tokenCard_placeholder.tr(),
+              inputType: InputType.normal,
+              validator: (value){
+                if(value == null || value.isEmpty){
+                  return LocaleKeys.login_inputs_tokenCard_errors_required.tr();
+                }
+                return null;
+              },
+              onChanged: (value,_){
+                context.read<LoginBloc>().changeInputsValues(tokenCard:value);
+              },
+              onEditingComplete: (){
+                context.read<LoginBloc>().validateInput(tokenCard:true);
+              },
           ),
           const SizedBox(height: 20,),
           IziInput(

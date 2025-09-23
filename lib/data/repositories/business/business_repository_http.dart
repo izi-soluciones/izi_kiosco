@@ -39,9 +39,6 @@ class BusinessRepositoryHttp extends BusinessRepository{
     String path = "/monedas-contribuyente";
     var response = await _dioClient.get(
         uri: path,
-        queryParameters: {
-          "contribuyente": contribuyenteId
-        },
         options: Options(responseType: ResponseType.json));
     if (response.statusCode == 200) {
       return List.from(response.data)
@@ -138,13 +135,9 @@ class BusinessRepositoryHttp extends BusinessRepository{
 
   @override
   Future<List<Contribuyente>> queryBusinessSearch({required String query, required int contribuyenteId}) async{
-    String path = "/nit";
+    String path = "/nit/$query";
     var response = await _dioClient.get(
         uri: path,
-        queryParameters: {
-          "contribuyente": contribuyenteId,
-          "nit": query
-        },
         options: Options(responseType: ResponseType.json));
     if (response.statusCode == 200) {
         return List.from(response.data)

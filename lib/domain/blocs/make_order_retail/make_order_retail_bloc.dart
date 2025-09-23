@@ -102,14 +102,8 @@ class MakeOrderRetailBloc extends Cubit<MakeOrderRetailState> {
   Future<SaleLink?> emitOrder(AuthState authState) async {
     try {
       var newSaleLinkDto = NewSaleLinkDto(
-          monedaId: state.currentCurrency?.id ?? AppConstants.defaultCurrencyId,
-          contribuyente: authState.currentContribuyente!.id!,
-          sucursal: authState.currentSucursal!.id!,
-          actividadEconomica: authState.currentDevice?.config.actividadEconomica,
-          almacen: authState.currentDevice!.config.almacen!,
-          prefactura: authState.currentContribuyente!.habilitadoFacturacion!=true,
           listaItems: state.itemsSelected,
-          moneda: state.currentCurrency?.simbolo == "Bs"? "BOB": state.currentCurrency?.simbolo ?? "",
+          dispositivo: authState.currentDevice?.id ?? 0
       );
       SaleLink saleLink = await _comandaRepository.createSaleLink(newSaleLinkDto);
       return saleLink;

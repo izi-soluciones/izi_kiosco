@@ -95,9 +95,6 @@ class PaymentBloc extends Cubit<PaymentState> {
       if (indexCurrency != -1) {
         currentCurrency = authState.currencies.elementAtOrNull(indexCurrency);
       }
-
-      List<PaymentMethod> paymentMethods =
-          await _businessRepository.getPaymentMethods();
       String? economicActivity;
 
       if(authState.currentContribuyente?.habilitadoFacturacion==true){
@@ -137,7 +134,6 @@ class PaymentBloc extends Cubit<PaymentState> {
               : null,
           step: 1,
           economicActivity: economicActivity,
-          paymentMethods: paymentMethods,
           currentCurrency: currentCurrency,
           usaSiat: usaSiat,
           paymentObj: paymentObj,
@@ -197,12 +193,6 @@ class PaymentBloc extends Cubit<PaymentState> {
       emit(state.copyWith(
           phoneNumber: state.phoneNumber.changeValue(phoneNumber)));
     }
-    if (cashRegister != null) {
-      emit(state.copyWith(
-          currentCashRegister: state.cashRegisters
-              .firstWhere((element) => element.id == cashRegister)));
-    }
-
     if (isManual != null) {
       emit(state.copyWith(isManual: isManual));
     }
@@ -243,14 +233,6 @@ class PaymentBloc extends Cubit<PaymentState> {
     _socketRepository.closeQrListening();
     qrStream?.cancel();
     qrStream = null;
-    if (state.payments.fold(
-            0,
-            (previousValue, element) =>
-                previousValue + (element.id != null ? 1 : 0)) >
-        0) {
-      emit(state.copyWith(step: 4));
-      return;
-    }
     emit(state.copyWith(
         step: 0,
         paymentType: PaymentType.others,
@@ -303,24 +285,6 @@ class PaymentBloc extends Cubit<PaymentState> {
 
   markPaidQr() {
     emit(state.copyWith(step: 3, paymentType: PaymentType.qr));
-  }
-
-  addPayment() {
-    List<Payment> payments = List.of(state.payments);
-    payments.add(Payment());
-    emit(state.copyWith(payments: payments));
-  }
-
-  changePaymentAmount(int index, num? amount) {
-    List<Payment> payments = List.of(state.payments);
-    payments[index] = Payment(monto: amount);
-    emit(state.copyWith(payments: payments));
-  }
-
-  removePayment(int index) {
-    List<Payment> payments = List.of(state.payments);
-    payments.removeAt(index);
-    emit(state.copyWith(payments: payments));
   }
 
   bool _validateInputs() {
@@ -407,7 +371,7 @@ class PaymentBloc extends Cubit<PaymentState> {
       var success = false;
       for (var i = 0; i < 10; i++) {
         try {
-          await _comandaRepository.markPaymentATC(charge.token ?? '',
+          await _comandaRepository.markPaymentATC(
               state.paymentObj?.uuid ?? "", charge.intentoPago);
           success = true;
           break;
@@ -448,16 +412,8 @@ class PaymentBloc extends Cubit<PaymentState> {
       {bool atc = false, bool linkser = false, bool contactless = true}) async {
     try {
       emit(state.copyWith(step: 4));
-      PaymentDto newPayment = PaymentDto(
-          orderId: state.paymentObj?.id ?? 0,
-          date: DateTime.now(),
-          monto: state.paymentObj?.amount ?? 0,
-          metodoPago: AppConstants.idPaymentMethodPOS,
-          moneda: state.currentCurrency?.simbolo == "Bs"
-              ? "BOB"
-              : state.currentCurrency?.simbolo ?? "BOB",
-          monedaId:
-              state.currentCurrency?.id ?? AppConstants.defaultCurrencyId);
+
+      PaymentDto newPayment = _buildPaymentDto(AppConstants.idPaymentMethodPOS);
 
       Charge charge = await _comandaRepository.generatePayment(
           contribuyenteId: authState.currentContribuyente?.id ?? 0,
@@ -488,8 +444,7 @@ class PaymentBloc extends Cubit<PaymentState> {
       var success = false;
       for (var i = 0; i < 10; i++) {
         try {
-          await _comandaRepository.markPaymentATC(
-              charge.token ?? '', charge.uuid, null);
+          await _comandaRepository.markPaymentATC( charge.uuid, null);
           success = true;
           break;
         } catch (e) {
@@ -572,7 +527,7 @@ class PaymentBloc extends Cubit<PaymentState> {
       var success = false;
       for (var i = 0; i < 10; i++) {
         try {
-          await _comandaRepository.markPaymentATC(charge.token ?? '',
+          await _comandaRepository.markPaymentATC(
               state.paymentObj?.uuid ?? "", charge.intentoPago);
           success = true;
           break;
@@ -617,17 +572,8 @@ class PaymentBloc extends Cubit<PaymentState> {
 
   Future<bool> _generateOrderQR(AuthState authState) async {
     if (authState.currentDevice?.config.demo == true) {
-      PaymentDto newPayment = PaymentDto(
-          orderId: state.paymentObj?.id ?? 0,
-          date: DateTime.now(),
-          monto: state.paymentObj?.amount ?? 0,
-          metodoPago: AppConstants.idPaymentMethodPOS,
-          moneda: state.currentCurrency?.simbolo == "Bs"
-              ? "BOB"
-              : state.currentCurrency?.simbolo ?? "BOB",
-          monedaId:
-              state.currentCurrency?.id ?? AppConstants.defaultCurrencyId);
 
+      PaymentDto newPayment = _buildPaymentDto(AppConstants.idPaymentMethodPOS);
       Charge charge = await _comandaRepository.generatePayment(
           contribuyenteId: authState.currentContribuyente?.id ?? 0,
           payment: newPayment);
@@ -636,8 +582,7 @@ class PaymentBloc extends Cubit<PaymentState> {
       var success = false;
       for (var i = 0; i < 10; i++) {
         try {
-          await _comandaRepository.markPaymentATC(
-              charge.token ?? '', charge.uuid, null);
+          await _comandaRepository.markPaymentATC(charge.uuid, null);
           success = true;
           break;
         } catch (e) {
@@ -653,15 +598,8 @@ class PaymentBloc extends Cubit<PaymentState> {
     }
 
     emit(state.copyWith(qrLoading: true));
-    PaymentDto qr = PaymentDto(
-        orderId: state.paymentObj?.id ?? 0,
-        date: DateTime.now(),
-        metodoPago: AppConstants.idPaymentMethodQR,
-        monto: state.paymentObj?.amount ?? 0,
-        moneda: state.currentCurrency?.simbolo == "Bs"
-            ? "BOB"
-            : state.currentCurrency?.simbolo ?? "BOB",
-        monedaId: state.currentCurrency?.id ?? AppConstants.defaultCurrencyId);
+    
+    PaymentDto qr = _buildPaymentDto(AppConstants.idPaymentMethodQR);
 
     Charge charge = await _comandaRepository.generatePayment(
         contribuyenteId: authState.currentContribuyente?.id ?? 0, payment: qr);
@@ -720,8 +658,8 @@ class PaymentBloc extends Cubit<PaymentState> {
     qrStream = _socketRepository.listenPayment(charge: charge).listen(
       (event) async {
         if (event is Map && event["statusVenta"] == "success") {
-            if (event["idFactura"] is int) {
-              await _printRollo(authState, idInvoice: event["idFactura"]);
+            if (event["uuidFactura"] is String) {
+              await _printRollo(authState, idInvoice: event["uuidFactura"]);
             }
           if (timer != null) {
             timer!.cancel();
@@ -761,47 +699,6 @@ class PaymentBloc extends Cubit<PaymentState> {
   bool isProcessing =false;
   bool activeProcessTimer =false;
   _saveAndListenPaymentOrder(AuthState authState, Charge charge) async {
-    var newOrderDto = NewOrderDto(
-        caja: 0,
-        cantidadComensales: 0,
-        nombreMesa: "nombreMesa",
-        descuentos: 0,
-        emisor: "",
-        fecha: DateTime.now(),
-        listaItems: [],
-        deviceId: authState.currentDevice?.id ?? 0,
-        mesa: "mesa",
-        paraLlevar: true,
-        tipoComanda: AppConstants.restaurantEnv,
-        sucursal: 0);
-    Map custom = {};
-    if (state.paymentObj?.custom is Map) {
-      custom = state.paymentObj!.custom;
-    }
-    newOrderDto.id = state.paymentObj?.id;
-
-    var documentType = state.documentType;
-    if (state.documentNumber.value.isEmpty && state.usaSiat) {
-      documentType = state.documentTypes.first;
-    }
-    custom["pagadorData"] = {
-      "tipoDocumento": documentType?.toJson(),
-      "nit":
-          state.documentNumber.value.isEmpty ? "0" : state.documentNumber.value,
-      "complemento":
-          AppConstants.ciList.contains(state.complement.value.toLowerCase()) ||
-                  state.documentNumber.value.isEmpty
-              ? null
-              : state.complement.value,
-      "razonSocial":
-          state.businessName.value.isEmpty ? "S/N" : state.businessName.value,
-      "telefonoComprador": state.phoneNumber.value
-    };
-    newOrderDto.clienteNombre =
-        state.businessName.value.isNotEmpty ? state.businessName.value : null;
-
-    newOrderDto.custom = custom;
-    await _comandaRepository.editOrder(newOrder: newOrderDto);
     if (isClosed) {
       return false;
     }
@@ -842,39 +739,46 @@ class PaymentBloc extends Cubit<PaymentState> {
         const Duration(seconds: 10),
             () async{
 
-          if(!isClosed && state.paymentObj?.id!=null && !activeProcessTimer){
+          if(!isClosed && state.paymentObj?.uuid!=null && !activeProcessTimer){
             activeProcessTimer=true;
             for(var i=0;i<60;i++){
               if(isProcessing || isClosed){
                 break;
               }
-              var comanda = await _comandaRepository.getComanda(orderId: state.paymentObj!.id);
-              if(comanda.factura!=null && !isProcessing){
-                isProcessing=true;
-                if (qrStream != null) {
-                  _socketRepository.closeQrListening();
-                  qrStream?.cancel();
+              try{
+                var comanda = await _comandaRepository.getComanda(orderUuid: state.paymentObj!.uuid!);
+                if(comanda.factura!=null && !isProcessing){
+                  isProcessing=true;
+                  if (qrStream != null) {
+                    _socketRepository.closeQrListening();
+                    qrStream?.cancel();
+                  }
+                  timerQR?.cancel();
+                  timeoutTimer.cancel();
+                  num? numero = comanda.numero;
+                  if (comanda.custom is Map && (comanda.custom["numeroCustom"] != null)) {
+                    numero = comanda.custom["numeroCustom"];
+                  }
+                  await _printRolloOrder(authState,
+                      orderNumber: comanda.numero?.toInt() ?? 0,
+                      customOrderNumber: numero?.toInt());
+                  if (kIsWeb) {
+                    await Future.delayed(const Duration(milliseconds: 1500));
+                  }
+                  if(comanda.custom is Map && comanda.custom["facturaUuid"] is String){
+                    await _printRollo(authState, idInvoice: comanda.custom["facturaUuid"]);
+                  }
+                  emit(state.copyWith(step: 5, status: PaymentStatus.paymentProcessed));
+                  timerSuccess = Timer(
+                    const Duration(seconds: 10),
+                        () async {
+                      emit(state.copyWith(status: PaymentStatus.successInvoice));
+                    },
+                  );
                 }
-                timerQR?.cancel();
-                timeoutTimer.cancel();
-                num? numero = comanda.numero;
-                if (comanda.custom is Map && (comanda.custom["numeroCustom"] != null)) {
-                  numero = comanda.custom["numeroCustom"];
-                }
-                await _printRolloOrder(authState,
-                    orderNumber: comanda.numero?.toInt() ?? 0,
-                    customOrderNumber: numero?.toInt());
-                if (kIsWeb) {
-                  await Future.delayed(const Duration(milliseconds: 1500));
-                }
-                await _printRollo(authState, idInvoice: comanda.factura);
-                emit(state.copyWith(step: 5, status: PaymentStatus.paymentProcessed));
-                timerSuccess = Timer(
-                  const Duration(seconds: 10),
-                      () async {
-                    emit(state.copyWith(status: PaymentStatus.successInvoice));
-                  },
-                );
+              }
+              catch(e){
+                log("error obteniendo comanda");
               }
               await Future.delayed(const Duration(seconds: 3));
             }
@@ -900,8 +804,8 @@ class PaymentBloc extends Cubit<PaymentState> {
                 if (kIsWeb) {
                   await Future.delayed(const Duration(seconds: 1));
                 }
-                if (event["idFactura"] is int) {
-                  await _printRollo(authState, idInvoice: event["idFactura"]);
+                if (event["uuidFactura"] is String) {
+                  await _printRollo(authState, idInvoice: event["uuidFactura"]);
                 }
               } catch (_) {}
               if (qrStream != null) {
@@ -924,20 +828,27 @@ class PaymentBloc extends Cubit<PaymentState> {
   }
 
   Future<void> queryBusiness({required AuthState authState}) async {
-    if (state.documentNumber.value.length < 3) {
-      return;
+    try{
+
+      if (state.documentNumber.value.length < 3) {
+        return;
+      }
+      emit(state.copyWith(
+          documentNumber: state.documentNumber.changeLoading(true)));
+      List<Contribuyente> businessList =
+          await _businessRepository.queryBusinessSearch(
+              query: state.documentNumber.value,
+              contribuyenteId: authState.currentContribuyente?.id ?? 0);
+      Contribuyente? find = businessList.firstWhereOrNull(
+          (element) => element.nit == state.documentNumber.value);
+      emit(state.copyWith(
+          businessName: state.businessName.changeValue(find?.razonSocial ?? ""),
+          documentNumber: state.documentNumber.changeLoading(false)));
     }
-    emit(state.copyWith(
-        documentNumber: state.documentNumber.changeLoading(true)));
-    List<Contribuyente> businessList =
-        await _businessRepository.queryBusinessSearch(
-            query: state.documentNumber.value,
-            contribuyenteId: authState.currentContribuyente?.id ?? 0);
-    Contribuyente? find = businessList.firstWhereOrNull(
-        (element) => element.nit == state.documentNumber.value);
-    emit(state.copyWith(
-        businessName: state.businessName.changeValue(find?.razonSocial ?? ""),
-        documentNumber: state.documentNumber.changeLoading(false)));
+    catch(e){
+      emit(state.copyWith(
+          documentNumber: state.documentNumber.changeLoading(false)));
+    }
   }
 
   cancelQR(AuthState authState){
@@ -961,7 +872,7 @@ class PaymentBloc extends Cubit<PaymentState> {
     await printUtils.print(tmp);
   }
 
-  _printRollo(AuthState authState, {int? idInvoice, Invoice? invoice}) async {
+  _printRollo(AuthState authState, {String? idInvoice, Invoice? invoice}) async {
     try{
       if (idInvoice == null && invoice == null) {
         return;
@@ -996,5 +907,28 @@ class PaymentBloc extends Cubit<PaymentState> {
 
   int _getIntFromDecimal(double num) {
     return (num * 100).toInt();
+  }
+
+  PaymentDto _buildPaymentDto(int metodoPago){
+
+      var documentType = state.documentType;
+      if (state.documentNumber.value.isEmpty && state.usaSiat) {
+        documentType = state.documentTypes.first;
+      }
+      PaymentDtoVentaData ventaData = PaymentDtoVentaData(
+        tipoDocumento: documentType,
+        complemento: AppConstants.ciList.contains(state.complement.value.toLowerCase()) ||
+                  state.documentNumber.value.isEmpty
+              ? null
+              : state.complement.value,
+        nit: state.documentNumber.value.isEmpty ? "0" : state.documentNumber.value,
+        razonSocial: state.businessName.value.isEmpty ? "S/N" : state.businessName.value,
+        telefonoComprador: state.phoneNumber.value
+        );
+      PaymentDto newPayment = PaymentDto(
+        ventaData: ventaData,
+          orderId: state.paymentObj?.id ?? 0,
+          metodoPago: AppConstants.idPaymentMethodPOS);
+      return newPayment;
   }
 }

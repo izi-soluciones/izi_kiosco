@@ -43,28 +43,13 @@ class NewOrderDto {
       required this.sucursal});
 
   Map<String, dynamic> toJson() => {
-        "caja": caja,
-        "custom": {
-          if (cantidadComensales != null)
-            "cantidadComensales": cantidadComensales,
-          if (nombreMesa != null) "nombreMesa": nombreMesa,
-          "dispositivo": deviceId
-        },
-        "descuentos": descuentos,
-        "emisor": emisor,
-        "fecha": fecha.dateFormat(DateFormatterType.dataWithHour),
+        "dispositivo": deviceId,
         "listaItems": listaItems.map(
           (e) {
             return e.toJson();
           },
         ).toList(),
-        "mesa": mesa,
-        if(notaInterna!=null)"notaInterna": notaInterna,
         "paraLlevar": paraLlevar,
-        "sucursal": sucursal,
-        "tipoComanda": tipoComanda,
-        "anulada":anulada?1:0,
-        "tipoMovimiento": "gasto-prod-venta"
       };
   Map<String, dynamic> toJsonEdit() => {
     "custom": custom,

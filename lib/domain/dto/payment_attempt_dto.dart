@@ -26,8 +26,8 @@ class PaymentAttemptDto {
       "nit": nit,
       "razonSocial": razonSocial,
       "telefonoComprador": telefonoComprador,
-      "complemento": complemento,
-      "tipoDocumento": tipoDocumento
+      if(complemento!=null)"complemento": complemento,
+      if(tipoDocumento!=null)"tipoDocumento": tipoDocumento
     }
   };
 }

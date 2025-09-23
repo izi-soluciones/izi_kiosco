@@ -20,7 +20,7 @@ import 'package:izi_kiosco/domain/models/sale_link.dart';
 abstract class ComandaRepository {
   Future<List<Comanda>> getComandas(
       {required FiltersComanda filters, required int page});
-  Future<Comanda> getComanda({required int orderId});
+  Future<Comanda> getComanda({required String orderUuid});
   Future<void> emit({required InvoiceDto invoice, required int orderId});
   Future<void> emitContingencia(
       {required InvoiceDto invoice, required int orderId});
@@ -56,9 +56,9 @@ abstract class ComandaRepository {
 
   Future<Comanda> markAsCreated(int orderId);
 
-  Future<Invoice> getInvoice(int invoiceId);
+  Future<Invoice> getInvoice(String invoiceUuid);
   Future<void> createPaidCharge(PaidChargeDto paidChargeDto);
-  Future<void> markPaymentATC(String token, String chargeUuid, int? internalId);
+  Future<void> markPaymentATC(String chargeUuid, int? internalId);
 
   Future<List<Item>> getSaleItems(
       {String? catalog, List<String>? items, required bool sortByPriority});

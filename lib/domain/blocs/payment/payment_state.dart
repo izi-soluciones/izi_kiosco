@@ -62,10 +62,6 @@ class PaymentState extends Equatable {
 
   final Currency? currentCurrency;
 
-  final List<CashRegister> cashRegisters;
-
-  final List<PaymentMethod> paymentMethods;
-  final List<Payment> payments;
   final List<DocumentType> documentTypes;
   final List<Contribuyente> queryBusinessList;
 
@@ -82,7 +78,6 @@ class PaymentState extends Equatable {
       required this.currentCurrency,
       required this.paymentType,
       required this.step,
-      required this.cashRegisters,
       required this.status,
       required this.casaMatriz,
       this.currentCashRegister,
@@ -90,8 +85,6 @@ class PaymentState extends Equatable {
       required this.documentTypes,
       required this.usaSiat,
       required this.queryBusinessList,
-      required this.payments,
-      required this.paymentMethods,
       required this.tipAmount,
       required this.businessName,
       required this.complement,
@@ -108,18 +101,12 @@ class PaymentState extends Equatable {
   factory PaymentState.init() => PaymentState(
       status: PaymentStatus.waitingGet,
       paymentObj: null,
-      cashRegisters: const [],
       cashAmount: 0,
       tipAmount: 0,
-      paymentMethods: const [],
       documentTypes: const [],
       economicActivity: "",
       usaSiat: false,
       queryBusinessList: const [],
-      payments: [
-        Payment(),
-        Payment()
-      ],
       paymentType: PaymentType.others,
       step: 5,
       isManual: false,
@@ -175,10 +162,7 @@ class PaymentState extends Equatable {
         queryBusinessList: queryBusinessList ?? this.queryBusinessList,
         economicActivity: economicActivity ?? this.economicActivity,
         cashAmount: cashAmount ?? this.cashAmount,
-        payments: payments ?? this.payments,
-        paymentMethods: paymentMethods ?? this.paymentMethods,
         currentCurrency: currentCurrency ?? this.currentCurrency,
-        cashRegisters: cashRegisters ?? this.cashRegisters,
         currentCashRegister: currentCashRegister ?? this.currentCashRegister,
         tipAmount: tipAmount ?? this.tipAmount,
         withException: withException ?? this.withException,
@@ -217,7 +201,6 @@ class PaymentState extends Equatable {
     qrWait,
         queryBusinessList,
     phoneNumber,
-    payments,
     qrCharge,
     qrAmount,
     qrPaymentKey,

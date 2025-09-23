@@ -71,6 +71,14 @@
       "noAccount": "¿No tienes una cuenta?"
     },
     "inputs": {
+      "tokenCard": {
+        "label": "Token de tarjeta",
+        "placeholder": "Ingresa el token de la tarjeta",
+        "errors": {
+          "required": "Por favor ingresa el token",
+          "invalid": "Token no válido"
+        }
+      },
       "token": {
         "label": "Token",
         "placeholder": "Ingresa el token del usuario",

@@ -1,29 +1,43 @@
+import 'package:izi_kiosco/domain/models/document_type.dart';
+
 class PaymentDto {
   int orderId;
-  DateTime date;
-  num monto;
-  int monedaId;
-  String moneda;
   int metodoPago;
+  PaymentDtoVentaData ventaData;
 
   PaymentDto(
       {required this.orderId,
-      required this.date,
-      required this.monto,
-      required this.moneda,
-      required this.monedaId,
+      required this.ventaData,
       required this.metodoPago});
 
   Map<String,dynamic> toJson(int contribuyenteId)=>{
-    "contribuyente": contribuyenteId,
     "pedido": orderId,
-    "monto": monto,
-    "moneda": moneda,
-    "monedaId": monedaId,
     "metodoPago": metodoPago,
-    "config": {
-      "notificarPagador":true,
-      "desdeKiosco":true
-    }
+    "ventaData": ventaData.toJson()
+  };
+}
+
+
+class PaymentDtoVentaData{
+  DocumentType? tipoDocumento;
+  String nit;
+  String? complemento;
+  String razonSocial;
+  String telefonoComprador;
+
+
+  PaymentDtoVentaData(
+      {required this.tipoDocumento,
+      required this.complemento,
+      required this.nit,
+      required this.razonSocial,
+      required this.telefonoComprador});
+
+  Map toJson()=>{
+    "tipoDocumento": tipoDocumento?.toJson(),
+    "nit": nit,
+    if(complemento!=null)"complemento": complemento,
+    "razonSocial": razonSocial,
+    "telefonoComprador": telefonoComprador
   };
 }

@@ -28,4 +28,19 @@ class TokenUtils{
     SharedPreferences prefs=await SharedPreferences.getInstance();
     await prefs.remove("rt");
   }
+
+
+  static Future<void> saveTokenCard(String token)async{
+    SharedPreferences prefs=await SharedPreferences.getInstance();
+    await prefs.setString("tokenCard", token);
+  }
+  static Future<String?> getTokenCard()async{
+    SharedPreferences prefs=await SharedPreferences.getInstance();
+    String? token=prefs.getString("tokenCard");
+    return token;
+  }
+  static Future<void> deleteTokenCard()async{
+    SharedPreferences prefs=await SharedPreferences.getInstance();
+    await prefs.remove("tokenCard");
+  }
 }

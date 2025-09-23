@@ -46,7 +46,7 @@ class _MakeOrderRetailInitState extends State<MakeOrderRetailInit> {
           Positioned.fill(
             child: Center(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 64),
+                padding: EdgeInsets.symmetric(horizontal: ru.lwMd()?32:64),
                 child: widget.state.status == MakeOrderRetailStatus.waitingGet?_shimmer(ru):DynamicList(
                   direction: ru.isVertical()
                       ? DynamicListDirection.column
@@ -130,7 +130,11 @@ class _MakeOrderRetailInitState extends State<MakeOrderRetailInit> {
           MakeOrderHeaderLg(onPop: () {
             GoRouter.of(context).goNamed(RoutesKeys.home);
             context.read<PageUtilsBloc>().closeScreenActive();
-          }),)
+          },
+          hideLogo: ru.lwMd(),
+          ),
+           
+          )
         ],
       ),
     );
@@ -233,6 +237,9 @@ class _MakeOrderRetailInitState extends State<MakeOrderRetailInit> {
 
   _infoItem(IconData icon, String text, ResponsiveUtils ru) {
     double sizeText = 20;
+    if (ru.isXs()) {
+      sizeText = 16;
+    }
     if (ru.gtSm()) {
       sizeText = 24;
     }

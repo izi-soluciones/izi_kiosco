@@ -399,7 +399,7 @@ class _PaymentPageInvoiceState extends State<PaymentPageInvoice> {
                         }
                       : null,
                   inputFormatters: [
-                    FilteringTextInputFormatter.allow(RegExp('[1-9]'))
+                    FilteringTextInputFormatter.allow(RegExp('[0-9]'))
                   ],
                   controller: documentNumberController,
                   loadingAutoComplete: widget.state.documentNumber.loading,
