@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:dio/dio.dart';
+import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:izi_kiosco/app/values/app_constants.dart';
 import 'package:izi_kiosco/app/values/env_keys.dart';
@@ -179,10 +180,13 @@ class ComandaRepositoryHttp extends ComandaRepository {
   Future<SaleLink> createSaleLink(NewSaleLinkDto newSaleLinkDto) async {
     try {
       String path = "/solicitudes-cobro/enlace-kiosko";
+      final tokenCaptcha =await FirebaseAppCheck.instance.getLimitedUseToken();
       var response = await _dioClient.post(
           uri: path,
           body: newSaleLinkDto.toJson(),
-          options: Options(responseType: ResponseType.json));
+          options: Options(responseType: ResponseType.json,headers: {
+            "X-Firebase-AppCheck": tokenCaptcha
+          }));
       if (response.statusCode == 200) {
         return SaleLink.fromJson(response.data);
       }
@@ -271,10 +275,13 @@ class ComandaRepositoryHttp extends ComandaRepository {
       {required int contribuyenteId, required PaymentDto payment}) async {
     try {
       String path = "/solicitudes-cobro/kiosko";
+      final tokenCaptcha =await FirebaseAppCheck.instance.getLimitedUseToken();
       var response = await _dioClient.post(
           uri: path,
           body: payment.toJson(contribuyenteId),
-          options: Options(responseType: ResponseType.json));
+          options: Options(responseType: ResponseType.json,headers: {
+            "X-Firebase-AppCheck": tokenCaptcha
+          }),);
       if (response.statusCode == 200 || response.statusCode == 201) {
         return Charge.fromJson(response.data);
       }
@@ -462,9 +469,12 @@ class ComandaRepositoryHttp extends ComandaRepository {
   Future<Comanda> emitOrderPre({required NewOrderDto newOrder}) async {
     try {
       String path = "/comandas/pre-comanda/emitir-public";
+      final tokenCaptcha =await FirebaseAppCheck.instance.getLimitedUseToken();
       var response = await _dioClient.post(
           uri: path,
-          options: Options(responseType: ResponseType.json),
+          options: Options(responseType: ResponseType.json,headers: {
+            "X-Firebase-AppCheck": tokenCaptcha
+          }),
           body: newOrder.toJson());
       if (response.statusCode == 200) {
         return Comanda.fromJson(response.data);
@@ -514,9 +524,12 @@ class ComandaRepositoryHttp extends ComandaRepository {
       PaymentAttemptDto paymentAttemptDto) async {
     try {
       String path = "/solicitudes-cobro/intento-pago";
+      final tokenCaptcha =await FirebaseAppCheck.instance.getLimitedUseToken();
       var response = await _dioClient.post(
           uri: path,
-          options: Options(responseType: ResponseType.json),
+          options: Options(responseType: ResponseType.json,headers: {
+            "X-Firebase-AppCheck": tokenCaptcha
+          }),
           body: paymentAttemptDto.toJson());
       if (response.statusCode == 200) {
         return Charge.fromJsonAttempt(response.data, paymentAttemptDto.uuid);
@@ -572,8 +585,12 @@ class ComandaRepositoryHttp extends ComandaRepository {
   Future<Comanda> markAsCreated(String orderUuid) async {
     try {
       String path = "/comandas/pre-comanda-uuid/$orderUuid/crear";
+      final tokenCaptcha =await FirebaseAppCheck.instance.getLimitedUseToken();
       var response = await _dioClient.post(
-          uri: path, options: Options(responseType: ResponseType.json));
+          uri: path, 
+          options: Options(responseType: ResponseType.json,headers: {
+            "X-Firebase-AppCheck": tokenCaptcha
+          }));
       if (response.statusCode == 200) {
         return Comanda.fromJson(response.data);
       } else {

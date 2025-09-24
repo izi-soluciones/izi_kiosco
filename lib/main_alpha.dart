@@ -1,4 +1,5 @@
 import 'package:easy_localization/easy_localization.dart';
+import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
@@ -9,6 +10,8 @@ if (dart.library.html) 'package:flutter_web_plugins/url_strategy.dart' as web_ur
 import 'package:izi_kiosco/app/my_app.dart';
 import 'package:izi_kiosco/app/values/assets_keys.dart';
 import 'package:izi_kiosco/firebase_options.dart';
+
+
 void main()async {
   if(kIsWeb){
     web_url.usePathUrlStrategy();
@@ -19,6 +22,14 @@ void main()async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+
+  await FirebaseAppCheck.instance
+        // Your personal reCaptcha public key goes here:
+        .activate(
+      androidProvider: AndroidProvider.debug,
+      appleProvider: AppleProvider.debug,
+      webProvider: ReCaptchaV3Provider(dotenv.env["CAPTCHA_KEY"] ?? ""),
+    );
 
   PlatformDispatcher.instance.onError = (error, stack) {
     FirebaseCrashlytics.instance.recordError(error, stack);

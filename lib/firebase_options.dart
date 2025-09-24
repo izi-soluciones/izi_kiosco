@@ -47,29 +47,29 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyAxCpBi8JLQZkAf27-UGJZoS_8F0QO7DOI',
-    appId: '1:130455241774:web:03bd2a42eea271be54cbbf',
-    messagingSenderId: '130455241774',
-    projectId: 'izi-kiosk-prod',
-    authDomain: 'izi-kiosk-prod.firebaseapp.com',
-    storageBucket: 'izi-kiosk-prod.firebasestorage.app',
-    measurementId: 'G-CN7ZFRLY70',
+    apiKey: 'AIzaSyBQGOObT1i4bhAIbGnZm-0ENasaKqHjcIo',
+    appId: '1:222578891689:web:828bc07fdd928e3f8842b8',
+    messagingSenderId: '222578891689',
+    projectId: 'izi-app-360521',
+    authDomain: 'izi-app-360521.firebaseapp.com',
+    storageBucket: 'izi-app-360521.firebasestorage.app',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyBBNISJd8yJVJyni-cXqhaktBYkLQPj6Lk',
-    appId: '1:130455241774:android:4de7e71fbe64391654cbbf',
-    messagingSenderId: '130455241774',
-    projectId: 'izi-kiosk-prod',
-    storageBucket: 'izi-kiosk-prod.firebasestorage.app',
+    apiKey: 'AIzaSyA7khIYN0alJVMcLAaghO_4pY1zxG_hrkE',
+    appId: '1:222578891689:android:6320667178b7a92d8842b8',
+    messagingSenderId: '222578891689',
+    projectId: 'izi-app-360521',
+    storageBucket: 'izi-app-360521.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyDToLltOv4K5ZwNhtmCzTEE3nBjA2L1CfM',
-    appId: '1:130455241774:ios:309e613654727dc354cbbf',
-    messagingSenderId: '130455241774',
-    projectId: 'izi-kiosk-prod',
-    storageBucket: 'izi-kiosk-prod.firebasestorage.app',
+    apiKey: 'AIzaSyCdke_clvsVKz8sRmzTxwmmiF-L6F54Jz4',
+    appId: '1:222578891689:ios:11d5195f3aca0bc98842b8',
+    messagingSenderId: '222578891689',
+    projectId: 'izi-app-360521',
+    storageBucket: 'izi-app-360521.firebasestorage.app',
     iosBundleId: 'com.izisoluciones.kiosco.iziKiosco',
   );
+
 }

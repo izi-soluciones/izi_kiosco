@@ -1,26 +1,36 @@
 {
   "project_info": {
-    "project_number": "130455241774",
-    "project_id": "izi-kiosk-prod",
-    "storage_bucket": "izi-kiosk-prod.firebasestorage.app"
+    "project_number": "222578891689",
+    "project_id": "izi-app-360521",
+    "storage_bucket": "izi-app-360521.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:130455241774:android:4de7e71fbe64391654cbbf",
+        "mobilesdk_app_id": "1:222578891689:android:6320667178b7a92d8842b8",
         "android_client_info": {
           "package_name": "com.izisoluciones.kiosco.izi_kiosco"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "222578891689-v7umap5fd090r5cmsbgis7g6i6is233m.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
-          "current_key": "AIzaSyBBNISJd8yJVJyni-cXqhaktBYkLQPj6Lk"
+          "current_key": "AIzaSyA7khIYN0alJVMcLAaghO_4pY1zxG_hrkE"
         }
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "222578891689-v7umap5fd090r5cmsbgis7g6i6is233m.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }
