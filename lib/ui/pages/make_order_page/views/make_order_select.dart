@@ -10,10 +10,10 @@ import 'package:izi_kiosco/app/values/routes_keys.dart';
 import 'package:izi_kiosco/domain/blocs/make_order/make_order_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/page_utils/page_utils_bloc.dart';
 import 'package:izi_kiosco/domain/models/item.dart';
+import 'package:izi_kiosco/ui/general/izi_header_kiosk.dart';
 import 'package:izi_kiosco/ui/general/izi_scroll.dart';
 import 'package:izi_kiosco/ui/pages/make_order_page/modals/item_options_modal.dart';
 import 'package:izi_kiosco/ui/pages/make_order_page/widgets/make_order_category.dart';
-import 'package:izi_kiosco/ui/pages/make_order_page/widgets/make_order_header_lg.dart';
 import 'package:izi_kiosco/ui/pages/make_order_page/widgets/make_order_item_lg.dart';
 import 'package:izi_kiosco/ui/utils/custom_alerts.dart';
 import 'package:izi_kiosco/ui/utils/responsive_utils.dart';
@@ -47,11 +47,11 @@ class _MakeOrderSelectState extends State<MakeOrderSelect> {
           child: MakeOrderFeatured(state: widget.makeOrderState),
         ),*/
 
-        MakeOrderHeaderLg(onPop: () {
+        IziHeaderKiosk(onPop: () {
           GoRouter.of(context).goNamed(RoutesKeys.home);
           context.read<PageUtilsBloc>().closeScreenActive();
         },
-          hideLogo: !ru.isVertical() || ru.lwSm(),
+          hideLogo: !ru.isVertical() || ru.isXs(),
         ),
         _headerLarge(ru),
         Expanded(
@@ -97,7 +97,7 @@ class _MakeOrderSelectState extends State<MakeOrderSelect> {
           crossAxisSpacing: 16,
           controller: scrollControllerLg,
           padding:
-              const EdgeInsets.only(top: 16, right: 32, left: 32, bottom: 63),
+              EdgeInsets.only(top: ru.isXs()?0:16, right: 32, left: 32, bottom: 63),
           itemCount: items.length,
           itemBuilder: (BuildContext context, int index) {
             return MakeOrderItemLg(
@@ -152,12 +152,12 @@ class _MakeOrderSelectState extends State<MakeOrderSelect> {
   Widget _headerLarge(ResponsiveUtils ru) {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
-      padding: EdgeInsets.symmetric(horizontal: 16, vertical: ru.isVertical()?32:16),
+      padding: EdgeInsets.symmetric(horizontal: 16, vertical: ru.isXs()?16:ru.isVertical()?32:16),
       child: RowContainer(
           gap: 16,
           children: widget.makeOrderState.categories.asMap().entries.map((e) {
             return MakeOrderCategory(
-                isHorizontal: !ru.isVertical(),
+                isHorizontal: !ru.isVertical() || ru.isXs(),
                 icon: _selectIconCategory(e.value.nombre.toLowerCase()),
                 onPressed: () {
                   context.read<MakeOrderBloc>().changeCategory(e.key);

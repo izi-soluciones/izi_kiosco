@@ -24,7 +24,7 @@ class MakeOrderAmountBtn extends StatelessWidget {
       child: InkWell(
         onTap: onPressed,
         child: Padding(
-          padding: EdgeInsets.symmetric(vertical: medium?10:18, horizontal: 30),
+          padding: EdgeInsets.symmetric(vertical: medium?12:18, horizontal: 30),
           child: Row(
             mainAxisAlignment: noAmount?MainAxisAlignment.center:MainAxisAlignment.spaceBetween,
             children: [

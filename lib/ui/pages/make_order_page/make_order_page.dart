@@ -79,7 +79,7 @@ class _MakeOrderPageState extends State<MakeOrderPage> {
                         ),
                         if(ru.isVertical())
                         SizedBox(
-                          height: 280,
+                          height: ru.isXs()?200:280,
                           child: MakeOrderDetail(
                               state: state
                           ),

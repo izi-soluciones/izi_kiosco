@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:izi_design_system/atoms/izi_card.dart';
 import 'package:izi_design_system/atoms/izi_typography.dart';
 import 'package:izi_design_system/molecules/izi_btn.dart';
+import 'package:izi_design_system/molecules/izi_btn_icon.dart';
 import 'package:izi_design_system/molecules/izi_input.dart';
 import 'package:izi_design_system/tokens/colors.dart';
 import 'package:izi_design_system/tokens/izi_icons.dart';
@@ -54,7 +55,7 @@ class _MakeOrderDetailState extends State<MakeOrderDetail> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      if(ru.width>630)
+                      if(ru.gtXs())
                       IziText.titleSmall(
                           color: IziColors.darkGrey, text: "Mi orden:"),
                       Expanded(
@@ -74,7 +75,7 @@ class _MakeOrderDetailState extends State<MakeOrderDetail> {
                         fontWeight: FontWeight.w400),
                   ),
                 )),
-          ru.width>630?
+          ru.width>700?
           _totalOrder():_totalOrderVertical(ru)
         ],
       ),
@@ -83,11 +84,11 @@ class _MakeOrderDetailState extends State<MakeOrderDetail> {
   _totalOrderVertical(ResponsiveUtils ru) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-      child: Column(
+      child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          IziBtn(
-              buttonText: LocaleKeys.makeOrder_buttons_initAgain.tr(),
+          IziBtnIcon(
+              buttonIcon: IziIcons.trash,
               buttonType: ButtonType.outline,
               buttonSize: ButtonSize.medium,
               buttonOnPressed: () {
@@ -95,19 +96,21 @@ class _MakeOrderDetailState extends State<MakeOrderDetail> {
                 context.read<MakeOrderBloc>().resetItems();
               }),
           const SizedBox(
-            height: 8,
+            width: 8,
           ),
-          MakeOrderAmountBtn(
-              medium:true,
-              noAmount: ru.width<500,
-              onPressed: _getTotal() > 0
-                  ? () {
-                _next(context);
-              }
-                  : null,
-              text: LocaleKeys.makeOrder_buttons_confirm.tr(),
-              amount: (_getTotal() - widget.state.discountAmount).moneyFormat(
-                  currency: widget.state.currentCurrency?.simbolo)
+          Expanded(
+            child: MakeOrderAmountBtn(
+                medium:true,
+                noAmount: ru.width<500,
+                onPressed: _getTotal() > 0
+                    ? () {
+                  _next(context);
+                }
+                    : null,
+                text: ru.isXs()?LocaleKeys.makeOrder_buttons_confirmSm.tr():LocaleKeys.makeOrder_buttons_confirm.tr(),
+                amount: (_getTotal() - widget.state.discountAmount).moneyFormat(
+                    currency: widget.state.currentCurrency?.simbolo)
+            ),
           ),
           const SizedBox(
             height: 16,

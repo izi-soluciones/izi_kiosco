@@ -20,9 +20,9 @@ class PaymentShimmerPaymentMethod extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        IziHeaderKiosk(onBack: (){
+        IziHeaderKiosk(onPop: (){
           _cancelOrder(context);
-        }),
+        }, hideLogo: true,),
         Container(
           width: double.infinity,
             padding: const EdgeInsets.symmetric(vertical: 32),

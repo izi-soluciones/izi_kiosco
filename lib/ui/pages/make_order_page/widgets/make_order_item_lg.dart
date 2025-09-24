@@ -77,13 +77,13 @@ class MakeOrderItemLg extends StatelessWidget {
                               IziText.titleSmall(height: 1.1,maxLines: 3,color: IziColors.dark, text: item.nombre,textAlign: TextAlign.start),
                               if(item.descripcion!=null)
                               const SizedBox(height: 4,),
-                              if(item.descripcion!=null)
+                              if(item.descripcion!=null && ru.gtXs())
                               IziText.label(maxLines: 5,color: IziColors.darkGrey85, text: item.descripcion??"",textAlign: TextAlign.start,fontWeight: FontWeight.w400),
 
                             ],
                           ),
 
-                          IziText.titleSmall(color: IziColors.darkGrey, text: item.precioUnitario.moneyFormat(currency: state.currentCurrency?.simbolo), fontWeight: FontWeight.w400,textAlign: TextAlign.start),
+                          IziText.titleSmall(color: IziColors.darkGrey, text: item.precioUnitario.moneyFormat(currency: state.currentCurrency?.simbolo), fontWeight: FontWeight.w400,textAlign: TextAlign.start, mobile: ru.isXs()),
                           if(ru.isVertical() && ru.gtSm())
                           const SizedBox(height: 10,),
 

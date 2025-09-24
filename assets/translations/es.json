@@ -520,6 +520,7 @@
     "buttons": {
       "next": "Siguiente",
       "confirm": "Confirmar pedido",
+      "confirmSm": "Confirmar",
       "discount": "Descuento",
       "editDiscount": "Editar Descuentos",
       "accept": "Aceptar",
@@ -527,6 +528,7 @@
       "add": "Añadir",
       "cancel": "Cancelar",
       "confirmAndPay": "Confirmar y pagar",
+      "confirmAndPaySm": "Pagar",
       "addMore": "Agregar más",
       "confirmingOrder": "Confirmando orden",
       "initAgain": "Empezar de nuevo"

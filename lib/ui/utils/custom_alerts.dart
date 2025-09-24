@@ -334,23 +334,26 @@ class CustomAlerts {
             onWillPop: () async {
               return dismissible;
             },
-            child: Center(
-                child: ConstrainedBox(
-                    constraints: BoxConstraints(
-                        maxWidth: 400,
-                        maxHeight: size.height * 0.8,
-                        minHeight: 0,
-                        minWidth: 400),
-                    child: AlertDialog(
-                        insetPadding: const EdgeInsets.all(0),
-                        contentPadding: padding ?? const EdgeInsets.all(24),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8)),
-                        backgroundColor: IziColors.lightGrey30,
-                        content: SizedBox(
-                          width: 800,
-                          child: defaultScroll?SingleChildScrollView(child: child):child,
-                        )))),
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Center(
+                  child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                          maxWidth: 400,
+                          maxHeight: size.height * 0.8,
+                          minHeight: 0,
+                          minWidth: 400),
+                      child: AlertDialog(
+                          insetPadding: const EdgeInsets.all(0),
+                          contentPadding: padding ?? const EdgeInsets.all(24),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8)),
+                          backgroundColor: IziColors.lightGrey30,
+                          content: SizedBox(
+                            width: 800,
+                            child: defaultScroll?SingleChildScrollView(child: child):child,
+                          )))),
+            ),
           );
         });
   }

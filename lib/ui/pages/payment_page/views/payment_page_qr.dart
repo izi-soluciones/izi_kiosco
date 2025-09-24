@@ -60,9 +60,9 @@ class _PaymentPageQRState extends State<PaymentPageQR> {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        IziHeaderKiosk(onBack: () {
+        IziHeaderKiosk(onPop: () {
           context.read<PaymentBloc>().cancelQR(context.read<AuthBloc>().state);
-        }),
+        },hideLogo: true,),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [

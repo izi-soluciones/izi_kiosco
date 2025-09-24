@@ -24,7 +24,7 @@ class _PaymentPageCardState extends State<PaymentPageCard> {
       mainAxisSize: MainAxisSize.max,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const IziHeaderKiosk(onBack: null),
+        const IziHeaderKiosk(onPop: null,hideLogo: true,),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [

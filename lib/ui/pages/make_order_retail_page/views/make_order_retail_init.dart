@@ -12,7 +12,7 @@ import 'package:izi_kiosco/app/values/routes_keys.dart';
 import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/make_order_retail/make_order_retail_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/page_utils/page_utils_bloc.dart';
-import 'package:izi_kiosco/ui/pages/make_order_page/widgets/make_order_header_lg.dart';
+import 'package:izi_kiosco/ui/general/izi_header_kiosk.dart';
 import 'package:izi_kiosco/ui/utils/dynamic_list.dart';
 import 'package:izi_kiosco/ui/utils/responsive_utils.dart';
 import 'package:lottie/lottie.dart';
@@ -127,7 +127,7 @@ class _MakeOrderRetailInitState extends State<MakeOrderRetailInit> {
             left: 0,
             right: 0,
             child:
-          MakeOrderHeaderLg(onPop: () {
+          IziHeaderKiosk(onPop: () {
             GoRouter.of(context).goNamed(RoutesKeys.home);
             context.read<PageUtilsBloc>().closeScreenActive();
           },

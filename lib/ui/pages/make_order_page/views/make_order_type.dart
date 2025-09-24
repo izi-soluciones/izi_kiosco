@@ -11,7 +11,7 @@ import 'package:izi_kiosco/app/values/locale_keys.g.dart';
 import 'package:izi_kiosco/app/values/routes_keys.dart';
 import 'package:izi_kiosco/domain/blocs/make_order/make_order_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/page_utils/page_utils_bloc.dart';
-import 'package:izi_kiosco/ui/pages/make_order_page/widgets/make_order_header_lg.dart';
+import 'package:izi_kiosco/ui/general/izi_header_kiosk.dart';
 import 'package:izi_kiosco/ui/utils/dynamic_list.dart';
 import 'package:izi_kiosco/ui/utils/responsive_utils.dart';
 
@@ -36,10 +36,12 @@ class _MakeOrderTypeState extends State<MakeOrderType> {
     return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              MakeOrderHeaderLg(onPop: () {
+              IziHeaderKiosk(onPop: () {
                 GoRouter.of(context).goNamed(RoutesKeys.home);
                 context.read<PageUtilsBloc>().closeScreenActive();
-              }),
+              },
+              hideLogo: ru.isXs(),
+              ),
               const SizedBox(
                 height: 60,
               ),
@@ -57,7 +59,7 @@ class _MakeOrderTypeState extends State<MakeOrderType> {
                               padding: const EdgeInsets.symmetric(horizontal: 16),
                               child: IziText.titleBig(
                                   color: IziColors.darkGrey,
-                                  mobile: ru.isXs(),
+                                  mobile: ru.lwSm(),
                                   cropText: false,
                                   textAlign: TextAlign.center,
                                   maxLines: 2,
@@ -71,7 +73,10 @@ class _MakeOrderTypeState extends State<MakeOrderType> {
                             ),
                             Flexible(
                               child: ConstrainedBox(
-                                constraints: BoxConstraints(maxHeight: ru.gtSm() && ru.isVertical()?500:400),
+                                constraints: BoxConstraints(
+                                  maxHeight: ru.gtSm() && ru.isVertical()?500:400,
+                                  maxWidth: ru.isXs()?280:double.infinity
+                                  ),
                                 child: Padding(
                                   padding: const EdgeInsets.symmetric(horizontal: 32.0),
                                   child: DynamicList(
@@ -81,7 +86,7 @@ class _MakeOrderTypeState extends State<MakeOrderType> {
                                       Expanded(
                                           child: _buttonSelect(IziIcons.hereOrder, LocaleKeys.makeOrder_body_eatHere.tr(), false,ru)
                                       ),
-                                      const SizedBox(width: 24,),
+                                      const SizedBox(width: 24,height: 24,),
                                       Expanded(
                                           child: _buttonSelect(IziIcons.takeAwayOrder, LocaleKeys.makeOrder_body_takeAway.tr(), true,ru)
                                       )
@@ -131,10 +136,10 @@ class _MakeOrderTypeState extends State<MakeOrderType> {
             ),
           ),
         ),
-        const SizedBox(height: 12,),
-        ru.gtSm()?
+        SizedBox(height: ru.gtXs()?12:4,),
+        ru.gtXs()?
         IziText.titleBig(color: IziColors.darkGrey85, text: text,maxLines: 1,textAlign: TextAlign.center):
-        IziText.titleMedium(color: IziColors.darkGrey85, text: text,maxLines: 1,textAlign: TextAlign.center,fontWeight: FontWeight.w600),
+        IziText.bodyBig(color: IziColors.darkGrey85, text: text,maxLines: 1,textAlign: TextAlign.center,fontWeight: FontWeight.w600),
       ],
     );
   }

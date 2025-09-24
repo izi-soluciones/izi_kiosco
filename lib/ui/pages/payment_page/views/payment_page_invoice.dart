@@ -60,9 +60,9 @@ class _PaymentPageInvoiceState extends State<PaymentPageInvoice> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              IziHeaderKiosk(onBack: () {
+              IziHeaderKiosk(onPop: () {
                 context.read<PaymentBloc>().changeStep(1);
-              }),
+              },hideLogo: true,),
               ConstrainedBox(
                 constraints: const BoxConstraints(
                   maxWidth: 600,

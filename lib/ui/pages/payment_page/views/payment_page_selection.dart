@@ -29,9 +29,9 @@ class PaymentPageSelection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        IziHeaderKiosk(onBack: (){
+        IziHeaderKiosk(onPop: (){
           _cancelOrder(context);
-        }),
+        },hideLogo: true,),
         Expanded(
           child: SingleChildScrollView(
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),

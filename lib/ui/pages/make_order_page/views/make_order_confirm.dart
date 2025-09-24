@@ -18,10 +18,10 @@ import 'package:izi_kiosco/domain/blocs/page_utils/page_utils_bloc.dart';
 import 'package:izi_kiosco/domain/models/comanda.dart';
 import 'package:izi_kiosco/domain/models/item.dart';
 import 'package:izi_kiosco/domain/models/payment_obj.dart';
+import 'package:izi_kiosco/ui/general/izi_header_kiosk.dart';
 import 'package:izi_kiosco/ui/general/izi_scroll.dart';
 import 'package:izi_kiosco/ui/pages/make_order_page/modals/item_options_modal.dart';
 import 'package:izi_kiosco/ui/pages/make_order_page/widgets/make_order_amount_btn.dart';
-import 'package:izi_kiosco/ui/pages/make_order_page/widgets/make_order_header_lg.dart';
 import 'package:izi_kiosco/ui/utils/custom_alerts.dart';
 import 'package:izi_kiosco/ui/utils/money_formatter.dart';
 import 'package:izi_kiosco/ui/utils/responsive_utils.dart';
@@ -75,7 +75,7 @@ class _MakeOrderConfirmState extends State<MakeOrderConfirm> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  MakeOrderHeaderLg(onPop: () {
+                  IziHeaderKiosk(onPop: () {
                     context.read<MakeOrderBloc>().changeStepStatus(1);
                   },hideLogo: !ru.isVertical()),
                   const SizedBox(
@@ -92,6 +92,16 @@ class _MakeOrderConfirmState extends State<MakeOrderConfirm> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.stretch,
                                 children: [
+                                  ru.isXs()?
+                                  IziText.bodyBig(
+                                      color: IziColors.darkGrey,
+                                      textAlign: TextAlign.left,
+                                      text: "${widget.state.takeAway?LocaleKeys
+                                          .makeOrder_body_confirmOrderTakeWay
+                                          .tr():LocaleKeys
+                                          .makeOrder_body_confirmOrderEatHere
+                                          .tr()}:",
+                                      fontWeight: FontWeight.w600):
                                   IziText.titleBig(
                                       color: IziColors.darkGrey,
                                       textAlign: TextAlign.left,
@@ -101,20 +111,20 @@ class _MakeOrderConfirmState extends State<MakeOrderConfirm> {
                                           .makeOrder_body_confirmOrderEatHere
                                           .tr()}:",
                                       fontWeight: FontWeight.w500),
-                                  const SizedBox(
-                                    height: 32,
+                                  SizedBox(
+                                    height: ru.isXs()?16:32,
                                   ),
                                   Flexible(
                                     child: IziScroll(
                                       scrollController: scrollController,
                                       child: SingleChildScrollView(
                                         controller: scrollController,
-                                        child: _listItems(widget.state),
+                                        child: _listItems(widget.state, ru),
                                       ),
                                     ),
                                   ),
-                                  const SizedBox(
-                                    height: 30,
+                                  SizedBox(
+                                    height: ru.isXs()?16:30,
                                   ),
                                   // Row(
                                   //   mainAxisAlignment: MainAxisAlignment.end,
@@ -137,6 +147,13 @@ class _MakeOrderConfirmState extends State<MakeOrderConfirm> {
                                     mainAxisSize: MainAxisSize.min,
                                     mainAxisAlignment: MainAxisAlignment.end,
                                     children: [
+                                      ru.isXs()?
+                                      IziText.bodyBig(
+                                        color: IziColors.darkGrey,
+                                        fontWeight: FontWeight.w500,
+                                        text:
+                                            "${LocaleKeys.makeOrder_labels_total.tr()}: ${(_getTotal(widget.state) - widget.state.discountAmount).moneyFormat(currency: widget.state.currentCurrency?.simbolo)}",
+                                      ):
                                       IziText.titleMedium(
                                         color: IziColors.darkGrey,
                                         fontWeight: FontWeight.w500,
@@ -156,7 +173,7 @@ class _MakeOrderConfirmState extends State<MakeOrderConfirm> {
                       ),
                     ),
                   ),
-                  _totalOrder(context, widget.state)
+                  _totalOrder(context, widget.state, ru)
                 ],
               ),
             ),
@@ -169,7 +186,7 @@ class _MakeOrderConfirmState extends State<MakeOrderConfirm> {
         ));
   }
 
-  _listItems(MakeOrderState state) {
+  _listItems(MakeOrderState state, ResponsiveUtils ru) {
     var cIndex = -1;
     return IziCard(
       child: Column(
@@ -192,7 +209,7 @@ class _MakeOrderConfirmState extends State<MakeOrderConfirm> {
                             ? controllers[cIndex]
                             : null,
                         e.key,
-                        i.key),
+                        i.key, ru),
                   );
                 },
               )
@@ -203,7 +220,7 @@ class _MakeOrderConfirmState extends State<MakeOrderConfirm> {
     );
   }
 
-  _totalOrder(BuildContext context, MakeOrderState state) {
+  _totalOrder(BuildContext context, MakeOrderState state, ResponsiveUtils ru) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
       child: Column(
@@ -213,6 +230,14 @@ class _MakeOrderConfirmState extends State<MakeOrderConfirm> {
             constraints: const BoxConstraints(maxWidth: 1080),
             child: Row(
               children: [
+                ru.isXs()?
+          IziBtnIcon(
+              buttonIcon: IziIcons.plusB,
+              buttonType: ButtonType.outline,
+              buttonSize: ButtonSize.medium,
+              buttonOnPressed: () {
+                        context.read<MakeOrderBloc>().changeStepStatus(1);
+              }):
                 Expanded(
                   flex: 5,
                   child: IziBtn(
@@ -229,12 +254,14 @@ class _MakeOrderConfirmState extends State<MakeOrderConfirm> {
                 Expanded(
                     flex: 8,
                     child: MakeOrderAmountBtn(
+                      noAmount: ru.width<500,
+                      medium: ru.isXs(),
                         onPressed: _getTotal(state) > 0
                             ? () {
                                 _emitOrder(context);
                               }
                             : null,
-                        text: LocaleKeys.makeOrder_buttons_confirmAndPay.tr(),
+                        text: ru.isXs()?LocaleKeys.makeOrder_buttons_confirmAndPaySm.tr(): LocaleKeys.makeOrder_buttons_confirmAndPay.tr(),
                         amount: (_getTotal(state) - state.discountAmount)
                             .moneyFormat(
                                 currency: state.currentCurrency?.simbolo)))
@@ -250,7 +277,7 @@ class _MakeOrderConfirmState extends State<MakeOrderConfirm> {
   }
 
   _item(BuildContext context,Item item, TextEditingController? controller, int indexCategory,
-      int indexItem) {
+      int indexItem, ResponsiveUtils ru) {
     return InkWell(
       onTap: () {
         _editItem(context, item, indexCategory, indexItem);
@@ -260,12 +287,14 @@ class _MakeOrderConfirmState extends State<MakeOrderConfirm> {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            IziText.title(color: IziColors.dark, text: "x${item.cantidad}"),
+            IziText.title(color: IziColors.dark, text: "x${item.cantidad}", mobile: ru.isXs()),
+            if(ru.gtXxs())
             const SizedBox(
               width: 16,
             ),
+            if(ru.gtXxs())
             SizedBox(
-              height: 68,
+              height: ru.isXs()?32:68,
               child: AspectRatio(
                 aspectRatio: 1,
                 child: Container(
@@ -301,30 +330,38 @@ class _MakeOrderConfirmState extends State<MakeOrderConfirm> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 mainAxisSize: MainAxisSize.min,
                 children: [
+                  ru.isXs()?
+                  IziText.body(
+                      textAlign: TextAlign.left,
+                      color: IziColors.dark,
+                      text: item.nombre,
+                      fontWeight: FontWeight.w600,
+                      maxLines: 10):
                   IziText.title(
                       textAlign: TextAlign.left,
                       color: IziColors.dark,
                       text: item.nombre,
                       fontWeight: FontWeight.w600,
-                      maxLines: 2),
+                      maxLines: 10),
 
                   ...item.modificadores.where((element) {
                     return element.caracteristicas.indexWhere((c) => c.check) !=-1;
                   }).map(
                         (e) {
-                          return Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                          IziText.bodySmall(
+                          return RichText(
+                            text: TextSpan(
+                              children: [
+                          TextSpan(
+                             text: "${e.nombre}: " ,
+                            style: IziText.bodySmall(
                           color: IziColors.dark,
-                              text:
-                              "${e.nombre}: " ,
-                              fontWeight: FontWeight.w500),
-                          Expanded(
-                            child: IziText.bodySmall(
-                            color: IziColors.darkGrey,
-                            maxLines: 50,
-                            text: e.caracteristicas.fold("", (previousValue, c){
+                              text:"",
+                              fontWeight: FontWeight.w500).style,
+                          )
+                          ,
+                          TextSpan(
+                            text:  e.caracteristicas.fold("", (previousValue, c){
+                              previousValue ??= "";
                               if(!c.check){
                                 return previousValue;
                               }
@@ -334,10 +371,16 @@ class _MakeOrderConfirmState extends State<MakeOrderConfirm> {
                               previousValue+="${c.nombre}${c.modPrecio > 0 ? " (+${c.modPrecio})" : ""}";
                               return previousValue;
                             }),
-                            fontWeight: FontWeight.w400),
+                            style: IziText.bodySmall(
+                            color: IziColors.darkGrey85,
+                            maxLines: 50,
+                            text:"",
+                            fontWeight: FontWeight.w400).style,
                           )
                             ],
-                          );
+                          
+                            )
+                            );
                       // return Column(
                       //   crossAxisAlignment: CrossAxisAlignment.start,
                       //   children: e.caracteristicas
@@ -378,7 +421,7 @@ class _MakeOrderConfirmState extends State<MakeOrderConfirm> {
             IziBtnIcon(
                 buttonIcon: IziIcons.close,
                 buttonType: ButtonType.secondary,
-                buttonSize: ButtonSize.medium,
+                buttonSize: ru.isXs()?ButtonSize.small: ButtonSize.medium,
                 color: IziColors.red,
                 buttonOnPressed: () {
                   context
