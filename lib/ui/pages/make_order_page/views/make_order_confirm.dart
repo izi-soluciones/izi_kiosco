@@ -77,7 +77,7 @@ class _MakeOrderConfirmState extends State<MakeOrderConfirm> {
                 children: [
                   IziHeaderKiosk(onPop: () {
                     context.read<MakeOrderBloc>().changeStepStatus(1);
-                  },hideLogo: !ru.isVertical()),
+                  },smallLogo: !ru.isVertical()),
                   const SizedBox(
                     height: 40,
                   ),

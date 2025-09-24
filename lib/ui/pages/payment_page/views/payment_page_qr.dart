@@ -57,110 +57,124 @@ class _PaymentPageQRState extends State<PaymentPageQR> {
   @override
   Widget build(BuildContext context) {
     return Column(
-      mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         IziHeaderKiosk(onPop: () {
           context.read<PaymentBloc>().cancelQR(context.read<AuthBloc>().state);
         },hideLogo: true,),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 600),
-              child: Column(
+        Expanded(
+          child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: Column(
+                mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  IziText.titleMedium(
-                      color: IziColors.dark,
-                      text: LocaleKeys.payment_titles_qrPayment.tr()),
-                  const SizedBox(
-                    height: 8,
+              children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Flexible(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 600),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      IziText.titleMedium(
+                          color: IziColors.dark,
+                          text: LocaleKeys.payment_titles_qrPayment.tr()),
+                      const SizedBox(
+                        height: 8,
+                      ),
+                      IziText.titleSmall(
+                          textAlign: TextAlign.center,
+                          color: IziColors.dark,
+                          text: LocaleKeys.payment_subtitles_scanQRtoPay.tr(),
+                          fontWeight: FontWeight.w500),
+                    ],
                   ),
-                  IziText.titleSmall(
-                      textAlign: TextAlign.center,
-                      color: IziColors.dark,
-                      text: LocaleKeys.payment_subtitles_scanQRtoPay.tr(),
-                      fontWeight: FontWeight.w500),
-                ],
+                ),
               ),
-            ),
-          ],
-        ),
-        Flexible(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxHeight: 600),
-            child: widget.state.qrCharge != null && !widget.state.qrLoading
-                ? _qrWidget()
-                : widget.state.qrLoading
-                    ? const Padding(
-                        padding: EdgeInsets.only(bottom: 30),
-                        child: Center(
-                          child: SizedBox(
-                            height: 40,
-                            width: 40,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 3,
+            ],
+          ),
+          Flexible(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxHeight: 600),
+              child: widget.state.qrCharge != null && !widget.state.qrLoading
+                  ? _qrWidget()
+                  : widget.state.qrLoading
+                      ? const Padding(
+                          padding: EdgeInsets.only(bottom: 30),
+                          child: Center(
+                            child: SizedBox(
+                              height: 40,
+                              width: 40,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 3,
+                              ),
                             ),
                           ),
-                        ),
-                      )
-                    : const SizedBox.shrink(),
+                        )
+                      : const SizedBox.shrink(),
+            ),
           ),
-        ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 600),
-              child: Column(
-                children: [
-                  if (widget.state.qrCharge != null)
-                    const SizedBox(
-                      height: 10,
-                    ),
-                  if (widget.state.qrCharge != null)
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        IziText.body(
-                            color: IziColors.darkGrey,
-                            text: "Tiempo Restante: ",
-                            fontWeight: FontWeight.w400),
-                        IziText.body(
-                            color: IziColors.primary,
-                            text: "${qrRemaining}s",
-                            fontWeight: FontWeight.w400),
-                      ],
-                    ),
-                  const SizedBox(
-                    height: 8,
-                  ),
-                  IziText.titleMedium(
-                      color: IziColors.darkGrey,
-                      text:
-                          "${LocaleKeys.payment_body_total.tr()}: ${(widget.state.paymentObj?.amount ?? 0).moneyFormat(currency: widget.state.currentCurrency?.simbolo)}",
-                      fontWeight: FontWeight.w600),
-                  const SizedBox(
-                    height: 50,
-                  ),
-                  if (widget.state.qrWait)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 32.0),
-                      child: IziText.titleSmall(
-                          maxLines: 5,
-                          textAlign: TextAlign.center,
-                          color: IziColors.secondaryDarken,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Flexible(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 600),
+                  child: Column(
+                    children: [
+                      if (widget.state.qrCharge != null)
+                        const SizedBox(
+                          height: 10,
+                        ),
+                      if (widget.state.qrCharge != null)
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            IziText.body(
+                                color: IziColors.darkGrey,
+                                text: "Tiempo Restante: ",
+                                fontWeight: FontWeight.w400),
+                            IziText.body(
+                                color: IziColors.primary,
+                                text: "${qrRemaining}s",
+                                fontWeight: FontWeight.w400),
+                          ],
+                        ),
+                      const SizedBox(
+                        height: 8,
+                      ),
+                      IziText.titleMedium(
+                          color: IziColors.darkGrey,
                           text:
-                              "Si ya hiciste el pago, espera unos segundos a que recibamos la confirmación",
-                          fontWeight: FontWeight.w500),
-                    ),
+                              "${LocaleKeys.payment_body_total.tr()}: ${(widget.state.paymentObj?.amount ?? 0).moneyFormat(currency: widget.state.currentCurrency?.simbolo)}",
+                          fontWeight: FontWeight.w600),
+                      const SizedBox(
+                        height: 50,
+                      ),
+                      if (widget.state.qrWait)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 32.0),
+                          child: IziText.titleSmall(
+                              maxLines: 5,
+                              textAlign: TextAlign.center,
+                              color: IziColors.secondaryDarken,
+                              text:
+                                  "Si ya hiciste el pago, espera unos segundos a que recibamos la confirmación",
+                              fontWeight: FontWeight.w500),
+                        ),
+                    ],
+                  ),
+                ),
+              )
+            ],
+          )
                 ],
-              ),
-            )
-          ],
+            ),
+            ),
         )
-      ],
+        ],
     );
   }
 

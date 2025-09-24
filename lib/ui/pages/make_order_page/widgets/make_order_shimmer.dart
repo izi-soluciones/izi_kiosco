@@ -25,7 +25,7 @@ class MakeOrderShimmer extends StatelessWidget {
           GoRouter.of(context).goNamed(RoutesKeys.home);
           context.read<PageUtilsBloc>().closeScreenActive();
         },
-    hideLogo: !ru.isVertical() || ru.isXs(),),
+    smallLogo: !ru.isVertical() || ru.isXs(),),
         Shimmer.fromColors(
             baseColor: IziColors.grey25,
             highlightColor: IziColors.lightGrey30,

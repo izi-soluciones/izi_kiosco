@@ -40,7 +40,7 @@ class _MakeOrderTypeState extends State<MakeOrderType> {
                 GoRouter.of(context).goNamed(RoutesKeys.home);
                 context.read<PageUtilsBloc>().closeScreenActive();
               },
-              hideLogo: ru.isXs(),
+              smallLogo: ru.isXs(),
               ),
               const SizedBox(
                 height: 60,

@@ -45,11 +45,13 @@ class PaymentPageSelection extends StatelessWidget {
                   IziText.titleBig(
                       color: IziColors.darkGrey,
                       text: LocaleKeys.payment_titles_paymentMethods.tr(),
+                      maxLines: 10,
                       fontWeight: FontWeight.w600),
                   const SizedBox(height: 16,),
                   IziText.titleSmall(
                       color: IziColors.darkGrey85,
                       text: LocaleKeys.payment_subtitles_selectPaymentMethod.tr(),
+                      maxLines: 10,
                       fontWeight: FontWeight.w600),
                   const SizedBox(height: 16,),
                   _methods(context, authState),

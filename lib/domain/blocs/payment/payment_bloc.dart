@@ -247,7 +247,7 @@ class PaymentBloc extends Cubit<PaymentState> {
       if (paymentType == PaymentType.cashRegister) {
         emit(state.copyWith(status: PaymentStatus.processingOrder));
         Comanda comanda =
-            await _comandaRepository.markAsCreated(state.paymentObj?.id ?? 0);
+            await _comandaRepository.markAsCreated(state.paymentObj?.uuid ?? "");
         if (comanda.numero is int) {
           _printRolloOrder(authState,
               orderNumber: (comanda.numero as int),
@@ -928,7 +928,7 @@ class PaymentBloc extends Cubit<PaymentState> {
       PaymentDto newPayment = PaymentDto(
         ventaData: ventaData,
           orderId: state.paymentObj?.id ?? 0,
-          metodoPago: AppConstants.idPaymentMethodPOS);
+          metodoPago: metodoPago);
       return newPayment;
   }
 }

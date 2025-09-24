@@ -57,9 +57,9 @@ class _IziScreenInactiveState extends State<IziScreenInactive> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  IziText.titleBig(cropText: false,textAlign: TextAlign.center,color: IziColors.dark, text: LocaleKeys.general_body_thisScreenClose.tr(args: [time.toString()]),fontWeight: FontWeight.w600,maxLines: 2,),
+                  IziText.titleBig(cropText: false,textAlign: TextAlign.center,color: IziColors.dark, text: LocaleKeys.general_body_thisScreenClose.tr(args: [time.toString()]),fontWeight: FontWeight.w600,maxLines: 5,),
                   const SizedBox(height: 8,),
-                  IziText.bodyBig(color: IziColors.darkGrey, text: LocaleKeys.general_buttons_pressToContinue.tr(),fontWeight: FontWeight.w600),
+                  IziText.bodyBig(color: IziColors.darkGrey, text: LocaleKeys.general_buttons_pressToContinue.tr(),fontWeight: FontWeight.w600, maxLines: 5),
                   const SizedBox(height: 8,),
                   const SizedBox(
                     width: 15,

@@ -11,14 +11,15 @@ import 'package:izi_kiosco/ui/utils/responsive_utils.dart';
 class IziHeaderKiosk extends StatelessWidget {
   final VoidCallback? onPop;
   final bool hideLogo;
-  const IziHeaderKiosk({super.key,this.onPop,this.hideLogo=false});
+  final bool smallLogo;
+  const IziHeaderKiosk({super.key,this.onPop,this.hideLogo=false,this.smallLogo=false});
 
   @override
   Widget build(BuildContext context) {
     final ru= ResponsiveUtils(context);
     return Container(
       color: ru.isXs()?Colors.white:null,
-      height: ru.isXs()?50:(hideLogo?70:140),
+      height: ru.isXs()?50:(smallLogo?70:140),
       child: Stack(
         children: [
           if(onPop!=null)
@@ -32,6 +33,7 @@ class IziHeaderKiosk extends StatelessWidget {
               ),
             ),
           ),
+          if(!hideLogo)
           Positioned(
             right: 0,
             left: 0,
@@ -41,7 +43,7 @@ class IziHeaderKiosk extends StatelessWidget {
               children: [
                 context.read<AuthBloc>().state.currentContribuyente?.logo != null
                     ? SizedBox(
-                    height: ru.isXs()?25:(hideLogo?50:100),
+                    height: ru.isXs()?25:(smallLogo?50:100),
                     child: CachedNetworkImage(
                       imageUrl:
                       "${dotenv.env[EnvKeys.apiUrl]}/contribuyentes/${context.read<AuthBloc>().state.currentContribuyente?.id}/logo",

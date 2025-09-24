@@ -131,7 +131,7 @@ class _MakeOrderRetailInitState extends State<MakeOrderRetailInit> {
             GoRouter.of(context).goNamed(RoutesKeys.home);
             context.read<PageUtilsBloc>().closeScreenActive();
           },
-          hideLogo: ru.lwMd(),
+          smallLogo: ru.lwMd(),
           ),
            
           )

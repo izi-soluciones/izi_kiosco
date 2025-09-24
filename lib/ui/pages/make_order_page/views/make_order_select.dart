@@ -51,7 +51,7 @@ class _MakeOrderSelectState extends State<MakeOrderSelect> {
           GoRouter.of(context).goNamed(RoutesKeys.home);
           context.read<PageUtilsBloc>().closeScreenActive();
         },
-          hideLogo: !ru.isVertical() || ru.isXs(),
+          smallLogo: !ru.isVertical() || ru.isXs(),
         ),
         _headerLarge(ru),
         Expanded(

@@ -72,13 +72,30 @@ class _PaymentPageInvoiceState extends State<PaymentPageInvoice> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
+                      if(ru.isXs())
+                      const SizedBox(height: 8,),
+                      ru.isXs()?
+                      IziText.titleMedium(
+                          color: IziColors.darkGrey,
+                          fontWeight: FontWeight.w600,
+                          maxLines: 10,
+                          text: LocaleKeys.payment_titles_invoiceData.tr()):
                       IziText.titleBig(
                           color: IziColors.dark,
                           fontWeight: FontWeight.w600,
+                          maxLines: 10,
                           text: LocaleKeys.payment_titles_invoiceData.tr()),
                       const SizedBox(
                         height: 16,
                       ),
+                      ru.isXs()?
+                      IziText.bodyBig(
+                          color: IziColors.dark,
+                          maxLines: 4,
+                          text:
+                              "${LocaleKeys.payment_subtitles_beforePaymentNeedData.tr()}:",
+                          fontWeight: FontWeight.w500):
+
                       IziText.titleSmall(
                           color: IziColors.dark,
                           maxLines: 4,

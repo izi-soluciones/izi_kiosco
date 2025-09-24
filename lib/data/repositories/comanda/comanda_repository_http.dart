@@ -569,9 +569,9 @@ class ComandaRepositoryHttp extends ComandaRepository {
   }
 
   @override
-  Future<Comanda> markAsCreated(int orderId) async {
+  Future<Comanda> markAsCreated(String orderUuid) async {
     try {
-      String path = "/comandas/pre-comanda/$orderId/crear";
+      String path = "/comandas/pre-comanda-uuid/$orderUuid/crear";
       var response = await _dioClient.post(
           uri: path, options: Options(responseType: ResponseType.json));
       if (response.statusCode == 200) {
