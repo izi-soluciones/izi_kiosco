@@ -4,6 +4,7 @@ class PaymentAttemptDto {
   String nit;
   String razonSocial;
   String telefonoComprador;
+  String? correoElectronico;
   Map? tipoDocumento;
   String? complemento;
 
@@ -14,6 +15,7 @@ class PaymentAttemptDto {
         required this.nit,
         required this.razonSocial,
         required this.telefonoComprador,
+        this.correoElectronico,
         this.tipoDocumento,
         this.complemento
       });
@@ -27,7 +29,8 @@ class PaymentAttemptDto {
       "razonSocial": razonSocial,
       "telefonoComprador": telefonoComprador,
       if(complemento!=null)"complemento": complemento,
-      if(tipoDocumento!=null)"tipoDocumento": tipoDocumento
+      if(tipoDocumento!=null)"tipoDocumento": tipoDocumento,
+      if(correoElectronico!=null)"correoElectronico": correoElectronico
     }
   };
 }

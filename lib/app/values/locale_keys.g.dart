@@ -266,6 +266,11 @@ abstract class  LocaleKeys {
   static const payment_inputs_businessName_errors_required = 'payment.inputs.businessName.errors.required';
   static const payment_inputs_businessName_errors = 'payment.inputs.businessName.errors';
   static const payment_inputs_businessName = 'payment.inputs.businessName';
+  static const payment_inputs_email_label = 'payment.inputs.email.label';
+  static const payment_inputs_email_placeholder = 'payment.inputs.email.placeholder';
+  static const payment_inputs_email_errors_invalid = 'payment.inputs.email.errors.invalid';
+  static const payment_inputs_email_errors = 'payment.inputs.email.errors';
+  static const payment_inputs_email = 'payment.inputs.email';
   static const payment_inputs_phoneNumber_label = 'payment.inputs.phoneNumber.label';
   static const payment_inputs_phoneNumber_placeholder = 'payment.inputs.phoneNumber.placeholder';
   static const payment_inputs_phoneNumber_description = 'payment.inputs.phoneNumber.description';

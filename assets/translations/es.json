@@ -338,6 +338,13 @@
           "required": "La razón social es requerida"
         }
       },
+      "email": {
+        "label": "Ingresa el correo electronico",
+        "placeholder": "example@correo.com",
+        "errors": {
+          "invalid": "Email inválido"
+        }
+      },
       "phoneNumber": {
         "label": "Ingresa tu número de celular",
         "placeholder": "Ingresa tu número de teléfono",

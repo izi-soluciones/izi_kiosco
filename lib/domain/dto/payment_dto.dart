@@ -24,12 +24,14 @@ class PaymentDtoVentaData{
   String? complemento;
   String razonSocial;
   String telefonoComprador;
+  String? correoElectronico;
 
 
   PaymentDtoVentaData(
       {required this.tipoDocumento,
       required this.complemento,
       required this.nit,
+      this.correoElectronico,
       required this.razonSocial,
       required this.telefonoComprador});
 
@@ -38,6 +40,7 @@ class PaymentDtoVentaData{
     "nit": nit,
     if(complemento!=null)"complemento": complemento,
     "razonSocial": razonSocial,
-    "telefonoComprador": telefonoComprador
+    "telefonoComprador": telefonoComprador,
+    if(correoElectronico!=null)"correoElectronico": correoElectronico
   };
 }

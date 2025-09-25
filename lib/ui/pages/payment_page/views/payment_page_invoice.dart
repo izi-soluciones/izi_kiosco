@@ -3,6 +3,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:izi_design_system/atoms/izi_link.dart';
 import 'package:izi_design_system/atoms/izi_typography.dart';
 import 'package:izi_design_system/molecules/izi_btn.dart';
 import 'package:izi_design_system/molecules/izi_input.dart';
@@ -49,6 +50,8 @@ class _PaymentPageInvoiceState extends State<PaymentPageInvoice> {
 
   int qrLock = 0;
   int qrRemaining = 0;
+
+  bool showEmail=false;
 
 
   @override
@@ -302,6 +305,9 @@ class _PaymentPageInvoiceState extends State<PaymentPageInvoice> {
         if (state.businessName.value != businessNameController.text) {
           businessNameController.text = state.businessName.value;
         }
+        if (state.email.value != emailController.text) {
+          emailController.text = state.email.value;
+        }
       },
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -532,6 +538,48 @@ class _PaymentPageInvoiceState extends State<PaymentPageInvoice> {
               text: LocaleKeys.payment_inputs_phoneNumber_description.tr(),
               fontWeight: FontWeight.w500,
               maxLines: 3),
+          const SizedBox(height: 16),
+          if(!showEmail)
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              ru.gtSm()?
+          IziLinkBig(linkText: "+ Agregar correo electrónico", linkOnPressed: (){
+            setState(() {
+              showEmail=true;
+            });
+          }, linkColor: IziColors.primary):
+          IziLink(linkText: "+ Agregar correo electrónico", linkOnPressed: (){
+            setState(() {
+              showEmail=true;
+            });}, linkColor: IziColors.primary)
+          ],
+          ),
+          if(showEmail)
+          IziInput(
+            labelInput: LocaleKeys.payment_inputs_email_label.tr(),
+            inputHintText:
+                LocaleKeys.payment_inputs_email_placeholder.tr(),
+            inputMaxLength: 150,
+            readOnly:
+                widget.state.qrCharge != null || widget.state.qrLoading == true,
+            inputSize: (ru.gtMd() || (ru.gtSm() && ru.isVertical()))
+                ? InputSize.big
+                : InputSize.normal,
+            onChanged: (value, valueRaw) {
+              context.read<PaymentBloc>().changeInputs(email: value);
+            },
+            onEditingComplete: () {
+              context
+                  .read<PaymentBloc>()
+                  .validateInput(email: true);
+            },
+            controller: emailController,
+            value: widget.state.email.value,
+            error: _getErrorsEmail(widget.state.email.inputError),
+            inputType: InputType.email,
+          ),
+
         ],
       ),
     );
@@ -597,6 +645,16 @@ class _PaymentPageInvoiceState extends State<PaymentPageInvoice> {
     switch (inputError) {
       case InputError.required:
         return LocaleKeys.payment_inputs_businessName_errors_required.tr();
+      default:
+        return null;
+    }
+  }
+
+
+  String? _getErrorsEmail(InputError? inputError) {
+    switch (inputError) {
+      case InputError.invalid:
+        return LocaleKeys.payment_inputs_email_errors_invalid.tr();
       default:
         return null;
     }

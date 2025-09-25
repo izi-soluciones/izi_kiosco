@@ -45,6 +45,7 @@ class PaymentState extends Equatable {
   final InputObj complement;
   final InputObj businessName;
   final InputObj phoneNumber;
+  final InputObj email;
 
 
   //VARIABLES
@@ -87,6 +88,7 @@ class PaymentState extends Equatable {
       required this.queryBusinessList,
       required this.tipAmount,
       required this.businessName,
+      required this.email,
       required this.complement,
       required this.documentNumber,
       this.documentType,
@@ -111,6 +113,7 @@ class PaymentState extends Equatable {
       step: 5,
       isManual: false,
       currentCurrency: null,
+      email: PaymentInputs.emailInput(),
       businessName: PaymentInputs.businessNameInput(),
       complement: PaymentInputs.complementInput(),
       documentNumber: PaymentInputs.documentNumberInput(),
@@ -167,6 +170,7 @@ class PaymentState extends Equatable {
         tipAmount: tipAmount ?? this.tipAmount,
         withException: withException ?? this.withException,
         businessName: businessName ?? this.businessName,
+        email: email ?? this.email,
         complement: complement ?? this.complement,
         documentNumber: documentNumber ?? this.documentNumber,
         documentType: documentType ?? this.documentType,
@@ -194,6 +198,7 @@ class PaymentState extends Equatable {
         documentTypes,
         withException,
         businessName,
+        email,
         complement,
         documentNumber,
         documentType,

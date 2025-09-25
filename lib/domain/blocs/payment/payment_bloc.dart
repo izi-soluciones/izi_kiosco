@@ -9,7 +9,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:izi_kiosco/app/values/app_constants.dart';
 import 'package:izi_kiosco/data/local/local_storage_card_errors.dart';
 import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
-import 'package:izi_kiosco/domain/dto/new_order_dto.dart';
 import 'package:izi_kiosco/domain/dto/payment_attempt_dto.dart';
 import 'package:izi_kiosco/domain/dto/payment_dto.dart';
 import 'package:izi_kiosco/domain/models/card_payment.dart';
@@ -173,6 +172,11 @@ class PaymentBloc extends Cubit<PaymentState> {
           businessName: state.businessName
               .validateError(valueRequired: state.documentNumber.value)));
     }
+    if (email) {
+      emit(state.copyWith(
+          email: state.email
+              .validateError(valueRequired: state.email.value)));
+    }
   }
 
   changeInputs(
@@ -218,6 +222,10 @@ class PaymentBloc extends Cubit<PaymentState> {
     if (businessName != null) {
       emit(state.copyWith(
           businessName: state.businessName.changeValue(businessName)));
+    }
+    if (email != null) {
+      emit(state.copyWith(
+          email: state.email.changeValue(email)));
     }
   }
 
@@ -289,6 +297,8 @@ class PaymentBloc extends Cubit<PaymentState> {
 
   bool _validateInputs() {
     emit(state.copyWith(
+        email: state.email
+            .validateError(valueRequired: state.email.value),
         documentNumber: state.documentNumber
             .validateError(valueRequired: state.businessName.value),
         businessName: state.businessName
@@ -302,6 +312,9 @@ class PaymentBloc extends Cubit<PaymentState> {
       return false;
     }
     if (state.phoneNumber.inputError != null) {
+      return false;
+    }
+    if (state.email.inputError != null) {
       return false;
     }
 
@@ -341,7 +354,9 @@ class PaymentBloc extends Cubit<PaymentState> {
           razonSocial: state.businessName.value.isEmpty
               ? "S/N"
               : state.businessName.value,
-          telefonoComprador: state.phoneNumber.value);
+          telefonoComprador: state.phoneNumber.value,
+          correoElectronico: state.email.value.isNotEmpty?state.email.value:null
+          );
 
       Charge charge =
           await _comandaRepository.generatePaymentAttempt(newPayment);
@@ -518,7 +533,8 @@ class PaymentBloc extends Cubit<PaymentState> {
           razonSocial: state.businessName.value.isEmpty
               ? "S/N"
               : state.businessName.value,
-          telefonoComprador: state.phoneNumber.value);
+          telefonoComprador: state.phoneNumber.value,
+          correoElectronico: state.email.value.isNotEmpty?state.email.value:null);
 
       Charge charge =
           await _comandaRepository.generatePaymentAttempt(newPayment);
@@ -562,7 +578,8 @@ class PaymentBloc extends Cubit<PaymentState> {
             : state.complement.value,
         razonSocial:
             state.businessName.value.isEmpty ? "S/N" : state.businessName.value,
-        telefonoComprador: state.phoneNumber.value);
+        telefonoComprador: state.phoneNumber.value,
+          correoElectronico: state.email.value.isNotEmpty?state.email.value:null);
 
     Charge charge = await _comandaRepository.generatePaymentAttempt(newPayment);
     await _listenPaymentRetail(authState, charge);
@@ -923,7 +940,8 @@ class PaymentBloc extends Cubit<PaymentState> {
               : state.complement.value,
         nit: state.documentNumber.value.isEmpty ? "0" : state.documentNumber.value,
         razonSocial: state.businessName.value.isEmpty ? "S/N" : state.businessName.value,
-        telefonoComprador: state.phoneNumber.value
+        telefonoComprador: state.phoneNumber.value,
+        correoElectronico: state.email.value
         );
       PaymentDto newPayment = PaymentDto(
         ventaData: ventaData,
