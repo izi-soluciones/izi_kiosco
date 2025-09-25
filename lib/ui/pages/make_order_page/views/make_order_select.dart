@@ -135,19 +135,20 @@ class _MakeOrderSelectState extends State<MakeOrderSelect> {
     }
   }
   
-  IconData _selectIconCategory(String name){
-    if(name.isEmpty){
-      return IziIcons.client;
-    }
-    for(var ci in AppConstants.categoryIcons){
-      if(ci.name.indexWhere((element) {
-        return name.toLowerCase().contains(element);
-      })!=-1){
-        return ci.icon;
-      }
-    }
-    return IziIcons.list;
+IconData _selectIconCategory(String name) {
+  if (name.isEmpty) {
+    return IziIcons.values["client"]!;
   }
+  for (var entry in IziIcons.values.entries) {
+    final key = entry.key.toLowerCase();
+    final contains = name.toLowerCase().contains(key);
+    if (contains) {
+      return entry.value;
+    }
+  }
+  return IziIcons.values["list"]!; //icono predeterminado
+}
+
 
   Widget _headerLarge(ResponsiveUtils ru) {
     return SingleChildScrollView(
