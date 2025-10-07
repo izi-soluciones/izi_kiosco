@@ -9,6 +9,7 @@ class AssetsKeys{
   static const String envStg="assets/.env.stg";
   static const String envAlpha="assets/.env.alpha";
   static const String envBeta="assets/.env.beta";
+  static const String envPcbba="assets/.env.pcbba";
   static const String iziWebUrl="https://izisoluciones.com/";
 
   static const String iziLogo="assets/izi_logo.png";

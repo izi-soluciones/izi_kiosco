@@ -116,6 +116,7 @@ flutter:
     - assets/.env.prod
     - assets/.env.stg
     - assets/.env.alpha
+    - assets/.env.pcbba
     - assets/translations/
     - assets/graphics/
     - assets/icons/
