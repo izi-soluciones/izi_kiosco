@@ -957,7 +957,9 @@ class PaymentBloc extends Cubit<PaymentState> {
         customOrderNumber,
         authState.currentContribuyente!,
         authState.currentSucursal!,
-        state.paymentObj);
+        state.paymentObj,
+        state.currentCurrency
+        );
     var printUtils = PrintUtils();
     await printUtils.print(tmp);
   }
@@ -974,8 +976,8 @@ class PaymentBloc extends Cubit<PaymentState> {
       if(authState.currentSucursal?.config is Map &&
       (authState.currentSucursal?.config as Map)["tipoFacturaVentas"] == "compacto"
       ){
-        tmp= await PrintTemplate.invoiceCompact(
-          invoice!, authState.currentContribuyente!, authState.currentSucursal!);
+        tmp= await PrintTemplate.printInvoiceCompact(
+          authState.currentContribuyente!, authState.currentSucursal!,invoice!);
       }
       else{
         tmp= await PrintTemplate.printInvoice(

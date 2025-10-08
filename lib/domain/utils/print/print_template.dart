@@ -6,6 +6,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:izi_kiosco/app/values/app_constants.dart';
 import 'package:izi_kiosco/app/values/env_keys.dart';
 import 'package:izi_kiosco/domain/models/contribuyente.dart';
+import 'package:izi_kiosco/domain/models/currency.dart';
 import 'package:izi_kiosco/domain/models/invoice.dart';
 import 'package:izi_kiosco/domain/models/payment_obj.dart';
 import 'package:izi_kiosco/domain/utils/date_formatter.dart';
@@ -14,6 +15,15 @@ import 'package:izi_kiosco/ui/utils/money_formatter.dart';
 
 class PrintTemplate {
 
+  static Future<List<IziPrintItem>>  printInvoiceCompact(
+  Contribuyente contribuyente,
+  Sucursal sucursal,
+  Invoice factura,)async {
+    if(contribuyente.habilitadoFacturacion == true && contribuyente.config["paisId"]=="CO"){
+      return invoiceCompactCo(factura,contribuyente,sucursal);
+    }
+    return await invoiceCompact(factura,contribuyente,sucursal);
+  }
   static Future<List<IziPrintItem>>  printInvoice(
   Contribuyente contribuyente,
   Sucursal sucursal,
@@ -258,7 +268,8 @@ static List<IziPrintItem> invoice80Co(
       int? customOrderNumber,
       Contribuyente contribuyente,
       Sucursal sucursal,
-      PaymentObj? paymentObj) async {
+      PaymentObj? paymentObj,
+      Currency? currency) async {
     List<IziPrintItem> items = [];
     items.add(IziPrintText(
         text: contribuyente.razonSocial ?? "",
@@ -305,7 +316,7 @@ static List<IziPrintItem> invoice80Co(
     items.add(IziPrintSeparator(dotted: true));
     items.add(IziPrintText(
         text:
-            "Monto total: ${paymentObj?.amount.moneyFormat(currency: AppConstants.defaultCurrency)}",
+            "Monto total: ${paymentObj?.amount.moneyFormat(currency: currency?.simbolo ??AppConstants.defaultCurrency)}",
         size: IziPrintSize.md,
         align: IziPrintAlign.left,
         bold: true));
@@ -820,6 +831,59 @@ static Future<List<IziPrintItem>> invoiceCompact(
           items.add(IziPrintText(text: "Forma de pago: ${invoice.terminosPago}", size: IziPrintSize.sm,align: IziPrintAlign.center));
         }else if(invoice.pdfRollo!=null){
           items.add(IziPrintQR(invoice.pdfCarta!, size: 2));
+    items.add(IziPrintLineWrap(lines: 1));
+          items.add(IziPrintText(text: "Visualice su factura desde el QR", size: IziPrintSize.sm,align: IziPrintAlign.center));
+          items.add(IziPrintText(text: "Forma de pago: ${invoice.terminosPago}", size: IziPrintSize.sm,align: IziPrintAlign.center));
+        }
+      items.add(IziPrintSeparator());
+      items.add(IziPrintText(
+          text: "Generada a través de iZi",
+          size: IziPrintSize.sm,
+          bold: true,
+          align: IziPrintAlign.center));
+    
+    return items;
+  }
+
+
+static Future<List<IziPrintItem>> invoiceCompactCo(
+      Invoice invoice, Contribuyente contribuyente, Sucursal sucursal) async {
+    List<IziPrintItem> items = [];
+    items.add(IziPrintText(text: contribuyente.nombre??"", size: IziPrintSize.md,bold: true,align: IziPrintAlign.center));
+    items.add(IziPrintText(text: contribuyente.razonSocial??"", size: IziPrintSize.sm,bold: false,align: IziPrintAlign.center));
+    items.add(IziPrintText(text: contribuyente.nit??"", size: IziPrintSize.sm,bold: false,align: IziPrintAlign.center));
+    items.add(IziPrintText(text: sucursal.nombre??"", size: IziPrintSize.sm,bold: true,align: IziPrintAlign.center));
+
+
+    items.add(IziPrintText(text: "NOMBRE: ${invoice.razonSocial}", size: IziPrintSize.sm,align: IziPrintAlign.left));
+    items.add(IziPrintText(text: "${invoice.customFactura["CO"]?["tipoIdentificacion"] ?? 'DOCUMENTO'}: ${invoice.comprador}", size: IziPrintSize.sm,align: IziPrintAlign.left));
+    items.add(IziPrintText(text: "FACTURA N°: ${invoice.numero}", size: IziPrintSize.sm,align: IziPrintAlign.left));
+    items.add(IziPrintText(text: "FECHA: ${DateTime.parse(invoice.fecha).toLocal().dateFormat(DateFormatterType.dateHour)}", size: IziPrintSize.sm,align: IziPrintAlign.left));
+    items.add(IziPrintText(text: "IMPORTE : ${invoice.montoTotalImpuesto}", size: IziPrintSize.sm,align: IziPrintAlign.left,bold: true));
+    items.add(IziPrintLineWrap(lines: 1));
+
+  final cufe = invoice.customFactura["CO"]?["factura"]?["cufe"];
+        if (cufe != null) {
+          items.add(IziPrintText(
+            text: "Autorización: ${invoice.customFactura["CO"]?["resolution"] ?? ''}",
+            size: IziPrintSize.xs,
+            align: IziPrintAlign.center,
+          ));
+        items.add(IziPrintLineWrap(lines: 1)); 
+
+          items.add(IziPrintQR(
+            "https://catalogo-vpfe.dian.gov.co/User/SearchDocument?DocumentKey=$cufe",
+            size: 2,
+          ));
+        items.add(IziPrintLineWrap(lines: 1)); 
+
+          items.add(IziPrintText(
+            text: "CUFE: $cufe",
+            size: IziPrintSize.xs,
+            align: IziPrintAlign.center,
+          ));
+        }else if(invoice.pdfRollo!=null){
+          items.add(IziPrintQR(invoice.pdfRollo!, size: 2));
     items.add(IziPrintLineWrap(lines: 1));
           items.add(IziPrintText(text: "Visualice su factura desde el QR", size: IziPrintSize.sm,align: IziPrintAlign.center));
           items.add(IziPrintText(text: "Forma de pago: ${invoice.terminosPago}", size: IziPrintSize.sm,align: IziPrintAlign.center));
