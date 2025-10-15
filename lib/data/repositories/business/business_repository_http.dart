@@ -139,7 +139,7 @@ class BusinessRepositoryHttp extends BusinessRepository{
 
   @override
   Future<List<Customer>> queryBusinessSearch({required String query, required int contribuyenteId}) async{
-    String path = "/nit";
+    String path = "/nit/$query";
     var response = await _dioClient.get(
         uri: path,
         options: Options(responseType: ResponseType.json));

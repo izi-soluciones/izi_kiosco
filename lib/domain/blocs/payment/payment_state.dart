@@ -24,10 +24,87 @@ enum PaymentStatus {
   errorActivity,
   markCreateError,
   processingInvoice,
-  processingOrder
+  processingOrder,
+  setInputs
 }
 
+
+enum PaymentCountryTaxes {bolivia, colombia}
 enum PaymentType { cash, card, qr, bankTransfer, gitCard, others, cashRegister}
+
+class ParamsCo extends Equatable {
+  final String? identificationType;
+  final String? personType;
+  final String? ivaResponsability;
+  final String? taxResponsability;
+  final List<IdentificationType> listIdentificationType;
+  final List<PersonType> listPersonType;
+  final List<IvaResponsability> listIvaResponsability;
+  final List<TaxResponsability> listTaxResponsability;
+
+  const ParamsCo({
+    this.identificationType,
+    this.personType,
+    this.ivaResponsability,
+    this.taxResponsability,
+    this.listIdentificationType = const [],
+    this.listPersonType = const [],
+    this.listIvaResponsability = const [],
+    this.listTaxResponsability = const [],
+  });
+
+  ParamsCo copyWith({
+    String? identificationType,
+    String? personType,
+    String? ivaResponsability,
+    String? taxResponsability,
+    List<IdentificationType>? listIdentificationType,
+    List<PersonType>? listPersonType,
+    List<IvaResponsability>? listIvaResponsability,
+    List<TaxResponsability>? listTaxResponsability,
+  }) {
+    return ParamsCo(
+      identificationType: identificationType ?? this.identificationType,
+      personType: personType ?? this.personType,
+      ivaResponsability: ivaResponsability ?? this.ivaResponsability,
+      taxResponsability: taxResponsability ?? this.taxResponsability,
+      listIdentificationType: listIdentificationType ?? this.listIdentificationType,
+      listPersonType: listPersonType ?? this.listPersonType,
+      listIvaResponsability: listIvaResponsability ?? this.listIvaResponsability,
+      listTaxResponsability: listTaxResponsability ?? this.listTaxResponsability,
+    );
+  }
+
+  @override
+  List<Object?> get props => [
+        identificationType,
+        personType,
+        ivaResponsability,
+        taxResponsability
+      ];
+}
+class ParamsBo extends Equatable {
+  final DocumentType? documentType;
+  final List<DocumentType> documentTypes;
+
+  const ParamsBo({
+    this.documentType,
+    this.documentTypes = const [],
+  });
+
+  ParamsBo copyWith({
+    DocumentType? documentType,
+    List<DocumentType>? documentTypes,
+  }) {
+    return ParamsBo(
+      documentType: documentType ?? this.documentType,
+      documentTypes: documentTypes ?? this.documentTypes,
+    );
+  }
+
+  @override
+  List<Object?> get props => [documentType];
+}
 
 class PaymentState extends Equatable {
   final String? errorDescription;
@@ -40,7 +117,6 @@ class PaymentState extends Equatable {
   final CashRegister? currentCashRegister;
   final bool withException;
   final bool isManual;
-  final DocumentType? documentType;
   final InputObj documentNumber;
   final InputObj complement;
   final InputObj businessName;
@@ -63,12 +139,16 @@ class PaymentState extends Equatable {
 
   final Currency? currentCurrency;
 
-  final List<DocumentType> documentTypes;
-  final List<Contribuyente> queryBusinessList;
+  final List<Customer> queryBusinessList;
 
   final PaymentObj? paymentObj;
 
   final bool usaSiat;
+
+
+  final ParamsBo? paramsBo;
+  final ParamsCo? paramsCo;
+  final PaymentCountryTaxes? countryTaxes;
 
   const PaymentState(
       {
@@ -82,8 +162,9 @@ class PaymentState extends Equatable {
       required this.status,
       required this.casaMatriz,
       this.currentCashRegister,
+      this.paramsBo,
+      this.paramsCo,
       required this.isManual,
-      required this.documentTypes,
       required this.usaSiat,
       required this.queryBusinessList,
       required this.tipAmount,
@@ -91,13 +172,13 @@ class PaymentState extends Equatable {
       required this.email,
       required this.complement,
       required this.documentNumber,
-      this.documentType,
       required this.withException,
       required this.phoneNumber,
         required this.qrLoading,
         this.qrAmount,
         this.qrCharge,
         this.qrWait = false,
+        this.countryTaxes,
         this.qrPaymentKey});
 
   factory PaymentState.init() => PaymentState(
@@ -105,7 +186,6 @@ class PaymentState extends Equatable {
       paymentObj: null,
       cashAmount: 0,
       tipAmount: 0,
-      documentTypes: const [],
       economicActivity: "",
       usaSiat: false,
       queryBusinessList: const [],
@@ -133,14 +213,12 @@ class PaymentState extends Equatable {
       Currency? currentCurrency,
       PaymentType? paymentType,
       List<Payment>? payments,
-      List<DocumentType>? documentTypes,
       List<PaymentMethod>? paymentMethods,
       bool? usaSiat,
       num? tipAmount,
-      List<Contribuyente>? queryBusinessList,
+      List<Customer>? queryBusinessList,
       bool? isManual,
       bool? withException,
-      DocumentType? documentType,
       InputObj? documentNumber,
       InputObj? complement,
       InputObj? businessName,
@@ -153,13 +231,15 @@ class PaymentState extends Equatable {
         bool? qrWait,
         bool? qrLoading,
       Sucursal? casaMatriz,
+        ParamsBo? paramsBo,
+        ParamsCo? paramsCo,
+        PaymentCountryTaxes? countryTaxes,
       PaymentObj? paymentObj}) {
     return PaymentState(
         casaMatriz: casaMatriz ?? this.casaMatriz,
         status: status ?? this.status,
         errorDescription: errorDescription ?? this.errorDescription,
         step: step ?? this.step,
-        documentTypes: documentTypes ?? this.documentTypes,
         paymentType: paymentType ?? this.paymentType,
         usaSiat: usaSiat ?? this.usaSiat,
         queryBusinessList: queryBusinessList ?? this.queryBusinessList,
@@ -173,7 +253,9 @@ class PaymentState extends Equatable {
         email: email ?? this.email,
         complement: complement ?? this.complement,
         documentNumber: documentNumber ?? this.documentNumber,
-        documentType: documentType ?? this.documentType,
+
+        paramsBo: paramsBo ?? this.paramsBo,
+        paramsCo: paramsCo ?? this.paramsCo,
         isManual: isManual ?? this.isManual,
       qrAmount: qrAmount ?? this.qrAmount,
       phoneNumber: phoneNumber ?? this.phoneNumber,
@@ -181,7 +263,8 @@ class PaymentState extends Equatable {
       qrPaymentKey: qrPaymentKey == -1?null: qrPaymentKey ?? this.qrPaymentKey,
       qrLoading: qrLoading ?? this.qrLoading,
       qrWait: qrWait ?? this.qrWait,
-      paymentObj: paymentObj ?? this.paymentObj
+      paymentObj: paymentObj ?? this.paymentObj,
+      countryTaxes: countryTaxes ?? this.countryTaxes
     );
   }
 
@@ -195,13 +278,13 @@ class PaymentState extends Equatable {
         cashAmount,
         paymentType,
         currentCashRegister,
-        documentTypes,
         withException,
         businessName,
         email,
         complement,
         documentNumber,
-        documentType,
+        paramsBo,
+        paramsCo,
         isManual,
     qrWait,
         queryBusinessList,
