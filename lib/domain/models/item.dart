@@ -16,9 +16,16 @@ class Item {
   num precioUnitario;
   num? valor;
   num precioModificadores;
+  num precioModUnitario;
   String? detalle;
 
   List<PrecioVenta> preciosVenta;
+  num taxPrice = 0;
+  ParametrosFacturacionItem? parametrosFacturacion;
+
+
+
+
 
   Item(
       {required this.cantidad,
@@ -38,7 +45,9 @@ class Item {
       required this.categoriaId,
       required this.centroProduccion,
       required this.preciosVenta,
+      this.precioModUnitario =0,
         this.precioModificadores = 0,
+        this.parametrosFacturacion,
       required this.codigoBarras});
   factory Item.fromJson(Map<dynamic, dynamic> json) {
     List listModificadores =
@@ -62,6 +71,7 @@ class Item {
         centroProduccion: json["centroProduccion"],
         codigoBarras: json["codigoBarras"],
         preciosVenta: json["preciosVenta"] is List? List.from(json["preciosVenta"]).where((element) => element is Map && element["listaPrecio"] is String && element["precio"] is num).map((e) => PrecioVenta(listaPrecio: e["listaPrecio"], precio: e["precio"])).toList():[] ,
+        parametrosFacturacion: json["parametrosFacturacion"] is Map?ParametrosFacturacionItem.fromJson(json["parametrosFacturacion"]) : null,
         id: json["id"] ?? 0,
         valor: json["valor"]);
   }
@@ -84,6 +94,7 @@ class Item {
       categoriaId: categoriaId,
       preciosVenta: preciosVenta,
       centroProduccion: centroProduccion,
+      parametrosFacturacion: parametrosFacturacion,
       codigoBarras: codigoBarras);
 
   Map<String,dynamic> toJson(){
@@ -237,3 +248,68 @@ class PrecioVenta{
 
   PrecioVenta({required this.listaPrecio, required this.precio});
 }
+class ParametrosFacturacionItem{
+  ParametrosFacturacionCoItem? co;
+  ParametrosFacturacionItem({
+    required this.co
+  });
+  factory ParametrosFacturacionItem.fromJson(Map json){
+    return ParametrosFacturacionItem(
+      co: json["CO"] is Map?ParametrosFacturacionCoItem.fromJson(json["CO"]):null
+    );
+  }
+
+}
+
+class ParametrosFacturacionCoItem{
+  Map impuestosCalculados;
+  bool impuestosIn;
+  List<ParametrosFacturacionCoImpuestosItem> impuestos;
+  ParametrosFacturacionCoItem({
+    required this.impuestos,
+    required this.impuestosIn,
+    required this.impuestosCalculados
+  });
+  factory ParametrosFacturacionCoItem.fromJson(Map json){
+    List listImpuestos =
+        json["impuestos"] is List ? json["impuestos"] : [];
+    listImpuestos.removeWhere((element) => element.isEmpty);
+    return ParametrosFacturacionCoItem(
+      impuestos: listImpuestos.map((e) => ParametrosFacturacionCoImpuestosItem.fromJson(e)).toList(),
+      impuestosIn: json["impuestosIn"] is bool? json["impuestosIn"]:false,
+      impuestosCalculados: json["impuestosCalculados"] is Map? json["impuestosCalculados"]:{},
+    );
+  }
+}
+
+class ParametrosFacturacionCoImpuestosItem{
+  num rate;
+  num monto;
+  bool isFixed;
+  bool isAmount;
+  String codigo;
+  String nombre;
+  String id;
+
+  ParametrosFacturacionCoImpuestosItem({
+    required this.rate,
+    required this.monto,
+    required this.isFixed,
+    required this.isAmount,
+    required this.codigo,
+    required this.nombre,
+    required this.id,
+  });
+  factory ParametrosFacturacionCoImpuestosItem.fromJson(Map json){
+    return ParametrosFacturacionCoImpuestosItem(
+      rate: json["rate"] is num? json["rate"]:0,
+      monto: json["monto"] is num? json["monto"]:0,
+      isFixed: json["isFixed"] is bool? json["isFixed"]:false,
+      isAmount: json["isAmount"] is bool? json["isAmount"]:false,
+      codigo: json["codigo"] is String? json["codigo"]:"",
+      nombre: json["nombre"] is String? json["nombre"]:"",
+      id: json["id"] is String? json["id"]:"");
+  }
+}
+
+

@@ -17,11 +17,16 @@ import 'package:izi_kiosco/domain/models/charge.dart';
 import 'package:izi_kiosco/domain/models/comanda.dart';
 import 'package:izi_kiosco/domain/models/contribuyente.dart';
 import 'package:izi_kiosco/domain/models/currency.dart';
+import 'package:izi_kiosco/domain/models/customer.dart';
 import 'package:izi_kiosco/domain/models/document_type.dart';
+import 'package:izi_kiosco/domain/models/identification_type.dart';
 import 'package:izi_kiosco/domain/models/invoice.dart';
+import 'package:izi_kiosco/domain/models/iva_responsability.dart';
 import 'package:izi_kiosco/domain/models/payment.dart';
 import 'package:izi_kiosco/domain/models/payment_method.dart';
 import 'package:izi_kiosco/domain/models/payment_obj.dart';
+import 'package:izi_kiosco/domain/models/person_type.dart';
+import 'package:izi_kiosco/domain/models/tax_responsability.dart';
 import 'package:izi_kiosco/domain/repositories/business_repository.dart';
 import 'package:izi_kiosco/domain/repositories/comanda_repository.dart';
 import 'package:izi_kiosco/domain/repositories/socket_repository.dart';
@@ -32,12 +37,19 @@ import 'package:izi_kiosco/domain/utils/print_utils.dart';
 import 'package:izi_kiosco/ui/utils/money_formatter.dart';
 part 'payment_state.dart';
 part 'payment_inputs.dart';
-
+class PaymentConfig{
+  Future Function(Contribuyente, Sucursal) setParams;
+  Function(PaymentDtoVentaData) setParamsOrderPayment;
+  Function(PaymentAttemptDto) setParamsPayment;
+  Function(Customer customer) setParamsCustomer;
+  PaymentConfig({required this.setParams, required this.setParamsOrderPayment, required this.setParamsPayment, required this.setParamsCustomer});
+}
 class PaymentBloc extends Cubit<PaymentState> {
   final ComandaRepository _comandaRepository;
   StreamSubscription? qrStream;
   final BusinessRepository _businessRepository;
   final SocketRepository _socketRepository;
+  PaymentConfig? countryConfig;
   PaymentBloc(
       this._comandaRepository, this._businessRepository, this._socketRepository)
       : super(PaymentState.init());
@@ -45,16 +57,8 @@ class PaymentBloc extends Cubit<PaymentState> {
   initOrder(
       {required PaymentObj paymentObj, required AuthState authState}) async {
     try {
-      bool usaSiat = false;
-      int casaMatrizIndex = authState.currentContribuyente?.sucursales
-              ?.indexWhere((element) =>
-                  element.id == authState.currentDevice?.sucursal) ??
-          -1;
-      if (casaMatrizIndex != -1) {
-        usaSiat = authState.currentContribuyente?.sucursales?[casaMatrizIndex]
-                .config["siat"] !=
-            null;
-      }
+
+      PaymentCountryTaxes? countryTaxes =  _setCountryConfig(authState.currentContribuyente!);
 
       List<CashRegister> cashRegisters =
           await _businessRepository.getCashRegisters(
@@ -80,13 +84,7 @@ class PaymentBloc extends Cubit<PaymentState> {
         // return;
       }
 
-      List<DocumentType>? documentTypes;
-      DocumentType? documentType;
-
-      if (usaSiat) {
-        documentTypes = await _businessRepository.getDocumentTypes();
-        documentType = documentTypes.lastOrNull;
-      }
+      
       int indexCurrency = authState.currencies.indexWhere((element) =>
           element.id ==
           authState.currentContribuyente?.config["monedaInventario"]);
@@ -95,49 +93,44 @@ class PaymentBloc extends Cubit<PaymentState> {
         currentCurrency = authState.currencies.elementAtOrNull(indexCurrency);
       }
       String? economicActivity;
-
-      if(authState.currentContribuyente?.habilitadoFacturacion==true){
-        if(authState.currentDevice?.config.isRetail==true){
-          economicActivity = authState.currentDevice?.config.actividadEconomica;
-        }
-        else{
-          if (authState.currentContribuyente?.config?["aERestaurante"] != null) {
-            if (authState.currentContribuyente?.config?["aERestaurante"] is num) {
-              economicActivity = authState
-                  .currentContribuyente?.config?["aERestaurante"]
-                  ?.toString();
-            } else if (authState.currentContribuyente?.config?["aERestaurante"]
-            is String) {
-              economicActivity =
-              authState.currentContribuyente?.config?["aERestaurante"];
-            } else if (authState.currentContribuyente?.config?["aERestaurante"]
-            is Map &&
-                authState.currentContribuyente?.config?["aERestaurante"]
-                ?["codigoCaeb"] !=
-                    null) {
-              economicActivity = authState
-                  .currentContribuyente?.config?["aERestaurante"]?["codigoCaeb"];
-            }
+      if(authState.currentDevice?.config.isRetail==true){
+        economicActivity = authState.currentDevice?.config.actividadEconomica;
+      }
+      else{
+        if (authState.currentContribuyente?.config?["aERestaurante"] != null) {
+          if (authState.currentContribuyente?.config?["aERestaurante"] is num) {
+            economicActivity = authState.currentContribuyente?.config?["aERestaurante"]
+                ?.toString();
+          } else if (authState.currentContribuyente?.config?["aERestaurante"]
+          is String) {
+            economicActivity = authState.currentContribuyente?.config?["aERestaurante"];
+          } else if (authState.currentContribuyente?.config?["aERestaurante"]
+          is Map &&
+              authState.currentContribuyente?.config?["aERestaurante"]
+              ?["codigoCaeb"] !=
+                  null) {
+            economicActivity = authState.currentContribuyente?.config?["aERestaurante"]?["codigoCaeb"];
           }
         }
+      }
+      
 
-        if (economicActivity==null) {
-          return emit(state.copyWith(status: PaymentStatus.errorActivity));
+      if(authState.currentContribuyente?.habilitadoFacturacion==true){
+        PaymentStatus? statusVerification = authState.taxesStrategy?.verifyParameters(authState.currentContribuyente, authState.currentSucursal, authState.currentDevice, economicActivity);
+        if(statusVerification!=null){
+          return emit(state.copyWith(status: statusVerification));
         }
       }
 
+      await countryConfig?.setParams(authState.currentContribuyente!,authState.currentSucursal!);
+
       emit(state.copyWith(
           status: PaymentStatus.successGet,
-          casaMatriz: (casaMatrizIndex != -1)
-              ? (authState.currentContribuyente?.sucursales?[casaMatrizIndex])
-              : null,
           step: 1,
           economicActivity: economicActivity,
           currentCurrency: currentCurrency,
-          usaSiat: usaSiat,
           paymentObj: paymentObj,
-          documentTypes: documentTypes,
-          documentType: documentType,
+          countryTaxes:countryTaxes,
           cashRegisters: cashRegisters,
           currentCashRegister: currentCashRegister));
     } catch (error) {
@@ -179,11 +172,20 @@ class PaymentBloc extends Cubit<PaymentState> {
     }
   }
 
+  resetInputs(){
+      emit(state.copyWith(
+          status: PaymentStatus.setInputs,
+          businessName: state.businessName.changeValue(""),
+          phoneNumber: state.phoneNumber.changeValue(""),
+          documentNumber: state.documentNumber.changeValue(""),
+          ));
+    emit(state.copyWith(status: PaymentStatus.successGet));
+  }
+
   changeInputs(
       {int? cashRegister,
       bool? withException,
       bool? isManual,
-      int? documentType,
       String? documentNumber,
       String? complement,
       String? businessName,
@@ -203,12 +205,6 @@ class PaymentBloc extends Cubit<PaymentState> {
 
     if (withException != null) {
       emit(state.copyWith(withException: withException));
-    }
-
-    if (documentType != null) {
-      emit(state.copyWith(
-          documentType: state.documentTypes.firstWhere(
-              (element) => element.codigoClasificador == documentType)));
     }
 
     if (documentNumber != null) {
@@ -335,14 +331,9 @@ class PaymentBloc extends Cubit<PaymentState> {
     try {
       emit(state.copyWith(step: 4));
 
-      var documentType = state.documentType;
-      if (state.documentNumber.value.isEmpty && state.usaSiat) {
-        documentType = state.documentTypes.first;
-      }
       PaymentAttemptDto newPayment = PaymentAttemptDto(
           uuid: state.paymentObj?.uuid ?? "",
           metodoPago: AppConstants.idPaymentMethodPOS,
-          tipoDocumento: documentType?.toJson() ?? {},
           nit: state.documentNumber.value.isEmpty
               ? "0"
               : state.documentNumber.value,
@@ -357,6 +348,8 @@ class PaymentBloc extends Cubit<PaymentState> {
           telefonoComprador: state.phoneNumber.value,
           correoElectronico: state.email.value.isNotEmpty?state.email.value:null
           );
+
+      countryConfig?.setParamsPayment(newPayment);    
 
       Charge charge =
           await _comandaRepository.generatePaymentAttempt(newPayment);
@@ -513,15 +506,9 @@ class PaymentBloc extends Cubit<PaymentState> {
 
   Future<bool> _generateRetailQR(AuthState authState) async {
     if (authState.currentDevice?.config.demo == true) {
-
-      var documentType = state.documentType;
-      if (state.documentNumber.value.isEmpty && state.usaSiat) {
-        documentType = state.documentTypes.first;
-      }
       PaymentAttemptDto newPayment = PaymentAttemptDto(
           uuid: state.paymentObj?.uuid ?? "",
           metodoPago: AppConstants.idPaymentMethodPOS,
-          tipoDocumento: documentType?.toJson() ?? {},
           nit: state.documentNumber.value.isEmpty
               ? "0"
               : state.documentNumber.value,
@@ -535,6 +522,7 @@ class PaymentBloc extends Cubit<PaymentState> {
               : state.businessName.value,
           telefonoComprador: state.phoneNumber.value,
           correoElectronico: state.email.value.isNotEmpty?state.email.value:null);
+      countryConfig?.setParamsPayment(newPayment);
 
       Charge charge =
           await _comandaRepository.generatePaymentAttempt(newPayment);
@@ -560,14 +548,9 @@ class PaymentBloc extends Cubit<PaymentState> {
     }
 
     emit(state.copyWith(qrLoading: true));
-    var documentType = state.documentType;
-    if (state.documentNumber.value.isEmpty && state.usaSiat) {
-      documentType = state.documentTypes.first;
-    }
     PaymentAttemptDto newPayment = PaymentAttemptDto(
         uuid: state.paymentObj?.uuid ?? "",
         metodoPago: AppConstants.idPaymentMethodQR,
-        tipoDocumento: documentType?.toJson() ?? {},
         nit: state.documentNumber.value.isEmpty
             ? "0"
             : state.documentNumber.value,
@@ -580,6 +563,7 @@ class PaymentBloc extends Cubit<PaymentState> {
             state.businessName.value.isEmpty ? "S/N" : state.businessName.value,
         telefonoComprador: state.phoneNumber.value,
           correoElectronico: state.email.value.isNotEmpty?state.email.value:null);
+    countryConfig?.setParamsPayment(newPayment);
 
     Charge charge = await _comandaRepository.generatePaymentAttempt(newPayment);
     await _listenPaymentRetail(authState, charge);
@@ -852,12 +836,15 @@ class PaymentBloc extends Cubit<PaymentState> {
       }
       emit(state.copyWith(
           documentNumber: state.documentNumber.changeLoading(true)));
-      List<Contribuyente> businessList =
+      List<Customer> businessList =
           await _businessRepository.queryBusinessSearch(
               query: state.documentNumber.value,
               contribuyenteId: authState.currentContribuyente?.id ?? 0);
-      Contribuyente? find = businessList.firstWhereOrNull(
+      Customer? find = businessList.firstWhereOrNull(
           (element) => element.nit == state.documentNumber.value);
+        if(find!=null){
+          countryConfig?.setParamsCustomer(find);
+        } 
       emit(state.copyWith(
           businessName: state.businessName.changeValue(find?.razonSocial ?? ""),
           documentNumber: state.documentNumber.changeLoading(false)));
@@ -884,7 +871,9 @@ class PaymentBloc extends Cubit<PaymentState> {
         customOrderNumber,
         authState.currentContribuyente!,
         authState.currentSucursal!,
-        state.paymentObj);
+        state.paymentObj,
+        state.currentCurrency
+        );
     var printUtils = PrintUtils();
     await printUtils.print(tmp);
   }
@@ -901,12 +890,12 @@ class PaymentBloc extends Cubit<PaymentState> {
       if(authState.currentSucursal?.config is Map &&
       (authState.currentSucursal?.config as Map)["tipoFacturaVentas"] == "compacto"
       ){
-        tmp= await PrintTemplate.invoiceCompact(
-          invoice!, authState.currentContribuyente!, authState.currentSucursal!);
+        tmp= await PrintTemplate.printInvoiceCompact(
+          authState.currentContribuyente!, authState.currentSucursal!,invoice!);
       }
       else{
-        tmp= await PrintTemplate.invoice80(
-          invoice!, authState.currentContribuyente!, authState.currentSucursal!);
+        tmp= await PrintTemplate.printInvoice(
+          authState.currentContribuyente!, authState.currentSucursal!,invoice!);
       }
        
       var printUtils = PrintUtils();
@@ -927,13 +916,7 @@ class PaymentBloc extends Cubit<PaymentState> {
   }
 
   PaymentDto _buildPaymentDto(int metodoPago){
-
-      var documentType = state.documentType;
-      if (state.documentNumber.value.isEmpty && state.usaSiat) {
-        documentType = state.documentTypes.first;
-      }
       PaymentDtoVentaData ventaData = PaymentDtoVentaData(
-        tipoDocumento: documentType,
         complemento: AppConstants.ciList.contains(state.complement.value.toLowerCase()) ||
                   state.documentNumber.value.isEmpty
               ? null
@@ -943,10 +926,182 @@ class PaymentBloc extends Cubit<PaymentState> {
         telefonoComprador: state.phoneNumber.value,
         correoElectronico: state.email.value
         );
+      countryConfig?.setParamsOrderPayment(ventaData);
       PaymentDto newPayment = PaymentDto(
         ventaData: ventaData,
           orderId: state.paymentObj?.id ?? 0,
           metodoPago: metodoPago);
       return newPayment;
   }
+
+
+  Future<void> _setParamsCo(Contribuyente contribuyente, Sucursal sucursal)async{
+
+    List<IdentificationType>? listIdentificationType;
+    List<IvaResponsability>? listIvaResponsability;
+    List<PersonType>? listPersonType;
+    List<TaxResponsability>? listTaxResponsability;
+
+    IdentificationType? identificationType;
+    IvaResponsability? ivaResponsability;
+    PersonType? personType;
+
+    final results = await Future.wait([
+      _businessRepository.getIdentificationType(),
+      _businessRepository.getIvaResponsability(),
+      _businessRepository.getPersonType(),
+      _businessRepository.getTaxResponsability(),
+    ]);
+
+  listIdentificationType   = results[0] as List<IdentificationType>;
+  listIvaResponsability    = results[1] as List<IvaResponsability>;
+  listPersonType           = results[2] as List<PersonType>;
+  listTaxResponsability    = results[3] as List<TaxResponsability>;
+
+    identificationType = listIdentificationType.firstOrNull;
+    ivaResponsability = listIvaResponsability.lastOrNull;
+    personType = listPersonType.lastOrNull;
+
+    listTaxResponsability.insert(0,TaxResponsability(codigo: null, nombre: "Sin responsabilidad fiscal"));
+    emit(state.copyWith(paramsCo: ParamsCo(
+      identificationType: identificationType?.codigo,
+      ivaResponsability: ivaResponsability?.codigo,
+      personType: personType?.codigo,
+      listIdentificationType: listIdentificationType,
+      listIvaResponsability: listIvaResponsability,
+      listPersonType: listPersonType,
+      listTaxResponsability: listTaxResponsability,
+    )));
+  }
+
+  void _setParamsOrderPaymentCo(PaymentDtoVentaData paymentDtoVentaData)async{
+    var identificationType = state.paramsCo?.identificationType;
+    var ivaResponsability = state.paramsCo?.ivaResponsability;
+    var personType = state.paramsCo?.personType;
+    var taxResponsability = state.paramsCo?.taxResponsability;
+
+    if(identificationType ==null || ivaResponsability ==null || personType == null){
+      throw "Parametros incorrectos";
+    }
+
+    paymentDtoVentaData.co= PaymentDtoVentaDataCo(
+      identificationType:  identificationType,
+      ivaResponsability:  ivaResponsability,
+      personType:  personType,
+      taxResponsability:  taxResponsability,
+
+    );
+  }
+
+  void _setParamsOrderPaymentBo(PaymentDtoVentaData paymentDtoVentaData)async{
+      var documentType = state.paramsBo?.documentType;
+      if (state.documentNumber.value.isEmpty) {
+        documentType = state.paramsBo?.documentTypes.first;
+      }
+      paymentDtoVentaData.tipoDocumento = documentType;
+  }
+
+  void _setPaymentCo(PaymentAttemptDto paymentAttemptDto)async{
+  }
+
+  void _setParamsCustomerCo(Customer customer)async{
+    emit(state.copyWith(
+      status: PaymentStatus.setInputs,
+      paramsCo: state.paramsCo?.copyWith(
+        identificationType: customer.custom?.co?.tipoIdentificacion,
+        taxResponsability: customer.custom?.co?.responsabilidadFiscal,
+        ivaResponsability: customer.custom?.co?.responsabilidadIva,
+        personType: customer.custom?.co?.tipoPersona,
+      )
+    ));
+    emit(state.copyWith(
+      status: PaymentStatus.successGet));
+  }
+
+
+
+
+  Future _setParamsBo(Contribuyente contribuyente, Sucursal sucursal)async{
+    List<DocumentType>? documentTypes;
+    DocumentType? documentType;
+    documentTypes = await _businessRepository.getDocumentTypes();
+    documentType = documentTypes.lastOrNull;
+    emit(state.copyWith(paramsBo: ParamsBo(documentType: documentType, documentTypes: documentTypes ?? [])));
+  }
+  void _setPaymentBo(PaymentAttemptDto paymentAttemptDto)async{
+
+      var documentType = state.paramsBo?.documentType;
+      if (state.documentNumber.value.isEmpty) {
+        documentType = state.paramsBo?.documentTypes.first;
+      }
+      paymentAttemptDto.tipoDocumento=documentType?.toJson();
+  }
+
+  void _setParamsCustomerBo(Customer customer)async{
+  }
+
+
+  PaymentCountryTaxes? _setCountryConfig(Contribuyente contribuyente){
+
+    if(contribuyente.habilitadoFacturacion==true){
+      if(contribuyente.usaSiat==true || (contribuyente.config is Map && contribuyente.config["paisId"] == "BO")){
+        countryConfig = PaymentConfig(
+          setParams: _setParamsBo,
+          setParamsCustomer: _setParamsCustomerBo,
+          setParamsOrderPayment: _setParamsOrderPaymentBo,
+          setParamsPayment: _setPaymentBo
+          );
+        return PaymentCountryTaxes.bolivia;
+      }
+      else if(contribuyente.config is Map && contribuyente.config["paisId"] == "CO"){
+        countryConfig = PaymentConfig(
+          setParams: _setParamsCo,
+          setParamsCustomer: _setParamsCustomerCo,
+          setParamsOrderPayment: _setParamsOrderPaymentCo,
+          setParamsPayment: _setPaymentCo
+          );
+        return PaymentCountryTaxes.colombia;
+      }
+    }
+    return null;
+  }
+
+  changeInputsBo({
+      int? documentType}) {
+    if (documentType != null) {
+      emit(state.copyWith(
+          paramsBo: state.paramsBo?.copyWith(
+            documentType: state.paramsBo?.documentTypes.firstWhere(
+              (element) => element.codigoClasificador == documentType)
+          )));
+    }
+  }
+
+  changeInputsCo({
+      String? personType,
+      String? taxResponsability,
+      String? identificationType,
+      String? ivaResponsability}) {
+    if (personType != null) {
+      emit(state.copyWith(
+          paramsCo: state.paramsCo?.copyWith(
+            personType: personType)));
+    }
+    if (taxResponsability != null) {
+      emit(state.copyWith(
+          paramsCo: state.paramsCo?.copyWith(
+            taxResponsability: taxResponsability)));
+    }
+    if (identificationType != null) {
+      emit(state.copyWith(
+          paramsCo: state.paramsCo?.copyWith(
+            identificationType: identificationType)));
+    }
+    if (ivaResponsability != null) {
+      emit(state.copyWith(
+          paramsCo: state.paramsCo?.copyWith(
+            ivaResponsability: ivaResponsability)));
+    }
+  }
+
 }

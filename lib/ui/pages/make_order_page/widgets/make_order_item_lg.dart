@@ -83,7 +83,7 @@ class MakeOrderItemLg extends StatelessWidget {
                             ],
                           ),
 
-                          IziText.titleSmall(color: IziColors.darkGrey, text: item.precioUnitario.moneyFormat(currency: state.currentCurrency?.simbolo), fontWeight: FontWeight.w400,textAlign: TextAlign.start, mobile: ru.isXs()),
+                          IziText.titleSmall(color: IziColors.darkGrey, text: item.taxPrice.moneyFormat(currency: state.currentCurrency?.simbolo), fontWeight: FontWeight.w400,textAlign: TextAlign.start),
                           if(ru.isVertical() && ru.gtSm())
                           const SizedBox(height: 10,),
 

@@ -65,7 +65,7 @@ class MakeOrderItemSm extends StatelessWidget {
                           textAlign: TextAlign.center),
                       IziText.body(
                           color: IziColors.grey,
-                          text: item.precioUnitario.moneyFormat(
+                          text: item.taxPrice.moneyFormat(
                               currency: state.currentCurrency?.simbolo),
                           fontWeight: FontWeight.w500,
                           textAlign: TextAlign.center),

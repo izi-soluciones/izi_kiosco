@@ -18,6 +18,8 @@ import 'dart:developer' as developer;
 
 import 'package:izi_kiosco/domain/repositories/auth_repository.dart';
 import 'package:izi_kiosco/domain/repositories/business_repository.dart';
+import 'package:izi_kiosco/domain/strategies/taxes/taxes_strategy.dart';
+import 'package:izi_kiosco/domain/strategies/taxes/taxes_strategy_factory.dart';
 import 'package:izi_kiosco/domain/utils/download_utils.dart';
 import 'package:izi_kiosco/domain/utils/print_utils.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
@@ -87,6 +89,8 @@ class AuthBloc extends Cubit<AuthState> {
 
         Contribuyente contribuyente = await _authRepository
             .getCurrentContribuyenteById(contribuyenteId);
+
+        TaxesStrategy taxesStrategy = TaxesStrategyFactory.taxes(contribuyente);
         List<Sucursal> sucursales = await _authRepository.getSucursales(contribuyenteId);
         contribuyente.sucursales = sucursales;
         Sucursal? sucursal;
@@ -123,6 +127,7 @@ class AuthBloc extends Cubit<AuthState> {
 
         List<Currency> currencies = await _businessRepository.getCurrencies(
             contribuyenteId: contribuyente.id ?? 0);
+
 
         emit(state.copyWith(
             status: AuthStatus.okAuth,
@@ -197,6 +202,9 @@ class AuthBloc extends Cubit<AuthState> {
     if (state.invoiceSubscription != null) {
       state.invoiceSubscription!.cancel();
     }
+
+
+    TaxesStrategy taxesStrategy = TaxesStrategyFactory.taxes(contribuyente);
 
     emit(state.copyWith(
         loadingContribuyente: false,

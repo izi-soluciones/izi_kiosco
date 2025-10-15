@@ -14,6 +14,7 @@ import 'package:izi_kiosco/domain/models/currency.dart';
 import 'package:izi_kiosco/domain/models/item.dart';
 import 'package:izi_kiosco/domain/repositories/business_repository.dart';
 import 'package:izi_kiosco/domain/repositories/comanda_repository.dart';
+import 'package:izi_kiosco/domain/strategies/taxes/taxes_strategy.dart';
 import 'package:izi_kiosco/domain/utils/crash_report.dart';
 import 'package:izi_kiosco/domain/utils/print/print_template.dart';
 import 'package:izi_kiosco/domain/utils/print_utils.dart';
@@ -25,8 +26,10 @@ class MakeOrderBloc extends Cubit<MakeOrderState> {
   MakeOrderBloc(this._comandaRepository,this._businessRepository, {String? tableId, int? numberDiners})
       : super(MakeOrderState.init(tableId, numberDiners));
 
+  TaxesStrategy? taxesStrategy;
   init(AuthState authState) async {
     try {
+      taxesStrategy = authState.taxesStrategy;
       int indexCurrency = authState.currencies.indexWhere((element) =>
           element.id ==
           authState.currentContribuyente?.config["monedaInventario"]);
@@ -83,6 +86,8 @@ class MakeOrderBloc extends Cubit<MakeOrderState> {
       for (var cat in list) {
         List<Item> itemsCat = [];
         for (var i in listItems) {
+          i.cantidad=1;
+          _setItemPrice(i, 0);
           if (i.categoriaId == cat.id && i.categoriaId != null) {
             i.categoria = cat.nombre;
             itemsCat.add(i);
@@ -165,15 +170,17 @@ class MakeOrderBloc extends Cubit<MakeOrderState> {
   }
 
   addItem({int? index, required Item item}) {
-    num pM = 0;
+    num modPriceUnit = 0;
     for (var m in item.modificadores) {
       for (var c in m.caracteristicas) {
         if (c.check) {
-          pM += c.modPrecio * item.cantidad;
+          modPriceUnit += c.modPrecio;
         }
       }
     }
-    item.precioModificadores = pM;
+    item.precioModificadores = modPriceUnit*item.cantidad;
+    item.precioModUnitario = modPriceUnit;
+    _setItemPrice(item, modPriceUnit);
     List<CategoryOrder> categories = List.from(state.itemsSelected);
     for (var i = 0; i < state.itemsSelected.length; i++) {
       categories[i] = state.itemsSelected[i].copyWith();
@@ -212,19 +219,24 @@ class MakeOrderBloc extends Cubit<MakeOrderState> {
       }
       if (indexItem != null) {
         item.cantidad = categories[indexCat].items[indexItem].cantidad + 1;
-        num pM = 0;
-        item.modificadores.map((m) {
-          m.caracteristicas.map((c) {
-            pM += c.modPrecio * item.cantidad;
-          });
-        });
-        item.precioModificadores = pM;
+        item.precioModificadores = modPriceUnit*item.cantidad;
+        item.precioModUnitario = modPriceUnit;
+        
+        _setItemPrice(item, modPriceUnit);
         categories[indexCat].items[indexItem] = item;
       } else {
         categories[indexCat].items.add(item);
       }
     }
     emit(state.copyWith(itemsSelected: categories));
+  }
+
+
+  _setItemPrice(Item item, num modPrice){
+      item.taxPrice = item.cantidad*(item.precioUnitario+modPrice);
+      if(item.parametrosFacturacion!=null){
+        item.taxPrice = taxesStrategy?.getTotalItem(item.parametrosFacturacion!, item.cantidad, item.precioUnitario+modPrice) ?? item.taxPrice;
+      }
   }
 
   resetItems(){
@@ -237,15 +249,17 @@ class MakeOrderBloc extends Cubit<MakeOrderState> {
     for (var i = 0; i < state.itemsSelected.length; i++) {
       categories[i] = state.itemsSelected[i].copyWith();
       for (var item in categories[i].items) {
-        num pM = 0;
+        num modPriceUnit = 0;
         for (var m in item.modificadores) {
           for (var c in m.caracteristicas) {
             if (c.check) {
-              pM += c.modPrecio * item.cantidad;
+              modPriceUnit += c.modPrecio;
             }
           }
         }
-        item.precioModificadores = pM;
+        item.precioModificadores = modPriceUnit*item.cantidad;
+        item.precioModUnitario = modPriceUnit;
+        _setItemPrice(item,modPriceUnit);
       }
     }
     emit(state.copyWith(itemsSelected: categories));
@@ -355,15 +369,17 @@ class MakeOrderBloc extends Cubit<MakeOrderState> {
           categories[i].items[j] = itemNew;
         }
         final item = categories[i].items[j];
-        num pM = 0;
+        num modPriceUnit = 0;
         for (var m in item.modificadores) {
           for (var c in m.caracteristicas) {
             if (c.check) {
-              pM += c.modPrecio * item.cantidad;
+              modPriceUnit += c.modPrecio;
             }
           }
         }
-        item.precioModificadores = pM;
+        item.precioModificadores = modPriceUnit*item.cantidad;
+        item.precioModUnitario= modPriceUnit;
+        _setItemPrice(item,modPriceUnit);
       }
     }
     emit(state.copyWith(itemsSelected: categories));

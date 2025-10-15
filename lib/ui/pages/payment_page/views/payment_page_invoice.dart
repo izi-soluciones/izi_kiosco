@@ -10,21 +10,18 @@ import 'package:izi_design_system/molecules/izi_input.dart';
 import 'package:izi_design_system/tokens/colors.dart';
 import 'package:izi_design_system/tokens/izi_icons.dart';
 import 'package:izi_design_system/tokens/types.dart';
-import 'package:izi_kiosco/app/values/app_constants.dart';
 import 'package:izi_kiosco/app/values/locale_keys.g.dart';
 import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/page_utils/page_utils_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/payment/payment_bloc.dart';
-import 'package:izi_kiosco/domain/models/document_type.dart';
 import 'package:izi_kiosco/domain/utils/input_obj.dart';
 import 'package:izi_kiosco/ui/general/izi_header_kiosk.dart';
-import 'package:izi_kiosco/ui/general/kiosco_numeric_keyboard.dart';
 import 'package:izi_kiosco/ui/pages/payment_page/modals/card_type_atc_modal.dart';
+import 'package:izi_kiosco/ui/pages/payment_page/views/country_form/payment_page_invoice_form.dart';
 import 'package:izi_kiosco/ui/utils/custom_alerts.dart';
 import 'package:izi_kiosco/ui/utils/dynamic_list.dart';
 import 'package:izi_kiosco/ui/utils/money_formatter.dart';
 import 'package:izi_kiosco/ui/utils/responsive_utils.dart';
-import 'package:izi_kiosco/ui/utils/row_container.dart';
 
 
 class PaymentPageInvoice extends StatefulWidget {
@@ -37,8 +34,6 @@ class PaymentPageInvoice extends StatefulWidget {
 
 class _PaymentPageInvoiceState extends State<PaymentPageInvoice> {
   TextEditingController businessNameController = TextEditingController();
-  TextEditingController documentNumberController = TextEditingController();
-  TextEditingController complementController = TextEditingController();
   bool documentNumberFocus = false;
   GlobalKey documentNumberKey = GlobalKey();
   TextEditingController emailController = TextEditingController();
@@ -131,77 +126,7 @@ class _PaymentPageInvoiceState extends State<PaymentPageInvoice> {
               _buttons(context, ru)
             ],
           ),
-        ),
-        if (phoneFocus || documentNumberFocus)
-          Positioned.fill(
-            child: GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: () {
-                if (phoneFocus) {
-                  context.read<PaymentBloc>().validateInput(phoneNumber: true);
-                } else {
-                  context
-                      .read<PaymentBloc>()
-                      .queryBusiness(authState: context.read<AuthBloc>().state)
-                      .then((value) {
-                    context.read<PaymentBloc>().validateInput(
-                        documentNumber: true, businessName: true);
-                  });
-                }
-                setState(() {
-                  phoneFocus = false;
-                  documentNumberFocus = false;
-                });
-              },
-              child: Container(
-                color: Colors.transparent,
-              ),
-            ),
-          ),
-        if (phoneFocus || documentNumberFocus)
-          Positioned(
-            top: documentNumberFocus
-                ? _getWidgetOffset(documentNumberKey).dy
-                : _getWidgetOffset(phoneKey).dy,
-            left: documentNumberFocus
-                ? _getWidgetOffset(documentNumberKey).dx
-                : _getWidgetOffset(phoneKey).dx,
-            child: KioscoNumericKeyboard(
-                controller: documentNumberFocus
-                    ? documentNumberController
-                    : phoneController,
-                onChanged: () {
-                  if (documentNumberFocus) {
-                    context.read<PaymentBloc>().changeInputs(
-                        documentNumber: documentNumberController.text);
-                  } else {
-                    context
-                        .read<PaymentBloc>()
-                        .changeInputs(phoneNumber: phoneController.text);
-                  }
-                },
-                onDone: () {
-                  if (phoneFocus) {
-                    context
-                        .read<PaymentBloc>()
-                        .validateInput(phoneNumber: true);
-                  } else {
-                    context
-                        .read<PaymentBloc>()
-                        .queryBusiness(
-                            authState: context.read<AuthBloc>().state)
-                        .then((value) {
-                      context.read<PaymentBloc>().validateInput(
-                          documentNumber: true, businessName: true);
-                    });
-                  }
-                  setState(() {
-                    phoneFocus = false;
-                    documentNumberFocus = false;
-                  });
-                }),
-          )
-      ],
+        )],
     );
   }
 
@@ -312,160 +237,7 @@ class _PaymentPageInvoiceState extends State<PaymentPageInvoice> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          IziText.body(
-              color: IziColors.darkGrey,
-              text: LocaleKeys.payment_inputs_documentNumber_label.tr(),
-              fontWeight: FontWeight.w400),
-          const SizedBox(
-            height: 4,
-          ),
-          if (widget.state.usaSiat && ru.isXs())
-            IziInput(
-              inputHintText: "",
-              bigLabel: (ru.gtMd() || (ru.gtSm() && ru.isVertical())),
-              value: widget.state.documentType?.codigoClasificador,
-              inputType: InputType.select,
-              inputSize: (ru.gtMd() || (ru.gtSm() && ru.isVertical()))
-                  ? InputSize.big
-                  : InputSize.normal,
-              readOnly: widget.state.qrCharge != null ||
-                  widget.state.qrLoading == true,
-              onSelected: (value) {
-                context.read<PaymentBloc>().changeInputs(documentType: value);
-              },
-              selectOptions: {
-                for (DocumentType type in widget.state.documentTypes)
-                  type.codigoClasificador:
-                      type.descripcion.split("-").firstOrNull ?? ""
-              },
-            ),
-          if (widget.state.usaSiat && ru.isXs())
-            const SizedBox(
-              height: 16,
-            ),
-          RowContainer(
-            gap: 8,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (widget.state.usaSiat && ru.gtXs())
-                Expanded(
-                  flex: 1,
-                  child: IziInput(
-                    inputHintText: "",
-                    bigLabel: (ru.gtMd() || (ru.gtSm() && ru.isVertical())),
-                    value: widget.state.documentType?.codigoClasificador,
-                    inputType: InputType.select,
-                    inputSize: (ru.gtMd() || (ru.gtSm() && ru.isVertical()))
-                        ? InputSize.big
-                        : InputSize.normal,
-                    readOnly: widget.state.qrCharge != null ||
-                        widget.state.qrLoading == true,
-                    onSelected: (value) {
-                      context
-                          .read<PaymentBloc>()
-                          .changeInputs(documentType: value);
-                    },
-                    selectOptions: {
-                      for (DocumentType type in widget.state.documentTypes)
-                        type.codigoClasificador:
-                            type.descripcion.split("-").firstOrNull ?? ""
-                    },
-                  ),
-                ),
-              Expanded(
-                flex: 2,
-                child: IziInput(
-                  key: documentNumberKey,
-                  bigLabel: (ru.gtMd() || (ru.gtSm() && ru.isVertical())),
-                  inputSize: (ru.gtMd() || (ru.gtSm() && ru.isVertical()))
-                      ? InputSize.big
-                      : InputSize.normal,
-                  inputMaxLength: 50,
-                  readOnly: (ru.gtMd() || (ru.gtSm() && ru.isVertical())),
-                  suffixWidget: widget.state.documentNumber.loading
-                      ? Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12),
-                          alignment: Alignment.center,
-                          height: 20,
-                          width: 20,
-                          child: const CircularProgressIndicator(
-                            color: IziColors.darkGrey,
-                            strokeWidth: 2,
-                          ))
-                      : null,
-                  onChanged: (value, valueRaw) {
-                    if (!(ru.gtMd() || (ru.gtSm() && ru.isVertical()))) {
-                      context.read<PaymentBloc>().changeInputs(
-                          documentNumber: documentNumberController.text);
-                    }
-                  },
-                  onEditingComplete: () {
-                    if (!(ru.gtMd() || (ru.gtSm() && ru.isVertical()))) {
-                      context
-                          .read<PaymentBloc>()
-                          .queryBusiness(
-                              authState: context.read<AuthBloc>().state)
-                          .then((value) {
-                        context.read<PaymentBloc>().validateInput(
-                            documentNumber: true, businessName: true);
-                      });
-                    }
-                  },
-                  onClick: widget.state.qrCharge == null &&
-                          widget.state.qrLoading == false &&
-                          (ru.gtMd() || (ru.gtSm() && ru.isVertical()))
-                      ? () {
-                          setState(() {
-                            documentNumberFocus = true;
-                            phoneFocus = false;
-                          });
-                        }
-                      : null,
-                  inputFormatters: [
-                    FilteringTextInputFormatter.allow(RegExp('[0-9]'))
-                  ],
-                  controller: documentNumberController,
-                  loadingAutoComplete: widget.state.documentNumber.loading,
-                  error: _getErrorsDocumentNumber(
-                      widget.state.documentNumber.inputError),
-                  inputHintText: LocaleKeys
-                      .payment_inputs_documentNumber_placeholder
-                      .tr(args: [
-                    (widget.state.documentType?.descripcion ?? "número")
-                        .split("-")
-                        .firstOrNull
-                        .toString()
-                  ]),
-                  inputType: InputType.number,
-                ),
-              ),
-              if (widget.state.usaSiat &&
-                  widget.state.documentType?.codigoClasificador ==
-                      AppConstants.codeCI)
-                Expanded(
-                  flex: 1,
-                  child: IziInput(
-                    inputHintText: "",
-                    inputMaxLength: 10,
-                    inputFormatters: [
-                      FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z]')),
-                    ],
-                    readOnly: widget.state.qrCharge != null ||
-                        widget.state.qrLoading == true,
-                    onChanged: (value, valueRaw) {
-                      context
-                          .read<PaymentBloc>()
-                          .changeInputs(complement: value);
-                    },
-                    bigLabel: (ru.gtMd() || (ru.gtSm() && ru.isVertical())),
-                    inputSize: (ru.gtMd() || (ru.gtSm() && ru.isVertical()))
-                        ? InputSize.big
-                        : InputSize.normal,
-                    inputType: InputType.normal,
-                  ),
-                ),
-            ],
-          ),
+          PaymentPageInvoiceForm(paymentState: widget.state),          
           const SizedBox(
             height: 16,
           ),
@@ -496,41 +268,26 @@ class _PaymentPageInvoiceState extends State<PaymentPageInvoice> {
             height: 16,
           ),
           IziInput(
-            focusNode: focusPhone,
             labelInput: LocaleKeys.payment_inputs_phoneNumber_label.tr(),
             inputHintText:
                 LocaleKeys.payment_inputs_phoneNumber_placeholder.tr(),
             bigLabel: (ru.gtMd() || (ru.gtSm() && ru.isVertical())),
-            key: phoneKey,
             inputMaxLength: 8,
             inputFormatters: [
               FilteringTextInputFormatter.allow(RegExp('[0-9]'))
             ],
             controller: phoneController,
-            readOnly: (ru.gtMd() || (ru.gtSm() && ru.isVertical())),
             inputSize: (ru.gtMd() || (ru.gtSm() && ru.isVertical()))
                 ? InputSize.big
                 : InputSize.normal,
-            onClick: widget.state.qrCharge == null &&
-                    widget.state.qrLoading == false &&
-                    (ru.gtMd() || (ru.gtSm() && ru.isVertical()))
-                ? () {
-                    setState(() {
-                      documentNumberFocus = false;
-                      phoneFocus = true;
-                    });
-                  }
-                : null,
             onEditingComplete: () {
               context.read<PaymentBloc>().validateInput(phoneNumber: true);
             },
             onChanged: (value, valueRaw) {
-              if(!(ru.gtMd() || (ru.gtSm() && ru.isVertical()))){
                 context.read<PaymentBloc>().changeInputs(phoneNumber: value);
-              }
             },
             error: _getErrorsPhoneNumber(widget.state.phoneNumber.inputError),
-            inputType: InputType.number,
+            inputType: (ru.gtMd() || (ru.gtSm() && ru.isVertical()))?InputType.keyboard:InputType.number,
           ),
           const SizedBox(height: 8),
           IziText.label(
@@ -674,8 +431,6 @@ class _PaymentPageInvoiceState extends State<PaymentPageInvoice> {
   _initAgain(){
     phoneController.text = "";
     businessNameController.text = "";
-    documentNumberController.text = "";
-    complementController.text = "";
     context.read<PaymentBloc>().changeInputs(
       phoneNumber: "",
       documentNumber: "",

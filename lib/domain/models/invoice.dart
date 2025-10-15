@@ -1,3 +1,5 @@
+import 'package:izi_kiosco/domain/models/item.dart';
+
 class Invoice {
 
   int? isIzi;
@@ -29,7 +31,7 @@ class Invoice {
   int? pagada;
   int? sucursal;
   String? sucursalDireccion;
-  dynamic customFactura;
+  Map customFactura;
   List<Items>? listaItems;
   num? monto;
   num? montoImpuesto;
@@ -86,7 +88,7 @@ class Invoice {
         this.sucursalDireccion,
         this.tipoFactura,
         required this.listaItems,
-        this.customFactura,
+        required this.customFactura,
 
         this.desdeInventario,
         this.isIzi,
@@ -176,7 +178,7 @@ class Invoice {
       pagada : json['pagada'],
       sucursal : json['sucursal'],
       sucursalDireccion : json['sucursalDireccion'],
-      customFactura : json['customFactura'],
+      customFactura : json['customFactura'] is Map?json['customFactura']:{},
       monto : json['monto'],
         montoImpuesto : json['montoImpuesto'],
       montoTotal : json['montoTotal'],
@@ -220,7 +222,7 @@ class Invoice {
       numeroOrden: json["numeroOrden"],
       numeroCustom: json["numeroCustom"] is int?json["numeroCustom"]:null,
       actividadEconomica: json["actividadEconomica"],
-    );
+      );
   }
 
   @override
@@ -242,6 +244,9 @@ class Items {
   num? precioTotalImpuesto;
   dynamic codigoInventario;
   dynamic codigo;
+  
+  
+  ParametrosFacturacionItem? parametrosFacturacion;
 
 
   Items({
@@ -256,7 +261,8 @@ class Items {
     this.precioUnitarioImpuesto,
     this.precioTotalImpuesto,
     this.codigoInventario,
-    this.codigo
+    this.codigo,
+        this.parametrosFacturacion
   });
 
 
@@ -292,7 +298,9 @@ class Items {
       precioUnitarioImpuesto: json["precioUnitarioImpuesto"],
       precioTotalImpuesto: json["precioTotalImpuesto"],
       codigo: json["codigo"],
-      codigoInventario: json["codigoInventario"]
+      codigoInventario: json["codigoInventario"],
+      parametrosFacturacion: json["parametrosFacturacion"] is Map?ParametrosFacturacionItem.fromJson(json["parametrosFacturacion"]) : null,
+    
     );
   }
 
