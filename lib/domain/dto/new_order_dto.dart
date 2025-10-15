@@ -112,7 +112,6 @@ class NewOrderDto {
       required this.sucursal});
 
   Map<String, dynamic> toJson() => {
-        "dispositivo": deviceId,
         "listaItems": listaItems.map(
           (e) {
             return e.toJson();

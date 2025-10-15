@@ -57,7 +57,7 @@ class AuthRepositoryTest extends AuthRepository{
   }
   
   @override
-  Future<Device> getDevice(int deviceId) {
+  Future<Device> getDevice() {
     // TODO: implement getDevice
     throw UnimplementedError();
   }

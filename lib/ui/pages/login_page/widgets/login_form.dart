@@ -53,25 +53,6 @@ class LoginForm extends StatelessWidget {
                 context.read<LoginBloc>().validateInput(tokenCard:true);
               },
           ),
-          const SizedBox(height: 20,),
-          IziInput(
-              labelInput: LocaleKeys.login_inputs_deviceId_label.tr(),
-              inputHintText: LocaleKeys.login_inputs_deviceId_placeholder.tr(),
-              inputType: InputType.number,
-              validator: (value){
-                if(value == null || value.isEmpty){
-                  return LocaleKeys.login_inputs_deviceId_errors_required.tr();
-                }
-                return null;
-              },
-              onChanged: (value,_){
-                context.read<LoginBloc>().changeInputsValues(deviceId:value);
-              },
-              onEditingComplete: (){
-                context.read<LoginBloc>().validateInput(deviceId:true);
-              },
-              error: _getErrorsDeviceId()
-          ),
           const SizedBox(height: 30,),
           IziBtn(
             buttonOnPressed:(){

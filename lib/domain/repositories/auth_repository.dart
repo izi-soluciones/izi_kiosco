@@ -13,7 +13,7 @@ abstract class AuthRepository{
   Future<Contribuyente> getCurrentContribuyenteById(int idContribuyente);
   Future<List<Sucursal> > getSucursales(int idContribuyente);
   Future<User> getCurrentUserById(String idUser);
-  Future<Device> getDevice(int deviceId);
+  Future<Device> getDevice();
   Future<List<Device>> getDevicesByContribuyente(int idContribuyente);
 
   Future<void> enableDevice(int idDevice);

@@ -171,10 +171,10 @@ class AuthRepositoryHttp extends AuthRepository{
   }
   
   @override
-  Future<Device> getDevice(int deviceId) async{
+  Future<Device> getDevice() async{
     try{
 
-      String path="/dispositivos/$deviceId";
+      String path="/dispositivos/simple";
       var response=await _dioClient.get(
           uri: path,
           options: Options(responseType: ResponseType.json)

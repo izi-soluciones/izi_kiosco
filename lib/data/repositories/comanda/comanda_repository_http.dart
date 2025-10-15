@@ -523,7 +523,7 @@ class ComandaRepositoryHttp extends ComandaRepository {
   Future<Charge> generatePaymentAttempt(
       PaymentAttemptDto paymentAttemptDto) async {
     try {
-      String path = "/solicitudes-cobro/intento-pago";
+      String path = "/solicitudes-cobro/intento-pago-kiosko";
       final tokenCaptcha =await FirebaseAppCheck.instance.getLimitedUseToken();
       var response = await _dioClient.post(
           uri: path,

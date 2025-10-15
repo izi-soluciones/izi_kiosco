@@ -41,7 +41,6 @@ class AuthBloc extends Cubit<AuthState> {
     }
     catch(_){}
     await TokenUtils.deleteToken();
-    await BusinessUtils.deleteDeviceId();
     await BusinessUtils.deleteContribuyenteId();
     await BusinessUtils.deleteSucursalId();
     await Future.delayed(const Duration(seconds: 2));
@@ -57,8 +56,7 @@ class AuthBloc extends Cubit<AuthState> {
       
       String? token = Uri.base.queryParameters["token"] ?? await TokenUtils.getToken();
       String? tokenCard = Uri.base.queryParameters["tokenCard"] ?? await TokenUtils.getTokenCard();
-      int? deviceId = int.tryParse(Uri.base.queryParameters["dispositivo"] ?? "") ?? await BusinessUtils.getDeviceId();
-      if (token == null || deviceId == null) {
+      if (token == null) {
         await TokenUtils.deleteToken();
         await UserUtils.deleteUser();
         await BusinessUtils.deleteContribuyenteId();
@@ -70,11 +68,10 @@ class AuthBloc extends Cubit<AuthState> {
       if(tokenCard!=null){
         await TokenUtils.saveTokenCard(tokenCard);
       }
-      await BusinessUtils.saveDeviceId(deviceId);
       emit(state.copyWith(status: AuthStatus.init));
       
       Map<String, dynamic> decodedToken = JwtDecoder.decode(token);
-      int? contribuyenteId = int.tryParse(decodedToken["contribuyente"]+"");
+      int? contribuyenteId = decodedToken["contribuyente"] is int?decodedToken["contribuyente"]:int.tryParse(decodedToken["contribuyente"]);
       if (contribuyenteId == null) {
         await TokenUtils.deleteToken();
         await UserUtils.deleteUser();
@@ -85,7 +82,7 @@ class AuthBloc extends Cubit<AuthState> {
       }
       await Future.delayed(const Duration(milliseconds: 2000));
 
-        Device device = await _authRepository.getDevice(deviceId);
+        Device device = await _authRepository.getDevice();
 
         Contribuyente contribuyente = await _authRepository
             .getCurrentContribuyenteById(contribuyenteId);

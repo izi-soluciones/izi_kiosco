@@ -10,7 +10,6 @@ class NewSaleLinkDto {
       required this.dispositivo});
 
   Map<String,dynamic> toJson()=>{
-    "dispositivo":dispositivo,
       "listaItems": listaItems.map((item) => {
         "item": item.id,
         "cantidad": item.cantidad

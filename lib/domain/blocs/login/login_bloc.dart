@@ -22,12 +22,10 @@ class LoginBloc extends Cubit<LoginState>{
     try{
       if(_validateInputs()){
         await TokenUtils.saveToken(state.token.value);
-        final deviceId = int.parse(state.deviceId.value);
-        await BusinessUtils.saveDeviceId(deviceId);
         if(state.tokenCard.value.isNotEmpty){
           await TokenUtils.saveTokenCard(state.tokenCard.value);
         }
-        await _authRepository.getDevice(deviceId);
+        await _authRepository.getDevice();
         emit(state.copyWith(status: LoginStatus.successLogin));
       }
     }
@@ -41,8 +39,7 @@ class LoginBloc extends Cubit<LoginState>{
 
   changeInputsValues({
     String? token,
-    String? tokenCard,
-    String? deviceId
+    String? tokenCard
 }){
     if(token!=null){
       emit(state.copyWith(
@@ -54,16 +51,10 @@ class LoginBloc extends Cubit<LoginState>{
         tokenCard: state.token.changeValue(tokenCard)
       ));
     }
-    if(deviceId!=null){
-      emit(state.copyWith(
-          deviceId: state.deviceId.changeValue(deviceId)
-      ));
-    }
   }
   validateInput({
     bool token = false,
-    bool tokenCard = false,
-    bool deviceId = false
+    bool tokenCard = false
   }){
     if(token){
       emit(state.copyWith(
@@ -75,26 +66,17 @@ class LoginBloc extends Cubit<LoginState>{
           tokenCard: state.tokenCard.validateError()
       ));
     }
-    if(deviceId){
-      emit(state.copyWith(
-          deviceId: state.deviceId.validateError()
-      ));
-    }
   }
 
   bool _validateInputs(){
     emit(state.copyWith(
         token: state.token.validateError(),
-        tokenCard: state.tokenCard.validateError(),
-        deviceId: state.deviceId.validateError()
+        tokenCard: state.tokenCard.validateError()
     ));
     if(state.token.inputError !=null){
       return false;
     }
     if(state.tokenCard.inputError !=null){
-      return false;
-    }
-    if(state.deviceId.inputError !=null){
       return false;
     }
 
