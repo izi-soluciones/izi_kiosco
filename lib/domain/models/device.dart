@@ -50,6 +50,7 @@ class ConfigDevice {
   final int? timePayment;
   final String? pin;
   final bool? sortByPriority;
+  final String? token;
 
   const ConfigDevice(
       {this.ipAtc,
@@ -60,6 +61,7 @@ class ConfigDevice {
       required this.actividadEconomica,
       required this.almacen,
       required this.isRetail,
+      required this.token,
       this.ipLinkser,
       this.video,
         required this.pin,
@@ -93,6 +95,7 @@ class ConfigDevice {
       jsonObj?["pin"] is String ? jsonObj!["pin"] : null,
       sortByPriority:
       jsonObj?["ordenarPrioridad"] is bool ? jsonObj!["ordenarPrioridad"] : null,
+      token: jsonObj?["token"] is String ? jsonObj!["token"] : null,
     );
     return config;
   }

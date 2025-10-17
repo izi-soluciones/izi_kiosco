@@ -110,8 +110,7 @@ class Routes {
                   create: (context) => MakeOrderBloc(
                       ComandaRepositoryHttp(), BusinessRepositoryHttp(),
                       numberDiners: numberDiners,
-                      tableId: tableId,)
-                    ..init(context.read<AuthBloc>().state),
+                      tableId: tableId,),
                   child: MakeOrderPage(fromTables: fromTables),
                 ));
               },

@@ -6,7 +6,9 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:izi_design_system/atoms/izi_typography.dart';
+import 'package:izi_design_system/molecules/izi_btn.dart';
 import 'package:izi_design_system/tokens/colors.dart';
+import 'package:izi_design_system/tokens/types.dart';
 import 'package:izi_kiosco/app/values/app_constants.dart';
 import 'package:izi_kiosco/app/values/locale_keys.g.dart';
 import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
@@ -56,6 +58,7 @@ class _PaymentPageQRState extends State<PaymentPageQR> {
 
   @override
   Widget build(BuildContext context) {
+    final authState = context.read<AuthBloc>().state;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -115,6 +118,23 @@ class _PaymentPageQRState extends State<PaymentPageQR> {
                         )
                       : const SizedBox.shrink(),
             ),
+          ),
+          if(authState.currentDevice?.config.token != null && widget.state.qrCharge != null && !widget.state.qrLoading)
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(top: 16),
+                child: IziBtn(
+                  buttonText: "Descargar QR",
+                  buttonType: ButtonType.outline,
+                  buttonSize: ButtonSize.small,
+                  buttonOnPressed: (){
+                    context.read<PaymentBloc>().downloadQrCode();
+                  }
+                  ),
+              ),
+            ],
           ),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,

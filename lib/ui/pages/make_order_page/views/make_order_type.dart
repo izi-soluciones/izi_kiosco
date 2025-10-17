@@ -9,6 +9,7 @@ import 'package:izi_design_system/tokens/colors.dart';
 import 'package:izi_design_system/tokens/izi_icons.dart';
 import 'package:izi_kiosco/app/values/locale_keys.g.dart';
 import 'package:izi_kiosco/app/values/routes_keys.dart';
+import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/make_order/make_order_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/page_utils/page_utils_bloc.dart';
 import 'package:izi_kiosco/ui/general/izi_header_kiosk.dart';
@@ -121,8 +122,9 @@ class _MakeOrderTypeState extends State<MakeOrderType> {
           child: IziCard(
             padding: const EdgeInsets.all(16),
             onPressed: (){
-              context.read<MakeOrderBloc>().changeTakeAway(takeAway);
+              context.read<MakeOrderBloc>().init(context.read<AuthBloc>().state,takeAway);
               context.read<MakeOrderBloc>().changeStepStatus(1);
+              
             },
             child: FractionallySizedBox(
               widthFactor: 0.6,

@@ -34,7 +34,13 @@ import 'package:izi_kiosco/domain/utils/crash_report.dart';
 import 'package:izi_kiosco/domain/utils/input_obj.dart';
 import 'package:izi_kiosco/domain/utils/print/print_template.dart';
 import 'package:izi_kiosco/domain/utils/print_utils.dart';
+import 'dart:io';
+import 'package:flutter/material.dart';
 import 'package:izi_kiosco/ui/utils/money_formatter.dart';
+import 'package:universal_html/html.dart' as html;
+import 'package:dio/dio.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
 part 'payment_state.dart';
 part 'payment_inputs.dart';
 class PaymentConfig{
@@ -272,7 +278,7 @@ class PaymentBloc extends Cubit<PaymentState> {
         );
         return;
       }
-      if(authState.currentContribuyente?.habilitadoFacturacion==true){
+      if(authState.currentContribuyente?.habilitadoFacturacion==true || authState.currentDevice?.config.isRetail!=true){
         emit(state.copyWith(
             paymentType: paymentType,
             step: 2,
@@ -875,7 +881,7 @@ class PaymentBloc extends Cubit<PaymentState> {
         state.currentCurrency
         );
     var printUtils = PrintUtils();
-    await printUtils.print(tmp);
+    await printUtils.print(tmp, authState.currentDevice);
   }
 
   _printRollo(AuthState authState, {String? idInvoice, Invoice? invoice}) async {
@@ -899,7 +905,7 @@ class PaymentBloc extends Cubit<PaymentState> {
       }
        
       var printUtils = PrintUtils();
-      await printUtils.print(tmp);
+      await printUtils.print(tmp, authState.currentDevice);
     }
     catch(e){
       log(e.toString());
@@ -1104,4 +1110,41 @@ class PaymentBloc extends Cubit<PaymentState> {
     }
   }
 
+  Future<void> downloadQrCode() async {
+    try {
+      final qrUrl = state.qrCharge?.qrUrl;
+      if (qrUrl == null) {
+        return;
+      }
+
+      final dio = Dio();
+      final response = await dio.get<List<int>>(
+        qrUrl,
+        options: Options(responseType: ResponseType.bytes),
+      );
+
+      if (response.statusCode == 200 && response.data != null) {
+        final bytes = Uint8List.fromList(response.data!);
+        final fileName = 'qr_code_${DateTime.now().millisecondsSinceEpoch}.png';
+
+        if (kIsWeb) {
+          final base64data = base64Encode(bytes);
+          final a = html.AnchorElement(href: 'data:image/png;base64,$base64data');
+          a.setAttribute('download', fileName);
+          a.click();
+        } else {
+          final status = await Permission.storage.request();
+          if (status.isGranted) {
+            final directory = await getApplicationDocumentsDirectory();
+            final file = File('${directory.path}/$fileName');
+            await file.writeAsBytes(bytes);
+          } else {
+          }
+        }
+      } else {
+      }
+    } catch (e) {
+      log(e.toString());
+    }
+  }
 }

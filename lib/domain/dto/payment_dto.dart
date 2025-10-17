@@ -58,7 +58,7 @@ class PaymentDtoVentaData{
       required this.telefonoComprador});
 
   Map toJson()=>{
-    "tipoDocumento": tipoDocumento?.toJson(),
+    if (tipoDocumento != null)"tipoDocumento": tipoDocumento?.toJson(),
     "nit": nit,
     if(complemento?.isNotEmpty==true)"complemento": complemento,
     "razonSocial": razonSocial,

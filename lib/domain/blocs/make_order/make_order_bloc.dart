@@ -16,8 +16,6 @@ import 'package:izi_kiosco/domain/repositories/business_repository.dart';
 import 'package:izi_kiosco/domain/repositories/comanda_repository.dart';
 import 'package:izi_kiosco/domain/strategies/taxes/taxes_strategy.dart';
 import 'package:izi_kiosco/domain/utils/crash_report.dart';
-import 'package:izi_kiosco/domain/utils/print/print_template.dart';
-import 'package:izi_kiosco/domain/utils/print_utils.dart';
 part 'make_order_state.dart';
 
 class MakeOrderBloc extends Cubit<MakeOrderState> {
@@ -27,7 +25,7 @@ class MakeOrderBloc extends Cubit<MakeOrderState> {
       : super(MakeOrderState.init(tableId, numberDiners));
 
   TaxesStrategy? taxesStrategy;
-  init(AuthState authState) async {
+  init(AuthState authState, bool takeAway) async {
     try {
       taxesStrategy = authState.taxesStrategy;
       int indexCurrency = authState.currencies.indexWhere((element) =>
@@ -83,28 +81,55 @@ class MakeOrderBloc extends Cubit<MakeOrderState> {
       );
 
       List<Item> listItems = await _comandaRepository.getSaleItems(catalog: authState.currentSucursal?.catalogo??"",sortByPriority: authState.currentDevice?.config.sortByPriority==true);
-      for (var cat in list) {
-        List<Item> itemsCat = [];
-        for (var i in listItems) {
-          i.cantidad=1;
-          _setItemPrice(i, 0);
-          if (i.categoriaId == cat.id && i.categoriaId != null) {
-            i.categoria = cat.nombre;
-            itemsCat.add(i);
-          }
+
+      listItems.removeWhere((element) {
+        return (takeAway && element.kioscoOcultarLlevar) || (!takeAway && element.kioscoOcultarAqui);
+      });
+      Map<String, CategoryOrder> categoryMap = {};
+      for (var item in listItems) {
+        item.cantidad = 1;
+        _setItemPrice(item, 0);
+
+        String targetCategoryId;
+        String targetCategoryName;
+
+        if (item.subCategoria != null && item.subCategoria!.isNotEmpty) {
+          targetCategoryId = item.subCategoria!;
+          targetCategoryName = item.subCategoria!;
+        } else if (item.categoriaId != null) {
+          targetCategoryId = item.categoriaId!;
+          targetCategoryName = item.categoria ?? "";
+        } else {
+          continue;
         }
-        cat.items = itemsCat;
+
+        if (!categoryMap.containsKey(targetCategoryId)) {
+          categoryMap[targetCategoryId] = CategoryOrder(
+            id: targetCategoryId,
+            nombre: targetCategoryName,
+            items: [],
+          );
+        }
+        item.categoria = targetCategoryName;
+        item.categoriaId = targetCategoryId;
+        categoryMap[targetCategoryId]!.items.add(item);
       }
+
+      list = categoryMap.values.toList();
       list.removeWhere((element) => element.items.isEmpty);
-        itemsFeatured=listItems.where((element) => element.customItem is Map && element.customItem?["kiosco"]?["destacado"]==true).toList();
-        list.sort(
-              (a, b) {
-            return a.nombre.toLowerCase().compareTo(b .nombre.toLowerCase());
-          },
-        );
-        if(itemsFeatured.isNotEmpty){
-          list.insert(0, CategoryOrder(nombre: "", items: itemsFeatured));
-        }
+      list.sort(
+            (a, b) => a.nombre.compareTo(b.nombre),
+      );
+
+      itemsFeatured=listItems.where((element) => element.customItem is Map && element.customItem?["kiosco"]?["destacado"]==true).toList();
+      list.sort(
+            (a, b) {
+          return a.nombre.toLowerCase().compareTo(b .nombre.toLowerCase());
+        },
+      );
+      if(itemsFeatured.isNotEmpty){
+        list.insert(0, CategoryOrder(nombre: "", items: itemsFeatured));
+      }
       }
       String? priceList = catalog?.listaPrecio;
       if (priceList != null) {
@@ -135,6 +160,7 @@ class MakeOrderBloc extends Cubit<MakeOrderState> {
             status: MakeOrderStatus.successGet,
             categories: list,
             indexCategory: 0,
+            takeAway: takeAway,
             itemsFeatured: itemsFeatured,
             cashRegisters: cashRegisters,
             currentCurrency: currentCurrency));

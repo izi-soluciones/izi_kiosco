@@ -23,6 +23,10 @@ class Item {
   num taxPrice = 0;
   ParametrosFacturacionItem? parametrosFacturacion;
 
+  String? subCategoria;
+  bool kioscoOcultarLlevar;
+  bool kioscoOcultarAqui;
+
 
 
 
@@ -45,6 +49,9 @@ class Item {
       required this.categoriaId,
       required this.centroProduccion,
       required this.preciosVenta,
+      required this.subCategoria,
+      required this.kioscoOcultarAqui,
+      required this.kioscoOcultarLlevar,
       this.precioModUnitario =0,
         this.precioModificadores = 0,
         this.parametrosFacturacion,
@@ -70,9 +77,12 @@ class Item {
         categoriaId: json["categoria"]?["id"] ?? json["categoria"]?["_id"],
         centroProduccion: json["centroProduccion"],
         codigoBarras: json["codigoBarras"],
+        subCategoria: json["subcategoria"] is String?json["subcategoria"]: null,
         preciosVenta: json["preciosVenta"] is List? List.from(json["preciosVenta"]).where((element) => element is Map && element["listaPrecio"] is String && element["precio"] is num).map((e) => PrecioVenta(listaPrecio: e["listaPrecio"], precio: e["precio"])).toList():[] ,
         parametrosFacturacion: json["parametrosFacturacion"] is Map?ParametrosFacturacionItem.fromJson(json["parametrosFacturacion"]) : null,
         id: json["id"] ?? 0,
+        kioscoOcultarAqui: json["kioscoOcultarAqui"] is bool? json["kioscoOcultarAqui"]: false,
+        kioscoOcultarLlevar: json["kioscoOcultarLlevar"] is bool? json["kioscoOcultarLlevar"]: false,
         valor: json["valor"]);
   }
 
@@ -93,8 +103,11 @@ class Item {
       categoria: categoria,
       categoriaId: categoriaId,
       preciosVenta: preciosVenta,
+      subCategoria: subCategoria,
       centroProduccion: centroProduccion,
       parametrosFacturacion: parametrosFacturacion,
+      kioscoOcultarAqui: kioscoOcultarAqui,
+      kioscoOcultarLlevar: kioscoOcultarLlevar,
       codigoBarras: codigoBarras);
 
   Map<String,dynamic> toJson(){

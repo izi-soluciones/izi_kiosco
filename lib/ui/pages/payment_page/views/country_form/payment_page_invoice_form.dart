@@ -58,7 +58,7 @@ class _PaymentPageInvoiceFormState extends State<PaymentPageInvoiceForm> {
           if(widget.paymentState.countryTaxes==PaymentCountryTaxes.colombia){
             return _co(ru,context);
           }
-          return const SizedBox.shrink();
+          return _documentNumber(ru,context);
       },),
     );
   }

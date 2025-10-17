@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:izi_kiosco/domain/models/device.dart';
 import 'package:printing/printing.dart';
 import 'package:sunmi_printer_plus/column_maker.dart';
 import 'package:sunmi_printer_plus/enums.dart';
@@ -126,7 +127,7 @@ class PrintUtils {
       }
     }
   }
-  print(List<IziPrintItem> values) async {
+  print(List<IziPrintItem> values, Device? device) async {
     if (kIsWeb) {
       await _pdfPrint(values);
     } else {
