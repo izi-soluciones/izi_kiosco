@@ -119,7 +119,7 @@ class _PaymentPageQRState extends State<PaymentPageQR> {
                       : const SizedBox.shrink(),
             ),
           ),
-          if(authState.currentDevice?.config.token != null && widget.state.qrCharge != null && !widget.state.qrLoading)
+          if(authState.currentDevice?.config.descargarQR==true && widget.state.qrCharge != null && !widget.state.qrLoading)
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
