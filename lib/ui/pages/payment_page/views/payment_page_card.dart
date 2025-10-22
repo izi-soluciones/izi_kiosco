@@ -1,5 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:izi_design_system/atoms/izi_typography.dart';
 import 'package:izi_design_system/tokens/colors.dart';
@@ -7,6 +8,8 @@ import 'package:izi_kiosco/app/values/assets_keys.dart';
 import 'package:izi_kiosco/app/values/locale_keys.g.dart';
 import 'package:izi_kiosco/domain/blocs/payment/payment_bloc.dart';
 import 'package:izi_kiosco/ui/general/izi_header_kiosk.dart';
+import 'package:izi_kiosco/ui/modals/warning_modal.dart';
+import 'package:izi_kiosco/ui/utils/custom_alerts.dart';
 import 'package:izi_kiosco/ui/utils/money_formatter.dart';
 
 class PaymentPageCard extends StatefulWidget {
@@ -18,6 +21,34 @@ class PaymentPageCard extends StatefulWidget {
 }
 
 class _PaymentPageCardState extends State<PaymentPageCard> {
+
+  bool showCancel= false;
+  verifyCancel()async {
+    await Future.delayed(const Duration(seconds: 60));
+    if(mounted){
+      setState(() {
+        showCancel =true;
+      });
+    }
+  }
+  @override
+  void initState() {
+    verifyCancel();
+    super.initState();
+  }
+
+  _cancelPayment(){
+    CustomAlerts.defaultAlert(
+        context: context,
+        dismissible: true,
+        child: WarningModal(
+            onAccept: ()async{
+              context.read<PaymentBloc>().cancelPaymentCard();
+            },
+            title: "Esta seguro de parar la transaccion"
+        )
+    );
+  }
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -87,6 +118,35 @@ class _PaymentPageCardState extends State<PaymentPageCard> {
                 text:
                     "${LocaleKeys.payment_body_total.tr()}: ${(widget.state.paymentObj?.amount ?? 0).moneyFormat(currency: widget.state.currentCurrency?.simbolo)}",
                 fontWeight: FontWeight.w600),
+            if(showCancel)
+            const SizedBox(
+              height: 32,
+            ),
+            if(showCancel)
+            IziText.titleBig(
+                color: IziColors.primary,
+                textAlign: TextAlign.center,
+                text:"Esta teniendo algun problema?",
+                fontWeight: FontWeight.w400),
+            if(showCancel)
+            Padding(
+              padding: const EdgeInsets.only(top: 16.0),
+              child: InkWell(
+                onTap: () {
+                  _cancelPayment();
+                },
+                child: Text(
+                  'Parar la transaccion',
+                  style: const TextStyle(
+                    fontSize: 18,
+                    color: IziColors.red,
+                    decoration: TextDecoration.underline,
+                    decorationColor: Colors.red,
+                    decorationThickness: 1.5,
+                  ),
+                ),
+              ),
+              )
           ],
         ))
       ],

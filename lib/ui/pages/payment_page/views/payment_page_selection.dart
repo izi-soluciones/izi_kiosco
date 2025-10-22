@@ -107,7 +107,7 @@ class PaymentPageSelection extends StatelessWidget {
             icon: IziIcons.card,
             text: LocaleKeys.payment_buttons_card.tr(),
           ),
-        if(state.paymentObj?.isComanda==true)
+        if(state.paymentObj?.isComanda==true && authState.currentDevice?.config.ocultarCash != true)
         PaymentMethodBtn(
             onPressed: (){
               _selectPayment(PaymentType.cashRegister,context);

@@ -79,6 +79,14 @@ abstract class IziPrintItem {}
 class PrintUtils {
   printDummy() async {
     if (kIsWeb) {
+      await _pdfPrint([
+        IziPrintText(
+          text: "Bienvenido Kiosko-iZi",
+          size: IziPrintSize.md,
+          bold: true,
+          align: IziPrintAlign.center,
+        )
+      ]);
     } else {
       if (Platform.isAndroid) {
         var resBinding = await SunmiPrinter.bindingPrinter();

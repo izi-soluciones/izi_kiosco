@@ -663,6 +663,7 @@ class ComandaRepositoryHttp extends ComandaRepository {
   Future<CardPayment> callCardPaymentATC(
       {required String amount,
       required String ip,
+      required CancelToken cancelToken,
       required bool contactless}) async {
     try {
       String path;
@@ -673,6 +674,7 @@ class ComandaRepositoryHttp extends ComandaRepository {
       }
       var response = await _dioClient.get(
           uri: path,
+          cancelToken: cancelToken,
           baseUrl: dotenv.env[EnvKeys.atcServerPOS],
           options: Options(
               responseType: ResponseType.json,

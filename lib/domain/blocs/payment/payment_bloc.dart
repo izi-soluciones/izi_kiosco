@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:developer';
 import 'dart:math' as math;
 import 'package:collection/collection.dart';
+import 'package:dio/dio.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -56,6 +57,7 @@ class PaymentBloc extends Cubit<PaymentState> {
   final BusinessRepository _businessRepository;
   final SocketRepository _socketRepository;
   PaymentConfig? countryConfig;
+  CancelToken cancelToken = CancelToken();
   PaymentBloc(
       this._comandaRepository, this._businessRepository, this._socketRepository)
       : super(PaymentState.init());
@@ -371,6 +373,7 @@ class PaymentBloc extends Cubit<PaymentState> {
           cardPayment = await _comandaRepository.callCardPaymentATC(
               amount: (state.paymentObj?.amount ?? 0).moneyFormat(),
               ip: authState.currentDevice!.config.ipAtc!,
+              cancelToken: cancelToken,
               contactless: contactless);
         } catch (e) {
           if (authState.currentDevice?.config.demo == true) {
@@ -443,6 +446,7 @@ class PaymentBloc extends Cubit<PaymentState> {
         try {
           cardPayment = await _comandaRepository.callCardPaymentATC(
               amount: (state.paymentObj?.amount ?? 0).moneyFormat(),
+              cancelToken: cancelToken,
               ip: authState.currentDevice!.config.ipAtc!,
               contactless: contactless);
         } catch (e) {
@@ -766,14 +770,15 @@ class PaymentBloc extends Cubit<PaymentState> {
                   if (comanda.custom is Map && (comanda.custom["numeroCustom"] != null)) {
                     numero = comanda.custom["numeroCustom"];
                   }
-                  await _printRolloOrder(authState,
-                      orderNumber: comanda.numero?.toInt() ?? 0,
-                      customOrderNumber: numero?.toInt());
-                  if (kIsWeb) {
-                    await Future.delayed(const Duration(milliseconds: 1500));
-                  }
                   if(comanda.custom is Map && comanda.custom["facturaUuid"] is String){
-                    await _printRollo(authState, idInvoice: comanda.custom["facturaUuid"]);
+                    await _printRollo(authState,
+                        idInvoice: comanda.custom["facturaUuid"],
+                        orderNumber: comanda.numero?.toInt() ?? 0,
+                        customOrderNumber: numero?.toInt());
+                  } else {
+                    await _printRolloOrder(authState,
+                        orderNumber: comanda.numero?.toInt() ?? 0,
+                        customOrderNumber: numero?.toInt());
                   }
                   emit(state.copyWith(step: 5, status: PaymentStatus.paymentProcessed));
                   timerSuccess = Timer(
@@ -801,18 +806,19 @@ class PaymentBloc extends Cubit<PaymentState> {
               timerQR?.cancel();
               timeoutTimer.cancel();
               try {
-                if (event["numeroOrden"] is int) {
+                if (event["uuidFactura"] is String && event["numeroOrden"] is int) {
+                  await _printRollo(authState,
+                      idInvoice: event["uuidFactura"],
+                      orderNumber: event["numeroOrden"],
+                      customOrderNumber: event["numeroCustom"] is int
+                          ? event["numeroCustom"]
+                          : null);
+                } else if (event["numeroOrden"] is int) {
                   await _printRolloOrder(authState,
                       orderNumber: event["numeroOrden"],
                       customOrderNumber: event["numeroCustom"] is int
                           ? event["numeroCustom"]
                           : null);
-                }
-                if (kIsWeb) {
-                  await Future.delayed(const Duration(seconds: 1));
-                }
-                if (event["uuidFactura"] is String) {
-                  await _printRollo(authState, idInvoice: event["uuidFactura"]);
                 }
               } catch (_) {}
               if (qrStream != null) {
@@ -884,26 +890,43 @@ class PaymentBloc extends Cubit<PaymentState> {
     await printUtils.print(tmp, authState.currentDevice);
   }
 
-  _printRollo(AuthState authState, {String? idInvoice, Invoice? invoice}) async {
+  _printRollo(AuthState authState, {String? idInvoice, Invoice? invoice, int? orderNumber, int? customOrderNumber}) async {
     try{
-      if (idInvoice == null && invoice == null) {
+      List<IziPrintItem> tmp = [];
+
+      if (orderNumber != null) {
+        var orderTmp = await PrintTemplate.order80(
+            orderNumber,
+            customOrderNumber,
+            authState.currentContribuyente!,
+            authState.currentSucursal!,
+            state.paymentObj,
+            state.currentCurrency
+        );
+        tmp.addAll(orderTmp);
+        tmp.add(IziPrintLineWrap(lines: 2));
+      }
+
+      if (idInvoice == null && invoice == null && orderNumber == null) {
         return;
       }
       if (idInvoice != null) {
         invoice = await _comandaRepository.getInvoice(idInvoice);
       }
-      List<IziPrintItem> tmp;
-      if(authState.currentSucursal?.config is Map &&
-      (authState.currentSucursal?.config as Map)["tipoFacturaVentas"] == "compacto"
-      ){
-        tmp= await PrintTemplate.printInvoiceCompact(
-          authState.currentContribuyente!, authState.currentSucursal!,invoice!);
+
+      if (invoice != null) {
+        if(authState.currentSucursal?.config is Map &&
+        (authState.currentSucursal?.config as Map)["tipoFacturaVentas"] == "compacto"
+        ){
+          tmp.addAll(await PrintTemplate.printInvoiceCompact(
+            authState.currentContribuyente!, authState.currentSucursal!,invoice!));
+        }
+        else{
+          tmp.addAll(await PrintTemplate.printInvoice(
+            authState.currentContribuyente!, authState.currentSucursal!,invoice!));
+        }
       }
-      else{
-        tmp= await PrintTemplate.printInvoice(
-          authState.currentContribuyente!, authState.currentSucursal!,invoice!);
-      }
-       
+
       var printUtils = PrintUtils();
       await printUtils.print(tmp, authState.currentDevice);
     }
@@ -1108,6 +1131,10 @@ class PaymentBloc extends Cubit<PaymentState> {
           paramsCo: state.paramsCo?.copyWith(
             ivaResponsability: ivaResponsability)));
     }
+  }
+  cancelPaymentCard(){
+    cancelToken.cancel();
+    cancelToken = CancelToken();
   }
 
   Future<void> downloadQrCode() async {

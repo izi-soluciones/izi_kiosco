@@ -52,6 +52,7 @@ class ConfigDevice {
   final bool? sortByPriority;
   final String? token;
   final bool descargarQR;
+  final bool ocultarCash;
 
   const ConfigDevice(
       {this.ipAtc,
@@ -65,6 +66,7 @@ class ConfigDevice {
       required this.token,
       this.ipLinkser,
       required this.descargarQR,
+      required this.ocultarCash,
       this.video,
         required this.pin,
       required this.demo,
@@ -99,6 +101,7 @@ class ConfigDevice {
       jsonObj?["ordenarPrioridad"] is bool ? jsonObj!["ordenarPrioridad"] : null,
       token: jsonObj?["token"] is String ? jsonObj!["token"] : null,
       descargarQR: jsonObj?["descargarQR"] is bool ? jsonObj!["descargarQR"] : false,
+      ocultarCash: jsonObj?["ocultarCash"] is bool ? jsonObj!["ocultarCash"] : false,
     );
     return config;
   }
