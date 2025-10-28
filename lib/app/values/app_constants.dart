@@ -24,6 +24,12 @@ class AppConstants{
   static const idPaymentMethodOthers=8;
   static const idPaymentMethodPOS=0;
 
+  static const responsabilidadFiscalCo = "R-99-PN";
+  static const tipoIdentificacionCo = "13";
+  static const tipoPersonaCo = "2";
+  static const responsabilidadIvaCo = "48";
+  static const defaultNitCo = "222222222222";
+  static const defaultRazonSocialCo = "CONSUMIDOR FINAL";
 
 
   static const categoryIcons=[

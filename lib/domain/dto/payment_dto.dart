@@ -64,6 +64,6 @@ class PaymentDtoVentaData{
     "razonSocial": razonSocial,
     "telefonoComprador": telefonoComprador,
     if(correoElectronico?.isNotEmpty==true)"correoElectronico": correoElectronico,
-    if(co!=null)"co": co
+    if(co!=null)"CO": co
   };
 }

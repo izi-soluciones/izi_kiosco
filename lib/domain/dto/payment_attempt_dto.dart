@@ -1,3 +1,5 @@
+import 'package:izi_kiosco/domain/dto/payment_dto.dart';
+
 class PaymentAttemptDto {
   int metodoPago;
   String uuid;
@@ -7,6 +9,7 @@ class PaymentAttemptDto {
   String? correoElectronico;
   Map? tipoDocumento;
   String? complemento;
+  PaymentDtoVentaDataCo? co;
 
   PaymentAttemptDto(
       {
@@ -30,7 +33,8 @@ class PaymentAttemptDto {
       "telefonoComprador": telefonoComprador,
       if(complemento!=null)"complemento": complemento,
       if(tipoDocumento!=null)"tipoDocumento": tipoDocumento,
-      if(correoElectronico!=null)"correoElectronico": correoElectronico
+      if(correoElectronico!=null)"correoElectronico": correoElectronico,
+      if(co!=null)"CO": co
     }
   };
 }

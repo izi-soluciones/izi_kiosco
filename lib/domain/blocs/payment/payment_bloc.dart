@@ -990,8 +990,6 @@ class PaymentBloc extends Cubit<PaymentState> {
     identificationType = listIdentificationType.firstOrNull;
     ivaResponsability = listIvaResponsability.lastOrNull;
     personType = listPersonType.lastOrNull;
-
-    listTaxResponsability.insert(0,TaxResponsability(codigo: null, nombre: "Sin responsabilidad fiscal"));
     emit(state.copyWith(paramsCo: ParamsCo(
       identificationType: identificationType?.codigo,
       ivaResponsability: ivaResponsability?.codigo,
@@ -1009,7 +1007,16 @@ class PaymentBloc extends Cubit<PaymentState> {
     var personType = state.paramsCo?.personType;
     var taxResponsability = state.paramsCo?.taxResponsability;
 
-    if(identificationType ==null || ivaResponsability ==null || personType == null){
+    if(state.documentNumber.value.isEmpty){
+      paymentDtoVentaData.nit = AppConstants.defaultNitCo;
+      paymentDtoVentaData.razonSocial = AppConstants.defaultRazonSocialCo;
+      identificationType = AppConstants.tipoIdentificacionCo;
+      ivaResponsability = AppConstants.responsabilidadIvaCo;
+      personType = AppConstants.tipoPersonaCo;
+      taxResponsability = AppConstants.responsabilidadFiscalCo;
+    }
+
+    if(identificationType ==null || ivaResponsability ==null || personType == null  || taxResponsability == null){
       throw "Parametros incorrectos";
     }
 
