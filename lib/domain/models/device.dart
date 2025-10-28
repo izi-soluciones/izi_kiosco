@@ -53,6 +53,7 @@ class ConfigDevice {
   final String? token;
   final bool descargarQR;
   final bool ocultarCash;
+  final bool facturaCompacto;
 
   const ConfigDevice(
       {this.ipAtc,
@@ -67,6 +68,7 @@ class ConfigDevice {
       this.ipLinkser,
       required this.descargarQR,
       required this.ocultarCash,
+      required this.facturaCompacto,
       this.video,
         required this.pin,
       required this.demo,
@@ -102,6 +104,7 @@ class ConfigDevice {
       token: jsonObj?["token"] is String ? jsonObj!["token"] : null,
       descargarQR: jsonObj?["descargarQR"] is bool ? jsonObj!["descargarQR"] : false,
       ocultarCash: jsonObj?["ocultarCash"] is bool ? jsonObj!["ocultarCash"] : false,
+      facturaCompacto: jsonObj?["facturaCompacto"] is bool ? jsonObj!["facturaCompacto"] : false,
     );
     return config;
   }

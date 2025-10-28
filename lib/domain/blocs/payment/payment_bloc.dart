@@ -894,36 +894,52 @@ class PaymentBloc extends Cubit<PaymentState> {
     try{
       List<IziPrintItem> tmp = [];
 
-      if (orderNumber != null) {
-        var orderTmp = await PrintTemplate.order80(
-            orderNumber,
-            customOrderNumber,
-            authState.currentContribuyente!,
-            authState.currentSucursal!,
-            state.paymentObj,
-            state.currentCurrency
-        );
-        tmp.addAll(orderTmp);
-        tmp.add(IziPrintLineWrap(lines: 2));
-      }
-
       if (idInvoice == null && invoice == null && orderNumber == null) {
         return;
       }
       if (idInvoice != null) {
         invoice = await _comandaRepository.getInvoice(idInvoice);
       }
+      if(orderNumber!=null){
+        tmp = await PrintTemplate.order80(
+              orderNumber,
+              customOrderNumber,
+              authState.currentContribuyente!,
+              authState.currentSucursal!,
+              state.paymentObj,
+              state.currentCurrency
+          );
+      }
+      if(invoice==null){
+        var printUtils = PrintUtils();
+        await printUtils.print(tmp, authState.currentDevice);
+        return;
+      }
 
-      if (invoice != null) {
+      if(authState.currentDevice?.config.facturaCompacto==true
+      ){
+        tmp = await PrintTemplate.printInvoiceCompact(
+          authState.currentContribuyente!,
+          authState.currentSucursal!,
+          invoice,
+          orderNumber: orderNumber,
+          customOrderNumber: customOrderNumber
+        );
+      }
+      else{
+        tmp.add(IziPrintLineWrap(lines: 2));
         if(authState.currentSucursal?.config is Map &&
-        (authState.currentSucursal?.config as Map)["tipoFacturaVentas"] == "compacto"
+          (authState.currentSucursal?.config as Map)["tipoFacturaVentas"] == "compacto"
         ){
           tmp.addAll(await PrintTemplate.printInvoiceCompact(
-            authState.currentContribuyente!, authState.currentSucursal!,invoice!));
+            authState.currentContribuyente!,
+            authState.currentSucursal!,
+            invoice
+          ));
         }
         else{
-          tmp.addAll(await PrintTemplate.printInvoice(
-            authState.currentContribuyente!, authState.currentSucursal!,invoice!));
+        tmp.addAll(await PrintTemplate.printInvoice(
+            authState.currentContribuyente!, authState.currentSucursal!,invoice));
         }
       }
 

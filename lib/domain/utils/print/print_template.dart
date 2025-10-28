@@ -18,11 +18,12 @@ class PrintTemplate {
   static Future<List<IziPrintItem>>  printInvoiceCompact(
   Contribuyente contribuyente,
   Sucursal sucursal,
-  Invoice factura,)async {
+  Invoice factura,
+  {int? orderNumber, int? customOrderNumber})async {
     if(contribuyente.habilitadoFacturacion == true && contribuyente.config["paisId"]=="CO"){
-      return invoiceCompactCo(factura,contribuyente,sucursal);
+      return invoiceCompactCo(factura,contribuyente,sucursal, orderNumber: orderNumber, customOrderNumber: customOrderNumber);
     }
-    return await invoiceCompact(factura,contribuyente,sucursal);
+    return await invoiceCompact(factura,contribuyente,sucursal, orderNumber: orderNumber, customOrderNumber: customOrderNumber);
   }
   static Future<List<IziPrintItem>>  printInvoice(
   Contribuyente contribuyente,
@@ -793,13 +794,24 @@ static List<IziPrintItem> invoice80Co(
   }
 
 static Future<List<IziPrintItem>> invoiceCompact(
-      Invoice invoice, Contribuyente contribuyente, Sucursal sucursal) async {
+      Invoice invoice, Contribuyente contribuyente, Sucursal sucursal, {int? orderNumber, int? customOrderNumber}) async {
     List<IziPrintItem> items = [];
     items.add(IziPrintText(text: contribuyente.nombre??"", size: IziPrintSize.md,bold: true,align: IziPrintAlign.center));
     items.add(IziPrintText(text: contribuyente.razonSocial??"", size: IziPrintSize.sm,bold: false,align: IziPrintAlign.center));
     items.add(IziPrintText(text: contribuyente.nit??"", size: IziPrintSize.sm,bold: false,align: IziPrintAlign.center));
     items.add(IziPrintText(text: sucursal.nombre??"", size: IziPrintSize.sm,bold: true,align: IziPrintAlign.center));
 
+    if (orderNumber != null) {
+      items.add(IziPrintSeparator(dotted: true));
+      items.add(IziPrintText(
+          text: customOrderNumber != null
+              ? "Orden #$customOrderNumber"
+              : "Orden #$orderNumber",
+          size: IziPrintSize.md,
+          align: IziPrintAlign.center,
+          bold: true));
+      items.add(IziPrintSeparator(dotted: true));
+    }
 
     items.add(IziPrintText(text: "NOMBRE: ${invoice.razonSocial}", size: IziPrintSize.sm,align: IziPrintAlign.left));
     items.add(IziPrintText(text: "NIT/CI/CEX: ${invoice.comprador}", size: IziPrintSize.sm,align: IziPrintAlign.left));
@@ -847,13 +859,24 @@ static Future<List<IziPrintItem>> invoiceCompact(
 
 
 static Future<List<IziPrintItem>> invoiceCompactCo(
-      Invoice invoice, Contribuyente contribuyente, Sucursal sucursal) async {
+      Invoice invoice, Contribuyente contribuyente, Sucursal sucursal, {int? orderNumber, int? customOrderNumber}) async {
     List<IziPrintItem> items = [];
     items.add(IziPrintText(text: contribuyente.nombre??"", size: IziPrintSize.md,bold: true,align: IziPrintAlign.center));
     items.add(IziPrintText(text: contribuyente.razonSocial??"", size: IziPrintSize.sm,bold: false,align: IziPrintAlign.center));
     items.add(IziPrintText(text: contribuyente.nit??"", size: IziPrintSize.sm,bold: false,align: IziPrintAlign.center));
     items.add(IziPrintText(text: sucursal.nombre??"", size: IziPrintSize.sm,bold: true,align: IziPrintAlign.center));
 
+    if (orderNumber != null) {
+      items.add(IziPrintSeparator(dotted: true));
+      items.add(IziPrintText(
+          text: customOrderNumber != null
+              ? "Orden #$customOrderNumber"
+              : "Orden #$orderNumber",
+          size: IziPrintSize.md,
+          align: IziPrintAlign.center,
+          bold: true));
+      items.add(IziPrintSeparator(dotted: true));
+    }
 
     items.add(IziPrintText(text: "NOMBRE: ${invoice.razonSocial}", size: IziPrintSize.sm,align: IziPrintAlign.left));
     items.add(IziPrintText(text: "${invoice.customFactura["CO"]?["tipoIdentificacion"] ?? 'DOCUMENTO'}: ${invoice.comprador}", size: IziPrintSize.sm,align: IziPrintAlign.left));
@@ -869,13 +892,13 @@ static Future<List<IziPrintItem>> invoiceCompactCo(
             size: IziPrintSize.xs,
             align: IziPrintAlign.center,
           ));
-        items.add(IziPrintLineWrap(lines: 1)); 
+        items.add(IziPrintLineWrap(lines: 1));
 
           items.add(IziPrintQR(
             "https://catalogo-vpfe.dian.gov.co/User/SearchDocument?DocumentKey=$cufe",
             size: 2,
           ));
-        items.add(IziPrintLineWrap(lines: 1)); 
+        items.add(IziPrintLineWrap(lines: 1));
 
           items.add(IziPrintText(
             text: "CUFE: $cufe",
@@ -894,7 +917,7 @@ static Future<List<IziPrintItem>> invoiceCompactCo(
           size: IziPrintSize.sm,
           bold: true,
           align: IziPrintAlign.center));
-    
+
     return items;
   }
 
