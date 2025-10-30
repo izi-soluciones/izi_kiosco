@@ -311,6 +311,7 @@
     },
     "buttons": {
       "qr": "QR",
+      "breB": "Bre-B",
       "card": "Tarjeta",
       "checkout": "Pagar en caja",
       "initAgain": "Empezar de nuevo",

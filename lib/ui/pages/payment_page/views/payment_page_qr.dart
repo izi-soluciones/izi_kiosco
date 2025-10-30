@@ -26,6 +26,7 @@ class PaymentPageQR extends StatefulWidget {
 }
 
 class _PaymentPageQRState extends State<PaymentPageQR> {
+  late AuthState authState;
   int qrRemaining = 0;
   Timer? timerRemaining;
   _initTimeRemaining() {
@@ -46,6 +47,7 @@ class _PaymentPageQRState extends State<PaymentPageQR> {
 
   @override
   void initState() {
+    authState = context.read<AuthBloc>().state;
     _initTimeRemaining();
     super.initState();
   }
@@ -58,12 +60,11 @@ class _PaymentPageQRState extends State<PaymentPageQR> {
 
   @override
   Widget build(BuildContext context) {
-    final authState = context.read<AuthBloc>().state;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         IziHeaderKiosk(onPop: () {
-          context.read<PaymentBloc>().cancelQR(context.read<AuthBloc>().state);
+          context.read<PaymentBloc>().cancelQR(authState);
         },hideLogo: true,),
         Expanded(
           child: Padding(
@@ -168,7 +169,7 @@ class _PaymentPageQRState extends State<PaymentPageQR> {
                       IziText.titleMedium(
                           color: IziColors.darkGrey,
                           text:
-                              "${LocaleKeys.payment_body_total.tr()}: ${(widget.state.paymentObj?.amount ?? 0).moneyFormat(currency: widget.state.currentCurrency?.simbolo)}",
+                              "${LocaleKeys.payment_body_total.tr()}: ${(widget.state.paymentObj?.amount ?? 0).moneyFormat(currency: widget.state.currentCurrency?.simbolo, digitsTaxes: authState.taxesStrategy.decimals)}",
                           fontWeight: FontWeight.w600),
                       const SizedBox(
                         height: 50,

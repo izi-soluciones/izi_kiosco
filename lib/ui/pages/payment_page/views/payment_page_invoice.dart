@@ -33,6 +33,7 @@ class PaymentPageInvoice extends StatefulWidget {
 }
 
 class _PaymentPageInvoiceState extends State<PaymentPageInvoice> {
+  late AuthState authState;
   TextEditingController businessNameController = TextEditingController();
   bool documentNumberFocus = false;
   GlobalKey documentNumberKey = GlobalKey();
@@ -47,6 +48,12 @@ class _PaymentPageInvoiceState extends State<PaymentPageInvoice> {
   int qrRemaining = 0;
 
   bool showEmail=false;
+
+  @override
+  void initState() {
+    super.initState();
+    authState = context.read<AuthBloc>().state;
+  }
 
 
   @override
@@ -180,7 +187,7 @@ class _PaymentPageInvoiceState extends State<PaymentPageInvoice> {
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
                             Text(
-                              "${LocaleKeys.payment_body_total.tr()}: ${widget.state.paymentObj?.amount.moneyFormat(currency: widget.state.currentCurrency?.simbolo)}",
+                              "${LocaleKeys.payment_body_total.tr()}: ${widget.state.paymentObj?.amount.moneyFormat(currency: widget.state.currentCurrency?.simbolo, digitsTaxes: authState.taxesStrategy.decimals)}",
                               maxLines: 5,
                               textAlign: TextAlign.center,
                               style: const TextStyle(
@@ -343,10 +350,10 @@ class _PaymentPageInvoiceState extends State<PaymentPageInvoice> {
   }
 
   _paymentCard() {
-    if (context.read<AuthBloc>().state.currentDevice?.config.ipLinkser !=
+    if (authState.currentDevice?.config.ipLinkser !=
         null) {
       _paymentCardLinkser(context);
-    } else if (context.read<AuthBloc>().state.currentDevice?.config.ipAtc !=
+    } else if (authState.currentDevice?.config.ipAtc !=
         null) {
       _paymentCardATC(context);
     }
@@ -356,12 +363,12 @@ class _PaymentPageInvoiceState extends State<PaymentPageInvoice> {
     context.read<PageUtilsBloc>().closeScreenActive();
     var status = await context
         .read<PaymentBloc>()
-        .makeCardPayment(context.read<AuthBloc>().state, linkser: true);
+        .makeCardPayment(authState, linkser: true);
     if (!mounted) {
       return;
     }
     if (!status) {
-      context.read<PageUtilsBloc>().initScreenActiveInvoiced(context.read<AuthBloc>().state);
+      context.read<PageUtilsBloc>().initScreenActiveInvoiced(authState);
     }
   }
 
@@ -376,14 +383,14 @@ class _PaymentPageInvoiceState extends State<PaymentPageInvoice> {
       if (value is int) {
         context.read<PageUtilsBloc>().closeScreenActive();
         var status = await context.read<PaymentBloc>().makeCardPayment(
-            context.read<AuthBloc>().state,
+            authState,
             atc: true,
             contactless: value == 1 ? false : true);
         if (!mounted) {
           return;
         }
         if (!status) {
-          context.read<PageUtilsBloc>().initScreenActiveInvoiced(context.read<AuthBloc>().state);
+          context.read<PageUtilsBloc>().initScreenActiveInvoiced(authState);
         }
       }
     });
@@ -443,7 +450,7 @@ class _PaymentPageInvoiceState extends State<PaymentPageInvoice> {
   _makePayment(){
     switch(widget.state.paymentType){
       case PaymentType.qr:
-        context.read<PaymentBloc>().generateQR(context.read<AuthBloc>().state);
+        context.read<PaymentBloc>().generateQR(authState);
         break;
       case PaymentType.card:
         _paymentCard();

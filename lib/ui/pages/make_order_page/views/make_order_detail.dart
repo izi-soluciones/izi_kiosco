@@ -30,10 +30,12 @@ class MakeOrderDetail extends StatefulWidget {
 }
 
 class _MakeOrderDetailState extends State<MakeOrderDetail> {
+  late final int digitsTaxes;
   ScrollController scrollController = ScrollController();
   bool loadingEmit = false;
   @override
   void initState() {
+    digitsTaxes = context.read<AuthBloc>().state.taxesStrategy.decimals;
     super.initState();
   }
 
@@ -110,7 +112,7 @@ class _MakeOrderDetailState extends State<MakeOrderDetail> {
                     : null,
                 text: ru.isXs()?LocaleKeys.makeOrder_buttons_confirmSm.tr():LocaleKeys.makeOrder_buttons_confirm.tr(),
                 amount: (_getTotal() - widget.state.discountAmount).moneyFormat(
-                    currency: widget.state.currentCurrency?.simbolo)
+                    currency: widget.state.currentCurrency?.simbolo, digitsTaxes: digitsTaxes)
             ),
           ),
           const SizedBox(
@@ -152,7 +154,7 @@ class _MakeOrderDetailState extends State<MakeOrderDetail> {
                         : null,
                     text: LocaleKeys.makeOrder_buttons_confirm.tr(),
                     amount: (_getTotal() - widget.state.discountAmount).moneyFormat(
-                        currency: widget.state.currentCurrency?.simbolo)
+                        currency: widget.state.currentCurrency?.simbolo, digitsTaxes: digitsTaxes)
                 ),
               )
             ],

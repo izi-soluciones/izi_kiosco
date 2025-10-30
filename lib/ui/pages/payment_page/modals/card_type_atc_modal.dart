@@ -11,6 +11,7 @@ import 'package:izi_kiosco/app/values/app_constants.dart';
 import 'package:izi_kiosco/domain/blocs/page_utils/page_utils_bloc.dart';
 import 'package:izi_kiosco/ui/utils/money_formatter.dart';
 import 'package:izi_kiosco/ui/utils/responsive_utils.dart';
+import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
 
 class CardTypeAtcModal extends StatefulWidget {
   final num amount;
@@ -21,8 +22,10 @@ class CardTypeAtcModal extends StatefulWidget {
 }
 
 class _CardTypeAtcModalState extends State<CardTypeAtcModal> {
+  late final int digitsTaxes;
   @override
   void initState() {
+    digitsTaxes = context.read<AuthBloc>().state.taxesStrategy.decimals;
     _verifyTime();
     super.initState();
   }
@@ -47,7 +50,7 @@ class _CardTypeAtcModalState extends State<CardTypeAtcModal> {
             IziText.titleSmall(color: IziColors.grey, text: "Monto a pagar"),
             const SizedBox(width: 8,),
             IziText.titleSmall(
-                color: IziColors.dark, text: widget.amount.moneyFormat()),
+                color: IziColors.dark, text: widget.amount.moneyFormat(digitsTaxes: digitsTaxes)),
           ],
         ),
         Flexible(

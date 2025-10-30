@@ -39,10 +39,12 @@ class MakeOrderRetailScan extends StatefulWidget {
 }
 
 class _MakeOrderRetailScanState extends State<MakeOrderRetailScan> {
+  late AuthState authState;
   FocusNode focusNodeKeyboard = FocusNode();
   String barCode = "";
   @override
   void initState() {
+    authState = context.read<AuthBloc>().state;
     super.initState();
   }
 
@@ -264,7 +266,7 @@ class _MakeOrderRetailScanState extends State<MakeOrderRetailScan> {
                   textAlign: TextAlign.center,
                   color: IziColors.grey,
                   text: item.taxPrice.moneyFormat(
-                      currency: widget.state.currentCurrency?.simbolo),
+                      currency: widget.state.currentCurrency?.simbolo, digitsTaxes: authState.taxesStrategy.decimals),
                   fontWeight: FontWeight.w500),
             ),
           ),
@@ -276,7 +278,7 @@ class _MakeOrderRetailScanState extends State<MakeOrderRetailScan> {
                   textAlign: TextAlign.center,
                   color: IziColors.grey,
                   text: (item.taxPrice).moneyFormat(
-                      currency: widget.state.currentCurrency?.simbolo),
+                      currency: widget.state.currentCurrency?.simbolo, digitsTaxes: authState.taxesStrategy.decimals),
                   fontWeight: FontWeight.w500),
             ),
           ),
@@ -354,7 +356,7 @@ class _MakeOrderRetailScanState extends State<MakeOrderRetailScan> {
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
               Text(
-      "${LocaleKeys.makeOrderRetail_scan_total.tr()}: ${_total().moneyFormat(currency: widget.state.currentCurrency?.simbolo??"")}",
+      "${LocaleKeys.makeOrderRetail_scan_total.tr()}: ${_total().moneyFormat(currency: widget.state.currentCurrency?.simbolo??"", digitsTaxes: authState.taxesStrategy.decimals)}",
                 style: TextStyle(
                   fontSize: size,
                   fontWeight: FontWeight.w600,
@@ -403,7 +405,7 @@ class _MakeOrderRetailScanState extends State<MakeOrderRetailScan> {
 
     context.read<PageUtilsBloc>().showLoading("Procesando compra");
     context.read<PageUtilsBloc>().closeScreenActive();
-    context.read<MakeOrderRetailBloc>().emitOrder(context.read<AuthBloc>().state).then((value) {
+    context.read<MakeOrderRetailBloc>().emitOrder(authState).then((value) {
       context.read<PageUtilsBloc>().closeLoading();
       if(value is SaleLink){
         var paymentObj = PaymentObj(
@@ -418,11 +420,11 @@ class _MakeOrderRetailScanState extends State<MakeOrderRetailScan> {
                 name: e.nombre)
             ).toList()
         );
-        context.read<PageUtilsBloc>().initScreenActiveInvoiced(context.read<AuthBloc>().state);
+        context.read<PageUtilsBloc>().initScreenActiveInvoiced(authState);
         GoRouter.of(context).goNamed(RoutesKeys.payment,
             extra: paymentObj, pathParameters: {"id": value.id.toString()});
       } else {
-        context.read<PageUtilsBloc>().initScreenActive(context.read<AuthBloc>().state);
+        context.read<PageUtilsBloc>().initScreenActive(authState);
       }
     });
   }

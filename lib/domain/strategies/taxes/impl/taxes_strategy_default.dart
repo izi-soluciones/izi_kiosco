@@ -5,7 +5,7 @@ import 'package:izi_kiosco/domain/models/item.dart';
 import 'package:izi_kiosco/domain/strategies/taxes/taxes_strategy.dart';
 import 'package:izi_kiosco/domain/utils/calc_utils.dart';
 
-class TaxesStrategyBo implements TaxesStrategy{
+class TaxesStrategyDefault implements TaxesStrategy{
   @override
  num getTotalItem(ParametrosFacturacionItem parametrosFacturacionItem, num cantidad, num precio){
     return Calc.mul(cantidad, precio);
@@ -13,10 +13,6 @@ class TaxesStrategyBo implements TaxesStrategy{
 
   @override
   PaymentStatus? verifyParameters(Contribuyente? contribuyente, Sucursal? sucursal, Device? currentDevice, String? economicActivity) {
-
-    if (economicActivity==null) {
-      return PaymentStatus.errorActivity;
-    }
     return null;
   }
   

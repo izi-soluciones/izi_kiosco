@@ -18,7 +18,7 @@ class AuthState extends Equatable{
   final bool terminalInit;
 
   final Catalog? catalog;
-  final TaxesStrategy? taxesStrategy;
+  final TaxesStrategy taxesStrategy;
 
   const AuthState({
     required this.currencies,
@@ -32,15 +32,16 @@ class AuthState extends Equatable{
     this.currentDevice,
     this.catalog,
     required this.video,
-    this.taxesStrategy
+    required this.taxesStrategy
   });
   factory AuthState.init()=>
-      const AuthState(
+      AuthState(
           status: AuthStatus.init,
         loadingContribuyente: false,
         terminalInit: false,
-        currencies: [],
-        video: null
+        currencies: const [],
+        video: null,
+        taxesStrategy: TaxesStrategyDefault()
       );
 
   AuthState copyWith({
@@ -75,7 +76,7 @@ class AuthState extends Equatable{
     );
   }
   AuthState resetState(){
-    return const AuthState(
+    return AuthState(
       currentContribuyente: null,
       currentSucursal: null,
       currentPos: null,
@@ -83,10 +84,11 @@ class AuthState extends Equatable{
       invoiceSubscription: null,
       loadingContribuyente: false,
       terminalInit: false,
-      currencies: [],
+      currencies: const [],
       currentDevice: null,
       video: null,
-      catalog: null
+      catalog: null,
+      taxesStrategy: TaxesStrategyDefault()
     );
   }
   @override

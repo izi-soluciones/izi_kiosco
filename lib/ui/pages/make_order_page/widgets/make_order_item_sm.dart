@@ -9,6 +9,8 @@ import 'package:izi_design_system/tokens/types.dart';
 import 'package:izi_kiosco/domain/blocs/make_order/make_order_bloc.dart';
 import 'package:izi_kiosco/domain/models/item.dart';
 import 'package:izi_kiosco/ui/utils/money_formatter.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
 
 class MakeOrderItemSm extends StatelessWidget {
   final Item item;
@@ -66,7 +68,7 @@ class MakeOrderItemSm extends StatelessWidget {
                       IziText.body(
                           color: IziColors.grey,
                           text: item.taxPrice.moneyFormat(
-                              currency: state.currentCurrency?.simbolo),
+                              currency: state.currentCurrency?.simbolo, digitsTaxes: context.read<AuthBloc>().state.taxesStrategy.decimals),
                           fontWeight: FontWeight.w500,
                           textAlign: TextAlign.center),
                     ],

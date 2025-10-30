@@ -18,6 +18,7 @@ import 'dart:developer' as developer;
 
 import 'package:izi_kiosco/domain/repositories/auth_repository.dart';
 import 'package:izi_kiosco/domain/repositories/business_repository.dart';
+import 'package:izi_kiosco/domain/strategies/taxes/impl/taxes_strategy_default.dart';
 import 'package:izi_kiosco/domain/strategies/taxes/taxes_strategy.dart';
 import 'package:izi_kiosco/domain/strategies/taxes/taxes_strategy_factory.dart';
 import 'package:izi_kiosco/domain/utils/download_utils.dart';
@@ -130,6 +131,7 @@ class AuthBloc extends Cubit<AuthState> {
             status: AuthStatus.okAuth,
             currencies: currencies,
             currentDevice: device,
+            taxesStrategy: taxesStrategy,
             catalog: catalog,
             currentSucursal: sucursal,
             video: video,

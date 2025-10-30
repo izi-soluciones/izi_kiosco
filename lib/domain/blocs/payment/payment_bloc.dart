@@ -36,10 +36,8 @@ import 'package:izi_kiosco/domain/utils/input_obj.dart';
 import 'package:izi_kiosco/domain/utils/print/print_template.dart';
 import 'package:izi_kiosco/domain/utils/print_utils.dart';
 import 'dart:io';
-import 'package:flutter/material.dart';
 import 'package:izi_kiosco/ui/utils/money_formatter.dart';
 import 'package:universal_html/html.dart' as html;
-import 'package:dio/dio.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 part 'payment_state.dart';
@@ -124,7 +122,7 @@ class PaymentBloc extends Cubit<PaymentState> {
       
 
       if(authState.currentContribuyente?.habilitadoFacturacion==true){
-        PaymentStatus? statusVerification = authState.taxesStrategy?.verifyParameters(authState.currentContribuyente, authState.currentSucursal, authState.currentDevice, economicActivity);
+        PaymentStatus? statusVerification = authState.taxesStrategy.verifyParameters(authState.currentContribuyente, authState.currentSucursal, authState.currentDevice, economicActivity);
         if(statusVerification!=null){
           return emit(state.copyWith(status: statusVerification));
         }
@@ -371,7 +369,7 @@ class PaymentBloc extends Cubit<PaymentState> {
       } else {
         try {
           cardPayment = await _comandaRepository.callCardPaymentATC(
-              amount: (state.paymentObj?.amount ?? 0).moneyFormat(),
+              amount: (state.paymentObj?.amount ?? 0).moneyFormat(digitsTaxes: authState.taxesStrategy.decimals),
               ip: authState.currentDevice!.config.ipAtc!,
               cancelToken: cancelToken,
               contactless: contactless);
@@ -445,7 +443,7 @@ class PaymentBloc extends Cubit<PaymentState> {
       } else {
         try {
           cardPayment = await _comandaRepository.callCardPaymentATC(
-              amount: (state.paymentObj?.amount ?? 0).moneyFormat(),
+              amount: (state.paymentObj?.amount ?? 0).moneyFormat(digitsTaxes: authState.taxesStrategy.decimals),
               cancelToken: cancelToken,
               ip: authState.currentDevice!.config.ipAtc!,
               contactless: contactless);
@@ -884,7 +882,8 @@ class PaymentBloc extends Cubit<PaymentState> {
         authState.currentContribuyente!,
         authState.currentSucursal!,
         state.paymentObj,
-        state.currentCurrency
+        state.currentCurrency,
+              taxesStrategy: authState.taxesStrategy
         );
     var printUtils = PrintUtils();
     await printUtils.print(tmp, authState.currentDevice);
@@ -907,7 +906,8 @@ class PaymentBloc extends Cubit<PaymentState> {
               authState.currentContribuyente!,
               authState.currentSucursal!,
               state.paymentObj,
-              state.currentCurrency
+              state.currentCurrency,
+              taxesStrategy: authState.taxesStrategy
           );
       }
       if(invoice==null){
@@ -923,7 +923,8 @@ class PaymentBloc extends Cubit<PaymentState> {
           authState.currentSucursal!,
           invoice,
           orderNumber: orderNumber,
-          customOrderNumber: customOrderNumber
+          customOrderNumber: customOrderNumber,
+              taxesStrategy: authState.taxesStrategy
         );
       }
       else{
@@ -934,12 +935,14 @@ class PaymentBloc extends Cubit<PaymentState> {
           tmp.addAll(await PrintTemplate.printInvoiceCompact(
             authState.currentContribuyente!,
             authState.currentSucursal!,
-            invoice
+            invoice,
+              taxesStrategy: authState.taxesStrategy
           ));
         }
         else{
         tmp.addAll(await PrintTemplate.printInvoice(
-            authState.currentContribuyente!, authState.currentSucursal!,invoice));
+            authState.currentContribuyente!, authState.currentSucursal!,invoice,
+              taxesStrategy: authState.taxesStrategy));
         }
       }
 
@@ -990,6 +993,7 @@ class PaymentBloc extends Cubit<PaymentState> {
     IdentificationType? identificationType;
     IvaResponsability? ivaResponsability;
     PersonType? personType;
+    TaxResponsability? taxResponsability;
 
     final results = await Future.wait([
       _businessRepository.getIdentificationType(),
@@ -1006,6 +1010,7 @@ class PaymentBloc extends Cubit<PaymentState> {
     identificationType = listIdentificationType.firstOrNull;
     ivaResponsability = listIvaResponsability.lastOrNull;
     personType = listPersonType.lastOrNull;
+    taxResponsability = listTaxResponsability.lastOrNull;
     emit(state.copyWith(paramsCo: ParamsCo(
       identificationType: identificationType?.codigo,
       ivaResponsability: ivaResponsability?.codigo,
@@ -1014,6 +1019,7 @@ class PaymentBloc extends Cubit<PaymentState> {
       listIvaResponsability: listIvaResponsability,
       listPersonType: listPersonType,
       listTaxResponsability: listTaxResponsability,
+      taxResponsability: taxResponsability?.codigo
     )));
   }
 

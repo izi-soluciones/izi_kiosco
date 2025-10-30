@@ -17,6 +17,7 @@ import 'package:izi_kiosco/ui/pages/make_order_page/widgets/make_order_amount_bt
 import 'package:izi_kiosco/ui/utils/custom_alerts.dart';
 import 'package:izi_kiosco/ui/utils/money_formatter.dart';
 import 'package:izi_kiosco/ui/utils/responsive_utils.dart';
+import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
 
 class MakeOrderDetailVertical extends StatefulWidget {
   final MakeOrderState state;
@@ -27,10 +28,12 @@ class MakeOrderDetailVertical extends StatefulWidget {
 }
 
 class _MakeOrderDetailStateVertical extends State<MakeOrderDetailVertical> {
+  late final int digitsTaxes;
   ScrollController scrollController = ScrollController();
   bool loadingEmit = false;
   @override
   void initState() {
+    digitsTaxes = context.read<AuthBloc>().state.taxesStrategy.decimals;
     super.initState();
   }
 
@@ -133,7 +136,7 @@ class _MakeOrderDetailStateVertical extends State<MakeOrderDetailVertical> {
                   : null,
               text: LocaleKeys.makeOrder_buttons_confirm.tr(),
               amount: (_getTotal() - widget.state.discountAmount).moneyFormat(
-                  currency: widget.state.currentCurrency?.simbolo)
+                  currency: widget.state.currentCurrency?.simbolo, digitsTaxes: digitsTaxes)
           ),
           const SizedBox(
             height: 16,

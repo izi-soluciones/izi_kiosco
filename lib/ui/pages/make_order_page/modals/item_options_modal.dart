@@ -9,6 +9,7 @@ import 'package:izi_design_system/molecules/izi_switch.dart';
 import 'package:izi_design_system/tokens/colors.dart';
 import 'package:izi_design_system/tokens/types.dart';
 import 'package:izi_kiosco/app/values/locale_keys.g.dart';
+import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/make_order/make_order_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/page_utils/page_utils_bloc.dart';
 import 'package:izi_kiosco/domain/models/item.dart';
@@ -158,7 +159,7 @@ class _ItemOptionsModalState extends State<ItemOptionsModal> {
                                           child: Row(
                                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                             children: [
-                                              Flexible(child: IziText.body(color: IziColors.darkGrey, text: "${e2.value.nombre}${e2.value.modPrecio>0? " (+${e2.value.modPrecio.moneyFormat(currency: widget.state.currentCurrency?.simbolo)})":""}", fontWeight: FontWeight.w600)),
+                                              Flexible(child: IziText.body(color: IziColors.darkGrey, text: "${e2.value.nombre}${e2.value.modPrecio>0? " (+${e2.value.modPrecio.moneyFormat(currency: widget.state.currentCurrency?.simbolo, digitsTaxes: context.read<AuthBloc>().state.taxesStrategy.decimals)})":""}", fontWeight: FontWeight.w600)),
                                               e1.isMultiple || e1.isLimitado!=null?
                                               IziSwitch( value: e2.value.check, onChanged: (value){
                                                 setState(() {

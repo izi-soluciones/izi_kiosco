@@ -35,11 +35,13 @@ class MakeOrderConfirm extends StatefulWidget {
 }
 
 class _MakeOrderConfirmState extends State<MakeOrderConfirm> {
+  late AuthState authState;
   List<TextEditingController> controllers = [];
   ScrollController scrollController = ScrollController();
   bool loadingEmit = false;
   @override
   void initState() {
+    authState = context.read<AuthBloc>().state;
     for (var c in widget.state.itemsSelected) {
       List.generate(c.items.length, (index) {
         controllers.add(TextEditingController());
@@ -152,13 +154,13 @@ class _MakeOrderConfirmState extends State<MakeOrderConfirm> {
                                         color: IziColors.darkGrey,
                                         fontWeight: FontWeight.w500,
                                         text:
-                                            "${LocaleKeys.makeOrder_labels_total.tr()}: ${(_getTotal(widget.state) - widget.state.discountAmount).moneyFormat(currency: widget.state.currentCurrency?.simbolo)}",
+                                            "${LocaleKeys.makeOrder_labels_total.tr()}: ${(_getTotal(widget.state) - widget.state.discountAmount).moneyFormat(currency: widget.state.currentCurrency?.simbolo, digitsTaxes: authState.taxesStrategy.decimals)}",
                                       ):
                                       IziText.titleMedium(
                                         color: IziColors.darkGrey,
                                         fontWeight: FontWeight.w500,
                                         text:
-                                            "${LocaleKeys.makeOrder_labels_total.tr()}: ${(_getTotal(widget.state) - widget.state.discountAmount).moneyFormat(currency: widget.state.currentCurrency?.simbolo)}",
+                                            "${LocaleKeys.makeOrder_labels_total.tr()}: ${(_getTotal(widget.state) - widget.state.discountAmount).moneyFormat(currency: widget.state.currentCurrency?.simbolo, digitsTaxes: authState.taxesStrategy.decimals)}",
                                       ),
                                     ],
                                   ),
@@ -264,7 +266,7 @@ class _MakeOrderConfirmState extends State<MakeOrderConfirm> {
                         text: ru.isXs()?LocaleKeys.makeOrder_buttons_confirmAndPaySm.tr(): LocaleKeys.makeOrder_buttons_confirmAndPay.tr(),
                         amount: (_getTotal(state) - state.discountAmount)
                             .moneyFormat(
-                                currency: state.currentCurrency?.simbolo)))
+                                currency: state.currentCurrency?.simbolo, digitsTaxes: authState.taxesStrategy.decimals)))
               ],
             ),
           ),
@@ -412,7 +414,7 @@ class _MakeOrderConfirmState extends State<MakeOrderConfirm> {
                 textAlign: TextAlign.center,
                 color: IziColors.grey,
                 text: item.taxPrice
-                    .moneyFormat(currency: widget.state.currentCurrency?.simbolo),
+                    .moneyFormat(currency: widget.state.currentCurrency?.simbolo, digitsTaxes: authState.taxesStrategy.decimals),
                 fontWeight: FontWeight.w500),
             const SizedBox(
               width: 16,
@@ -447,7 +449,7 @@ class _MakeOrderConfirmState extends State<MakeOrderConfirm> {
     context.read<PageUtilsBloc>().closeScreenActive();
     await context
         .read<MakeOrderBloc>()
-        .emitOrder(context.read<AuthBloc>().state)
+        .emitOrder(authState)
         .then(
       (value) {
         context.read<PageUtilsBloc>().closeLoading();
@@ -464,11 +466,11 @@ class _MakeOrderConfirmState extends State<MakeOrderConfirm> {
                   name: e.nombre)
               ).toList()
           );
-          context.read<PageUtilsBloc>().initScreenActiveInvoiced(context.read<AuthBloc>().state);
+          context.read<PageUtilsBloc>().initScreenActiveInvoiced(authState);
           GoRouter.of(this.context).goNamed(RoutesKeys.payment,
               extra: paymentObj, pathParameters: {"id": value.id.toString()});
         } else {
-          context.read<PageUtilsBloc>().initScreenActive(context.read<AuthBloc>().state);
+          context.read<PageUtilsBloc>().initScreenActive(authState);
         }
       },
     );

@@ -16,6 +16,8 @@ import 'package:izi_kiosco/domain/models/item.dart';
 import 'package:izi_kiosco/ui/general/headers/back_mobile_header.dart';
 import 'package:izi_kiosco/ui/general/izi_scroll.dart';
 import 'package:izi_kiosco/ui/utils/money_formatter.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
 
 class MakeOrderItemOptions extends StatefulWidget {
   final Item item;
@@ -28,6 +30,7 @@ class MakeOrderItemOptions extends StatefulWidget {
 }
 
 class _MakeOrderItemOptionsState extends State<MakeOrderItemOptions> {
+  late final int digitsTaxes;
   Item? itemEdit;
   int? indexRequired;
 
@@ -35,6 +38,7 @@ class _MakeOrderItemOptionsState extends State<MakeOrderItemOptions> {
   ScrollController scrollController = ScrollController();
   @override
   void initState() {
+    digitsTaxes = context.read<AuthBloc>().state.taxesStrategy.decimals;
     itemEdit = widget.item.copyWith();
     itemEdit?.cantidad = 1;
     for (var _ in itemEdit?.modificadores ?? []) {
@@ -139,7 +143,7 @@ class _MakeOrderItemOptionsState extends State<MakeOrderItemOptions> {
                                     text: widget.item.taxPrice
                                         .moneyFormat(
                                             currency: widget.state
-                                                .currentCurrency?.simbolo),
+                                                .currentCurrency?.simbolo, digitsTaxes: digitsTaxes),
                                     fontWeight: FontWeight.w500,
                                     textAlign: TextAlign.center),
                               ],
@@ -262,7 +266,7 @@ class _MakeOrderItemOptionsState extends State<MakeOrderItemOptions> {
                                               IziText.body(
                                                   color: IziColors.darkGrey,
                                                   text:
-                                                      "${e2.value.nombre}${e2.value.modPrecio > 0 ? " (+${e2.value.modPrecio.moneyFormat(currency: widget.state.currentCurrency?.simbolo)})" : ""}",
+                                                      "${e2.value.nombre}${e2.value.modPrecio > 0 ? " (+${e2.value.modPrecio.moneyFormat(currency: widget.state.currentCurrency?.simbolo, digitsTaxes: digitsTaxes)})" : ""}",
                                                   fontWeight: FontWeight.w600),
                                               e1.isMultiple
                                                   ? IziSwitch(
@@ -321,7 +325,7 @@ class _MakeOrderItemOptionsState extends State<MakeOrderItemOptions> {
               IziText.bodyBig(
                   color: IziColors.dark,
                   text: _getTotal().moneyFormat(
-                      currency: widget.state.currentCurrency?.simbolo),
+                      currency: widget.state.currentCurrency?.simbolo, digitsTaxes: digitsTaxes),
                   fontWeight: FontWeight.w500,
                   textAlign: TextAlign.center),
               IziBtn(

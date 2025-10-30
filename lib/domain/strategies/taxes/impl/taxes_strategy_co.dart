@@ -52,4 +52,17 @@ class TaxesStrategyCo implements TaxesStrategy{
     return null;
   }
 
+  @override
+  int decimals= 0;
+  
+  @override
+  bool showQR = false;
+
+
+  @override
+  bool showBreB = true;
+
+  @override
+  String brandName = "IZIFY";
+
 }

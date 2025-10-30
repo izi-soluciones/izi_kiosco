@@ -9,6 +9,7 @@ import 'package:izi_kiosco/domain/models/contribuyente.dart';
 import 'package:izi_kiosco/domain/models/currency.dart';
 import 'package:izi_kiosco/domain/models/invoice.dart';
 import 'package:izi_kiosco/domain/models/payment_obj.dart';
+import 'package:izi_kiosco/domain/strategies/taxes/taxes_strategy.dart';
 import 'package:izi_kiosco/domain/utils/date_formatter.dart';
 import 'package:izi_kiosco/domain/utils/print_utils.dart';
 import 'package:izi_kiosco/ui/utils/money_formatter.dart';
@@ -19,26 +20,27 @@ class PrintTemplate {
   Contribuyente contribuyente,
   Sucursal sucursal,
   Invoice factura,
-  {int? orderNumber, int? customOrderNumber})async {
+  {int? orderNumber, int? customOrderNumber, required TaxesStrategy taxesStrategy})async {
     if(contribuyente.habilitadoFacturacion == true && contribuyente.config["paisId"]=="CO"){
-      return invoiceCompactCo(factura,contribuyente,sucursal, orderNumber: orderNumber, customOrderNumber: customOrderNumber);
+      return invoiceCompactCo(factura,contribuyente,sucursal, orderNumber: orderNumber, customOrderNumber: customOrderNumber,taxesStrategy: taxesStrategy);
     }
-    return await invoiceCompact(factura,contribuyente,sucursal, orderNumber: orderNumber, customOrderNumber: customOrderNumber);
+    return await invoiceCompact(factura,contribuyente,sucursal, orderNumber: orderNumber, customOrderNumber: customOrderNumber,taxesStrategy: taxesStrategy);
   }
   static Future<List<IziPrintItem>>  printInvoice(
   Contribuyente contribuyente,
   Sucursal sucursal,
-  Invoice factura,)async {
+  Invoice factura,{required TaxesStrategy taxesStrategy})async {
     if(contribuyente.habilitadoFacturacion == true && contribuyente.config["paisId"]=="CO"){
-      return invoice80Co(contribuyente,sucursal,factura);
+      return invoice80Co(contribuyente,sucursal,factura,taxesStrategy: taxesStrategy);
     }
-    return await invoice80(contribuyente,sucursal,factura);
+    return await invoice80(contribuyente,sucursal,factura,taxesStrategy: taxesStrategy);
   }
 
 static List<IziPrintItem> invoice80Co(
   Contribuyente contribuyente,
   Sucursal sucursal,
   Invoice invoice,
+  {required TaxesStrategy taxesStrategy}
 ) {
   final List<IziPrintItem> items = [];
 
@@ -251,7 +253,7 @@ static List<IziPrintItem> invoice80Co(
   
   items.add(IziPrintSeparator());
   items.add(IziPrintText(
-    text: "Generada a través de iZi",
+    text: "Generada a través de ${taxesStrategy.brandName}",
     size: IziPrintSize.xs,
     bold: true,
     align: IziPrintAlign.center,
@@ -270,7 +272,9 @@ static List<IziPrintItem> invoice80Co(
       Contribuyente contribuyente,
       Sucursal sucursal,
       PaymentObj? paymentObj,
-      Currency? currency) async {
+      Currency? currency, {
+        required TaxesStrategy taxesStrategy
+      }) async {
     List<IziPrintItem> items = [];
     items.add(IziPrintText(
         text: contribuyente.razonSocial ?? "",
@@ -317,7 +321,7 @@ static List<IziPrintItem> invoice80Co(
     items.add(IziPrintSeparator(dotted: true));
     items.add(IziPrintText(
         text:
-            "Monto total: ${paymentObj?.amount.moneyFormat(currency: currency?.simbolo ??AppConstants.defaultCurrency)}",
+            "Monto total: ${paymentObj?.amount.moneyFormat(currency: currency?.simbolo ??AppConstants.defaultCurrency, digitsTaxes: taxesStrategy.decimals)}",
         size: IziPrintSize.md,
         align: IziPrintAlign.left,
         bold: true));
@@ -342,7 +346,7 @@ static List<IziPrintItem> invoice80Co(
     ));
     items.add(IziPrintSeparator());
     items.add(IziPrintText(
-        text: "Generada a través de iZi",
+        text: "Generada a través de ${taxesStrategy.brandName}",
         size: IziPrintSize.sm,
         bold: true,
         align: IziPrintAlign.center));
@@ -350,7 +354,9 @@ static List<IziPrintItem> invoice80Co(
   }
 
   static Future<List<IziPrintItem>> invoice80(Contribuyente contribuyente, Sucursal sucursal,
-      Invoice invoice) async {
+      Invoice invoice, {
+        required TaxesStrategy taxesStrategy
+      }) async {
     List<IziPrintItem> items = [];
     Map? configSiat = contribuyente.customData is Map &&
             invoice.customFactura["siat"] is Map &&
@@ -785,7 +791,7 @@ static List<IziPrintItem> invoice80Co(
       }
       items.add(IziPrintSeparator());
       items.add(IziPrintText(
-          text: "Generada a través de iZi",
+          text: "Generada a través de ${taxesStrategy.brandName}",
           size: IziPrintSize.sm,
           bold: true,
           align: IziPrintAlign.center));
@@ -794,7 +800,7 @@ static List<IziPrintItem> invoice80Co(
   }
 
 static Future<List<IziPrintItem>> invoiceCompact(
-      Invoice invoice, Contribuyente contribuyente, Sucursal sucursal, {int? orderNumber, int? customOrderNumber}) async {
+      Invoice invoice, Contribuyente contribuyente, Sucursal sucursal, {int? orderNumber, int? customOrderNumber, required TaxesStrategy taxesStrategy}) async {
     List<IziPrintItem> items = [];
     items.add(IziPrintText(text: contribuyente.nombre??"", size: IziPrintSize.md,bold: true,align: IziPrintAlign.center));
     items.add(IziPrintText(text: contribuyente.razonSocial??"", size: IziPrintSize.sm,bold: false,align: IziPrintAlign.center));
@@ -849,7 +855,7 @@ static Future<List<IziPrintItem>> invoiceCompact(
         }
       items.add(IziPrintSeparator());
       items.add(IziPrintText(
-          text: "Generada a través de iZi",
+          text: "Generada a través de ${taxesStrategy.brandName}",
           size: IziPrintSize.sm,
           bold: true,
           align: IziPrintAlign.center));
@@ -859,7 +865,7 @@ static Future<List<IziPrintItem>> invoiceCompact(
 
 
 static Future<List<IziPrintItem>> invoiceCompactCo(
-      Invoice invoice, Contribuyente contribuyente, Sucursal sucursal, {int? orderNumber, int? customOrderNumber}) async {
+      Invoice invoice, Contribuyente contribuyente, Sucursal sucursal, {int? orderNumber, int? customOrderNumber, required TaxesStrategy taxesStrategy}) async {
     List<IziPrintItem> items = [];
     items.add(IziPrintText(text: contribuyente.nombre??"", size: IziPrintSize.md,bold: true,align: IziPrintAlign.center));
     items.add(IziPrintText(text: contribuyente.razonSocial??"", size: IziPrintSize.sm,bold: false,align: IziPrintAlign.center));
@@ -913,7 +919,7 @@ static Future<List<IziPrintItem>> invoiceCompactCo(
         }
       items.add(IziPrintSeparator());
       items.add(IziPrintText(
-          text: "Generada a través de iZi",
+          text: "Generada a través de ${taxesStrategy.brandName}",
           size: IziPrintSize.sm,
           bold: true,
           align: IziPrintAlign.center));

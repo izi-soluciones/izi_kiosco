@@ -11,6 +11,7 @@ import 'package:izi_kiosco/ui/general/izi_header_kiosk.dart';
 import 'package:izi_kiosco/ui/modals/warning_modal.dart';
 import 'package:izi_kiosco/ui/utils/custom_alerts.dart';
 import 'package:izi_kiosco/ui/utils/money_formatter.dart';
+import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
 
 class PaymentPageCard extends StatefulWidget {
   final PaymentState state;
@@ -21,7 +22,7 @@ class PaymentPageCard extends StatefulWidget {
 }
 
 class _PaymentPageCardState extends State<PaymentPageCard> {
-
+  late final int digitsTaxes;
   bool showCancel= false;
   verifyCancel()async {
     await Future.delayed(const Duration(seconds: 60));
@@ -33,6 +34,7 @@ class _PaymentPageCardState extends State<PaymentPageCard> {
   }
   @override
   void initState() {
+    digitsTaxes = context.read<AuthBloc>().state.taxesStrategy.decimals;
     verifyCancel();
     super.initState();
   }
@@ -116,7 +118,7 @@ class _PaymentPageCardState extends State<PaymentPageCard> {
                 color: IziColors.darkGrey,
                 textAlign: TextAlign.center,
                 text:
-                    "${LocaleKeys.payment_body_total.tr()}: ${(widget.state.paymentObj?.amount ?? 0).moneyFormat(currency: widget.state.currentCurrency?.simbolo)}",
+                    "${LocaleKeys.payment_body_total.tr()}: ${(widget.state.paymentObj?.amount ?? 0).moneyFormat(currency: widget.state.currentCurrency?.simbolo, digitsTaxes: digitsTaxes)}",
                 fontWeight: FontWeight.w600),
             if(showCancel)
             const SizedBox(
