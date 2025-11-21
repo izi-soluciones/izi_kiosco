@@ -645,6 +645,46 @@ class PaymentBloc extends Cubit<PaymentState> {
     }
   }
 
+  Future<bool> generateBREB(AuthState authState) async {
+    try {
+      emit(state.copyWith(
+        status: PaymentStatus.brebLoading,
+        brebLoading: true,
+        brebCharge: null,
+        step: 7,
+        paymentType: PaymentType.breb,
+      ));
+
+      PaymentDto newPayment =
+          _buildPaymentDto(AppConstants.idPaymentMethodBreB);
+
+      Charge charge = await _comandaRepository.generatePayment(
+        contribuyenteId: authState.currentContribuyente?.id ?? 0,
+        payment: newPayment,
+      );
+
+      await _saveAndListenPaymentOrder(authState, charge);
+
+      emit(state.copyWith(
+        brebCharge: charge,
+        brebLoading: false,
+        status: PaymentStatus.successGet,
+      ));
+
+      
+
+      return true;
+    } catch (e) {
+      emit(state.copyWith(
+        brebLoading: false,
+        status: PaymentStatus.brebError,
+        errorDescription: e.toString(),
+      ));
+      return false;
+    }
+  }
+
+
   _listenPaymentRetail(AuthState authState, Charge charge) async {
     if (isClosed) {
       return false;
@@ -872,6 +912,14 @@ class PaymentBloc extends Cubit<PaymentState> {
     else{
       emit(state.copyWith(step: 1,qrLoading: false,qrCharge: ()=>null));
     }
+  }
+
+  cancelBREB(AuthState authState) {
+    emit(state.copyWith(
+      step: authState.currentContribuyente?.habilitadoFacturacion == true ? 2 : 1,
+      brebLoading: false,
+      brebCharge: null,
+    ));
   }
 
   _printRolloOrder(AuthState authState,

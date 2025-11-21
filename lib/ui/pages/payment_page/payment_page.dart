@@ -14,6 +14,7 @@ import 'package:izi_kiosco/ui/pages/payment_page/views/payment_page_invoice.dart
 import 'package:izi_kiosco/ui/pages/payment_page/views/payment_page_order_complete.dart';
 import 'package:izi_kiosco/ui/pages/payment_page/views/payment_page_order_error.dart';
 import 'package:izi_kiosco/ui/pages/payment_page/views/payment_page_qr.dart';
+import 'package:izi_kiosco/ui/pages/payment_page/views/payment_page_breb.dart';
 import 'package:izi_kiosco/ui/pages/payment_page/views/payment_page_selection.dart';
 import 'package:izi_kiosco/ui/pages/payment_page/widgets/payment_shimmer_payment_method.dart';
 import 'package:izi_kiosco/ui/utils/custom_alerts.dart';
@@ -58,6 +59,20 @@ class PaymentPage extends StatelessWidget {
               snackBar: SnackBarInfo(
                   text: LocaleKeys.payment_messages_errorCard.tr(),
                   snackBarType: SnackBarType.error));
+        }
+        if (state.status == PaymentStatus.brebError) {
+          context.read<PageUtilsBloc>().closeLoading();
+          context.read<PageUtilsBloc>().showSnackBar(
+            snackBar: SnackBarInfo(
+              text: LocaleKeys.payment_messages_errorBreB.tr(),
+              snackBarType: SnackBarType.error,
+            ),
+          );
+          if (GoRouter.of(context).canPop()) {
+            GoRouter.of(context).pop();
+          } else {
+            GoRouter.of(context).goNamed(RoutesKeys.home);
+          }
         }
         if (state.status == PaymentStatus.errorGet || state.status == PaymentStatus.markCreateError || state.status== PaymentStatus.errorInvoiced || state.status == PaymentStatus.errorAnnulled) {
 
@@ -115,6 +130,8 @@ class PaymentPage extends StatelessWidget {
             PaymentPageOrderComplete(state: state,),
             //6
             const PaymentPageOrderError(),
+            //7
+            PaymentPageBREB(state: state),
           ],
         );
       },
