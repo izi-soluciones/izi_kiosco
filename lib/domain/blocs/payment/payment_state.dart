@@ -20,6 +20,8 @@ enum PaymentStatus {
   cashRegisterProcessing,
   cardError,
   qrError,
+  brebError,
+  brebLoading,
   cardProcessed,
   errorActivity,
   markCreateError,
@@ -30,7 +32,7 @@ enum PaymentStatus {
 
 
 enum PaymentCountryTaxes {bolivia, colombia}
-enum PaymentType { cash, card, qr, bankTransfer, gitCard, others, cashRegister}
+enum PaymentType { cash, card, qr, bankTransfer, gitCard, others, cashRegister, breb}
 
 class ParamsCo extends Equatable {
   final String? identificationType;
@@ -128,6 +130,8 @@ class PaymentState extends Equatable {
   final num? qrAmount;
   final Charge? qrCharge;
   final bool qrWait;
+  final Charge? brebCharge;
+  final bool brebLoading;
   final int? qrPaymentKey;
 
   final bool qrLoading;
@@ -178,6 +182,8 @@ class PaymentState extends Equatable {
         this.qrAmount,
         this.qrCharge,
         this.qrWait = false,
+        this.brebCharge,
+        this.brebLoading = false,
         this.countryTaxes,
         this.qrPaymentKey});
 
@@ -200,6 +206,8 @@ class PaymentState extends Equatable {
       withException: false,
       phoneNumber: PaymentInputs.phoneNumberInput(),
       qrLoading: false,
+      brebCharge: null,
+      brebLoading: false,
       casaMatriz: null);
 
   copyWith(
@@ -230,6 +238,8 @@ class PaymentState extends Equatable {
         int? qrPaymentKey,
         bool? qrWait,
         bool? qrLoading,
+        Charge? brebCharge,
+        bool? brebLoading,
       Sucursal? casaMatriz,
         ParamsBo? paramsBo,
         ParamsCo? paramsCo,
@@ -263,6 +273,8 @@ class PaymentState extends Equatable {
       qrPaymentKey: qrPaymentKey == -1?null: qrPaymentKey ?? this.qrPaymentKey,
       qrLoading: qrLoading ?? this.qrLoading,
       qrWait: qrWait ?? this.qrWait,
+      brebCharge: brebCharge ?? this.brebCharge,
+      brebLoading: brebLoading ?? this.brebLoading,
       paymentObj: paymentObj ?? this.paymentObj,
       countryTaxes: countryTaxes ?? this.countryTaxes
     );

@@ -23,6 +23,7 @@ class AppConstants{
   static const idPaymentMethodGiftCard=6;
   static const idPaymentMethodOthers=8;
   static const idPaymentMethodPOS=0;
+  static const idPaymentMethodBreB=44;
 
   static const responsabilidadFiscalCo = "R-99-PN";
   static const tipoIdentificacionCo = "13";

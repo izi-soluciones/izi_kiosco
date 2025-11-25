@@ -283,6 +283,7 @@ abstract class  LocaleKeys {
   static const payment_messages_errorGet = 'payment.messages.errorGet';
   static const payment_messages_errorQR = 'payment.messages.errorQR';
   static const payment_messages_errorCard = 'payment.messages.errorCard';
+  static const payment_messages_errorBreB = 'payment.messages.errorBreB';
   static const payment_messages_processingOrder = 'payment.messages.processingOrder';
   static const payment_messages_processingInvoice = 'payment.messages.processingInvoice';
   static const payment_messages = 'payment.messages';

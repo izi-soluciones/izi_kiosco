@@ -455,6 +455,9 @@ class _PaymentPageInvoiceState extends State<PaymentPageInvoice> {
       case PaymentType.card:
         _paymentCard();
         break;
+      case PaymentType.breb:
+        context.read<PaymentBloc>().generateBREB(authState);
+        break;
       default:
         break;
     }
