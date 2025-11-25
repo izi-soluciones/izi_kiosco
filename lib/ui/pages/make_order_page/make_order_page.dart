@@ -19,14 +19,20 @@ import 'package:izi_kiosco/ui/utils/responsive_utils.dart';
 
 class MakeOrderPage extends StatefulWidget {
   final bool fromTables;
-  const MakeOrderPage({super.key,required this.fromTables});
+  final bool isRetail;
+  const MakeOrderPage({super.key,required this.fromTables, this.isRetail=false});
 
   @override
   State<MakeOrderPage> createState() => _MakeOrderPageState();
 }
 
 class _MakeOrderPageState extends State<MakeOrderPage> {
-  PageController pageController = PageController();
+  late PageController pageController;
+  @override
+  void initState() {
+    pageController= PageController(initialPage: widget.isRetail?1:0);
+    super.initState();
+  }
   @override
   Widget build(BuildContext context) {
     final ru = ResponsiveUtils(context);

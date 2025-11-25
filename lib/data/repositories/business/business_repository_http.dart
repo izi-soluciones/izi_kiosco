@@ -138,10 +138,13 @@ class BusinessRepositoryHttp extends BusinessRepository{
   }
 
   @override
-  Future<List<Customer>> queryBusinessSearch({required String query, required int contribuyenteId}) async{
+  Future<List<Customer>> queryBusinessSearch({required String query, required String? pais}) async{
     String path = "/nit/$query";
     var response = await _dioClient.get(
         uri: path,
+        queryParameters: {
+          "pais": pais
+        },
         options: Options(responseType: ResponseType.json));
     if (response.statusCode == 200) {
         return List.from(response.data)

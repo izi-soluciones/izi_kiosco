@@ -3,6 +3,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:izi_design_system/atoms/izi_link.dart';
 import 'package:izi_design_system/atoms/izi_typography.dart';
 import 'package:izi_design_system/molecules/izi_input.dart';
 import 'package:izi_design_system/tokens/colors.dart';
@@ -36,6 +37,7 @@ class _PaymentPageInvoiceFormState extends State<PaymentPageInvoiceForm> {
   TextEditingController identificationTypeController = TextEditingController();
   TextEditingController ivaResponsabilityController = TextEditingController();
   TextEditingController taxResponsabilityController = TextEditingController();
+  bool datosAvanzados =false;
   @override
   Widget build(BuildContext context) {
     ResponsiveUtils ru = ResponsiveUtils(context);
@@ -87,11 +89,13 @@ class _PaymentPageInvoiceFormState extends State<PaymentPageInvoiceForm> {
 
   Widget _documentNumber(ResponsiveUtils ru,BuildContext context){
     return IziInput(
-                  bigLabel: (ru.gtMd() || (ru.gtSm() && ru.isVertical())),
-                  inputSize: (ru.gtMd() || (ru.gtSm() && ru.isVertical()))
-                      ? InputSize.big
-                      : InputSize.normal,
+      labelInput: LocaleKeys.payment_inputs_documentNumber_label.tr(),
+        bigLabel: (ru.gtMd() || (ru.gtSm() && ru.isVertical())),
+        inputSize: (ru.gtMd() || (ru.gtSm() && ru.isVertical()))
+            ? InputSize.big
+            : InputSize.normal,
                   inputMaxLength: 50,
+                  value: widget.paymentState.documentNumber.value,
                   suffixWidget: widget.paymentState.documentNumber.loading
                       ? Container(
                           padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -132,7 +136,7 @@ class _PaymentPageInvoiceFormState extends State<PaymentPageInvoiceForm> {
                         .firstOrNull
                         .toString()
                   ]),
-                  inputType: (ru.gtMd() || (ru.gtSm() && ru.isVertical()))?InputType.keyboard:InputType.number,
+                  inputType: ((ru.gtSm() && ru.isVertical()))?InputType.keyboard:InputType.number,
                 );
   }
 
@@ -140,14 +144,6 @@ class _PaymentPageInvoiceFormState extends State<PaymentPageInvoiceForm> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-
-        IziText.body(
-            color: IziColors.darkGrey,
-            text: LocaleKeys.payment_inputs_documentNumber_label.tr(),
-            fontWeight: FontWeight.w400),
-            const SizedBox(
-              height: 4,
-            ),
         if (ru.isXs())
          _documentType(ru, context),
         if (ru.isXs())
@@ -205,34 +201,17 @@ class _PaymentPageInvoiceFormState extends State<PaymentPageInvoiceForm> {
         return null;
     }
   }
-
-  Widget _co(ResponsiveUtils ru, BuildContext context){
-    return Column(
-      children: [
-
-        IziText.body(
-            color: IziColors.darkGrey,
-            text: LocaleKeys.payment_inputs_documentNumber_label.tr(),
-            fontWeight: FontWeight.w400),
-        const SizedBox(
-          height: 4,
-        ),
-        _documentNumber(ru, context),
-            const SizedBox(
-              height: 16,
-            ),
-
-        IziInput(
+ _documentTypeCO(ResponsiveUtils ru, BuildContext context){
+    return IziInput(
+          labelInput: LocaleKeys.payment_inputs_documentType_label.tr(),
+        bigLabel: (ru.gtMd() || (ru.gtSm() && ru.isVertical())),
           controller: identificationTypeController,
           inputHintText: "",
-          bigLabel: (ru.gtMd() || (ru.gtSm() && ru.isVertical())),
+        inputSize: (ru.gtMd() || (ru.gtSm() && ru.isVertical()))
+            ? InputSize.big
+            : InputSize.normal,
           value: widget.paymentState.paramsCo?.identificationType,
           inputType: InputType.select,
-          inputSize: (ru.gtMd() || (ru.gtSm() && ru.isVertical()))
-              ? InputSize.big
-              : InputSize.normal,
-          readOnly: widget.paymentState.qrCharge != null ||
-              widget.paymentState.qrLoading == true,
           onSelected: (value) {
             context.read<PaymentBloc>().changeInputsCo(identificationType: value);
           },
@@ -241,12 +220,53 @@ class _PaymentPageInvoiceFormState extends State<PaymentPageInvoiceForm> {
               type.codigo:
                   type.nombre
           },
+        );
+  }
+  Widget _co(ResponsiveUtils ru, BuildContext context){
+    return Column(
+      children: [
+
+        if (ru.isXs())
+         _documentType(ru, context),
+        if (ru.isXs())
+          const SizedBox(
+            height: 16,
+          ),
+          RowContainer(
+            gap: 8,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (ru.gtXs())
+                Expanded(
+                  flex: 1,
+                  child: _documentTypeCO(ru, context)
+                ),
+              Expanded(
+                flex: 2,
+                child: _documentNumber(ru, context)
+              ),
+            ],
+          ),
+        const SizedBox(
+          height: 8,
         ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            IziLink(linkText: "${datosAvanzados?"-":"+"} Datos avanzados", linkOnPressed: (){
+              setState(() {
+                datosAvanzados=!datosAvanzados;
+              });
+            }, linkColor: IziColors.primary),
+          ],
+        ),
+        if(datosAvanzados)
             const SizedBox(
               height: 16,
             ),
 
 
+        if(datosAvanzados)
         IziInput(
           controller: ivaResponsabilityController,
           inputHintText: "",
@@ -267,10 +287,12 @@ class _PaymentPageInvoiceFormState extends State<PaymentPageInvoiceForm> {
                  type.nombre
           },
         ),
+        if(datosAvanzados)
             const SizedBox(
               height: 16,
             ),
 
+        if(datosAvanzados)
         IziInput(
           controller: personTypeController,
           inputHintText: "",
@@ -291,10 +313,12 @@ class _PaymentPageInvoiceFormState extends State<PaymentPageInvoiceForm> {
                   type.nombre
           },
         ),
+        if(datosAvanzados)
             const SizedBox(
               height: 16,
             ),
 
+        if(datosAvanzados)
         IziInput(
           controller: taxResponsabilityController,
           inputHintText: "",

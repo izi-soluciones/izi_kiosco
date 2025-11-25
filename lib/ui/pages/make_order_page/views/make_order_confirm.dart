@@ -98,7 +98,8 @@ class _MakeOrderConfirmState extends State<MakeOrderConfirm> {
                                   IziText.bodyBig(
                                       color: IziColors.darkGrey,
                                       textAlign: TextAlign.left,
-                                      text: "${widget.state.takeAway?LocaleKeys
+                                      text: "${authState.currentDevice?.config.isRetail==true?LocaleKeys.makeOrder_subtitles_myPurchase
+                                          .tr():widget.state.takeAway?LocaleKeys
                                           .makeOrder_body_confirmOrderTakeWay
                                           .tr():LocaleKeys
                                           .makeOrder_body_confirmOrderEatHere
@@ -107,7 +108,8 @@ class _MakeOrderConfirmState extends State<MakeOrderConfirm> {
                                   IziText.titleBig(
                                       color: IziColors.darkGrey,
                                       textAlign: TextAlign.left,
-                                      text: "${widget.state.takeAway?LocaleKeys
+                                      text: "${authState.currentDevice?.config.isRetail==true?LocaleKeys.makeOrder_subtitles_myPurchase
+                                          .tr():widget.state.takeAway?LocaleKeys
                                           .makeOrder_body_confirmOrderTakeWay
                                           .tr():LocaleKeys
                                           .makeOrder_body_confirmOrderEatHere
@@ -451,24 +453,12 @@ class _MakeOrderConfirmState extends State<MakeOrderConfirm> {
         .read<MakeOrderBloc>()
         .emitOrder(authState)
         .then(
-      (value) {
+      (paymentObj) {
         context.read<PageUtilsBloc>().closeLoading();
-        if (value is Comanda) {
-          var paymentObj = PaymentObj(
-              id: value.id,
-              uuid: value.uuid,
-              custom: value.custom is Map? value.custom : {},
-              amount: value.montoTotal??0,
-              isComanda: true,
-              items: value.listaItems.map((e) => ItemPaymentObj(
-                  quantity: e.cantidad ?? 0,
-                  custom: e.modificadores,
-                  name: e.nombre)
-              ).toList()
-          );
+        if (paymentObj is PaymentObj) {
           context.read<PageUtilsBloc>().initScreenActiveInvoiced(authState);
           GoRouter.of(this.context).goNamed(RoutesKeys.payment,
-              extra: paymentObj, pathParameters: {"id": value.id.toString()});
+              extra: paymentObj, pathParameters: {"id": paymentObj.id.toString()});
         } else {
           context.read<PageUtilsBloc>().initScreenActive(authState);
         }

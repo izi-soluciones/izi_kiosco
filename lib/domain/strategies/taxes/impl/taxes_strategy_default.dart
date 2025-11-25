@@ -27,4 +27,7 @@ class TaxesStrategyDefault implements TaxesStrategy{
   
   @override
   String brandName = "iZi";
+  
+  @override
+  String? countryCode;
 }

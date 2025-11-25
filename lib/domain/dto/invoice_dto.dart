@@ -70,7 +70,7 @@ class InvoiceDto {
       if (documentType != null) "tipoDocumentoIdentidad": documentType,
       if(autorizacion!=null)"autorizacion": autorizacion,
       if(numero!=null)"numero":numero,
-      if(correoElectronicoComprador!=null) "correoElectronicoComprador":correoElectronicoComprador
+      if(correoElectronicoComprador?.isNotEmpty==true) "correoElectronicoComprador":correoElectronicoComprador
     };
     return map;
   }

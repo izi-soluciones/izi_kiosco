@@ -277,7 +277,7 @@ class _PaymentPageInvoiceState extends State<PaymentPageInvoice> {
           IziInput(
             labelInput: LocaleKeys.payment_inputs_phoneNumber_label.tr(),
             inputHintText:
-                LocaleKeys.payment_inputs_phoneNumber_placeholder.tr(),
+                widget.state.phoneNumberMask ?? LocaleKeys.payment_inputs_phoneNumber_placeholder.tr(),
             bigLabel: (ru.gtMd() || (ru.gtSm() && ru.isVertical())),
             inputMaxLength: 8,
             inputFormatters: [
@@ -294,7 +294,7 @@ class _PaymentPageInvoiceState extends State<PaymentPageInvoice> {
                 context.read<PaymentBloc>().changeInputs(phoneNumber: value);
             },
             error: _getErrorsPhoneNumber(widget.state.phoneNumber.inputError),
-            inputType: (ru.gtMd() || (ru.gtSm() && ru.isVertical()))?InputType.keyboard:InputType.number,
+            inputType: ((ru.gtSm() && ru.isVertical()))?InputType.keyboard:InputType.number,
           ),
           const SizedBox(height: 8),
           IziText.label(
@@ -323,7 +323,7 @@ class _PaymentPageInvoiceState extends State<PaymentPageInvoice> {
           IziInput(
             labelInput: LocaleKeys.payment_inputs_email_label.tr(),
             inputHintText:
-                LocaleKeys.payment_inputs_email_placeholder.tr(),
+                widget.state.emailMask ?? LocaleKeys.payment_inputs_email_placeholder.tr(),
             inputMaxLength: 150,
             readOnly:
                 widget.state.qrCharge != null || widget.state.qrLoading == true,

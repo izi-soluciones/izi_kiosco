@@ -122,6 +122,8 @@ class PaymentState extends Equatable {
   final InputObj businessName;
   final InputObj phoneNumber;
   final InputObj email;
+  final String? emailMask;
+  final String? phoneNumberMask;
 
 
   //VARIABLES
@@ -179,6 +181,8 @@ class PaymentState extends Equatable {
         this.qrCharge,
         this.qrWait = false,
         this.countryTaxes,
+        this.emailMask,
+        this.phoneNumberMask,
         this.qrPaymentKey});
 
   factory PaymentState.init() => PaymentState(
@@ -234,6 +238,8 @@ class PaymentState extends Equatable {
         ParamsBo? paramsBo,
         ParamsCo? paramsCo,
         PaymentCountryTaxes? countryTaxes,
+        String? Function()? emailMask,
+        String? Function()? phoneNumberMask,
       PaymentObj? paymentObj}) {
     return PaymentState(
         casaMatriz: casaMatriz ?? this.casaMatriz,
@@ -264,7 +270,9 @@ class PaymentState extends Equatable {
       qrLoading: qrLoading ?? this.qrLoading,
       qrWait: qrWait ?? this.qrWait,
       paymentObj: paymentObj ?? this.paymentObj,
-      countryTaxes: countryTaxes ?? this.countryTaxes
+      countryTaxes: countryTaxes ?? this.countryTaxes,
+      emailMask: emailMask!=null? emailMask():this.emailMask,
+      phoneNumberMask: phoneNumberMask!=null? phoneNumberMask():this.phoneNumberMask,
     );
   }
 
@@ -292,6 +300,8 @@ class PaymentState extends Equatable {
     qrCharge,
     qrAmount,
     qrPaymentKey,
-    qrLoading
+    qrLoading,
+    emailMask,
+    phoneNumberMask
       ];
 }

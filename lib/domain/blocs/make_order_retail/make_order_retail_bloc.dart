@@ -33,6 +33,8 @@ class MakeOrderRetailBloc extends Cubit<MakeOrderRetailState> {
         catalog: authState.currentSucursal?.catalogo ?? "", sortByPriority: false
       );
 
+      
+
 
       List<CashRegister> cashRegisters =
           await _businessRepository.getCashRegisters(

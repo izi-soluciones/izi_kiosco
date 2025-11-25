@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:izi_kiosco/app/values/app_constants.dart';
 import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
 import 'package:izi_kiosco/domain/dto/new_order_dto.dart';
+import 'package:izi_kiosco/domain/dto/new_sale_link_dto.dart';
 import 'package:izi_kiosco/domain/models/cash_register.dart';
 import 'package:izi_kiosco/domain/models/catalog.dart';
 import 'package:izi_kiosco/domain/models/category_order.dart';
@@ -12,6 +13,8 @@ import 'package:izi_kiosco/domain/models/comanda.dart';
 import 'package:izi_kiosco/domain/models/consumption_point.dart';
 import 'package:izi_kiosco/domain/models/currency.dart';
 import 'package:izi_kiosco/domain/models/item.dart';
+import 'package:izi_kiosco/domain/models/payment_obj.dart';
+import 'package:izi_kiosco/domain/models/sale_link.dart';
 import 'package:izi_kiosco/domain/repositories/business_repository.dart';
 import 'package:izi_kiosco/domain/repositories/comanda_repository.dart';
 import 'package:izi_kiosco/domain/strategies/taxes/taxes_strategy.dart';
@@ -155,6 +158,7 @@ class MakeOrderBloc extends Cubit<MakeOrderState> {
         emit(state.copyWith(status: MakeOrderStatus.waitingGet));
         return;
       }
+
       if(!isClosed){
         emit(state.copyWith(
             status: MakeOrderStatus.successGet,
@@ -314,7 +318,16 @@ class MakeOrderBloc extends Cubit<MakeOrderState> {
     emit(state.copyWith(takeAway: takeAway));
   }
 
-  Future<Comanda?> emitOrder(AuthState authState)async{
+  Future<PaymentObj?> emitOrder(AuthState authState)async{
+    if(authState.currentDevice?.config.isRetail==true){
+      return await _emitSale(authState);
+    }
+    else{
+      return await _emitOrder(authState);
+    }
+  }
+
+  Future<PaymentObj?> _emitOrder(AuthState authState)async{
     try{
       int cajaUsuarioIndex=state.cashRegisters.indexWhere((element) => authState.currentDevice?.caja==element.id && element.abierta==true);
       CashRegister? cashRegister;
@@ -359,7 +372,19 @@ class MakeOrderBloc extends Cubit<MakeOrderState> {
         emit(state.copyWith(status: MakeOrderStatus.successEmit));
         emit(state.copyWith(status: MakeOrderStatus.successGet));
       }
-      return comanda;
+      var paymentObj = PaymentObj(
+              id: comanda.id,
+              uuid: comanda.uuid,
+              custom: comanda.custom is Map? comanda.custom : {},
+              amount: comanda.montoTotal??0,
+              isComanda: true,
+              items: comanda.listaItems.map((e) => ItemPaymentObj(
+                  quantity: e.cantidad ?? 0,
+                  custom: e.modificadores,
+                  name: e.nombre)
+              ).toList()
+          );
+      return paymentObj;
     }
     catch(err){
       log(err.toString());
@@ -409,6 +434,40 @@ class MakeOrderBloc extends Cubit<MakeOrderState> {
       }
     }
     emit(state.copyWith(itemsSelected: categories));
+  }
+
+  Future<PaymentObj?> _emitSale(AuthState authState) async {
+    try{
+      List<Item> itemsSelected = [];
+      for(var cat in state.itemsSelected){
+        itemsSelected.addAll(cat.items);
+      }
+      var newSaleLinkDto = NewSaleLinkDto(
+          listaItems: itemsSelected,
+          dispositivo: authState.currentDevice?.id ?? 0
+      );
+      SaleLink saleLink = await _comandaRepository.createSaleLink(newSaleLinkDto);
+      var paymentObj = PaymentObj(
+              id: saleLink.id,
+              uuid: saleLink.uuid,
+              custom: {},
+              amount: saleLink.monto,
+              isComanda: false,
+              items: itemsSelected.map((e) => ItemPaymentObj(
+                  quantity: e.cantidad,
+                  custom: {},
+                  name: e.nombre)
+              ).toList()
+          );
+      
+      return paymentObj;
+    }
+    catch(err){
+      log(err.toString());
+      emit(state.copyWith(status: MakeOrderStatus.errorEmit,errorDescription: err.toString()));
+      emit(state.copyWith(status: MakeOrderStatus.successGet));
+      return null;
+    }
   }
 
 }
