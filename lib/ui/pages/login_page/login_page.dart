@@ -1,11 +1,13 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:izi_design_system/atoms/izi_card.dart';
 import 'package:izi_design_system/molecules/izi_snack_bar.dart';
 import 'package:izi_design_system/tokens/colors.dart';
 import 'package:izi_design_system/tokens/izi_icons.dart';
 import 'package:izi_kiosco/app/values/assets_keys.dart';
+import 'package:izi_kiosco/app/values/env_keys.dart';
 import 'package:izi_kiosco/app/values/locale_keys.g.dart';
 import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/login/login_bloc.dart';
@@ -35,6 +37,8 @@ class LoginPage extends StatelessWidget {
       builder: (context,state) {
         return Stack(
           children: [
+
+            if(dotenv.env[EnvKeys.brandName]=="iZi")
             Positioned(
                 bottom: 0,
                 left: 0,
@@ -42,7 +46,8 @@ class LoginPage extends StatelessWidget {
                 child: Center(
                   child: ConstrainedBox(
                     constraints: const BoxConstraints(maxWidth: 500),
-                    child: Image.asset(
+                    child: 
+                    Image.asset(
                       AssetsKeys.cityGraphic,
                       fit: BoxFit.fitWidth,
                     ),
@@ -58,9 +63,9 @@ class LoginPage extends StatelessWidget {
                         Container(
                             alignment: Alignment.centerLeft,
                             padding: const EdgeInsets.all(16),
-                            child: const FittedBox(
+                            child: FittedBox(
                                 fit: BoxFit.fill,
-                                child: Icon(IziIcons.izi,color: IziColors.primary)
+                                child: Image.asset(dotenv.env[EnvKeys.appIcon]??"", width: 60, height: 60,)
                             )
                         ),
                         ConstrainedBox(

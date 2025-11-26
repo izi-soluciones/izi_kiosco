@@ -242,7 +242,7 @@
     "title": "Inicio",
     "drawer": "Inicio",
     "subtitles":{
-      "iziSlogan": "Es fácil, es iZi"
+      "iziSlogan": "Es fácil, es {{brand_name}}"
     },
     "body": {
       "order": "Ordena",
@@ -600,7 +600,7 @@
   },
   "warningRooms": {
     "title": "No se encuentra ningun espacio disponible",
-    "description": "Utiliza la app de iZi administrador para configurar los espacios"
+    "description": "Utiliza la app de {{brand_name}} administrador para configurar los espacios"
   },
   "warningPermissions": {
     "title": "Sin permisos",

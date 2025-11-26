@@ -7,6 +7,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_web_plugins/url_strategy.dart'
 if (dart.library.html) 'package:flutter_web_plugins/url_strategy.dart' as web_url;
 import 'package:izi_kiosco/app/my_app.dart';
+import 'package:izi_kiosco/app/utils/custom_asset_loader.dart';
 import 'package:izi_kiosco/app/values/assets_keys.dart';
 import 'package:izi_kiosco/firebase_options.dart';
 void main()async {
@@ -30,6 +31,7 @@ void main()async {
     EasyLocalization(
         supportedLocales: const [Locale('es')],
         path: AssetsKeys.translations,
+        assetLoader: CustomAssetLoader(),
         fallbackLocale: const Locale('es'),
         child: MyApp()
     ),

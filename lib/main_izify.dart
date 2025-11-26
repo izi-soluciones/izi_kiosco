@@ -15,7 +15,7 @@ void main()async {
     web_url.usePathUrlStrategy();
   }
   WidgetsFlutterBinding.ensureInitialized();
-  await dotenv.load(fileName: AssetsKeys.envBeta);
+  await dotenv.load(fileName: AssetsKeys.envIzify);
   await EasyLocalization.ensureInitialized();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,

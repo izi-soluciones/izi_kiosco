@@ -244,12 +244,12 @@ class _HomePageState extends State<HomePage> {
                                       ),),
                                       Padding(
                                         padding: EdgeInsets.only(left: ru.height*0.005,bottom: ru.height*0.002),
-                                        child: const FittedBox(
-                                          child: Icon(
+                                        child: FittedBox(
+                                          child: dotenv.env[EnvKeys.brandName]=="iZi"?const Icon(
                                             IziIcons.izi,
                                             color: IziColors.primary,
                                             size: 40,
-                                          ),
+                                          ):Image.asset(dotenv.env[EnvKeys.appIcon]??"", width: 60, height: 60,),
                                         ),
                                       ),
                                     ],

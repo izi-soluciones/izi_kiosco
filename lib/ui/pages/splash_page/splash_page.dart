@@ -2,9 +2,11 @@ import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:izi_design_system/tokens/colors.dart';
 import 'package:izi_design_system/tokens/izi_icons.dart';
 import 'package:izi_kiosco/app/values/assets_keys.dart';
+import 'package:izi_kiosco/app/values/env_keys.dart';
 import 'package:lottie/lottie.dart';
 import 'package:just_audio/just_audio.dart';
 
@@ -64,7 +66,10 @@ class _SplashPageState extends State<SplashPage> {
                   color: IziColors.lightGrey30,
                   borderRadius: BorderRadius.circular(108)
               ),
-              child: Lottie.asset(AssetsKeys.splashScreenJson,width: 108,repeat: false,)
+              
+              child: dotenv.env[EnvKeys.brandName] == "IZIFY"
+                  ? Image.asset(AssetsKeys.izifySplashScreenImage, width: 108)
+                  : Lottie.asset(AssetsKeys.splashScreenJson,width: 108,repeat: false,)
           ),
         ),
       ),

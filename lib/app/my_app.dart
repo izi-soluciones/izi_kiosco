@@ -2,6 +2,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:go_router/go_router.dart';
 import 'package:izi_design_system/atoms/izi_typography.dart';
 import 'package:izi_design_system/molecules/izi_btn.dart';
@@ -11,6 +12,7 @@ import 'package:izi_design_system/tokens/theme.dart';
 import 'package:izi_design_system/tokens/types.dart';
 import 'package:izi_kiosco/app/utils/app_behavior.dart';
 import 'package:izi_kiosco/app/utils/go_router_refresh_stream.dart';
+import 'package:izi_kiosco/app/values/env_keys.dart';
 import 'package:izi_kiosco/app/values/routes.dart';
 import 'package:izi_kiosco/app/values/routes_keys.dart';
 import 'package:izi_kiosco/data/repositories/auth/auth_repository_http.dart';
@@ -88,7 +90,7 @@ class MyApp extends StatelessWidget {
         debugShowCheckedModeBanner: false,
         debugShowMaterialGrid: false,
         routerConfig: route,
-        title: "iZi Kiosco",
+        title: "${dotenv.env[EnvKeys.brandName]} Kiosco",
         theme: iziThemeData(),
         builder: (context, child) {
           final ru = ResponsiveUtils(context);

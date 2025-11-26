@@ -118,6 +118,7 @@ flutter:
     - assets/.env.stg
     - assets/.env.alpha
     - assets/.env.pcbba
+    - assets/.env.izify
     - assets/translations/
     - assets/graphics/
     - assets/icons/

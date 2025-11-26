@@ -134,7 +134,7 @@ class _MakeOrderDetailStateVertical extends State<MakeOrderDetailVertical> {
                 _next(context);
               }
                   : null,
-              text: LocaleKeys.makeOrder_buttons_confirm.tr(),
+              text: LocaleKeys.makeOrder_buttons_confirmSm.tr(),
               amount: (_getTotal() - widget.state.discountAmount).moneyFormat(
                   currency: widget.state.currentCurrency?.simbolo, digitsTaxes: digitsTaxes)
           ),

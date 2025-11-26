@@ -21,22 +21,36 @@ class IziScreenInactive extends StatefulWidget {
 }
 
 class _IziScreenInactiveState extends State<IziScreenInactive> {
-  late Timer timer;
-  late int time;
+  late Timer _timer;
+  late int _timeRemaining;
+
   @override
   void initState() {
-    time=context.read<AuthBloc>().state.currentDevice?.config.timeConfirmation ?? AppConstants.timerMessage;
-    timer = Timer(Duration(seconds: time), () {
-      context.read<PageUtilsBloc>().closeScreenActive();
-      GoRouter.of(context).goNamed(RoutesKeys.home);
-    });
     super.initState();
+    _timeRemaining = context.read<AuthBloc>().state.currentDevice?.config.timeConfirmation ?? AppConstants.timerMessage;
+    _startTimer();
   }
+
+  void _startTimer() {
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (_timeRemaining > 0) {
+        setState(() {
+          _timeRemaining--;
+        });
+      } else {
+        _timer.cancel();
+        context.read<PageUtilsBloc>().closeScreenActive();
+        GoRouter.of(context).goNamed(RoutesKeys.home);
+      }
+    });
+  }
+
   @override
   void dispose() {
-    timer.cancel();
+    _timer.cancel();
     super.dispose();
   }
+
   @override
   Widget build(BuildContext context) {
     return Material(
@@ -57,20 +71,31 @@ class _IziScreenInactiveState extends State<IziScreenInactive> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  IziText.titleBig(cropText: false,textAlign: TextAlign.center,color: IziColors.dark, text: LocaleKeys.general_body_thisScreenClose.tr(args: [time.toString()]),fontWeight: FontWeight.w600,maxLines: 5,),
-                  const SizedBox(height: 8,),
-                  IziText.bodyBig(color: IziColors.darkGrey, text: LocaleKeys.general_buttons_pressToContinue.tr(),fontWeight: FontWeight.w600, maxLines: 5),
-                  const SizedBox(height: 8,),
+                  IziText.titleBig(
+                    cropText: false,
+                    textAlign: TextAlign.center,
+                    color: IziColors.dark,
+                    text: LocaleKeys.general_body_thisScreenClose.tr(args: [_timeRemaining.toString()]),
+                    fontWeight: FontWeight.w600,
+                    maxLines: 5,
+                  ),
+                  const SizedBox(height: 8),
+                  IziText.bodyBig(
+                    color: IziColors.darkGrey,
+                    text: LocaleKeys.general_buttons_pressToContinue.tr(),
+                    fontWeight: FontWeight.w600,
+                    maxLines: 5,
+                  ),
+                  const SizedBox(height: 8),
                   const SizedBox(
                     width: 15,
                     height: 15,
-                    child: CircularProgressIndicator(color: IziColors.primary,strokeWidth: 2),
+                    child: CircularProgressIndicator(color: IziColors.primary, strokeWidth: 2),
                   ),
                 ],
               ),
             ),
           )
-
         ],
       ),
     );
