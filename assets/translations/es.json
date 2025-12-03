@@ -360,7 +360,8 @@
       "errorGet": "Ocurrió un error al obtener los datos",
       "errorQR": "Ocurrió un problema al generar el QR",
       "errorCard": "Ocurrió un problema al generar el cobro por POS",
-      "processingOrder": "Procesando órden",
+      "errorBreB": "Ocurrió un problema al generar el cobro por Bre-B",
+      "processingOrder": "Procesando orden",
       "processingInvoice": "Procesando factura"
     }
   },

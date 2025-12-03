@@ -93,7 +93,7 @@ class PaymentPageSelection extends StatelessWidget {
         if(authState.taxesStrategy.showBreB)
         PaymentMethodBtn(
             onPressed: (){
-              _selectPayment(PaymentType.qr,context,authState);
+              _selectPayment(PaymentType.breb,context,authState);
               },
             icon: IziIcons.cash,
             color: IziColors.primaryDarken,
@@ -142,6 +142,9 @@ class PaymentPageSelection extends StatelessWidget {
           break;
         case PaymentType.qr:
           context.read<PaymentBloc>().generateQR(authState);
+          break;
+        case PaymentType.breb:
+          context.read<PaymentBloc>().generateBREB(authState);
           break;
         default:
           break;
