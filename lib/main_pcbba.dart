@@ -21,13 +21,13 @@ void main()async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  await FirebaseAppCheck.instance
-        // Your personal reCaptcha public key goes here:
-        .activate(
-      androidProvider: AndroidProvider.debug,
-      appleProvider: AppleProvider.debug,
-      webProvider: ReCaptchaV3Provider(dotenv.env["CAPTCHA_KEY"] ?? ""),
-    );
+  // await FirebaseAppCheck.instance
+  //       // Your personal reCaptcha public key goes here:
+  //       .activate(
+  //     androidProvider: AndroidProvider.debug,
+  //     appleProvider: AppleProvider.debug,
+  //     webProvider: ReCaptchaV3Provider(dotenv.env["CAPTCHA_KEY"] ?? ""),
+  //   );
   runApp(
     EasyLocalization(
         supportedLocales: const [Locale('es')],
