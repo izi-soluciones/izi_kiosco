@@ -647,6 +647,9 @@ class PaymentBloc extends Cubit<PaymentState> {
 
   Future<bool> generateBREB(AuthState authState) async {
     try {
+      if(!_validateInputs()){
+        return false;
+      }
       emit(state.copyWith(
         status: PaymentStatus.brebLoading,
         brebLoading: true,
