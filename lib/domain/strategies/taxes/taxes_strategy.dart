@@ -15,6 +15,8 @@ abstract class TaxesStrategy{
     required this.decimals,
     required this.brandName
   });
+
+  String? countryCode;
   
   num getTotalItem(ParametrosFacturacionItem parametrosFacturacionItem, num cantidad, num precio);  
   PaymentStatus? verifyParameters(Contribuyente? contribuyente, Sucursal? sucursal, Device? device, String? economicActivity);  

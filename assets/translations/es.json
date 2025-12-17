@@ -325,8 +325,15 @@
       "complement": {
         "label": "Complemento"
       },
+      "documentType": {
+        "label": "Tipo de documento",
+        "placeholder": "Ingresa el {}",
+        "errors": {
+          "required": "El tipo es requerido"
+        }
+      },
       "documentNumber": {
-        "label": "Ingresa el número de NIT o CI para la factura (opcional)",
+        "label": "Número de documento (opcional)",
         "placeholder": "Ingresa el {}",
         "errors": {
           "required": "El número es requerido"
@@ -341,7 +348,7 @@
       },
       "email": {
         "label": "Ingresa el correo electronico",
-        "placeholder": "example@correo.com",
+        "placeholder": "",
         "errors": {
           "invalid": "Email inválido"
         }
@@ -512,10 +519,15 @@
       "numberDinners": "Cantidad de comensales",
       "discounts": "Descuentos",
       "details": "Detalles",
-      "orderNumber": "Orden #{}"
+      "orderNumber": "Orden #{}",
+      "myOrder":"Mi orden",
+      "myPurchase":"Mi compra",
+      "orderTakeOut":"Orden para llevar",
+      "orderEatHere":"Orden para comer aquí"
     },
     "body":{
       "addDishesOrDrinks": "Agrega platos o bebidas de la lista",
+      "addItems": "Agrega productos de la lista",
       "quantity": "Cantidad",
       "items": "Items ({})",
       "confirmOrder": "Confirmación de la orden",

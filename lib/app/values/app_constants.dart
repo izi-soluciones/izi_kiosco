@@ -31,6 +31,17 @@ class AppConstants{
   static const responsabilidadIvaCo = "48";
   static const defaultNitCo = "222222222222";
   static const defaultRazonSocialCo = "CONSUMIDOR FINAL";
+  static const idNitCo = "31";
+  static const defaultDataNit = {
+    "personType": "1",
+    "ivaResponsability": "48",
+    "taxResponsability": "R-99-PN"
+  };
+  static const defaultDataOther = {
+    "personType": "2",
+    "ivaResponsability": "49",
+    "taxResponsability": "R-99-PN"
+  };
 
 
   static const categoryIcons=[

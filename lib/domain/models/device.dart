@@ -42,6 +42,7 @@ class ConfigDevice {
   final String? video;
   final bool demo;
   final bool isRetail;
+  final bool isRetailBarcode;
   final String? almacen;
   final String? actividadEconomica;
   final int? timeVideo;
@@ -64,6 +65,7 @@ class ConfigDevice {
       required this.actividadEconomica,
       required this.almacen,
       required this.isRetail,
+      required this.isRetailBarcode,
       required this.token,
       this.ipLinkser,
       required this.descargarQR,
@@ -105,6 +107,7 @@ class ConfigDevice {
       descargarQR: jsonObj?["descargarQR"] is bool ? jsonObj!["descargarQR"] : false,
       ocultarCash: jsonObj?["ocultarCash"] is bool ? jsonObj!["ocultarCash"] : false,
       facturaCompacto: jsonObj?["facturaCompacto"] is bool ? jsonObj!["facturaCompacto"] : false,
+      isRetailBarcode: jsonObj?["isRetailBarcode"] is bool ? jsonObj!["isRetailBarcode"] : false,
     );
     return config;
   }

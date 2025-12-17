@@ -257,6 +257,11 @@ abstract class  LocaleKeys {
   static const payment_buttons = 'payment.buttons';
   static const payment_inputs_complement_label = 'payment.inputs.complement.label';
   static const payment_inputs_complement = 'payment.inputs.complement';
+  static const payment_inputs_documentType_label = 'payment.inputs.documentType.label';
+  static const payment_inputs_documentType_placeholder = 'payment.inputs.documentType.placeholder';
+  static const payment_inputs_documentType_errors_required = 'payment.inputs.documentType.errors.required';
+  static const payment_inputs_documentType_errors = 'payment.inputs.documentType.errors';
+  static const payment_inputs_documentType = 'payment.inputs.documentType';
   static const payment_inputs_documentNumber_label = 'payment.inputs.documentNumber.label';
   static const payment_inputs_documentNumber_placeholder = 'payment.inputs.documentNumber.placeholder';
   static const payment_inputs_documentNumber_errors_required = 'payment.inputs.documentNumber.errors.required';
@@ -407,8 +412,13 @@ abstract class  LocaleKeys {
   static const makeOrder_subtitles_discounts = 'makeOrder.subtitles.discounts';
   static const makeOrder_subtitles_details = 'makeOrder.subtitles.details';
   static const makeOrder_subtitles_orderNumber = 'makeOrder.subtitles.orderNumber';
+  static const makeOrder_subtitles_myOrder = 'makeOrder.subtitles.myOrder';
+  static const makeOrder_subtitles_myPurchase = 'makeOrder.subtitles.myPurchase';
+  static const makeOrder_subtitles_orderTakeOut = 'makeOrder.subtitles.orderTakeOut';
+  static const makeOrder_subtitles_orderEatHere = 'makeOrder.subtitles.orderEatHere';
   static const makeOrder_subtitles = 'makeOrder.subtitles';
   static const makeOrder_body_addDishesOrDrinks = 'makeOrder.body.addDishesOrDrinks';
+  static const makeOrder_body_addItems = 'makeOrder.body.addItems';
   static const makeOrder_body_quantity = 'makeOrder.body.quantity';
   static const makeOrder_body_items = 'makeOrder.body.items';
   static const makeOrder_body_confirmOrder = 'makeOrder.body.confirmOrder';

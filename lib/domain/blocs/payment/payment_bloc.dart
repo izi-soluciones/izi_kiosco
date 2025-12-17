@@ -200,6 +200,8 @@ class PaymentBloc extends Cubit<PaymentState> {
       String? email,
       String? firstDigits,
       String? lastDigits,
+        String? Function()? emailMask,
+        String? Function()? phoneNumberMask,
       String? phoneNumber}) {
     if (phoneNumber != null) {
       emit(state.copyWith(
@@ -228,6 +230,12 @@ class PaymentBloc extends Cubit<PaymentState> {
     if (email != null) {
       emit(state.copyWith(
           email: state.email.changeValue(email)));
+    }
+    if(emailMask !=null){
+      emit(state.copyWith(emailMask: emailMask));
+    }
+    if(phoneNumberMask !=null){
+      emit(state.copyWith(phoneNumberMask: phoneNumberMask));
     }
   }
 
@@ -299,13 +307,13 @@ class PaymentBloc extends Cubit<PaymentState> {
 
   bool _validateInputs() {
     emit(state.copyWith(
-        email: state.email
+        email: state.emailMask != null?state.email: state.email
             .validateError(valueRequired: state.email.value),
         documentNumber: state.documentNumber
             .validateError(valueRequired: state.businessName.value),
         businessName: state.businessName
             .validateError(valueRequired: state.documentNumber.value),
-        phoneNumber: state.phoneNumber.validateError()));
+        phoneNumber: state.phoneNumberMask != null?state.phoneNumber: state.phoneNumber.validateError()));
 
     if (state.documentNumber.inputError != null) {
       return false;
@@ -892,7 +900,7 @@ class PaymentBloc extends Cubit<PaymentState> {
       List<Customer> businessList =
           await _businessRepository.queryBusinessSearch(
               query: state.documentNumber.value,
-              contribuyenteId: authState.currentContribuyente?.id ?? 0);
+              pais: authState.taxesStrategy.countryCode);
       Customer? find = businessList.firstWhereOrNull(
           (element) => element.nit == state.documentNumber.value);
         if(find!=null){
@@ -900,7 +908,10 @@ class PaymentBloc extends Cubit<PaymentState> {
         } 
       emit(state.copyWith(
           businessName: state.businessName.changeValue(find?.razonSocial ?? ""),
-          documentNumber: state.documentNumber.changeLoading(false)));
+          documentNumber: state.documentNumber.changeLoading(false),
+          emailMask: ()=>find?.correoElectronico,
+          phoneNumberMask: ()=>find?.telefono,
+          ));
     }
     catch(e){
       emit(state.copyWith(
@@ -1202,9 +1213,29 @@ class PaymentBloc extends Cubit<PaymentState> {
             taxResponsability: taxResponsability)));
     }
     if (identificationType != null) {
-      emit(state.copyWith(
-          paramsCo: state.paramsCo?.copyWith(
-            identificationType: identificationType)));
+      if(identificationType==AppConstants.idNitCo){
+        emit(state.copyWith(
+          status: PaymentStatus.setInputs,
+            paramsCo: state.paramsCo?.copyWith(
+              
+              identificationType: identificationType,
+              ivaResponsability: AppConstants.defaultDataNit["ivaResponsability"],
+              personType: AppConstants.defaultDataNit["personType"],
+              taxResponsability: AppConstants.defaultDataNit["taxResponsability"]
+              )));
+        emit(state.copyWith(status: PaymentStatus.successGet));
+      }
+      else{
+        emit(state.copyWith(
+          status: PaymentStatus.setInputs,
+            paramsCo: state.paramsCo?.copyWith(
+              identificationType: identificationType,
+              ivaResponsability: AppConstants.defaultDataOther["ivaResponsability"],
+              personType: AppConstants.defaultDataOther["personType"],
+              taxResponsability: AppConstants.defaultDataOther["taxResponsability"]
+              )));
+    emit(state.copyWith(status: PaymentStatus.successGet));
+      }
     }
     if (ivaResponsability != null) {
       emit(state.copyWith(

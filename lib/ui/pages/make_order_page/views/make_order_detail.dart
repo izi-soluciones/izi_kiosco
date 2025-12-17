@@ -42,6 +42,7 @@ class _MakeOrderDetailState extends State<MakeOrderDetail> {
   @override
   Widget build(BuildContext context) {
     final ru = ResponsiveUtils(context);
+    final authState = context.read<AuthBloc>().state;
     return Container(
       decoration: const BoxDecoration(
         border: Border(
@@ -74,7 +75,7 @@ class _MakeOrderDetailState extends State<MakeOrderDetail> {
                     child: IziText.body(
                         color: IziColors.grey,
                         text:
-                            LocaleKeys.makeOrder_body_addDishesOrDrinks.tr(),
+                           authState.currentDevice?.config.isRetail==true?LocaleKeys.makeOrder_body_addItems.tr(): LocaleKeys.makeOrder_body_addDishesOrDrinks.tr(),
                         fontWeight: FontWeight.w400),
                   ),
                 )),

@@ -40,7 +40,7 @@ class NewOrderDtoCustomPagadorData {
       'nit': nit,
       'complemento': complemento,
       'razonSocial': razonSocial,
-      'telefonoComprador': telefonoComprador,
+      if(telefonoComprador?.isNotEmpty==true)'telefonoComprador': telefonoComprador,
       'tipoDocumento': tipoDocumento?.toJson(),
       "CO": co?.toJson()
     };

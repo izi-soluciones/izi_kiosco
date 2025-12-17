@@ -100,6 +100,7 @@ class Routes {
                 String? tableId;
                 int? numberDiners;
                 bool fromTables = false;
+                bool isRetail = context.read<AuthBloc>().state.currentDevice?.config.isRetail==true;
                 if (state.extra is Map) {
                   tableId = (state.extra as Map)["tableId"];
                   numberDiners = (state.extra as Map)["numberDiners"];
@@ -107,11 +108,19 @@ class Routes {
                 }
                 return NoTransitionPage(
                     child: BlocProvider(
-                  create: (context) => MakeOrderBloc(
+                  create: (context){
+                    if(isRetail){
+                      return MakeOrderBloc(
                       ComandaRepositoryHttp(), BusinessRepositoryHttp(),
                       numberDiners: numberDiners,
-                      tableId: tableId,),
-                  child: MakeOrderPage(fromTables: fromTables),
+                      tableId: tableId)..init(context.read<AuthBloc>().state, true)..changeStepStatus(1);
+                    }
+                    return MakeOrderBloc(
+                      ComandaRepositoryHttp(), BusinessRepositoryHttp(),
+                      numberDiners: numberDiners,
+                      tableId: tableId,);
+                  },
+                  child: MakeOrderPage(fromTables: fromTables,isRetail: isRetail),
                 ));
               },
             ),

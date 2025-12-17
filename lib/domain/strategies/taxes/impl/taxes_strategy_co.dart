@@ -64,5 +64,7 @@ class TaxesStrategyCo implements TaxesStrategy{
 
   @override
   String brandName = "IZIFY";
+  @override
+  String? countryCode = "CO";
 
 }

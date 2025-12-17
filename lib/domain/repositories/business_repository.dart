@@ -20,7 +20,7 @@ abstract class BusinessRepository{
   Future<List<PaymentMethod>> getPaymentMethods();
   Future<List<DocumentType>> getDocumentTypes();
   Future<List<EconomicActivity>> getEconomicActivities({required int contribuyenteId,required int sucursalId});
-  Future<List<Customer>> queryBusinessSearch({required String query, required int contribuyenteId});
+  Future<List<Customer>> queryBusinessSearch({required String query, required String? pais});
   Future<void> askHelp(int sucursal,String nombre);
 
   Future<bool> verifyConnectionPos();

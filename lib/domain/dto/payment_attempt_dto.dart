@@ -5,7 +5,7 @@ class PaymentAttemptDto {
   String uuid;
   String nit;
   String razonSocial;
-  String telefonoComprador;
+  String? telefonoComprador;
   String? correoElectronico;
   Map? tipoDocumento;
   String? complemento;
@@ -30,10 +30,10 @@ class PaymentAttemptDto {
     "ventaData": {
       "nit": nit,
       "razonSocial": razonSocial,
-      "telefonoComprador": telefonoComprador,
+      if(telefonoComprador?.isNotEmpty == true) "telefonoComprador": telefonoComprador,
       if(complemento!=null)"complemento": complemento,
       if(tipoDocumento!=null)"tipoDocumento": tipoDocumento,
-      if(correoElectronico!=null)"correoElectronico": correoElectronico,
+      if(correoElectronico?.isNotEmpty == true)"correoElectronico": correoElectronico,
       if(co!=null)"CO": co
     }
   };
