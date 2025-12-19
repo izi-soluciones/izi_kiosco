@@ -135,24 +135,90 @@ class PrintUtils {
       }
     }
   }
+  static const platform = MethodChannel('com.izisoluciones.kiosco/print');
+
   print(List<IziPrintItem> values, Device? device) async {
     if (kIsWeb) {
       await _pdfPrint(values);
     } else {
       if (Platform.isAndroid) {
-        var resBinding = await SunmiPrinter.bindingPrinter();
-        await SunmiPrinter.initPrinter();
-        var status = await SunmiPrinter.getPrinterStatus();
-        log(status.toString());
-        if (resBinding == true && status != PrinterStatus.ERROR) {
-          await _sunmiPrint(values);
+        if (device?.config.descargarQR == true) {
+          try {
+            await _autoReplyPrint(values);
+          } catch (e) {
+            log("AutoReplyPrint failed: $e");
+             // Fallback or just log? User asked to "add a flow", implies valid alternative. 
+             // But if specific device is new, maybe fallback isn't desired. 
+             // I'll keep it exclusive for now as per request "utilizar el dsk nuevo".
+          }
         } else {
-          //await _pdfPrint(values);
+          var resBinding = await SunmiPrinter.bindingPrinter();
+          await SunmiPrinter.initPrinter();
+          var status = await SunmiPrinter.getPrinterStatus();
+          log(status.toString());
+          if (resBinding == true && status != PrinterStatus.ERROR) {
+            await _sunmiPrint(values);
+          } else {
+            //await _pdfPrint(values);
+          }
         }
       } else {
         //await _pdfPrint(values);
       }
     }
+  }
+
+  _autoReplyPrint(List<IziPrintItem> values) async {
+    List<Map<String, Object>> items = [];
+    for (var i in values) {
+      if (i is IziPrintText) {
+        items.add({
+          'type': 'text',
+          'text': i.text,
+          'size': i.size.index,
+          'bold': i.bold,
+          'align': i.align.toString().split('.').last,
+        });
+      } else if (i is IziPrintRow) {
+         items.add({
+           'type': 'row',
+           'size': i.size.index,
+           'bold': i.bold,
+           'cols': i.values.map((c) => {
+             'text': c.text,
+             'width': c.width,
+             'align': c.align.toString().split('.').last,
+           }).toList(),
+         });
+      } else if (i is IziPrintQR) {
+        items.add({
+          'type': 'qrcode',
+          'content': i.qrContent,
+          'size': i.size,
+          'align': i.align.toString().split('.').last,
+        });
+      } else if (i is IziPrintSeparator) {
+        items.add({
+          'type': 'line',
+          'dotted': i.dotted
+        });
+      } else if (i is IziPrintLineWrap) {
+        items.add({
+          'type': 'feed',
+          'lines': i.lines
+        });
+      } else if (i is IziPrintImage) {
+        items.add({
+          'type': 'image',
+          'data': i.image,
+          'align': i.align.toString().split('.').last,
+          'size': i.size
+        });
+      }
+    }
+    items.add({'type': 'cut'});
+    
+    await platform.invokeMethod('print', {'items': items});
   }
 
   _sunmiPrint(List<IziPrintItem> values) async {
