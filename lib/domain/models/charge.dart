@@ -8,6 +8,7 @@ class Charge extends Equatable {
   final String? token;
   final int? intentoPago;
   final String? cobroKeyValue;
+  final String? cobroHandle;
 
   const Charge(
       {required this.qrUrl,
@@ -16,7 +17,8 @@ class Charge extends Equatable {
       this.intentoPago,
       required this.token,
       required this.id, 
-      this.cobroKeyValue});
+      this.cobroKeyValue,
+      this.cobroHandle});
 
   factory Charge.fromJson(Map<String, dynamic> json) {
     String? qrUrl;
@@ -41,6 +43,11 @@ class Charge extends Equatable {
                 json["custom"]["datosIntegracion"] is Map &&
                 json["custom"]["datosIntegracion"]["cobroKeyValue"] is String
             ? json["custom"]["datosIntegracion"]["cobroKeyValue"]
+            : null,
+        cobroHandle: json["custom"] is Map &&
+                json["custom"]["datosIntegracion"] is Map &&
+                json["custom"]["datosIntegracion"]["cobroHandle"] is String
+            ? json["custom"]["datosIntegracion"]["cobroHandle"]
             : null,
         qrBase64: qrBase64);
   }
@@ -70,19 +77,25 @@ class Charge extends Equatable {
                 json["custom"]["datosIntegracion"]["cobroKeyValue"] is String
             ? json["custom"]["datosIntegracion"]["cobroKeyValue"]
             : null,
+        cobroHandle: json["custom"] is Map &&
+                json["custom"]["datosIntegracion"] is Map &&
+                json["custom"]["datosIntegracion"]["cobroHandle"] is String
+            ? json["custom"]["datosIntegracion"]["cobroHandle"]
+            : null,
         qrBase64: qrBase64);
   }
 
-  Charge copyWith({String? qrUrl, String? uuid, int? id, String? qrBase64,String? token,String? cobroKeyValue,}) {
+  Charge copyWith({String? qrUrl, String? uuid, int? id, String? qrBase64,String? token,String? cobroKeyValue,String? cobroHandle}) {
     return Charge(
         qrUrl: qrUrl ?? this.qrUrl,
         uuid: uuid ?? this.uuid,
         id: id ?? this.id,
         token: token ?? this.token,
         qrBase64: qrBase64 ?? this.qrBase64,
-        cobroKeyValue: cobroKeyValue ?? this.cobroKeyValue);
+        cobroKeyValue: cobroKeyValue ?? this.cobroKeyValue,
+        cobroHandle: cobroHandle ?? this.cobroHandle);
   }
 
   @override
-  List<Object?> get props => [qrUrl, uuid, id, qrBase64,token,cobroKeyValue];
+  List<Object?> get props => [qrUrl, uuid, id, qrBase64,token,cobroKeyValue,cobroHandle];
 }

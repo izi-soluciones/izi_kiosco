@@ -66,4 +66,5 @@ abstract class ComandaRepository {
 
   Future<SaleLink> createSaleLink(NewSaleLinkDto newSaleLinkDto);
   Future<Charge> generatePaymentAttempt(PaymentAttemptDto paymentAttemptDto);
+  Future<void> cancelBrebKey({required int contribuyenteId, required String handle});
 }
