@@ -735,4 +735,30 @@ class ComandaRepositoryHttp extends ComandaRepository {
       throw error.toString();
     }
   }
+
+  @override
+  Future<void> cancelBrebKey({required int contribuyenteId, required String handle}) async {
+    try {
+      String path = "/contribuyentes/$contribuyenteId/integraciones/breb/cancelar";
+      var response = await _dioClient.post(
+          uri: path,
+          body: {
+            "handle": handle
+          },
+          options: Options(responseType: ResponseType.json));
+      if (response.statusCode != 200) {
+        if (response.data?["status"] ?? false) {
+          throw response.data?["data"];
+        }
+        throw response.data;
+      }
+    } on DioException catch (e) {
+      if (e.response?.data is String) {
+        throw e.response?.data;
+      }
+      throw e.error ?? "Network Error";
+    } catch (error) {
+      throw error.toString();
+    }
+  }
 }

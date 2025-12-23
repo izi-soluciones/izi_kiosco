@@ -56,6 +56,8 @@ class PaymentBloc extends Cubit<PaymentState> {
   final SocketRepository _socketRepository;
   PaymentConfig? countryConfig;
   CancelToken cancelToken = CancelToken();
+  int? _contribuyenteId;
+
   PaymentBloc(
       this._comandaRepository, this._businessRepository, this._socketRepository)
       : super(PaymentState.init());
@@ -333,6 +335,16 @@ class PaymentBloc extends Cubit<PaymentState> {
 
   @override
   Future<void> close() async {
+    if (state.brebCharge != null &&
+        state.brebCharge!.cobroHandle != null &&
+        _contribuyenteId != null &&
+        state.status != PaymentStatus.successInvoice &&
+        state.status != PaymentStatus.successPayment &&
+        state.status != PaymentStatus.paymentProcessed) {
+      await _comandaRepository.cancelBrebKey(
+          contribuyenteId: _contribuyenteId!,
+          handle: state.brebCharge!.cobroHandle!);
+    }
     _socketRepository.closeQrListening();
     qrStream?.cancel();
     qrStream = null;
@@ -658,6 +670,7 @@ class PaymentBloc extends Cubit<PaymentState> {
       if(!_validateInputs()){
         return false;
       }
+      _contribuyenteId = authState.currentContribuyente?.id;
       emit(state.copyWith(
         status: PaymentStatus.brebLoading,
         brebLoading: true,
