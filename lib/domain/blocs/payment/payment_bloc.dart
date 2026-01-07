@@ -380,6 +380,10 @@ class PaymentBloc extends Cubit<PaymentState> {
       Charge charge =
           await _comandaRepository.generatePaymentAttempt(newPayment);
       await _listenPaymentRetail(authState, charge);
+      if (authState.currentDevice?.config.demo == true) {
+        emit(state.copyWith(step: 8, status: PaymentStatus.demoPayment, qrCharge: () => charge));
+        return true;
+      }
       CardPayment cardPayment;
       if (linkser) {
         cardPayment = await _comandaRepository.callCardPayment(
@@ -394,12 +398,7 @@ class PaymentBloc extends Cubit<PaymentState> {
               cancelToken: cancelToken,
               contactless: contactless);
         } catch (e) {
-          if (authState.currentDevice?.config.demo == true) {
-            cardPayment =
-                CardPayment(response: "", cardNumber: "", date: "", hour: "");
-          } else {
             rethrow;
-          }
         }
       }
       emit(state.copyWith(status: PaymentStatus.processingOrder));
@@ -454,6 +453,10 @@ class PaymentBloc extends Cubit<PaymentState> {
           contribuyenteId: authState.currentContribuyente?.id ?? 0,
           payment: newPayment);
       await _saveAndListenPaymentOrder(authState, charge);
+      if (authState.currentDevice?.config.demo == true) {
+        emit(state.copyWith(step: 8, status: PaymentStatus.demoPayment, qrCharge: () => charge));
+        return true;
+      }
       CardPayment cardPayment;
       if (linkser) {
         cardPayment = await _comandaRepository.callCardPayment(
@@ -468,12 +471,7 @@ class PaymentBloc extends Cubit<PaymentState> {
               ip: authState.currentDevice!.config.ipAtc!,
               contactless: contactless);
         } catch (e) {
-          if (authState.currentDevice?.config.demo == true) {
-            cardPayment =
-                CardPayment(response: "", cardNumber: "", date: "", hour: "");
-          } else {
             rethrow;
-          }
         }
       }
       emit(state.copyWith(status: PaymentStatus.processingOrder));
@@ -536,7 +534,7 @@ class PaymentBloc extends Cubit<PaymentState> {
     if (authState.currentDevice?.config.demo == true) {
       PaymentAttemptDto newPayment = PaymentAttemptDto(
           uuid: state.paymentObj?.uuid ?? "",
-          metodoPago: AppConstants.idPaymentMethodPOS,
+          metodoPago: AppConstants.idPaymentMethodQR,
           nit: state.documentNumber.value.isEmpty
               ? "0"
               : state.documentNumber.value,
@@ -548,31 +546,15 @@ class PaymentBloc extends Cubit<PaymentState> {
           razonSocial: state.businessName.value.isEmpty
               ? "S/N"
               : state.businessName.value,
-          telefonoComprador: state.phoneNumber.value,
+           telefonoComprador: state.phoneNumber.value,
           correoElectronico: state.email.value.isNotEmpty?state.email.value:null);
       countryConfig?.setParamsPayment(newPayment);
 
       Charge charge =
           await _comandaRepository.generatePaymentAttempt(newPayment);
       await _listenPaymentRetail(authState, charge);
-      emit(state.copyWith(status: PaymentStatus.processingOrder));
-      var success = false;
-      for (var i = 0; i < 10; i++) {
-        try {
-          await _comandaRepository.markPaymentATC(
-              state.paymentObj?.uuid ?? "", charge.intentoPago);
-          success = true;
-          break;
-        } catch (e) {
-          await Future.delayed(Duration(seconds: 1 * (i + 1)));
-          log(e.toString());
-        }
-      }
-      if (!success) {
-        return false;
-      } else {
-        return true;
-      }
+      emit(state.copyWith(step: 8, status: PaymentStatus.demoPayment, qrCharge: () => charge));
+      return true;
     }
 
     emit(state.copyWith(qrLoading: true));
@@ -602,28 +584,13 @@ class PaymentBloc extends Cubit<PaymentState> {
   Future<bool> _generateOrderQR(AuthState authState) async {
     if (authState.currentDevice?.config.demo == true) {
 
-      PaymentDto newPayment = _buildPaymentDto(AppConstants.idPaymentMethodPOS);
+      PaymentDto newPayment = _buildPaymentDto(AppConstants.idPaymentMethodQR);
       Charge charge = await _comandaRepository.generatePayment(
           contribuyenteId: authState.currentContribuyente?.id ?? 0,
           payment: newPayment);
       await _saveAndListenPaymentOrder(authState, charge);
-      emit(state.copyWith(status: PaymentStatus.processingOrder));
-      var success = false;
-      for (var i = 0; i < 10; i++) {
-        try {
-          await _comandaRepository.markPaymentATC(charge.uuid, null);
-          success = true;
-          break;
-        } catch (e) {
-          await Future.delayed(Duration(seconds: 1 * (i + 1)));
-          log(e.toString());
-        }
-      }
-      if (!success) {
-        return false;
-      } else {
-        return true;
-      }
+       emit(state.copyWith(step: 8, status: PaymentStatus.demoPayment, qrCharge: () => charge));
+       return true;
     }
 
     emit(state.copyWith(qrLoading: true));
@@ -688,6 +655,11 @@ class PaymentBloc extends Cubit<PaymentState> {
       );
 
       await _saveAndListenPaymentOrder(authState, charge);
+
+      if (authState.currentDevice?.config.demo == true) {
+        emit(state.copyWith(step: 8, status: PaymentStatus.demoPayment, qrCharge: () => charge));
+        return true;
+      }
 
       emit(state.copyWith(
         brebCharge: charge,
@@ -1297,5 +1269,21 @@ class PaymentBloc extends Cubit<PaymentState> {
     } catch (e) {
       log(e.toString());
     }
+  }
+  Future<void> confirmDemoPayment() async {
+     try {
+       if (state.paymentObj?.isComanda == true) {
+         await _comandaRepository.confirmDemoPaymentOrder(
+             id: state.qrCharge?.id ?? 0);
+       } else {
+         await _comandaRepository.confirmDemoPaymentRetail(
+             id: state.qrCharge?.id ?? 0);
+       }
+     } catch (e) {
+       log(e.toString());
+       emit(state.copyWith(
+           status: PaymentStatus.errorGet, errorDescription: e.toString()));
+       emit(state.copyWith(status: PaymentStatus.waitingGet));
+     }
   }
 }

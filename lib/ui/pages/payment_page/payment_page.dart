@@ -16,6 +16,7 @@ import 'package:izi_kiosco/ui/pages/payment_page/views/payment_page_order_error.
 import 'package:izi_kiosco/ui/pages/payment_page/views/payment_page_qr.dart';
 import 'package:izi_kiosco/ui/pages/payment_page/views/payment_page_breb.dart';
 import 'package:izi_kiosco/ui/pages/payment_page/views/payment_page_selection.dart';
+import 'package:izi_kiosco/ui/pages/payment_page/views/payment_page_demo.dart';
 import 'package:izi_kiosco/ui/pages/payment_page/widgets/payment_shimmer_payment_method.dart';
 import 'package:izi_kiosco/ui/utils/custom_alerts.dart';
 
@@ -132,6 +133,8 @@ class PaymentPage extends StatelessWidget {
             const PaymentPageOrderError(),
             //7
             PaymentPageBREB(state: state),
+            //8
+            PaymentPageDemo(state: state)
           ],
         );
       },
