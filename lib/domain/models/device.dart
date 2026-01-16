@@ -8,6 +8,10 @@ class Device {
   bool enUso;
   String? sucursalName;
   String? catalogo;
+  String? tipoNombre;
+  bool? isVirtual;
+  bool? isMenu;
+  bool? isRetail;
 
   Device(
       {required this.id,
@@ -18,7 +22,11 @@ class Device {
       this.sucursalName,
       required this.enUso,
         required this.catalogo,
-      required this.activo});
+      required this.activo,
+      this.tipoNombre,
+      this.isVirtual,
+      this.isMenu,
+      this.isRetail});
 
   factory Device.fromJson(Map json) => Device(
       id: json["id"],
@@ -28,11 +36,15 @@ class Device {
       config: ConfigDevice.fromJson(json["config"]),
       activo: json["activo"] ?? false,
       catalogo: json["catalogo"],
-      enUso: json["enUso"] ?? false);
+      enUso: json["enUso"] ?? false,
+      tipoNombre: json["tipoNombre"],
+      isVirtual: json["isVirtual"] ?? false,
+      isMenu: json["isMenu"] ?? false,
+      isRetail: json["isRetail"] ?? false);
 
   @override
   String toString() {
-    return 'Device{id: $id, sucursal: $sucursal, nombre: $nombre, caja: $caja, config: $config, activo: $activo, enUso: $enUso, sucursalName: $sucursalName}';
+    return 'Device{id: $id, sucursal: $sucursal, nombre: $nombre, caja: $caja, config: $config, activo: $activo, enUso: $enUso, sucursalName: $sucursalName, tipoNombre: $tipoNombre, isVirtual: $isVirtual, isMenu: $isMenu, isRetail: $isRetail}';
   }
 }
 
@@ -41,7 +53,6 @@ class ConfigDevice {
   final String? ipLinkser;
   final String? video;
   final bool demo;
-  final bool isRetail;
   final bool isRetailBarcode;
   final String? almacen;
   final String? actividadEconomica;
@@ -64,7 +75,6 @@ class ConfigDevice {
       required this.timeVideo,
       required this.actividadEconomica,
       required this.almacen,
-      required this.isRetail,
       required this.isRetailBarcode,
       required this.token,
       this.ipLinkser,
@@ -84,7 +94,6 @@ class ConfigDevice {
       ipLinkser: jsonObj?["ipLinkser"] is String ? jsonObj!["ipLinkser"] : null,
       video: jsonObj?["video"] is String ? jsonObj!["video"] : null,
       demo: jsonObj?["demo"] is bool ? jsonObj!["demo"] : false,
-      isRetail: jsonObj?["isRetail"] is bool ? jsonObj!["isRetail"] : false,
       almacen: jsonObj?["almacen"] is String ? jsonObj!["almacen"] : null,
       actividadEconomica: jsonObj?["actividadEconomica"] is int
           ? (jsonObj?["actividadEconomica"] as int).toString()

@@ -319,7 +319,7 @@ class MakeOrderBloc extends Cubit<MakeOrderState> {
   }
 
   Future<PaymentObj?> emitOrder(AuthState authState)async{
-    if(authState.currentDevice?.config.isRetail==true){
+    if(authState.currentDevice?.isRetail==true){
       return await _emitSale(authState);
     }
     else{

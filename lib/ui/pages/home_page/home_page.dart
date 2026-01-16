@@ -123,7 +123,7 @@ class _HomePageState extends State<HomePage> {
                       child: GestureDetector(
                         behavior: HitTestBehavior.opaque,
                         onTap: () {
-                          if(context.read<AuthBloc>().state.currentDevice?.config.isRetail==true && context.read<AuthBloc>().state.currentDevice?.config.isRetailBarcode==true){
+                          if(context.read<AuthBloc>().state.currentDevice?.isRetail==true && context.read<AuthBloc>().state.currentDevice?.config.isRetailBarcode==true){
 
                             GoRouter.of(context).goNamed(RoutesKeys.makeOrderRetail);
                           }
@@ -145,7 +145,7 @@ class _HomePageState extends State<HomePage> {
                     ):GestureDetector(
                       behavior: HitTestBehavior.opaque,
                       onTap: () {
-                        if(context.read<AuthBloc>().state.currentDevice?.config.isRetail==true && context.read<AuthBloc>().state.currentDevice?.config.isRetailBarcode==true){
+                        if(context.read<AuthBloc>().state.currentDevice?.isRetail==true && context.read<AuthBloc>().state.currentDevice?.config.isRetailBarcode==true){
 
                           GoRouter.of(context).goNamed(RoutesKeys.makeOrderRetail);
                         }
@@ -196,7 +196,7 @@ class _HomePageState extends State<HomePage> {
                                         padding: const EdgeInsets.only(
                                             bottom: 30, right: 30, left: 30),
                                         child:SvgPicture.asset(
-                                            context.read<AuthBloc>().state.currentDevice?.config.isRetail==true && context.read<AuthBloc>().state.currentDevice?.config.isRetailBarcode==true?AssetsKeys.homeTitleRetailSvg:AssetsKeys.homeTitleSvg,
+                                            context.read<AuthBloc>().state.currentDevice?.isRetail==true && context.read<AuthBloc>().state.currentDevice?.config.isRetailBarcode==true?AssetsKeys.homeTitleRetailSvg:AssetsKeys.homeTitleSvg,
                                           width: ru.width,
                                           fit: BoxFit.contain,
 

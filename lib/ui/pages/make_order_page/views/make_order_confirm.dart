@@ -98,7 +98,7 @@ class _MakeOrderConfirmState extends State<MakeOrderConfirm> {
                                   IziText.bodyBig(
                                       color: IziColors.darkGrey,
                                       textAlign: TextAlign.left,
-                                      text: "${authState.currentDevice?.config.isRetail==true?LocaleKeys.makeOrder_subtitles_myPurchase
+                                      text: "${authState.currentDevice?.isRetail==true?LocaleKeys.makeOrder_subtitles_myPurchase
                                           .tr():widget.state.takeAway?LocaleKeys
                                           .makeOrder_body_confirmOrderTakeWay
                                           .tr():LocaleKeys
@@ -108,7 +108,7 @@ class _MakeOrderConfirmState extends State<MakeOrderConfirm> {
                                   IziText.titleBig(
                                       color: IziColors.darkGrey,
                                       textAlign: TextAlign.left,
-                                      text: "${authState.currentDevice?.config.isRetail==true?LocaleKeys.makeOrder_subtitles_myPurchase
+                                      text: "${authState.currentDevice?.isRetail==true?LocaleKeys.makeOrder_subtitles_myPurchase
                                           .tr():widget.state.takeAway?LocaleKeys
                                           .makeOrder_body_confirmOrderTakeWay
                                           .tr():LocaleKeys

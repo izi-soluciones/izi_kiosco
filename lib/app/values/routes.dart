@@ -100,7 +100,7 @@ class Routes {
                 String? tableId;
                 int? numberDiners;
                 bool fromTables = false;
-                bool isRetail = context.read<AuthBloc>().state.currentDevice?.config.isRetail==true;
+                bool isRetail = context.read<AuthBloc>().state.currentDevice?.isRetail==true;
                 if (state.extra is Map) {
                   tableId = (state.extra as Map)["tableId"];
                   numberDiners = (state.extra as Map)["numberDiners"];

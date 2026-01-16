@@ -75,7 +75,7 @@ class _MakeOrderDetailState extends State<MakeOrderDetail> {
                     child: IziText.body(
                         color: IziColors.grey,
                         text:
-                           authState.currentDevice?.config.isRetail==true?LocaleKeys.makeOrder_body_addItems.tr(): LocaleKeys.makeOrder_body_addDishesOrDrinks.tr(),
+                           authState.currentDevice?.isRetail==true?LocaleKeys.makeOrder_body_addItems.tr(): LocaleKeys.makeOrder_body_addDishesOrDrinks.tr(),
                         fontWeight: FontWeight.w400),
                   ),
                 )),

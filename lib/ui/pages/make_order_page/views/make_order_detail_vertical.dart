@@ -58,7 +58,7 @@ class _MakeOrderDetailStateVertical extends State<MakeOrderDetailVertical> {
                     Padding(
                       padding: const EdgeInsets.all(16.0),
                       child: IziText.title(
-                          color: IziColors.dark, text: authState.currentDevice?.config.isRetail==true?LocaleKeys.makeOrder_subtitles_myPurchase.tr(): LocaleKeys.makeOrder_subtitles_myOrder.tr(),fontWeight: FontWeight.w600),
+                          color: IziColors.dark, text: authState.currentDevice?.isRetail==true?LocaleKeys.makeOrder_subtitles_myPurchase.tr(): LocaleKeys.makeOrder_subtitles_myOrder.tr(),fontWeight: FontWeight.w600),
                     ),
                     const Divider(color: IziColors.grey35,height: 1,thickness: 1),
                     _headerItems(ru),
@@ -75,7 +75,7 @@ class _MakeOrderDetailStateVertical extends State<MakeOrderDetailVertical> {
                     child: IziText.body(
                         color: IziColors.grey,
                         text:
-                           authState.currentDevice?.config.isRetail==true?LocaleKeys.makeOrder_body_addItems.tr(): LocaleKeys.makeOrder_body_addDishesOrDrinks.tr(),
+                           authState.currentDevice?.isRetail==true?LocaleKeys.makeOrder_body_addItems.tr(): LocaleKeys.makeOrder_body_addDishesOrDrinks.tr(),
                         fontWeight: FontWeight.w400),
                   ),
                 )),

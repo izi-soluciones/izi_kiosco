@@ -101,7 +101,7 @@ class PaymentBloc extends Cubit<PaymentState> {
         currentCurrency = authState.currencies.elementAtOrNull(indexCurrency);
       }
       String? economicActivity;
-      if(authState.currentDevice?.config.isRetail==true){
+      if(authState.currentDevice?.isRetail==true){
         economicActivity = authState.currentDevice?.config.actividadEconomica;
       }
       else{
@@ -280,7 +280,7 @@ class PaymentBloc extends Cubit<PaymentState> {
         );
         return;
       }
-      if(authState.currentContribuyente?.habilitadoFacturacion==true || authState.currentDevice?.config.isRetail!=true){
+      if(authState.currentContribuyente?.habilitadoFacturacion==true || authState.currentDevice?.isRetail!=true){
         emit(state.copyWith(
             paymentType: paymentType,
             step: 2,
