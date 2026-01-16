@@ -152,7 +152,7 @@ class _PaymentPageInvoiceFormState extends State<PaymentPageInvoiceForm> {
           ),
           RowContainer(
             gap: 8,
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               if (ru.gtXs())
                 Expanded(

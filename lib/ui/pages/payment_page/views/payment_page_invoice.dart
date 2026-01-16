@@ -276,8 +276,7 @@ class _PaymentPageInvoiceState extends State<PaymentPageInvoice> {
           ),
           IziInput(
             labelInput: LocaleKeys.payment_inputs_phoneNumber_label.tr(),
-            inputHintText:
-                widget.state.phoneNumberMask ?? LocaleKeys.payment_inputs_phoneNumber_placeholder.tr(),
+            inputHintText: LocaleKeys.payment_inputs_phoneNumber_placeholder.tr(),
             bigLabel: (ru.gtMd() || (ru.gtSm() && ru.isVertical())),
             inputMaxLength: 8,
             inputFormatters: [
@@ -322,8 +321,7 @@ class _PaymentPageInvoiceState extends State<PaymentPageInvoice> {
           if(showEmail)
           IziInput(
             labelInput: LocaleKeys.payment_inputs_email_label.tr(),
-            inputHintText:
-                widget.state.emailMask ?? LocaleKeys.payment_inputs_email_placeholder.tr(),
+            inputHintText: LocaleKeys.payment_inputs_email_placeholder.tr(),
             inputMaxLength: 150,
             readOnly:
                 widget.state.qrCharge != null || widget.state.qrLoading == true,
