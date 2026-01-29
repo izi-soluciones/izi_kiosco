@@ -19,7 +19,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 version: 1.0.19+6
 
 environment:
-  sdk: '>=3.0.6 <4.0.0'
+  sdk: '>=3.10.0 <4.0.0'
 
 # Dependencies specify other packages that your package needs in order to work.
 # To automatically upgrade your package dependencies to the latest versions
@@ -52,14 +52,14 @@ dependencies:
   just_audio: ^0.9.34
   shimmer: ^2.0.0
   device_info_plus: ^9.0.3
-  permission_handler: ^10.4.3
+  permission_handler: ^12.0.0
   path_provider: ^2.1.0
   universal_html: ^2.2.3
   open_file: ^3.3.2
   socket_io_client: ^1.0.1
   auto_size_text: ^3.0.0
   cached_network_image: ^3.3.1
-  intl: ^0.18.0
+  intl: ^0.20.2
   encrypt: 5.0.1
   carousel_slider: ^4.2.1
   flutter_staggered_grid_view: ^0.7.0

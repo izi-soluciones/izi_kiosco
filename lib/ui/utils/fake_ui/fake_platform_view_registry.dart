@@ -1,7 +1,7 @@
-class FakePlatformViewRegistry {
-  void registerViewFactory(
-      String viewTypeId, dynamic Function(int) viewFactory) {
-    throw UnsupportedError("platform view registry in non-web context");
-  }
+// lib/ui/utils/fake_ui/fake_platform_view_registry.dart
+
+class _FakeRegistry {
+  void registerViewFactory(String viewType, dynamic callback) {}
 }
-final platformViewRegistry = FakePlatformViewRegistry();
+
+final platformViewRegistry = _FakeRegistry();
