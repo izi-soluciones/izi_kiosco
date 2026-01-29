@@ -20,12 +20,12 @@ class PaymentPageOrderComplete extends StatelessWidget {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        IziText.titleBig(color: IziColors.darkGrey, text: state.paymentType==PaymentType.cashRegister?LocaleKeys.payment_subtitles_successOrder.tr():LocaleKeys.payment_subtitles_successPayment.tr(),fontWeight: FontWeight.w600),
+        IziText.titleBig(color: context.iziColors.darkGrey, text: state.paymentType==PaymentType.cashRegister?LocaleKeys.payment_subtitles_successOrder.tr():LocaleKeys.payment_subtitles_successPayment.tr(),fontWeight: FontWeight.w600),
         Lottie.asset(AssetsKeys.okAnimationJson,width: 250,repeat: false,),
         const SizedBox(height: 8,),
-        IziText.titleMedium(maxLines: 2,color: IziColors.darkGrey, text: state.paymentType==PaymentType.cashRegister?LocaleKeys.payment_body_goToCashRegisters.tr():state.paymentObj?.isComanda == true?LocaleKeys.payment_body_weNotifyWhatsapp.tr():LocaleKeys.payment_body_canRetirePurchase.tr(),fontWeight: FontWeight.w500),
+        IziText.titleMedium(maxLines: 2,color: context.iziColors.darkGrey, text: state.paymentType==PaymentType.cashRegister?LocaleKeys.payment_body_goToCashRegisters.tr():state.paymentObj?.isComanda == true?LocaleKeys.payment_body_weNotifyWhatsapp.tr():LocaleKeys.payment_body_canRetirePurchase.tr(),fontWeight: FontWeight.w500),
         const SizedBox(height: 24,),
-        if(state.paymentType!=PaymentType.cashRegister && state.paymentObj?.isComanda == true) IziText.titleSmall(color: IziColors.darkGrey, text: LocaleKeys.payment_body_waitingTime.tr(),fontWeight: FontWeight.w400),
+        if(state.paymentType!=PaymentType.cashRegister && state.paymentObj?.isComanda == true) IziText.titleSmall(color: context.iziColors.darkGrey, text: LocaleKeys.payment_body_waitingTime.tr(),fontWeight: FontWeight.w400),
         const SizedBox(height: 54,),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,

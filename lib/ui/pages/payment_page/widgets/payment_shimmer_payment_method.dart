@@ -28,8 +28,8 @@ class PaymentShimmerPaymentMethod extends StatelessWidget {
             padding: const EdgeInsets.symmetric(vertical: 32),
             alignment: Alignment.center,
             child: Shimmer.fromColors(
-              baseColor: IziColors.grey25,
-              highlightColor: IziColors.lightGrey30,
+              baseColor: context.iziColors.grey25,
+              highlightColor: context.iziColors.lightGrey30,
               direction: ShimmerDirection.ltr,
               period: const Duration(seconds: 1),
               child: Stack(
@@ -38,9 +38,9 @@ class PaymentShimmerPaymentMethod extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.center,
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        SizedBox(width: 150,child: _shimmerBox(height: 20)),
+                        SizedBox(width: 150,child: _shimmerBox(context,height: 20)),
                         const SizedBox(height: 10,),
-                        SizedBox(width: 150,child: _shimmerBox(height: 35))
+                        SizedBox(width: 150,child: _shimmerBox(context,height: 35))
                       ],
                     ),
                 ],
@@ -50,8 +50,8 @@ class PaymentShimmerPaymentMethod extends StatelessWidget {
           child: SingleChildScrollView(
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
             child: Shimmer.fromColors(
-              baseColor: IziColors.grey25,
-              highlightColor: IziColors.lightGrey30,
+              baseColor: context.iziColors.grey25,
+              highlightColor: context.iziColors.lightGrey30,
               direction: ShimmerDirection.ltr,
               period: const Duration(seconds: 1),
               child: ConstrainedBox(
@@ -75,19 +75,19 @@ class PaymentShimmerPaymentMethod extends StatelessWidget {
       alignment: WrapAlignment.center,
       children: [
         SizedBox(width: 292,child:
-        _shimmerBox(height: 250),),
+        _shimmerBox(context,height: 250),),
         SizedBox(width: 292,child:
-        _shimmerBox(height: 250),),
+        _shimmerBox(context,height: 250),),
         SizedBox(width: 292,child:
-        _shimmerBox(height: 250),)
+        _shimmerBox(context,height: 250),)
       ],
     );
   }
-  Widget _shimmerBox({required double height}){
+  Widget _shimmerBox(BuildContext context,{required double height}){
     return Container(
       height: height,
       decoration: BoxDecoration(
-          color: IziColors.dark,
+          color: context.iziColors.dark,
           borderRadius: BorderRadius.circular(8)
       ),
     );

@@ -81,12 +81,12 @@ class _PaymentPageInvoiceState extends State<PaymentPageInvoice> {
                       const SizedBox(height: 8,),
                       ru.isXs()?
                       IziText.titleMedium(
-                          color: IziColors.darkGrey,
+                          color: context.iziColors.darkGrey,
                           fontWeight: FontWeight.w600,
                           maxLines: 10,
                           text: LocaleKeys.payment_titles_invoiceData.tr()):
                       IziText.titleBig(
-                          color: IziColors.dark,
+                          color: context.iziColors.dark,
                           fontWeight: FontWeight.w600,
                           maxLines: 10,
                           text: LocaleKeys.payment_titles_invoiceData.tr()),
@@ -95,14 +95,14 @@ class _PaymentPageInvoiceState extends State<PaymentPageInvoice> {
                       ),
                       ru.isXs()?
                       IziText.bodyBig(
-                          color: IziColors.dark,
+                          color: context.iziColors.dark,
                           maxLines: 4,
                           text:
                               "${LocaleKeys.payment_subtitles_beforePaymentNeedData.tr()}:",
                           fontWeight: FontWeight.w500):
 
                       IziText.titleSmall(
-                          color: IziColors.dark,
+                          color: context.iziColors.dark,
                           maxLines: 4,
                           text:
                               "${LocaleKeys.payment_subtitles_beforePaymentNeedData.tr()}:",
@@ -170,14 +170,14 @@ class _PaymentPageInvoiceState extends State<PaymentPageInvoice> {
                     onTap: () {
                       _makePayment();
                     },
-                    splashColor: IziColors.secondaryDarken,
-                    focusColor: IziColors.secondaryDarken,
-                    highlightColor: IziColors.secondaryDarken,
-                    hoverColor: IziColors.secondaryDarken,
+                    splashColor: context.iziColors.secondaryDarken,
+                    focusColor: context.iziColors.secondaryDarken,
+                    highlightColor: context.iziColors.secondaryDarken,
+                    hoverColor: context.iziColors.secondaryDarken,
                     borderRadius: BorderRadius.circular(6),
                     child: Ink(
                       decoration: BoxDecoration(
-                          color: IziColors.secondary,
+                          color: context.iziColors.secondary,
                           borderRadius: BorderRadius.circular(6)),
                       child: Padding(
                         padding: const EdgeInsets.symmetric(
@@ -190,9 +190,9 @@ class _PaymentPageInvoiceState extends State<PaymentPageInvoice> {
                               "${LocaleKeys.payment_body_total.tr()}: ${widget.state.paymentObj?.amount.moneyFormat(currency: widget.state.currentCurrency?.simbolo, digitsTaxes: authState.taxesStrategy.decimals)}",
                               maxLines: 5,
                               textAlign: TextAlign.center,
-                              style: const TextStyle(
+                              style: TextStyle(
                                   height: 1.2,
-                                  color: IziColors.white,
+                                  color: context.iziColors.white,
                                   fontWeight: FontWeight.w600,
                                   fontSize: 20),
                             ),
@@ -200,20 +200,20 @@ class _PaymentPageInvoiceState extends State<PaymentPageInvoice> {
                               LocaleKeys.payment_buttons_proceedPayment.tr(),
                               maxLines: 5,
                               textAlign: TextAlign.center,
-                              style: const TextStyle(
-                                  color: IziColors.white, fontSize: 20),
+                              style: TextStyle(
+                                  color: context.iziColors.white, fontSize: 20),
                             ),
                           ],
                         ),
                       ),
                     ),
                   ),
-                  const Positioned(
+                  Positioned(
                       right: 8,
                       child: Icon(
                         IziIcons.rightB,
                         size: 32,
-                        color: IziColors.white,
+                        color: context.iziColors.white,
                       ))
                 ],
               ),
@@ -297,7 +297,7 @@ class _PaymentPageInvoiceState extends State<PaymentPageInvoice> {
           ),
           const SizedBox(height: 8),
           IziText.label(
-              color: IziColors.darkGrey,
+              color: context.iziColors.darkGrey,
               text: LocaleKeys.payment_inputs_phoneNumber_description.tr(),
               fontWeight: FontWeight.w500,
               maxLines: 3),
@@ -311,11 +311,11 @@ class _PaymentPageInvoiceState extends State<PaymentPageInvoice> {
             setState(() {
               showEmail=true;
             });
-          }, linkColor: IziColors.primary):
+          }, linkColor: context.iziColors.primary):
           IziLink(linkText: "+ Agregar correo electrónico", linkOnPressed: (){
             setState(() {
               showEmail=true;
-            });}, linkColor: IziColors.primary)
+            });}, linkColor: context.iziColors.primary)
           ],
           ),
           if(showEmail)

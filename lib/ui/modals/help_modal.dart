@@ -61,14 +61,14 @@ class _HelpModalState extends State<HelpModal> {
                     onTap: (){
                       Navigator.pop(context);
                     },
-                    child: const Icon(IziIcons.close,color: IziColors.darkGrey,size: 30,),
+                    child: Icon(IziIcons.close,color: context.iziColors.darkGrey,size: 30,),
                   )
                 ],
               ),
               const SizedBox(height: 8,),
               IziImg.alertWarning(width: 72.3),
               const SizedBox(height: 8,),
-              IziText.titleMedium(color: IziColors.dark, text: LocaleKeys.helpModal_title.tr()),
+              IziText.titleMedium(color: context.iziColors.dark, text: LocaleKeys.helpModal_title.tr()),
               const SizedBox(height: 32,),
               IziBtn(
                   buttonText: LocaleKeys.helpModal_buttons_call.tr(),
@@ -80,7 +80,7 @@ class _HelpModalState extends State<HelpModal> {
                     Navigator.pop(context);
                   }:null),
               if(!state.helpActive)
-                IziText.titleMedium(color: IziColors.primary, text: "${seconds}s"),
+                IziText.titleMedium(color: context.iziColors.primary, text: "${seconds}s"),
             ],
           ),
         );

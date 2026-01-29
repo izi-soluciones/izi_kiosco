@@ -48,7 +48,7 @@ class _WarningModalState extends State<WarningModal> {
               maxLines: 5,
               mobile: true,
               textAlign: TextAlign.center,
-              color: IziColors.dark),
+              color: context.iziColors.dark),
           const SizedBox(
             height: 24,
           ),
@@ -81,7 +81,7 @@ class _WarningModalState extends State<WarningModal> {
             padding: const EdgeInsets.only(left: 20, right: 20),
             child: IziBtnLinkIcon(
               filterText: LocaleKeys.general_buttons_cancel.tr(),
-              color: IziColors.grey,
+              color: context.iziColors.grey,
               icon: IziIcons.leftB,
               filterTextOnPress: loading
                   ? () {}

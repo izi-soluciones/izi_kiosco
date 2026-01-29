@@ -15,7 +15,7 @@ class MakeOrderChip extends StatelessWidget {
       onTap: onPressed,
       child: Container(
         decoration: BoxDecoration(
-          color: IziColors.grey35,
+          color: context.iziColors.grey35,
           borderRadius: BorderRadius.circular(6)
         ),
         padding: const EdgeInsets.symmetric(horizontal: 10),
@@ -24,9 +24,9 @@ class MakeOrderChip extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           mainAxisSize: dense?MainAxisSize.min:MainAxisSize.max,
           children: [
-            Icon(icon,color: IziColors.primary,size: 16,),
+            Icon(icon,color: context.iziColors.primary,size: 16,),
             const SizedBox(width: 12,),
-            IziText.buttonSmall(color: IziColors.darkGrey, text: text, fontWeight: FontWeight.w600)
+            IziText.buttonSmall(color: context.iziColors.darkGrey, text: text, fontWeight: FontWeight.w600)
           ],
         ),
       ),

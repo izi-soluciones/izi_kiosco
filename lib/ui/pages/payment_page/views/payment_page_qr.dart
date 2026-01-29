@@ -83,14 +83,14 @@ class _PaymentPageQRState extends State<PaymentPageQR> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       IziText.titleMedium(
-                          color: IziColors.dark,
+                          color: context.iziColors.dark,
                           text: LocaleKeys.payment_titles_qrPayment.tr()),
                       const SizedBox(
                         height: 8,
                       ),
                       IziText.titleSmall(
                           textAlign: TextAlign.center,
-                          color: IziColors.dark,
+                          color: context.iziColors.dark,
                           text: LocaleKeys.payment_subtitles_scanQRtoPay.tr(),
                           fontWeight: FontWeight.w500),
                     ],
@@ -154,11 +154,11 @@ class _PaymentPageQRState extends State<PaymentPageQR> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             IziText.body(
-                                color: IziColors.darkGrey,
+                                color: context.iziColors.darkGrey,
                                 text: "Tiempo Restante: ",
                                 fontWeight: FontWeight.w400),
                             IziText.body(
-                                color: IziColors.primary,
+                                color: context.iziColors.primary,
                                 text: "${qrRemaining}s",
                                 fontWeight: FontWeight.w400),
                           ],
@@ -167,7 +167,7 @@ class _PaymentPageQRState extends State<PaymentPageQR> {
                         height: 8,
                       ),
                       IziText.titleMedium(
-                          color: IziColors.darkGrey,
+                          color: context.iziColors.darkGrey,
                           text:
                               "${LocaleKeys.payment_body_total.tr()}: ${(widget.state.paymentObj?.amount ?? 0).moneyFormat(currency: widget.state.currentCurrency?.simbolo, digitsTaxes: authState.taxesStrategy.decimals)}",
                           fontWeight: FontWeight.w600),
@@ -180,7 +180,7 @@ class _PaymentPageQRState extends State<PaymentPageQR> {
                           child: IziText.titleSmall(
                               maxLines: 5,
                               textAlign: TextAlign.center,
-                              color: IziColors.secondaryDarken,
+                              color: context.iziColors.secondaryDarken,
                               text:
                                   "Si ya hiciste el pago, espera unos segundos a que recibamos la confirmación",
                               fontWeight: FontWeight.w500),

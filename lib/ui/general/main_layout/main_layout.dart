@@ -21,15 +21,13 @@ class MainLayout extends StatelessWidget {
   final Widget child;
   final Widget Function()? titleSmall;
   final Widget Function()? titleBig;
-  final Color titleCardColorSm;
-  final Color titleCardColorLg;
   final bool hideBottomNav;
   final bool hideDrawer;
   final bool resizeWhenForm;
   final String Function()? onPop;
   final bool brand;
   final String currentLocation;
-  MainLayout({Key? key,required this.currentLocation,this.brand=false,this.hideBottomNav=false,this.titleSmall,this.titleBig,this.hideDrawer=false,required this.child, this.onPop, this.resizeWhenForm=true,this.titleCardColorSm=IziColors.white,this.titleCardColorLg=IziColors.white}) : super(key: key);
+  MainLayout({Key? key,required this.currentLocation,this.brand=false,this.hideBottomNav=false,this.titleSmall,this.titleBig,this.hideDrawer=false,required this.child, this.onPop, this.resizeWhenForm=true}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -60,7 +58,7 @@ class MainLayout extends StatelessWidget {
                                 child: Scaffold(
                                   key: _scaffoldKey,
                                         resizeToAvoidBottomInset: resizeWhenForm,
-                                        backgroundColor: IziColors.lightGrey30,
+                                        backgroundColor: context.iziColors.lightGrey30,
                                         body: SafeArea(
                                           child: child
                                         ),

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:izi_design_system/atoms/izi_typography.dart';
 import 'package:izi_design_system/tokens/colors.dart';
+import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
 
 class MakeOrderCategory extends StatelessWidget {
   final String title;
@@ -14,12 +16,15 @@ class MakeOrderCategory extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final AuthState authState = context.read<AuthBloc>().state;
+    final bgColor = authState.currentDevice?.config.kioskColors.categoryBgColor ?? context.iziColors.dark;
+    final textColor = authState.currentDevice?.config.kioskColors.categoryTextColor ?? context.iziColors.white;
     return InkWell(
       onTap: onPressed,
       child: Ink(
         padding: isHorizontal?const EdgeInsets.symmetric(horizontal: 16,vertical: 8):const EdgeInsets.fromLTRB(32,10,32,5),
         decoration: BoxDecoration(
-          color: active? IziColors.dark:IziColors.grey25,
+          color: active? bgColor:context.iziColors.grey25,
           borderRadius: BorderRadius.circular(8)
         ),
         child: isHorizontal?
@@ -28,9 +33,9 @@ class MakeOrderCategory extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.center,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon,color: active?IziColors.white:IziColors.dark,size: 24,weight: 1),
+            Icon(icon,color: active?textColor:context.iziColors.dark,size: 24,weight: 1),
             const SizedBox(width: 16,),
-            IziText.bodyBig(color: active?IziColors.white:IziColors.dark,textAlign: TextAlign.center, text: title, fontWeight: FontWeight.w600,maxLines: 3),
+            IziText.bodyBig(color: active?textColor:context.iziColors.dark,textAlign: TextAlign.center, text: title, fontWeight: FontWeight.w600,maxLines: 3),
           ],
         ):
         Column(
@@ -38,8 +43,8 @@ class MakeOrderCategory extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.center,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon,color: active?IziColors.white:IziColors.dark,size: 40,weight: 1),
-            IziText.body(color: active?IziColors.white:IziColors.dark,textAlign: TextAlign.center, text: title, fontWeight: FontWeight.w600,maxLines: 3),
+            Icon(icon,color: active?textColor:context.iziColors.dark,size: 40,weight: 1),
+            IziText.body(color: active?textColor:context.iziColors.dark,textAlign: TextAlign.center, text: title, fontWeight: FontWeight.w600,maxLines: 3),
           ],
         ),
       ),

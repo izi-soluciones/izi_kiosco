@@ -28,18 +28,18 @@ class MakeOrderFeatured extends StatelessWidget {
                   flex: 1,
                   child: Container(
                     margin: EdgeInsets.only(right: idx==first?10:0),
-                    color: IziColors.grey25,
+                    color: context.iziColors.grey25,
                     child: Stack(
                       children: [
                         Positioned.fill(
                           child: item.imagen==null || item.imagen?.isEmpty==true?
-                          const FittedBox(child: Icon(IziIcons.dish,color: IziColors.warmLighten)):
+                          FittedBox(child: Icon(IziIcons.dish,color: context.iziColors.warmLighten)):
                           CachedNetworkImage(
                             imageUrl: item.imagen??"",
                             fit: BoxFit.cover,
-                            placeholder: (context, url) => const Center(child: CircularProgressIndicator(strokeWidth: 2,color: IziColors.dark)),
+                            placeholder: (context, url) => Center(child: CircularProgressIndicator(strokeWidth: 2,color: context.iziColors.dark)),
                             errorWidget: (context, url, error)  {
-                              return const FittedBox(child: Icon(IziIcons.dish,color: IziColors.warmLighten));
+                              return FittedBox(child: Icon(IziIcons.dish,color: context.iziColors.warmLighten));
                             },
                           ),
                         ),
@@ -51,12 +51,12 @@ class MakeOrderFeatured extends StatelessWidget {
                             widthFactor: 0.7,
                             alignment: Alignment.centerLeft,
                             child: Container(
-                              decoration: const BoxDecoration(
-                                  color: IziColors.primary,
-                                  borderRadius: BorderRadius.only(topRight: Radius.circular(8),bottomRight: Radius.circular(8))
+                              decoration: BoxDecoration(
+                                  color: context.iziColors.primary,
+                                  borderRadius: const BorderRadius.only(topRight: Radius.circular(8),bottomRight: Radius.circular(8))
                               ),
                               padding: const EdgeInsets.all(8),
-                              child: IziText.body(color: IziColors.white, text: item.nombre, fontWeight: FontWeight.w600),
+                              child: IziText.body(color: context.iziColors.white, text: item.nombre, fontWeight: FontWeight.w600),
                             ),
                           ),
                         )

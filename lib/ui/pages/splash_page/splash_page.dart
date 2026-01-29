@@ -37,7 +37,7 @@ class _SplashPageState extends State<SplashPage> {
   Widget build(BuildContext context) {
     final size=MediaQuery.of(context).size;
     return Scaffold(
-        backgroundColor: IziColors.lightGrey30,
+        backgroundColor: context.iziColors.lightGrey30,
         body: Stack(
             children: _buildItems(size)
         )
@@ -52,7 +52,7 @@ class _SplashPageState extends State<SplashPage> {
           Positioned(
               left: size.width.toInt()>0?random.nextInt(size.width.toInt()>2000?2000:size.width.toInt())*1.0:0,
               bottom: size.height.toInt()>0?random.nextInt(size.height.toInt()>2000?2000:size.height.toInt())*1.0:0,
-              child: Icon(IziIcons.plusB,color: [IziColors.redLighten,IziColors.redLighten50,IziColors.secondaryLighten,IziColors.secondaryLighten60][random.nextInt(4)],)
+              child: Icon(IziIcons.plusB,color: [context.iziColors.redLighten,context.iziColors.redLighten50,context.iziColors.secondaryLighten,context.iziColors.secondaryLighten60][random.nextInt(4)],)
           )
       );
     }
@@ -63,7 +63,7 @@ class _SplashPageState extends State<SplashPage> {
           child: Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                  color: IziColors.lightGrey30,
+                  color: context.iziColors.lightGrey30,
                   borderRadius: BorderRadius.circular(108)
               ),
               

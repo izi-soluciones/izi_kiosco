@@ -29,19 +29,19 @@ class PaymentPageOrderError extends StatelessWidget {
               imageUrl:
               "${dotenv.env[EnvKeys.apiUrl]}/contribuyentes/${context.read<AuthBloc>().state.currentContribuyente?.id}/logo",
               fit: BoxFit.fitHeight,
-              placeholder: (context, url) => const Center(
+              placeholder: (context, url) => Center(
                   child: CircularProgressIndicator(
-                      strokeWidth: 2, color: IziColors.dark)),
+                      strokeWidth: 2, color: context.iziColors.dark)),
               errorWidget: (context, url, error) {
                 return const SizedBox.shrink();
               },
             ))
             : const SizedBox.shrink(),
         const SizedBox(height: 32,),
-        IziText.titleBig(color: IziColors.darkGrey, text: LocaleKeys.payment_subtitles_error.tr(),fontWeight: FontWeight.w600),
+        IziText.titleBig(color: context.iziColors.darkGrey, text: LocaleKeys.payment_subtitles_error.tr(),fontWeight: FontWeight.w600),
         const Icon(IziIcons.close,size: 250,color: Colors.red),
         const SizedBox(height: 8,),
-        IziText.titleMedium(maxLines: 2,color: IziColors.darkGrey, text: LocaleKeys.payment_subtitles_cantProcessPayment.tr(),fontWeight: FontWeight.w500),
+        IziText.titleMedium(maxLines: 2,color: context.iziColors.darkGrey, text: LocaleKeys.payment_subtitles_cantProcessPayment.tr(),fontWeight: FontWeight.w500),
         const SizedBox(height: 54,),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,

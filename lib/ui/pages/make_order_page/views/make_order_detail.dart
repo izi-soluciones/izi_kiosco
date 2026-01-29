@@ -44,9 +44,9 @@ class _MakeOrderDetailState extends State<MakeOrderDetail> {
     final ru = ResponsiveUtils(context);
     final authState = context.read<AuthBloc>().state;
     return Container(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         border: Border(
-          top: BorderSide(color: IziColors.grey35, width: 1),
+          top: BorderSide(color: context.iziColors.grey35, width: 1),
         ),
       ),
       child: Column(
@@ -61,7 +61,7 @@ class _MakeOrderDetailState extends State<MakeOrderDetail> {
                     children: [
                       if(ru.gtXs())
                       IziText.titleSmall(
-                          color: IziColors.darkGrey, text: "Mi orden:"),
+                          color: context.iziColors.darkGrey, text: "Mi orden:"),
                       Expanded(
                         child: _listItems(ru),
                       )
@@ -73,7 +73,7 @@ class _MakeOrderDetailState extends State<MakeOrderDetail> {
                   padding: const EdgeInsets.all(32),
                   child: Center(
                     child: IziText.body(
-                        color: IziColors.grey,
+                        color: context.iziColors.grey,
                         text:
                            authState.currentDevice?.config.isRetail==true?LocaleKeys.makeOrder_body_addItems.tr(): LocaleKeys.makeOrder_body_addDishesOrDrinks.tr(),
                         fontWeight: FontWeight.w400),
@@ -194,7 +194,7 @@ class _MakeOrderDetailState extends State<MakeOrderDetail> {
                     Padding(
                       padding: const EdgeInsets.only(right: 16),
                       child: IziText.body(
-                          color: IziColors.dark,
+                          color: context.iziColors.dark,
                           text: item.nombre,
                           fontWeight: FontWeight.w600,
                           maxLines: 2),
@@ -234,12 +234,12 @@ class _MakeOrderDetailState extends State<MakeOrderDetail> {
                     .removeItem(indexCategory, indexItem);
               },
               child: Container(
-                decoration: const BoxDecoration(
-                    color: IziColors.red, shape: BoxShape.circle),
-                child: const Icon(
+                decoration: BoxDecoration(
+                    color: context.iziColors.red, shape: BoxShape.circle),
+                child: Icon(
                   IziIcons.close,
                   size: 22,
-                  color: IziColors.white,
+                  color: context.iziColors.white,
                 ),
               ),
             ),

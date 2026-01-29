@@ -17,7 +17,7 @@ class MakeOrderAmountBtn extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       elevation: 0,
-      color: onPressed==null?IziColors.lightGrey:IziColors.secondary,
+      color: onPressed==null?context.iziColors.lightGrey:context.iziColors.secondary,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(6),
       ),
@@ -29,15 +29,15 @@ class MakeOrderAmountBtn extends StatelessWidget {
             mainAxisAlignment: noAmount?MainAxisAlignment.center:MainAxisAlignment.spaceBetween,
             children: [
               if(!noAmount)
-              IziText.buttonBig(color: onPressed==null?IziColors.grey55:IziColors.white, text: amount, fontWeight: FontWeight.w600),
+              IziText.buttonBig(color: onPressed==null?context.iziColors.grey55:context.iziColors.white, text: amount, fontWeight: FontWeight.w600),
               if(!noAmount)
                 const SizedBox(width: 40,),
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  IziText.buttonBig(color: onPressed==null?IziColors.grey55:IziColors.white, text: text.toUpperCase(), fontWeight: FontWeight.w600),
+                  IziText.buttonBig(color: onPressed==null?context.iziColors.grey55:context.iziColors.white, text: text.toUpperCase(), fontWeight: FontWeight.w600),
                   const SizedBox(width: 8,),
-                  Icon(IziIcons.rightB,color: onPressed==null?IziColors.grey55:IziColors.white,size: 20,)
+                  Icon(IziIcons.rightB,color: onPressed==null?context.iziColors.grey55:context.iziColors.white,size: 20,)
                 ],
               )
             ],

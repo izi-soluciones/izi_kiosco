@@ -67,7 +67,7 @@ class _PaymentPageCardState extends State<PaymentPageCard> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   IziText.titleMedium(
-                      color: IziColors.dark,
+                      color: context.iziColors.dark,
                       text: LocaleKeys.payment_titles_cardPayment.tr()),
                   const SizedBox(
                     height: 8,
@@ -84,7 +84,7 @@ class _PaymentPageCardState extends State<PaymentPageCard> {
             if(widget.state.status == PaymentStatus.cardProcessing)
             IziText.titleSmall(
                 textAlign: TextAlign.center,
-                color: IziColors.dark,
+                color: context.iziColors.dark,
                 text: LocaleKeys.payment_subtitles_enterYourCard.tr(),
                 fontWeight: FontWeight.w500),
             const SizedBox(
@@ -115,7 +115,7 @@ class _PaymentPageCardState extends State<PaymentPageCard> {
               height: 32,
             ),
             IziText.titleBig(
-                color: IziColors.darkGrey,
+                color: context.iziColors.darkGrey,
                 textAlign: TextAlign.center,
                 text:
                     "${LocaleKeys.payment_body_total.tr()}: ${(widget.state.paymentObj?.amount ?? 0).moneyFormat(currency: widget.state.currentCurrency?.simbolo, digitsTaxes: digitsTaxes)}",
@@ -126,7 +126,7 @@ class _PaymentPageCardState extends State<PaymentPageCard> {
             ),
             if(showCancel)
             IziText.titleBig(
-                color: IziColors.primary,
+                color: context.iziColors.primary,
                 textAlign: TextAlign.center,
                 text:"Esta teniendo algun problema?",
                 fontWeight: FontWeight.w400),
@@ -139,9 +139,9 @@ class _PaymentPageCardState extends State<PaymentPageCard> {
                 },
                 child: Text(
                   'Parar la transaccion',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 18,
-                    color: IziColors.red,
+                    color: context.iziColors.red,
                     decoration: TextDecoration.underline,
                     decorationColor: Colors.red,
                     decorationThickness: 1.5,

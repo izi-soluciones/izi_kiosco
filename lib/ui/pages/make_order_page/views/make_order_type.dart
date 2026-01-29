@@ -59,7 +59,7 @@ class _MakeOrderTypeState extends State<MakeOrderType> {
                             Padding(
                               padding: const EdgeInsets.symmetric(horizontal: 16),
                               child: IziText.titleBig(
-                                  color: IziColors.darkGrey,
+                                  color: context.iziColors.darkGrey,
                                   mobile: ru.lwSm(),
                                   cropText: false,
                                   textAlign: TextAlign.center,
@@ -132,7 +132,7 @@ class _MakeOrderTypeState extends State<MakeOrderType> {
                 child: Icon(
                   icon,
                   weight: 0.5,
-                  color: IziColors.primary,
+                  color: context.iziColors.primary,
                 ),
               ),
             ),
@@ -140,8 +140,8 @@ class _MakeOrderTypeState extends State<MakeOrderType> {
         ),
         SizedBox(height: ru.gtXs()?12:4,),
         ru.gtXs()?
-        IziText.titleBig(color: IziColors.darkGrey85, text: text,maxLines: 1,textAlign: TextAlign.center):
-        IziText.bodyBig(color: IziColors.darkGrey85, text: text,maxLines: 1,textAlign: TextAlign.center,fontWeight: FontWeight.w600),
+        IziText.titleBig(color: context.iziColors.darkGrey85, text: text,maxLines: 1,textAlign: TextAlign.center):
+        IziText.bodyBig(color: context.iziColors.darkGrey85, text: text,maxLines: 1,textAlign: TextAlign.center,fontWeight: FontWeight.w600),
       ],
     );
   }

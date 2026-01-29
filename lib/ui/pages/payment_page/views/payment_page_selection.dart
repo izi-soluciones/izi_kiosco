@@ -43,20 +43,20 @@ class PaymentPageSelection extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   IziText.titleBig(
-                      color: IziColors.darkGrey,
+                      color: context.iziColors.darkGrey,
                       text: LocaleKeys.payment_titles_paymentMethods.tr(),
                       maxLines: 10,
                       fontWeight: FontWeight.w600),
                   const SizedBox(height: 16,),
                   IziText.titleSmall(
-                      color: IziColors.darkGrey85,
+                      color: context.iziColors.darkGrey85,
                       text: LocaleKeys.payment_subtitles_selectPaymentMethod.tr(),
                       maxLines: 10,
                       fontWeight: FontWeight.w600),
                   const SizedBox(height: 16,),
                   _methods(context, authState),
                   const SizedBox(height: 32,),
-                  IziText.titleBig(textAlign: TextAlign.center,fontWeight: FontWeight.w600,color: IziColors.darkGrey85, text: "${LocaleKeys.payment_body_total.tr()}: ${state.paymentObj?.amount.moneyFormat(currency: state.currentCurrency?.simbolo, digitsTaxes: authState.taxesStrategy.decimals)}")
+                  IziText.titleBig(textAlign: TextAlign.center,fontWeight: FontWeight.w600,color: context.iziColors.darkGrey85, text: "${LocaleKeys.payment_body_total.tr()}: ${state.paymentObj?.amount.moneyFormat(currency: state.currentCurrency?.simbolo, digitsTaxes: authState.taxesStrategy.decimals)}")
                 ],
               ),
             ),
@@ -96,7 +96,7 @@ class PaymentPageSelection extends StatelessWidget {
               _selectPayment(PaymentType.breb,context,authState);
               },
             icon: IziIcons.cash,
-            color: IziColors.primaryDarken,
+            color: context.iziColors.primaryDarken,
             text: LocaleKeys.payment_buttons_breB.tr(),
         ),
         if(authState.taxesStrategy.showQR)
@@ -105,7 +105,7 @@ class PaymentPageSelection extends StatelessWidget {
               _selectPayment(PaymentType.qr,context,authState);
               },
             icon: IziIcons.qrCode,
-            color: IziColors.primaryDarken,
+            color: context.iziColors.primaryDarken,
             text: LocaleKeys.payment_buttons_qr.tr(),
         ),
         if(authState.currentDevice?.config.ipAtc!=null||authState.currentDevice?.config.ipLinkser!=null )
@@ -113,7 +113,7 @@ class PaymentPageSelection extends StatelessWidget {
             onPressed: (){
               _selectPayment(PaymentType.card,context,authState);
             },
-            color: IziColors.secondaryDarken,
+            color: context.iziColors.secondaryDarken,
             icon: IziIcons.card,
             text: LocaleKeys.payment_buttons_card.tr(),
           ),
@@ -123,7 +123,7 @@ class PaymentPageSelection extends StatelessWidget {
               _selectPayment(PaymentType.cashRegister,context,authState);
               },
             icon: IziIcons.registerMachine,
-            color: IziColors.darkGrey,
+            color: context.iziColors.darkGrey,
             text: LocaleKeys.payment_buttons_checkout.tr(),
         )
       ],

@@ -13,8 +13,8 @@ class IziScroll extends StatelessWidget {
         thickness: 5,
         thumbVisibility: true,
         radius: const Radius.circular(10),
-    trackColor: IziColors.white,
-    thumbColor: IziColors.grey35,
+    trackColor: context.iziColors.white,
+    thumbColor: context.iziColors.grey35,
     child: child);
   }
 }

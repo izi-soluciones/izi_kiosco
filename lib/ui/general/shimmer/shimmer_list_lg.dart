@@ -9,8 +9,8 @@ class ShimmerListLg extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Shimmer.fromColors(
-        baseColor: IziColors.grey25,
-        highlightColor: IziColors.lightGrey30,
+        baseColor: context.iziColors.grey25,
+        highlightColor: context.iziColors.lightGrey30,
         direction: ShimmerDirection.ltr,
         period: const Duration(seconds: 1),
         child: Column(
@@ -23,15 +23,15 @@ class ShimmerListLg extends StatelessWidget {
                   children: [
                     FractionallySizedBox(
                       widthFactor: 1/2,
-                      child: _shimmerBox(height: 42),
+                      child: _shimmerBox(context,height: 42),
                     ),
                     const SizedBox(height: 38),
                     RowContainer(
                       gap: 16,
                       children: [
-                        Expanded(child: _shimmerBox(height: 42),),
-                        Expanded(child: _shimmerBox(height: 42),),
-                        Expanded(child: _shimmerBox(height: 42),)
+                        Expanded(child: _shimmerBox(context,height: 42),),
+                        Expanded(child: _shimmerBox(context,height: 42),),
+                        Expanded(child: _shimmerBox(context,height: 42),)
                       ],
                     )
                   ],
@@ -43,7 +43,7 @@ class ShimmerListLg extends StatelessWidget {
                   children: [
                     Expanded(
                       flex:1,
-                      child: _shimmerBox(height: 12),
+                      child: _shimmerBox(context,height: 12),
                     ),
                     /*const SizedBox(width: 20,),
                     Expanded(
@@ -61,7 +61,7 @@ class ShimmerListLg extends StatelessWidget {
                     ),
                     SizedBox(
                       width: 120,
-                      child: _shimmerBox(height: 20),
+                      child: _shimmerBox(context,height: 20),
                     )
                   ],
                 )
@@ -71,7 +71,7 @@ class ShimmerListLg extends StatelessWidget {
                   builder: (context,constraints) {
                     return ListView(
                       padding: const EdgeInsets.symmetric(horizontal: 33),
-                      children: _buildShimmerList(screenHeight: constraints.maxHeight),
+                      children: _buildShimmerList(context,screenHeight: constraints.maxHeight),
                     );
                   }
               ),
@@ -82,27 +82,27 @@ class ShimmerListLg extends StatelessWidget {
     );
   }
 
-  List<Widget> _buildShimmerList({required double screenHeight}){
+  List<Widget> _buildShimmerList(BuildContext context,{required double screenHeight}){
     double height=60;
     List<Widget> widgets=[];
     int num=(screenHeight/height).ceil();
     for(int i=0;i<num;i++){
       widgets.addAll(
           [
-            _shimmerList(height: height),
+            _shimmerList(context,height: height),
           ]
       );
     }
     return widgets;
   }
-  Widget _shimmerList({required double height}){
+  Widget _shimmerList(BuildContext context,{required double height}){
     return Row(
       children: [
         Container(
           height: 14,width: 74,
           margin: const EdgeInsets.only(left: 19),
           decoration: BoxDecoration(
-              color: IziColors.dark,
+              color: context.iziColors.dark,
               borderRadius: BorderRadius.circular(20)
           ),
         ),
@@ -122,7 +122,7 @@ class ShimmerListLg extends StatelessWidget {
                 Container(
                   height: 10,
                   decoration: BoxDecoration(
-                      color: IziColors.dark,
+                      color: context.iziColors.dark,
                       borderRadius: BorderRadius.circular(8)
                   ),
                 ),
@@ -135,18 +135,18 @@ class ShimmerListLg extends StatelessWidget {
           width: 50,
           margin: const EdgeInsets.only(left:19 ),
           decoration: BoxDecoration(
-              color: IziColors.dark,
+              color: context.iziColors.dark,
               borderRadius: BorderRadius.circular(8)
           ),
         )
       ],
     );
   }
-  Widget _shimmerBox({required double height}){
+  Widget _shimmerBox(BuildContext context,{required double height}){
     return Container(
       height: height,
       decoration: BoxDecoration(
-          color: IziColors.dark,
+          color: context.iziColors.dark,
           borderRadius: BorderRadius.circular(8)
       ),
     );

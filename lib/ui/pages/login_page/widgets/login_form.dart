@@ -21,7 +21,7 @@ class LoginForm extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          IziText.titleBig(text: LocaleKeys.login_subtitles_enterIzi.tr(), color: IziColors.dark),
+          IziText.titleBig(text: LocaleKeys.login_subtitles_enterIzi.tr(), color: context.iziColors.dark),
           const SizedBox(height: 25,),
           IziInput(
               labelInput: LocaleKeys.login_inputs_token_label.tr(),

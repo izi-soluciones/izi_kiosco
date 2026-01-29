@@ -7,12 +7,12 @@ class ShimmerListSm extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Shimmer.fromColors(
-        baseColor: IziColors.grey25,
+        baseColor: context.iziColors.grey25,
         direction: ShimmerDirection.ltr,
         period: const Duration(seconds: 1),
 
 
-        highlightColor: IziColors.lightGrey30,
+        highlightColor: context.iziColors.lightGrey30,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -21,11 +21,11 @@ class ShimmerListSm extends StatelessWidget {
               child: Row(
                 children: [
                   Expanded(
-                      child: _shimmerBox(height: 40)),
+                      child: _shimmerBox(context,height: 40)),
                   const SizedBox(width:16,),
                   SizedBox(
                       width: 70,
-                      child: _shimmerBox(height: 20)
+                      child: _shimmerBox(context,height: 20)
                   )
                 ],
               ),
@@ -42,7 +42,7 @@ class ShimmerListSm extends StatelessWidget {
                   builder: (context,constraints) {
                     return ListView(
                       padding: const EdgeInsets.symmetric(horizontal: 20),
-                      children: _buildShimmerList(screenHeight: constraints.maxHeight),
+                      children: _buildShimmerList(context,screenHeight: constraints.maxHeight),
                     );
                   }
               ),
@@ -53,26 +53,26 @@ class ShimmerListSm extends StatelessWidget {
     );
   }
 
-  List<Widget> _buildShimmerList({required double screenHeight}){
+  List<Widget> _buildShimmerList(BuildContext context,{required double screenHeight}){
     double height=83;
     List<Widget> widgets=[];
     int num=(screenHeight/height).ceil();
     for(int i=0;i<num;i++){
       widgets.addAll(
           [
-            _shimmerList(height: height),
+            _shimmerList(context,height: height),
           ]
       );
     }
     return widgets;
   }
-  Widget _shimmerList({required double height}){
+  Widget _shimmerList(BuildContext context,{required double height}){
     return Row(
       children: [
         Container(
           height: 12,width: 12,
           decoration: BoxDecoration(
-              color: IziColors.dark,
+              color: context.iziColors.dark,
               borderRadius: BorderRadius.circular(20)
           ),
         ),
@@ -92,7 +92,7 @@ class ShimmerListSm extends StatelessWidget {
                 Container(
                   height: 10,
                   decoration: BoxDecoration(
-                      color: IziColors.dark,
+                      color: context.iziColors.dark,
                       borderRadius: BorderRadius.circular(8)
                   ),
                 ),
@@ -102,7 +102,7 @@ class ShimmerListSm extends StatelessWidget {
                   child: Container(
                     height: 10,
                     decoration: BoxDecoration(
-                        color: IziColors.dark,
+                        color: context.iziColors.dark,
                         borderRadius: BorderRadius.circular(8)
                     ),
                   ),
@@ -113,7 +113,7 @@ class ShimmerListSm extends StatelessWidget {
                   child: Container(
                     height: 10,
                     decoration: BoxDecoration(
-                        color: IziColors.dark,
+                        color: context.iziColors.dark,
                         borderRadius: BorderRadius.circular(8)
                     ),
                   ),
@@ -130,18 +130,18 @@ class ShimmerListSm extends StatelessWidget {
           height: 14,
           width: 100,
           decoration: BoxDecoration(
-              color: IziColors.dark,
+              color: context.iziColors.dark,
               borderRadius: BorderRadius.circular(8)
           ),
         )
       ],
     );
   }
-  Widget _shimmerBox({required double height}){
+  Widget _shimmerBox(BuildContext context,{required double height}){
     return Container(
       height: height,
       decoration: BoxDecoration(
-          color: IziColors.dark,
+          color: context.iziColors.dark,
           borderRadius: BorderRadius.circular(8)
       ),
     );

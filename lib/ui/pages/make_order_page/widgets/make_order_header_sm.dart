@@ -50,7 +50,7 @@ class MakeOrderHeaderSm extends StatelessWidget {
                   ),
                 if (!ru.isXXs())
                   IziText.bodyBig(
-                      color: IziColors.dark,
+                      color: context.iziColors.dark,
                       text: state.order?.id != null
                           ? LocaleKeys.makeOrder_subtitles_orderNumber
                               .tr(args: [state.order!.numero.toString()])

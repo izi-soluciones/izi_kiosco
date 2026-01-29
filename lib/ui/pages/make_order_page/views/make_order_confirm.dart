@@ -96,7 +96,7 @@ class _MakeOrderConfirmState extends State<MakeOrderConfirm> {
                                 children: [
                                   ru.isXs()?
                                   IziText.bodyBig(
-                                      color: IziColors.darkGrey,
+                                      color: context.iziColors.darkGrey,
                                       textAlign: TextAlign.left,
                                       text: "${authState.currentDevice?.config.isRetail==true?LocaleKeys.makeOrder_subtitles_myPurchase
                                           .tr():widget.state.takeAway?LocaleKeys
@@ -106,7 +106,7 @@ class _MakeOrderConfirmState extends State<MakeOrderConfirm> {
                                           .tr()}:",
                                       fontWeight: FontWeight.w600):
                                   IziText.titleBig(
-                                      color: IziColors.darkGrey,
+                                      color: context.iziColors.darkGrey,
                                       textAlign: TextAlign.left,
                                       text: "${authState.currentDevice?.config.isRetail==true?LocaleKeys.makeOrder_subtitles_myPurchase
                                           .tr():widget.state.takeAway?LocaleKeys
@@ -153,13 +153,13 @@ class _MakeOrderConfirmState extends State<MakeOrderConfirm> {
                                     children: [
                                       ru.isXs()?
                                       IziText.bodyBig(
-                                        color: IziColors.darkGrey,
+                                        color: context.iziColors.darkGrey,
                                         fontWeight: FontWeight.w500,
                                         text:
                                             "${LocaleKeys.makeOrder_labels_total.tr()}: ${(_getTotal(widget.state) - widget.state.discountAmount).moneyFormat(currency: widget.state.currentCurrency?.simbolo, digitsTaxes: authState.taxesStrategy.decimals)}",
                                       ):
                                       IziText.titleMedium(
-                                        color: IziColors.darkGrey,
+                                        color: context.iziColors.darkGrey,
                                         fontWeight: FontWeight.w500,
                                         text:
                                             "${LocaleKeys.makeOrder_labels_total.tr()}: ${(_getTotal(widget.state) - widget.state.discountAmount).moneyFormat(currency: widget.state.currentCurrency?.simbolo, digitsTaxes: authState.taxesStrategy.decimals)}",
@@ -204,7 +204,7 @@ class _MakeOrderConfirmState extends State<MakeOrderConfirm> {
                   cIndex++;
                   return Container(
                     decoration: BoxDecoration(
-                      border: e.key<state.itemsSelected.length-1 || i.key<e.value.items.length-1?const Border(bottom: BorderSide(color: IziColors.grey35,width: 1)):null
+                      border: e.key<state.itemsSelected.length-1 || i.key<e.value.items.length-1? Border(bottom: BorderSide(color: context.iziColors.grey35,width: 1)):null
                     ),
                     child: _item(
                       context,
@@ -291,7 +291,7 @@ class _MakeOrderConfirmState extends State<MakeOrderConfirm> {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            IziText.title(color: IziColors.dark, text: "x${item.cantidad}", mobile: ru.isXs()),
+            IziText.title(color: context.iziColors.dark, text: "x${item.cantidad}", mobile: ru.isXs()),
             if(ru.gtXxs())
             const SizedBox(
               width: 16,
@@ -304,22 +304,22 @@ class _MakeOrderConfirmState extends State<MakeOrderConfirm> {
                 child: Container(
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(8),
-                    color: IziColors.grey25,
+                    color: context.iziColors.grey25,
                   ),
                   clipBehavior: Clip.antiAlias,
                   child: item.imagen == null || item.imagen?.isEmpty == true
-                      ? const FittedBox(
-                          child: Icon(IziIcons.dish, color: IziColors.warmLighten))
+                      ?  FittedBox(
+                          child: Icon(IziIcons.dish, color: context.iziColors.warmLighten))
                       : CachedNetworkImage(
                           imageUrl: item.imagen ?? "",
                           fit: BoxFit.cover,
-                          placeholder: (context, url) => const Center(
+                          placeholder: (context, url) =>  Center(
                               child: CircularProgressIndicator(
-                                  strokeWidth: 2, color: IziColors.dark)),
+                                  strokeWidth: 2, color: context.iziColors.dark)),
                           errorWidget: (context, url, error) {
-                            return const FittedBox(
+                            return  FittedBox(
                                 child: Icon(IziIcons.dish,
-                                    color: IziColors.warmLighten));
+                                    color: context.iziColors.warmLighten));
                           },
                         ),
                 ),
@@ -337,13 +337,13 @@ class _MakeOrderConfirmState extends State<MakeOrderConfirm> {
                   ru.isXs()?
                   IziText.body(
                       textAlign: TextAlign.left,
-                      color: IziColors.dark,
+                      color: context.iziColors.dark,
                       text: item.nombre,
                       fontWeight: FontWeight.w600,
                       maxLines: 10):
                   IziText.title(
                       textAlign: TextAlign.left,
-                      color: IziColors.dark,
+                      color: context.iziColors.dark,
                       text: item.nombre,
                       fontWeight: FontWeight.w600,
                       maxLines: 10),
@@ -358,7 +358,7 @@ class _MakeOrderConfirmState extends State<MakeOrderConfirm> {
                           TextSpan(
                              text: "${e.nombre}: " ,
                             style: IziText.bodySmall(
-                          color: IziColors.dark,
+                          color: context.iziColors.dark,
                               text:"",
                               fontWeight: FontWeight.w500).style,
                           )
@@ -376,7 +376,7 @@ class _MakeOrderConfirmState extends State<MakeOrderConfirm> {
                               return previousValue;
                             }),
                             style: IziText.bodySmall(
-                            color: IziColors.darkGrey85,
+                            color: context.iziColors.darkGrey85,
                             maxLines: 50,
                             text:"",
                             fontWeight: FontWeight.w400).style,
@@ -391,7 +391,7 @@ class _MakeOrderConfirmState extends State<MakeOrderConfirm> {
                       //       .where((element) => element.check)
                       //       .map((c) {
                       //     return IziText.bodySmall(
-                      //         color: IziColors.darkGrey,
+                      //         color: context.iziColors.darkGrey,
                       //         text:
                       //         "${c.nombre}${c.modPrecio > 0 ? " (+${c.modPrecio})" : ""}",
                       //         fontWeight: FontWeight.w400);
@@ -402,7 +402,7 @@ class _MakeOrderConfirmState extends State<MakeOrderConfirm> {
                   if(item.detalle?.isNotEmpty==true)
                   IziText.body(
                       textAlign: TextAlign.left,
-                      color: IziColors.primary,
+                      color: context.iziColors.primary,
                       text: item.detalle!,
                       fontWeight: FontWeight.w400,
                       maxLines: 2),
@@ -414,7 +414,7 @@ class _MakeOrderConfirmState extends State<MakeOrderConfirm> {
             ),
             IziText.body(
                 textAlign: TextAlign.center,
-                color: IziColors.grey,
+                color: context.iziColors.grey,
                 text: item.taxPrice
                     .moneyFormat(currency: widget.state.currentCurrency?.simbolo, digitsTaxes: authState.taxesStrategy.decimals),
                 fontWeight: FontWeight.w500),
@@ -425,7 +425,7 @@ class _MakeOrderConfirmState extends State<MakeOrderConfirm> {
                 buttonIcon: IziIcons.close,
                 buttonType: ButtonType.secondary,
                 buttonSize: ru.isXs()?ButtonSize.small: ButtonSize.medium,
-                color: IziColors.red,
+                color: context.iziColors.red,
                 buttonOnPressed: () {
                   context
                       .read<MakeOrderBloc>()

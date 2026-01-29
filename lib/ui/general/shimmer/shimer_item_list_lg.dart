@@ -7,24 +7,24 @@ class ShimmerItemListLg extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Shimmer.fromColors(
-        baseColor: IziColors.grey25,
+        baseColor: context.iziColors.grey25,
         direction: ShimmerDirection.ltr,
         period: const Duration(seconds: 1),
-        highlightColor: IziColors.lightGrey30,
+        highlightColor: context.iziColors.lightGrey30,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: _shimmerList(height: 60),
+          child: _shimmerList(context,height: 60),
         )
     );
   }
-  Widget _shimmerList({required double height}){
+  Widget _shimmerList(BuildContext context,{required double height}){
     return Row(
       children: [
         Container(
           height: 14,width: 74,
           margin: const EdgeInsets.only(left: 19),
           decoration: BoxDecoration(
-              color: IziColors.dark,
+              color: context.iziColors.dark,
               borderRadius: BorderRadius.circular(20)
           ),
         ),
@@ -44,7 +44,7 @@ class ShimmerItemListLg extends StatelessWidget {
                 Container(
                   height: 10,
                   decoration: BoxDecoration(
-                      color: IziColors.dark,
+                      color: context.iziColors.dark,
                       borderRadius: BorderRadius.circular(8)
                   ),
                 ),
@@ -57,7 +57,7 @@ class ShimmerItemListLg extends StatelessWidget {
           width: 50,
           margin: const EdgeInsets.only(left:19 ),
           decoration: BoxDecoration(
-              color: IziColors.dark,
+              color: context.iziColors.dark,
               borderRadius: BorderRadius.circular(8)
           ),
         )

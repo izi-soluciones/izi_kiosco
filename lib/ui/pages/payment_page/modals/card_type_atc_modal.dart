@@ -43,14 +43,14 @@ class _CardTypeAtcModalState extends State<CardTypeAtcModal> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         IziText.title(
-            color: IziColors.dark, text: "Elige un tipo de pago con tarjeta"),
+            color: context.iziColors.dark, text: "Elige un tipo de pago con tarjeta"),
         const SizedBox(height: 16,),
         Row(
           children: [
-            IziText.titleSmall(color: IziColors.grey, text: "Monto a pagar"),
+            IziText.titleSmall(color: context.iziColors.grey, text: "Monto a pagar"),
             const SizedBox(width: 8,),
             IziText.titleSmall(
-                color: IziColors.dark, text: widget.amount.moneyFormat(digitsTaxes: digitsTaxes)),
+                color: context.iziColors.dark, text: widget.amount.moneyFormat(digitsTaxes: digitsTaxes)),
           ],
         ),
         Flexible(
@@ -91,10 +91,10 @@ class _CardTypeAtcModalState extends State<CardTypeAtcModal> {
         child: Column(
           children: [
             Expanded(
-              child: FittedBox(fit: BoxFit.fitHeight,child: Icon(icon,color: IziColors.darkGrey,)),
+              child: FittedBox(fit: BoxFit.fitHeight,child: Icon(icon,color: context.iziColors.darkGrey,)),
             ),
             const SizedBox(height: 4,),
-            IziText.titleSmall(color: IziColors.dark, text: title,mobile: ru.isXs())
+            IziText.titleSmall(color: context.iziColors.dark, text: title,mobile: ru.isXs())
           ],
         ),
       ),

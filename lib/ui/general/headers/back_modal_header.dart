@@ -11,23 +11,23 @@ class BackModalHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.only(left: 24,right: 17,top: 18,bottom: 18),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         border: Border(
-          bottom: BorderSide(color: IziColors.grey35,width: 1)
+          bottom: BorderSide(color: context.iziColors.grey35,width: 1)
         )
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Flexible(child: IziText.titleSmall(color: IziColors.dark, text: title),),
+          Flexible(child: IziText.titleSmall(color: context.iziColors.dark, text: title),),
           InkWell(
             onTap: (){
               Navigator.pop(context);
             },
-            child: const Icon(
+            child: Icon(
               IziIcons.close,
               size: 30,
-              color: IziColors.grey,
+              color: context.iziColors.grey,
             ),
           )
         ],

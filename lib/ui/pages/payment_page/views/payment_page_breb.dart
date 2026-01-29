@@ -101,7 +101,7 @@ class _PaymentPageBREBState extends State<PaymentPageBREB> {
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           IziText.titleMedium(
-                            color: IziColors.primaryDarken,
+                            color: context.iziColors.primaryDarken,
                             text: "Paga a través de Bre-B",
                           ),
                           const SizedBox(height: 24),
@@ -111,7 +111,7 @@ class _PaymentPageBREBState extends State<PaymentPageBREB> {
                             alignment: Alignment.center,
                             child: Icon(
                               IziIcons.cash,
-                              color: IziColors.primary,
+                              color: context.iziColors.primary,
                               size: 150,
                             ),
                           ),
@@ -121,12 +121,12 @@ class _PaymentPageBREBState extends State<PaymentPageBREB> {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               IziText.body(
-                                color: IziColors.darkGrey,
+                                color: context.iziColors.darkGrey,
                                 text: "Tiempo Restante: ",
                                 fontWeight: FontWeight.w400,
                               ),
                               IziText.body(
-                                color: IziColors.primary,
+                                color: context.iziColors.primary,
                                 text: "${remaining}s",
                                 fontWeight: FontWeight.w400,
                               ),
@@ -138,13 +138,13 @@ class _PaymentPageBREBState extends State<PaymentPageBREB> {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               IziText.titleMedium(
-                                color: IziColors.darkGrey,
+                                color: context.iziColors.darkGrey,
                                 text: "Llave: ",
                                 fontWeight: FontWeight.w700,
                               ),
                               const SizedBox(height: 8),
                               IziText.titleMedium(
-                                color: IziColors.darkGrey85,
+                                color: context.iziColors.darkGrey85,
                                 text: charge?.cobroKeyValue ?? "",
                                 fontWeight: FontWeight.w500,
                                 textAlign: TextAlign.center,
@@ -157,13 +157,13 @@ class _PaymentPageBREBState extends State<PaymentPageBREB> {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               IziText.titleMedium(
-                                color: IziColors.darkGrey,
+                                color: context.iziColors.darkGrey,
                                 text: LocaleKeys.payment_body_total.tr() + ": ",
                                 fontWeight: FontWeight.w700,
                               ),
                               const SizedBox(height: 8),
                               IziText.titleMedium(
-                                color: IziColors.darkGrey85,
+                                color: context.iziColors.darkGrey85,
                                 text: amountText,
                                 fontWeight: FontWeight.w500,
                                 textAlign: TextAlign.center,
@@ -174,7 +174,7 @@ class _PaymentPageBREBState extends State<PaymentPageBREB> {
                           const SizedBox(height: 32),
 
                           IziText.body(
-                            color: IziColors.darkGrey,
+                            color: context.iziColors.darkGrey,
                             text:
                                 "(Recuerda ingresar el monto exacto para marcar el cobro como pagado)",
                             fontWeight: FontWeight.w400,
@@ -189,7 +189,7 @@ class _PaymentPageBREBState extends State<PaymentPageBREB> {
                               child: IziText.titleSmall(
                                 maxLines: 5,
                                 textAlign: TextAlign.center,
-                                color: IziColors.secondaryDarken,
+                                color: context.iziColors.secondaryDarken,
                                 text:
                                     "Si ya hiciste el pago, espera unos segundos a que recibamos la confirmación",
                                 fontWeight: FontWeight.w500,

@@ -35,15 +35,15 @@ class CustomAlerts {
                       width: double.infinity,
                       padding: const EdgeInsets.only(bottom:  12,top: 12,left: 20,right: 20),
                       decoration: BoxDecoration(
-                        color: isHovered?IziColors.lightGrey:null,
-                          border: e.key==values.length-1?null:const Border(
+                        color: isHovered?context.iziColors.lightGrey:null,
+                          border: e.key==values.length-1?null:Border(
                               bottom: BorderSide(
-                                  color: IziColors.lightGrey,
+                                  color: context.iziColors.lightGrey,
                                   width: 1.5
                               )
                           )
                       ),
-                      child: IziText.body(color: e.value.color??IziColors.darkGrey, text: e.value.name, fontWeight: e.value.fontWeight??FontWeight.w500)
+                      child: IziText.body(color: e.value.color??context.iziColors.darkGrey, text: e.value.name, fontWeight: e.value.fontWeight??FontWeight.w500)
                   );
                 },
               )
@@ -54,7 +54,7 @@ class CustomAlerts {
             minWidth: minWidth ?? 320,
             minHeight: 10,
         ),
-        color: IziColors.white,
+        color: context.iziColors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         position: RelativeRect.fromLTRB(
             offset.dx, offset.dy, offset.dx, offset.dy),
@@ -88,7 +88,7 @@ class CustomAlerts {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12)
                     ),
-                    color: IziColors.white,
+                    color: context.iziColors.white,
                     child: widget,
                   ))
                 ),
@@ -348,7 +348,7 @@ class CustomAlerts {
                           contentPadding: padding ?? const EdgeInsets.all(24),
                           shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8)),
-                          backgroundColor: IziColors.lightGrey30,
+                          backgroundColor: context.iziColors.lightGrey30,
                           content: SizedBox(
                             width: 800,
                             child: defaultScroll?SingleChildScrollView(child: child):child,

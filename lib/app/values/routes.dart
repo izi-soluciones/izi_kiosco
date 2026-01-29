@@ -138,7 +138,7 @@ class Routes {
                             paymentObj: paymentObj,
                             authState: context.read<AuthBloc>().state),
                       child: Scaffold(
-                          backgroundColor: IziColors.lightGrey30,
+                          backgroundColor: context.iziColors.lightGrey30,
                           body: PaymentPage()),
                     ),
                   );

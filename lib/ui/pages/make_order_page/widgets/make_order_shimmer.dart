@@ -27,14 +27,14 @@ class MakeOrderShimmer extends StatelessWidget {
         },
     smallLogo: !ru.isVertical() || ru.isXs(),),
         Shimmer.fromColors(
-            baseColor: IziColors.grey25,
-            highlightColor: IziColors.lightGrey30,
+            baseColor: context.iziColors.grey25,
+            highlightColor: context.iziColors.lightGrey30,
             direction: ShimmerDirection.ltr,
-            child: _headerLarge(ru)),
+            child: _headerLarge(context,ru)),
         Expanded(
           child: Shimmer.fromColors(
-              baseColor: IziColors.grey25,
-              highlightColor: IziColors.lightGrey30,
+              baseColor: context.iziColors.grey25,
+              highlightColor: context.iziColors.lightGrey30,
               direction: ShimmerDirection.ltr,
               child: _itemsLg(ru)),
         ),
@@ -60,30 +60,30 @@ class MakeOrderShimmer extends StatelessWidget {
         EdgeInsets.only(top: ru.isXs()?0:16, right: 32, left: 32, bottom: 63),
         itemCount: 10,
         itemBuilder: (BuildContext context, int index) {
-          return _shimmerBox(height: ru.isXs()?200:ru.isVertical() ?400:300);
+          return _shimmerBox(context,height: ru.isXs()?200:ru.isVertical() ?400:300);
         },
       );
     });
   }
-  Widget _headerLarge(ResponsiveUtils ru) {
+  Widget _headerLarge(BuildContext context,ResponsiveUtils ru) {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       padding: EdgeInsets.symmetric(horizontal: 16, vertical: ru.isVertical() && !ru.isXs()?32:16),
       child: RowContainer(
           gap: 16,
           children: List.generate(7, (index) {
-            return SizedBox(width: 140,child: _shimmerBox(
+            return SizedBox(width: 140,child: _shimmerBox(context,
                 height: !ru.isVertical() || ru.isXs()?45:80));
 
           })),
     );
   }
 
-  Widget _shimmerBox({required double height}) {
+  Widget _shimmerBox(BuildContext context,{required double height}) {
     return Container(
       height: height,
       decoration: BoxDecoration(
-          color: IziColors.dark, borderRadius: BorderRadius.circular(8)),
+          color: context.iziColors.dark, borderRadius: BorderRadius.circular(8)),
     );
   }
 }

@@ -132,12 +132,12 @@ class _HomePageState extends State<HomePage> {
                           }
                           context.read<PageUtilsBloc>().initScreenActive(context.read<AuthBloc>().state);
                         },
-                        child: const Center(
+                        child: Center(
                           child: SizedBox(
                             width: 30,
                             height: 30,
                             child: CircularProgressIndicator(
-                              color: IziColors.primary,
+                              color: context.iziColors.primary,
                             ),
                           ),
                         ),
@@ -160,7 +160,7 @@ class _HomePageState extends State<HomePage> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             IziText.titleBig(
-                                color: IziColors.primary,
+                                color: context.iziColors.primary,
                                 text: LocaleKeys.home_subtitles_iziSlogan.tr(),
                                 fontWeight: FontWeight.w400),
                             const SizedBox(height: 32,),
@@ -179,10 +179,10 @@ class _HomePageState extends State<HomePage> {
                                                   "${dotenv.env[EnvKeys.apiUrl]}/contribuyentes/${state.currentContribuyente?.id}/logo",
                                               fit: BoxFit.fitHeight,
                                               placeholder: (context, url) =>
-                                                  const Center(
+                                                  Center(
                                                       child: CircularProgressIndicator(
                                                           strokeWidth: 2,
-                                                          color: IziColors.dark)),
+                                                          color: context.iziColors.dark)),
                                               errorWidget: (context, url, error) {
                                                 return const SizedBox.shrink();
                                               },
@@ -196,6 +196,7 @@ class _HomePageState extends State<HomePage> {
                                         padding: const EdgeInsets.only(
                                             bottom: 30, right: 30, left: 30),
                                         child:SvgPicture.asset(
+                                          colorFilter: ColorFilter.mode(context.iziColors.primary, BlendMode.srcIn),
                                             context.read<AuthBloc>().state.currentDevice?.config.isRetail==true && context.read<AuthBloc>().state.currentDevice?.config.isRetailBarcode==true?AssetsKeys.homeTitleRetailSvg:AssetsKeys.homeTitleSvg,
                                           width: ru.width,
                                           fit: BoxFit.contain,
@@ -207,8 +208,8 @@ class _HomePageState extends State<HomePage> {
                                     constraints: const BoxConstraints(maxWidth: 600),
                                     child: Padding(
                                       padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                                      child: AutoSizeText(LocaleKeys.home_body_clickToInit.tr(),minFontSize: 1,maxFontSize: 100,style: const TextStyle(
-                                        color: IziColors.grey,
+                                      child: AutoSizeText(LocaleKeys.home_body_clickToInit.tr(),minFontSize: 1,maxFontSize: 100,style: TextStyle(
+                                        color: context.iziColors.grey,
                                         fontSize: 100,
                                         fontWeight: FontWeight.w400,
                                       ),maxLines: 1),
@@ -220,7 +221,7 @@ class _HomePageState extends State<HomePage> {
                             Column(
                               children: [
                                 IziText.body(
-                                    color: IziColors.grey35,
+                                    color: context.iziColors.grey35,
                                     text: context
                                             .read<AuthBloc>()
                                             .state
@@ -228,8 +229,8 @@ class _HomePageState extends State<HomePage> {
                                             ?.nombre ??
                                         "",
                                     fontWeight: FontWeight.w500),
-                                const Divider(
-                                  color: IziColors.grey35,
+                                Divider(
+                                  color: context.iziColors.grey35,
                                   height: 20,
                                   thickness: 1,
                                 ),
@@ -239,15 +240,15 @@ class _HomePageState extends State<HomePage> {
                                     crossAxisAlignment: CrossAxisAlignment.center,
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
-                                      AutoSizeText(LocaleKeys.home_body_anIziPlatform.tr(),minFontSize: 1,style: const TextStyle(
-                                        color: IziColors.darkGrey,fontWeight: FontWeight.w400
+                                      AutoSizeText(LocaleKeys.home_body_anIziPlatform.tr(),minFontSize: 1,style:  TextStyle(
+                                        color: context.iziColors.darkGrey,fontWeight: FontWeight.w400
                                       ),),
                                       Padding(
                                         padding: EdgeInsets.only(left: ru.height*0.005,bottom: ru.height*0.002),
                                         child: FittedBox(
-                                          child: dotenv.env[EnvKeys.brandName]=="iZi"?const Icon(
+                                          child: dotenv.env[EnvKeys.brandName]=="iZi"? Icon(
                                             IziIcons.izi,
-                                            color: IziColors.primary,
+                                            color: context.iziColors.primary,
                                             size: 40,
                                           ):Image.asset(dotenv.env[EnvKeys.appIcon]??"", width: 60, height: 60,),
                                         ),
@@ -290,7 +291,7 @@ class _HomePageState extends State<HomePage> {
                                 ),
                               ),
                               Container(
-                                color: IziColors.white,
+                                color: context.iziColors.white,
                                 padding: const EdgeInsets.all(32),
                                 child: Row(
                                   mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -305,10 +306,10 @@ class _HomePageState extends State<HomePage> {
                                         "${dotenv.env[EnvKeys.apiUrl]}/contribuyentes/${state.currentContribuyente?.id}/logo",
                                         fit: BoxFit.fitHeight,
                                         placeholder: (context, url) =>
-                                        const Center(
+                                         Center(
                                             child: CircularProgressIndicator(
                                                 strokeWidth: 2,
-                                                color: IziColors.dark)),
+                                                color: context.iziColors.dark)),
                                         errorWidget: (context, url, error) {
                                           return const SizedBox.shrink();
                                         },
@@ -318,7 +319,7 @@ class _HomePageState extends State<HomePage> {
                                     const SizedBox(width: 32,),
                                     Expanded(
                                       child: IziText.titleBig(
-                                          color: IziColors.primary,
+                                          color: context.iziColors.primary,
                                           text: LocaleKeys.home_body_clickToInit.tr(),
                                           fontWeight: FontWeight.w400),
                                     ),
@@ -368,13 +369,13 @@ class _HomePageState extends State<HomePage> {
           }
           return Container(
             padding: const EdgeInsets.symmetric(horizontal: 32,vertical: 16),
-            color: IziColors.yellow,
+            color: context.iziColors.yellow,
             child: Row(
               children: [
                 Expanded(
                   child: IziText.body(
                       fontWeight: FontWeight.w600,
-                      color: IziColors.dark,
+                      color: context.iziColors.dark,
                       textAlign: TextAlign.center,
                       text: !state.statusServer?"El servidor del POS no response":"El POS no esta conectado correctamente"
                   ),
@@ -385,7 +386,7 @@ class _HomePageState extends State<HomePage> {
                       showError=false;
                     });
                   },
-                  child: const Icon(IziIcons.close,color: IziColors.dark,),
+                  child:  Icon(IziIcons.close,color: context.iziColors.dark,),
                 ),
               ],
             ),
