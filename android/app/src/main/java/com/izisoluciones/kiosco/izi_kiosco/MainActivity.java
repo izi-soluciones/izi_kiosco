@@ -91,7 +91,19 @@ public class MainActivity extends FlutterActivity {
                     int scale = size > 3 ? 1 : 0; // rough mapping
                     AutoReplyPrint.INSTANCE.CP_Pos_SetTextScale(h, scale, scale);
 
-                    AutoReplyPrint.INSTANCE.CP_Pos_PrintTextInUTF8(h, new WString(text));
+                    // Handle newlines manually. CP_Pos_PrintTextInUTF8 does not auto-feed.
+                    // We split by newline and ensure a FeedLine occurs after each segment.
+                    // This solves two problems:
+                    // 1. Internal \n in string are respected.
+                    // 2. The Text item itself acts as a block element (ending with a newline).
+                    String[] lines = text.split("\n", -1);
+                    for (String line : lines) {
+                         if (line.length() > 0) {
+                             AutoReplyPrint.INSTANCE.CP_Pos_PrintTextInUTF8(h, new WString(line));
+                         }
+                         // Always feed after a line segment to advance paper
+                         AutoReplyPrint.INSTANCE.CP_Pos_FeedLine(h, 1);
+                    }
                     
                     // Reset styles
                     AutoReplyPrint.INSTANCE.CP_Pos_SetTextScale(h, 0, 0);
@@ -150,10 +162,8 @@ public class MainActivity extends FlutterActivity {
                 } else if ("line".equals(type)) {
                      boolean dotted = (Boolean) item.get("dotted");
                      if (dotted) {
-                        AutoReplyPrint.INSTANCE.CP_Pos_PrintHorizontalLineSpecifyThickness(h, 0, 576, 1); // Dotted not directly supported by command usually, just thin line? 
-                        // Or iterate printing dashes?
-                        // Let's just print a standard line for now or dashes if requested.
-                        AutoReplyPrint.INSTANCE.CP_Pos_PrintTextInUTF8(h, new WString(new String(new char[32]).replace("\0", "- ") + "\r\n"));
+                        // Use a thin line for "dotted" request, as not all printers support native dotted lines via this API
+                        AutoReplyPrint.INSTANCE.CP_Pos_PrintHorizontalLineSpecifyThickness(h, 0, 576, 1);
                      } else {
                         AutoReplyPrint.INSTANCE.CP_Pos_PrintHorizontalLine(h, 0, 576);
                      }
