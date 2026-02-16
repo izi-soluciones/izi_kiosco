@@ -40,7 +40,8 @@ class Contribuyente {
     this.autorizaciones,
     this.usuarios,
     required this.actividadesEconomicas,
-    required this.autorizadosAPI
+    required this.autorizadosAPI,
+    this.logoUrl
   });
 
   @override
@@ -56,6 +57,7 @@ class Contribuyente {
   String? correoElectronico;
   int? plan;
   String? logo;
+  String? logoUrl;
   int? logoId;
   String? logoOrientation;
   int? estado;
@@ -133,8 +135,15 @@ class Contribuyente {
     autorizaciones : json["autorizaciones"],
     usuarios : []
   );
-
-  factory Contribuyente.fromJson(Map<String, dynamic> json)=>Contribuyente(
+  factory Contribuyente.fromJson(Map<String, dynamic> json){
+    bool isValidUrl(String url) {
+      final uri = Uri.tryParse(url);
+      return uri != null &&
+          uri.hasScheme &&
+          (uri.isScheme("http") || uri.isScheme("https")) &&
+          uri.host.isNotEmpty;
+    }
+    return Contribuyente(
       id : json['id'],
       nombre : json['nombre'],
       razonSocial : json['razonSocial'],
@@ -174,9 +183,11 @@ class Contribuyente {
       llaves : null,
       tiposFactura : [],
       camposExtra : [],
+      logoUrl : isValidUrl(json["logoUrl"]??"")?json["logoUrl"]:null,
       autorizaciones : json["autorizaciones"],
       usuarios : List.from(json["usuarios"] is Iterable?json["usuarios"]:[]).map((e) => Usuarios.fromJson(e)).toList()
   );
+  }
 
 
   factory Contribuyente.initCreate()=>Contribuyente(

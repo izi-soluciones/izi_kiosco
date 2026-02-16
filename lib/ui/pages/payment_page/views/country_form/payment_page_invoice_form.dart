@@ -102,8 +102,8 @@ class _PaymentPageInvoiceFormState extends State<PaymentPageInvoiceForm> {
                           alignment: Alignment.center,
                           height: 20,
                           width: 20,
-                          child: const CircularProgressIndicator(
-                            color: IziColors.darkGrey,
+                          child:  CircularProgressIndicator(
+                            color: context.iziColors.darkGrey,
                             strokeWidth: 2,
                           ))
                       : null,
@@ -152,7 +152,7 @@ class _PaymentPageInvoiceFormState extends State<PaymentPageInvoiceForm> {
           ),
           RowContainer(
             gap: 8,
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               if (ru.gtXs())
                 Expanded(
@@ -257,7 +257,7 @@ class _PaymentPageInvoiceFormState extends State<PaymentPageInvoiceForm> {
               setState(() {
                 datosAvanzados=!datosAvanzados;
               });
-            }, linkColor: IziColors.primary),
+            }, linkColor: context.iziColors.primary),
           ],
         ),
         if(datosAvanzados)

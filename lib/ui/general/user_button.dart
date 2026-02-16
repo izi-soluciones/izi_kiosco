@@ -18,10 +18,10 @@ class UserButton extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            IziText.body(text: user, color: IziColors.dark, fontWeight: FontWeight.w500),
+            IziText.body(text: user, color: context.iziColors.dark, fontWeight: FontWeight.w500),
             SizedBox(width: icon!=null?8:4),
             icon??
-            const Icon(IziIcons.downB,color: IziColors.darkGrey,size: 18,)
+            Icon(IziIcons.downB,color: context.iziColors.darkGrey,size: 18,)
           ],
         ),
       ),

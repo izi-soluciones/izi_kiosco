@@ -42,10 +42,10 @@ class _MakeOrderDetailStateVertical extends State<MakeOrderDetailVertical> {
     final ru = ResponsiveUtils(context);
     final authState = context.read<AuthBloc>().state;
     return Container(
-      decoration: const BoxDecoration(
-        color: IziColors.white,
+      decoration: BoxDecoration(
+        color: context.iziColors.white,
         border: Border(
-          left: BorderSide(color: IziColors.grey35, width: 1),
+          left: BorderSide(color: context.iziColors.grey35, width: 1),
         ),
       ),
       child: Column(
@@ -58,11 +58,11 @@ class _MakeOrderDetailStateVertical extends State<MakeOrderDetailVertical> {
                     Padding(
                       padding: const EdgeInsets.all(16.0),
                       child: IziText.title(
-                          color: IziColors.dark, text: authState.currentDevice?.config.isRetail==true?LocaleKeys.makeOrder_subtitles_myPurchase.tr(): LocaleKeys.makeOrder_subtitles_myOrder.tr(),fontWeight: FontWeight.w600),
+                          color: context.iziColors.dark, text: authState.currentDevice?.config.isRetail==true?LocaleKeys.makeOrder_subtitles_myPurchase.tr(): LocaleKeys.makeOrder_subtitles_myOrder.tr(),fontWeight: FontWeight.w600),
                     ),
-                    const Divider(color: IziColors.grey35,height: 1,thickness: 1),
+                    Divider(color: context.iziColors.grey35,height: 1,thickness: 1),
                     _headerItems(ru),
-                    const Divider(color: IziColors.grey35,height: 1,thickness: 1),
+                    Divider(color: context.iziColors.grey35,height: 1,thickness: 1),
                     Expanded(
                       child: _listItems(ru),
                     )
@@ -73,7 +73,7 @@ class _MakeOrderDetailStateVertical extends State<MakeOrderDetailVertical> {
                   padding: const EdgeInsets.all(32),
                   child: Center(
                     child: IziText.body(
-                        color: IziColors.grey,
+                        color: context.iziColors.grey,
                         text:
                            authState.currentDevice?.config.isRetail==true?LocaleKeys.makeOrder_body_addItems.tr(): LocaleKeys.makeOrder_body_addDishesOrDrinks.tr(),
                         fontWeight: FontWeight.w400),
@@ -92,7 +92,7 @@ class _MakeOrderDetailStateVertical extends State<MakeOrderDetailVertical> {
             Expanded(
               flex: 2,
               child: IziText.bodySmall(
-                  color: IziColors.darkGrey85,
+                  color: context.iziColors.darkGrey85,
                   text: LocaleKeys.makeOrder_labels_count.tr(),
                   fontWeight: FontWeight.w500),
             ),
@@ -100,7 +100,7 @@ class _MakeOrderDetailStateVertical extends State<MakeOrderDetailVertical> {
           Expanded(
             flex:4,
             child: IziText.bodySmall(
-                color: IziColors.darkGrey85,
+                color: context.iziColors.darkGrey85,
                 text: LocaleKeys.makeOrder_labels_item.tr(),
                 fontWeight: FontWeight.w500),
           ),
@@ -158,9 +158,9 @@ class _MakeOrderDetailStateVertical extends State<MakeOrderDetailVertical> {
         _editItem(context, item, indexCategory, indexItem);
       },
       child: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           border: Border(
-            bottom: BorderSide(color: IziColors.grey35, width: 1),
+            bottom: BorderSide(color: context.iziColors.grey35, width: 1),
           ),
         ),
         padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -196,7 +196,7 @@ class _MakeOrderDetailStateVertical extends State<MakeOrderDetailVertical> {
             Expanded(
               flex:4,
               child: IziText.body(
-                  color: IziColors.dark,
+                  color: context.iziColors.dark,
                   text: item.nombre,
                   fontWeight: FontWeight.w600,
                   maxLines: 2),
@@ -204,7 +204,7 @@ class _MakeOrderDetailStateVertical extends State<MakeOrderDetailVertical> {
             const SizedBox(width: 16,),
             IziBtnIcon(
               buttonIcon: IziIcons.close,
-              color: IziColors.red,
+              color: context.iziColors.red,
               buttonType: ButtonType.primary,
               buttonSize: ButtonSize.small,
               buttonOnPressed: (){

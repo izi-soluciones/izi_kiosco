@@ -1,3 +1,6 @@
+import 'package:flutter/material.dart';
+import 'package:izi_design_system/tokens/colors.dart';
+
 class Device {
   int id;
   int sucursal;
@@ -55,6 +58,8 @@ class ConfigDevice {
   final bool descargarQR;
   final bool ocultarCash;
   final bool facturaCompacto;
+  final IziColorPalette? colors;
+  final KioskColors kioskColors;
 
   const ConfigDevice(
       {this.ipAtc,
@@ -74,6 +79,8 @@ class ConfigDevice {
       this.video,
         required this.pin,
       required this.demo,
+      required this.colors,
+      required this.kioskColors,
       required this.sortByPriority});
 
   factory ConfigDevice.fromJson(dynamic json) {
@@ -108,7 +115,34 @@ class ConfigDevice {
       ocultarCash: jsonObj?["ocultarCash"] is bool ? jsonObj!["ocultarCash"] : false,
       facturaCompacto: jsonObj?["facturaCompacto"] is bool ? jsonObj!["facturaCompacto"] : false,
       isRetailBarcode: jsonObj?["isRetailBarcode"] is bool ? jsonObj!["isRetailBarcode"] : false,
+      colors: IziColorPalette.fromMap(jsonObj?["colors"]),
+      kioskColors: KioskColors.fromJson(jsonObj?["kioskColors"]),
     );
     return config;
   }
+}
+
+class KioskColors{
+  final Color? categoryBgColor;
+  final Color? categoryTextColor;
+
+  const KioskColors({required this.categoryBgColor, required this.categoryTextColor});
+
+  factory KioskColors.fromJson(Map<String, dynamic>? json) { 
+
+  Color? parseColor(String? value) {
+    if (value == null) return null;
+    try {
+      String hex = value.replaceAll("#", "");
+      if (hex.length == 6) {
+        hex = "FF$hex";
+      }
+      return Color(int.parse(hex, radix: 16));
+    } catch (e) {
+      return null;
+    }
+  }
+    return KioskColors(
+      categoryBgColor: json?["categoryBgColor"] is String? parseColor(json?["categoryBgColor"]) : null,
+      categoryTextColor: json?["categoryTextColor"] is String? parseColor(json?["categoryTextColor"]) : null);}
 }

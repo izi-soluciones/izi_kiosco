@@ -28,7 +28,7 @@ class PaymentMethodBtn extends StatelessWidget {
                 children: [
                   Icon(icon,size: ru.gtSm()?150:75,color: color,),
                   const SizedBox(height: 8,),
-                  IziText.titleMedium(textAlign: TextAlign.center,maxLines: 2,color: IziColors.dark, text: text,mobile: true)
+                  IziText.titleMedium(textAlign: TextAlign.center,maxLines: 2,color: context.iziColors.dark, text: text,mobile: true)
                 ],
               )
         ),

@@ -33,21 +33,21 @@ class MakeOrderItemSm extends StatelessWidget {
               AspectRatio(
                 aspectRatio: 1,
                 child: Container(
-                  color: IziColors.grey25,
+                  color: context.iziColors.grey25,
                   child: item.imagen == null || item.imagen?.isEmpty == true
-                      ? const FittedBox(
+                      ? FittedBox(
                           child:
-                              Icon(IziIcons.dish, color: IziColors.warmLighten))
+                              Icon(IziIcons.dish, color: context.iziColors.warmLighten))
                       : CachedNetworkImage(
                           imageUrl: item.imagen ?? "",
                           fit: BoxFit.cover,
-                          placeholder: (context, url) => const Center(
+                          placeholder: (context, url) => Center(
                               child: CircularProgressIndicator(
-                                  strokeWidth: 2, color: IziColors.dark)),
+                                  strokeWidth: 2, color: context.iziColors.dark)),
                           errorWidget: (context, url, error) {
-                            return const FittedBox(
+                            return FittedBox(
                                 child: Icon(IziIcons.dish,
-                                    color: IziColors.warmLighten));
+                                    color: context.iziColors.warmLighten));
                           },
                         ),
                 ),
@@ -62,11 +62,11 @@ class MakeOrderItemSm extends StatelessWidget {
                       IziText.bodyBig(
                         fontWeight: FontWeight.w500,
                           maxLines: 1,
-                          color: IziColors.dark,
+                          color: context.iziColors.dark,
                           text: item.nombre,
                           textAlign: TextAlign.center),
                       IziText.body(
-                          color: IziColors.grey,
+                          color: context.iziColors.grey,
                           text: item.taxPrice.moneyFormat(
                               currency: state.currentCurrency?.simbolo, digitsTaxes: context.read<AuthBloc>().state.taxesStrategy.decimals),
                           fontWeight: FontWeight.w500,

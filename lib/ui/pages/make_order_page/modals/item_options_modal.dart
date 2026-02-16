@@ -114,14 +114,14 @@ class _ItemOptionsModalState extends State<ItemOptionsModal> {
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 Container(
-                                  decoration: const BoxDecoration(
-                                      border:Border(bottom: BorderSide(color: IziColors.grey25,width: 1))
+                                  decoration:  BoxDecoration(
+                                      border:Border(bottom: BorderSide(color: context.iziColors.grey25,width: 1))
                                   ),
                                   child: ExpansionTile(
                                     key: titleKeys[entry.key],
                                     initiallyExpanded: e1.isObligatorio,
                                     tilePadding: const EdgeInsets.symmetric(horizontal: 32,vertical: 8),
-                                    title: IziText.titleSmall(color: entry.key==indexRequired?IziColors.red:IziColors.dark, text: e1.nombre+(e1.isObligatorio?"*":"")),
+                                    title: IziText.titleSmall(color: entry.key==indexRequired?context.iziColors.red:context.iziColors.dark, text: e1.nombre+(e1.isObligatorio?"*":"")),
                                     children:
                                     e1.caracteristicas.asMap().entries.map((e2) {
                                       return InkWell(
@@ -159,7 +159,7 @@ class _ItemOptionsModalState extends State<ItemOptionsModal> {
                                           child: Row(
                                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                             children: [
-                                              Flexible(child: IziText.body(color: IziColors.darkGrey, text: "${e2.value.nombre}${e2.value.modPrecio>0? " (+${e2.value.modPrecio.moneyFormat(currency: widget.state.currentCurrency?.simbolo, digitsTaxes: context.read<AuthBloc>().state.taxesStrategy.decimals)})":""}", fontWeight: FontWeight.w600)),
+                                              Flexible(child: IziText.body(color: context.iziColors.darkGrey, text: "${e2.value.nombre}${e2.value.modPrecio>0? " (+${e2.value.modPrecio.moneyFormat(currency: widget.state.currentCurrency?.simbolo, digitsTaxes: context.read<AuthBloc>().state.taxesStrategy.decimals)})":""}", fontWeight: FontWeight.w600)),
                                               e1.isMultiple || e1.isLimitado!=null?
                                               IziSwitch( value: e2.value.check, onChanged: (value){
                                                 setState(() {
@@ -208,7 +208,7 @@ class _ItemOptionsModalState extends State<ItemOptionsModal> {
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 32,vertical: 8),
                     child: IziInput(
-                      background: IziColors.white,
+                      background: context.iziColors.white,
                       labelInput: LocaleKeys.makeOrder_inputs_comments_label.tr(),
                       inputHintText: LocaleKeys.makeOrder_inputs_comments_placeholder.tr(),
                       inputType: InputType.textArea,

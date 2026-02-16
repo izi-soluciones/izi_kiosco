@@ -78,9 +78,9 @@ class _MakeOrderItemOptionsState extends State<MakeOrderItemOptions> {
       mainAxisSize: MainAxisSize.min,
       children: [
         BackMobileHeader(
-          background: IziColors.lightGrey30,
+          background: context.iziColors.lightGrey30,
           title: IziText.bodyBig(
-              color: IziColors.dark,
+              color: context.iziColors.dark,
               text: LocaleKeys.makeOrder_subtitles_details.tr(),
               fontWeight: FontWeight.w500),
           onBack: () {
@@ -89,7 +89,7 @@ class _MakeOrderItemOptionsState extends State<MakeOrderItemOptions> {
         ),
         Expanded(
           child: Container(
-            color: IziColors.white,
+            color: context.iziColors.white,
             child: Column(
               children: [
                 Padding(
@@ -104,24 +104,24 @@ class _MakeOrderItemOptionsState extends State<MakeOrderItemOptions> {
                           AspectRatio(
                             aspectRatio: 1,
                             child: Container(
-                              color: IziColors.grey25,
+                              color: context.iziColors.grey25,
                               child: widget.item.imagen == null ||
                                       widget.item.imagen?.isEmpty == true
-                                  ? const FittedBox(
+                                  ? FittedBox(
                                       child: Icon(IziIcons.dish,
-                                          color: IziColors.warmLighten))
+                                          color: context.iziColors.warmLighten))
                                   : CachedNetworkImage(
                                       imageUrl: widget.item.imagen ?? "",
                                       fit: BoxFit.cover,
                                       placeholder: (context, url) =>
-                                          const Center(
+                                          Center(
                                               child: CircularProgressIndicator(
                                                   strokeWidth: 2,
-                                                  color: IziColors.dark)),
+                                                  color: context.iziColors.dark)),
                                       errorWidget: (context, url, error) {
-                                        return const FittedBox(
+                                        return FittedBox(
                                             child: Icon(IziIcons.dish,
-                                                color: IziColors.warmLighten));
+                                                color: context.iziColors.warmLighten));
                                       },
                                     ),
                             ),
@@ -135,11 +135,11 @@ class _MakeOrderItemOptionsState extends State<MakeOrderItemOptions> {
                                 IziText.bodyBig(
                                     fontWeight: FontWeight.w500,
                                     maxLines: 5,
-                                    color: IziColors.dark,
+                                    color: context.iziColors.dark,
                                     text: widget.item.nombre,
                                     textAlign: TextAlign.center),
                                 IziText.body(
-                                    color: IziColors.grey,
+                                    color: context.iziColors.grey,
                                     text: widget.item.taxPrice
                                         .moneyFormat(
                                             currency: widget.state
@@ -162,7 +162,7 @@ class _MakeOrderItemOptionsState extends State<MakeOrderItemOptions> {
                     children: [
                       Flexible(
                         child: IziText.bodyBig(
-                            color: IziColors.darkGrey,
+                            color: context.iziColors.darkGrey,
                             text: LocaleKeys.makeOrder_body_quantity.tr(),
                             fontWeight: FontWeight.w500),
                       ),
@@ -189,13 +189,13 @@ class _MakeOrderItemOptionsState extends State<MakeOrderItemOptions> {
                     ],
                   ),
                 ),
-                const Divider(
-                  color: IziColors.grey25,
+                Divider(
+                  color: context.iziColors.grey25,
                   height: 1,
                 ),
                 Expanded(
                   child: Container(
-                    color: IziColors.white,
+                    color: context.iziColors.white,
                     child: IziScroll(
                       scrollController: scrollController,
                       child: SingleChildScrollView(
@@ -222,8 +222,8 @@ class _MakeOrderItemOptionsState extends State<MakeOrderItemOptions> {
                                       key: titleKeys[entry.key],
                                       child: IziText.titleSmall(
                                           color: entry.key == indexRequired
-                                              ? IziColors.red
-                                              : IziColors.dark,
+                                              ? context.iziColors.red
+                                              : context.iziColors.dark,
                                           text: e1.nombre +
                                               (e1.isObligatorio ? "*" : "")),
                                     ),
@@ -254,9 +254,9 @@ class _MakeOrderItemOptionsState extends State<MakeOrderItemOptions> {
                                               border: e2.key <
                                                       e1.caracteristicas.length -
                                                           1
-                                                  ? const Border(
+                                                  ? Border(
                                                       bottom: BorderSide(
-                                                          color: IziColors.grey25,
+                                                          color: context.iziColors.grey25,
                                                           width: 1))
                                                   : null),
                                           child: Row(
@@ -264,7 +264,7 @@ class _MakeOrderItemOptionsState extends State<MakeOrderItemOptions> {
                                                 MainAxisAlignment.spaceBetween,
                                             children: [
                                               IziText.body(
-                                                  color: IziColors.darkGrey,
+                                                  color: context.iziColors.darkGrey,
                                                   text:
                                                       "${e2.value.nombre}${e2.value.modPrecio > 0 ? " (+${e2.value.modPrecio.moneyFormat(currency: widget.state.currentCurrency?.simbolo, digitsTaxes: digitsTaxes)})" : ""}",
                                                   fontWeight: FontWeight.w600),
@@ -323,7 +323,7 @@ class _MakeOrderItemOptionsState extends State<MakeOrderItemOptions> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               IziText.bodyBig(
-                  color: IziColors.dark,
+                  color: context.iziColors.dark,
                   text: _getTotal().moneyFormat(
                       currency: widget.state.currentCurrency?.simbolo, digitsTaxes: digitsTaxes),
                   fontWeight: FontWeight.w500,

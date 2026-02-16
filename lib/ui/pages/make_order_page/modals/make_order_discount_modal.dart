@@ -38,19 +38,19 @@ class _MakeOrderDiscountModalState extends State<MakeOrderDiscountModal> {
       children: [
          Padding(
            padding: const EdgeInsets.symmetric(horizontal: 32,vertical: 18),
-           child: IziText.titleSmall(color: IziColors.dark, text: LocaleKeys.makeOrder_subtitles_discounts.tr()),
+           child: IziText.titleSmall(color: context.iziColors.dark, text: LocaleKeys.makeOrder_subtitles_discounts.tr()),
          ),
-        const Divider(color: IziColors.grey25,height: 1,),
+         Divider(color: context.iziColors.grey25,height: 1,),
         ...discounts.asMap().entries.map((e) {
           return Container(
             padding: const EdgeInsets.symmetric(horizontal: 32,vertical: 16),
-            decoration: const BoxDecoration(
-              border: Border(bottom: BorderSide(color: IziColors.grey25,width: 1))
+            decoration:  BoxDecoration(
+              border: Border(bottom: BorderSide(color: context.iziColors.grey25,width: 1))
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                IziText.body(color: IziColors.darkGrey, text: "-${e.value}%", fontWeight: FontWeight.w600),
+                IziText.body(color: context.iziColors.darkGrey, text: "-${e.value}%", fontWeight: FontWeight.w600),
                 IziSwitch(value: discountsStatus[e.key], onChanged: (value){
                   for(var i=0;i<discountsStatus.length;i++){
                     discountsStatus[i]=false;
@@ -105,9 +105,9 @@ class _MakeOrderDiscountModalState extends State<MakeOrderDiscountModal> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  IziText.body(color: IziColors.darkGrey, text: isAmount?widget.state.currentCurrency?.simbolo??AppConstants.defaultCurrency:"%", fontWeight: FontWeight.w600),
+                  IziText.body(color: context.iziColors.darkGrey, text: isAmount?widget.state.currentCurrency?.simbolo??AppConstants.defaultCurrency:"%", fontWeight: FontWeight.w600),
                   const SizedBox(width: 6,),
-                  const Icon(IziIcons.downB,size: 20,color: IziColors.darkGrey,),
+                   Icon(IziIcons.downB,size: 20,color: context.iziColors.darkGrey,),
                   const SizedBox(width: 10,),
                 ],
               ),

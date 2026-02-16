@@ -200,10 +200,8 @@ class PaymentBloc extends Cubit<PaymentState> {
       String? authorization,
       String? invoiceNumber,
       String? email,
-      String? firstDigits,
-      String? lastDigits,
-        String? Function()? emailMask,
-        String? Function()? phoneNumberMask,
+        String? firstDigits,
+        String? lastDigits,
       String? phoneNumber}) {
     if (phoneNumber != null) {
       emit(state.copyWith(
@@ -232,12 +230,6 @@ class PaymentBloc extends Cubit<PaymentState> {
     if (email != null) {
       emit(state.copyWith(
           email: state.email.changeValue(email)));
-    }
-    if(emailMask !=null){
-      emit(state.copyWith(emailMask: emailMask));
-    }
-    if(phoneNumberMask !=null){
-      emit(state.copyWith(phoneNumberMask: phoneNumberMask));
     }
   }
 
@@ -309,13 +301,13 @@ class PaymentBloc extends Cubit<PaymentState> {
 
   bool _validateInputs() {
     emit(state.copyWith(
-        email: state.emailMask != null?state.email: state.email
+        email: state.email
             .validateError(valueRequired: state.email.value),
         documentNumber: state.documentNumber
             .validateError(valueRequired: state.businessName.value),
         businessName: state.businessName
             .validateError(valueRequired: state.documentNumber.value),
-        phoneNumber: state.phoneNumberMask != null?state.phoneNumber: state.phoneNumber.validateError()));
+        phoneNumber: state.phoneNumber.validateError()));
 
     if (state.documentNumber.inputError != null) {
       return false;
@@ -922,8 +914,6 @@ class PaymentBloc extends Cubit<PaymentState> {
       emit(state.copyWith(
           businessName: state.businessName.changeValue(find?.razonSocial ?? ""),
           documentNumber: state.documentNumber.changeLoading(false),
-          emailMask: ()=>find?.correoElectronico,
-          phoneNumberMask: ()=>find?.telefono,
           ));
     }
     catch(e){

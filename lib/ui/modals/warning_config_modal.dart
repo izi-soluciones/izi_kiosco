@@ -28,7 +28,7 @@ class WarningConfigModal extends StatelessWidget {
             maxLines: 5,
             mobile: true,
             textAlign: TextAlign.center,
-            color: IziColors.dark),
+            color: context.iziColors.dark),
         const SizedBox(
           height: 8,
         ),
@@ -37,7 +37,7 @@ class WarningConfigModal extends StatelessWidget {
             maxLines: 10,
             fontWeight: FontWeight.w400,
             textAlign: TextAlign.center,
-            color: IziColors.darkGrey),
+            color: context.iziColors.darkGrey),
         const SizedBox(
           height: 24,
         ),
@@ -45,7 +45,7 @@ class WarningConfigModal extends StatelessWidget {
           padding: const EdgeInsets.only(left: 20, right: 20),
           child: IziBtnLinkIcon(
             filterText: LocaleKeys.general_buttons_accept.tr(),
-            color: IziColors.grey,
+            color: context.iziColors.grey,
             icon: IziIcons.leftB,
             filterTextOnPress: () {
               Navigator.of(context).pop();

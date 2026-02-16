@@ -26,14 +26,14 @@ class ItemHome extends StatelessWidget {
                 fit: BoxFit.fitHeight,
                 child: Icon(
                   icon,
-                  color: IziColors.primary,
+                  color: context.iziColors.primary,
                 ),
               ),
             ),
             Padding(
               padding: const EdgeInsets.only(top:8.0),
               child: IziText.titleSmall(
-                  color: IziColors.dark,
+                  color: context.iziColors.dark,
                   textAlign: TextAlign.center,
                   text: name,
             )

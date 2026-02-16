@@ -60,18 +60,18 @@ class _ErrorPaymentPageState extends State<ErrorPaymentPage> {
                       Row(
                         children: [
                           Expanded(
-                            child:IziText.titleSmall(color: IziColors.dark, text: "Nº"),
+                            child:IziText.titleSmall(color: context.iziColors.dark, text: "Nº"),
                           ),
                           Expanded(
                             flex: 2,
-                            child:IziText.titleSmall(color: IziColors.dark, text: "Respuesta"),
+                            child:IziText.titleSmall(color: context.iziColors.dark, text: "Respuesta"),
                           ),
                           Expanded(
-                            child:IziText.titleSmall(color: IziColors.dark, text: "Fecha"),
+                            child:IziText.titleSmall(color: context.iziColors.dark, text: "Fecha"),
                           ),
                           Expanded(
                             flex: 2,
-                            child:IziText.titleSmall(color: IziColors.dark, text: "Tarjeta (U. 4 digitos)"),
+                            child:IziText.titleSmall(color: context.iziColors.dark, text: "Tarjeta (U. 4 digitos)"),
                           )
                         ],
                       ),
@@ -83,18 +83,18 @@ class _ErrorPaymentPageState extends State<ErrorPaymentPage> {
                             child: Row(
                               children: [
                                 Expanded(
-                                  child:IziText.titleSmall(color: IziColors.dark, text: (e.key+1).toString()),
+                                  child:IziText.titleSmall(color: context.iziColors.dark, text: (e.key+1).toString()),
                                 ),
                                 Expanded(
                                   flex: 2,
-                                  child:IziText.titleSmall(color: IziColors.dark, text: e.value.response),
+                                  child:IziText.titleSmall(color: context.iziColors.dark, text: e.value.response),
                                 ),
                                 Expanded(
-                                  child:IziText.titleSmall(color: IziColors.dark, text: "${e.value.date} ${e.value.hour}"),
+                                  child:IziText.titleSmall(color: context.iziColors.dark, text: "${e.value.date} ${e.value.hour}"),
                                 ),
                                 Expanded(
                                   flex: 2,
-                                  child:IziText.titleSmall(color: IziColors.dark, text: (e.value.cardNumber?.length ?? 0)>4?e.value.cardNumber!.substring(e.value.cardNumber!.length-4,e.value.cardNumber!.length):""),
+                                  child:IziText.titleSmall(color: context.iziColors.dark, text: (e.value.cardNumber?.length ?? 0)>4?e.value.cardNumber!.substring(e.value.cardNumber!.length-4,e.value.cardNumber!.length):""),
                                 )
                               ],
                             ),

@@ -24,10 +24,10 @@ class MakeOrderItemLg extends StatelessWidget {
     final ru = ResponsiveUtils(context);
     return Material(
       elevation: 0,
-      color: IziColors.white,
+      color: context.iziColors.white,
       shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(8),
-        side: const BorderSide(color: IziColors.grey25,width: 1)
+        side: BorderSide(color: context.iziColors.grey25,width: 1)
       ),
       clipBehavior: Clip.hardEdge,
       child: InkWell(
@@ -43,10 +43,10 @@ class MakeOrderItemLg extends StatelessWidget {
                     AspectRatio(
                       aspectRatio: 1,
                       child: Ink(
-                        color: IziColors.grey25,
+                        color: context.iziColors.grey25,
                         child:
                         item.imagen==null || item.imagen?.isEmpty==true?
-                        const FittedBox(child: Icon(IziIcons.dish,color: IziColors.warmLighten)):
+                        FittedBox(child: Icon(IziIcons.dish,color: context.iziColors.warmLighten)):
                         CachedNetworkImage(
                           imageBuilder: (context, imageProvider) {
                             return Ink.image(
@@ -58,10 +58,10 @@ class MakeOrderItemLg extends StatelessWidget {
                           imageUrl: item.imagen??"",
                           fit: BoxFit.cover,
                           placeholder: (context, url) {
-                            return const Center(child: CircularProgressIndicator(strokeWidth: 2,color: IziColors.dark));
+                            return Center(child: CircularProgressIndicator(strokeWidth: 2,color: context.iziColors.dark));
                           },
                           errorWidget: (context, url, error)  {
-                            return const FittedBox(child: Icon(IziIcons.dish,color: IziColors.warmLighten));
+                            return FittedBox(child: Icon(IziIcons.dish,color: context.iziColors.warmLighten));
                           },
                         ),
                       ),
@@ -76,16 +76,16 @@ class MakeOrderItemLg extends StatelessWidget {
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              IziText.titleSmall(height: 1.1,maxLines: 3,color: IziColors.dark, text: item.nombre,textAlign: TextAlign.start),
+                              IziText.titleSmall(height: 1.1,maxLines: 3,color: context.iziColors.dark, text: item.nombre,textAlign: TextAlign.start),
                               if(item.descripcion!=null)
                               const SizedBox(height: 4,),
                               if(item.descripcion!=null && ru.gtXs())
-                              IziText.label(maxLines: 5,color: IziColors.darkGrey85, text: item.descripcion??"",textAlign: TextAlign.start,fontWeight: FontWeight.w400),
+                              IziText.label(maxLines: 5,color: context.iziColors.darkGrey85, text: item.descripcion??"",textAlign: TextAlign.start,fontWeight: FontWeight.w400),
 
                             ],
                           ),
 
-                          IziText.titleSmall(color: IziColors.darkGrey, text: item.taxPrice.moneyFormat(currency: state.currentCurrency?.simbolo, digitsTaxes: context.read<AuthBloc>().state.taxesStrategy.decimals), fontWeight: FontWeight.w400,textAlign: TextAlign.start),
+                          IziText.titleSmall(color: context.iziColors.darkGrey, text: item.taxPrice.moneyFormat(currency: state.currentCurrency?.simbolo, digitsTaxes: context.read<AuthBloc>().state.taxesStrategy.decimals), fontWeight: FontWeight.w400,textAlign: TextAlign.start),
                           if(ru.isVertical() && ru.gtSm())
                           const SizedBox(height: 10,),
 

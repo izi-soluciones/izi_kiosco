@@ -29,7 +29,7 @@ class IziHeaderKiosk extends StatelessWidget {
               onTap: onPop,
               child:  Padding(
                 padding: EdgeInsets.all(ru.isXs()?10:20),
-                child: Icon(IziIcons.leftB, color: IziColors.grey, size: ru.isXs()?30:50),
+                child: Icon(IziIcons.leftB, color: context.iziColors.grey, size: ru.isXs()?30:50),
               ),
             ),
           ),
@@ -48,12 +48,12 @@ class IziHeaderKiosk extends StatelessWidget {
                       imageUrl:
                       "${dotenv.env[EnvKeys.apiUrl]}/contribuyentes/${context.read<AuthBloc>().state.currentContribuyente?.id}/logo",
                       fit: BoxFit.fitHeight,
-                      placeholder: (context, url) => const Center(
+                      placeholder: (context, url) => Center(
                           child: SizedBox(
                             height: 15,
                             width: 15,
                             child: CircularProgressIndicator(
-                                strokeWidth: 2, color: IziColors.dark),
+                                strokeWidth: 2, color: context.iziColors.dark),
                           )),
                       errorWidget: (context, url, error) {
                         return const SizedBox.shrink();

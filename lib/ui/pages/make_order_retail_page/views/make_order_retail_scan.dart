@@ -98,7 +98,7 @@ class _MakeOrderRetailScanState extends State<MakeOrderRetailScan> {
             textAlign: TextAlign.center,
             style: TextStyle(
                 fontSize: ru.gtMd() || (ru.gtSm() && ru.isVertical()) ? 30 : 24,
-                color: IziColors.darkGrey85,
+                color: context.iziColors.darkGrey85,
                 fontWeight: FontWeight.w500),
           )
         ],
@@ -117,7 +117,7 @@ class _MakeOrderRetailScanState extends State<MakeOrderRetailScan> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             IziText.titleMedium(
-                color: IziColors.darkGrey,
+                color: context.iziColors.darkGrey,
                 text: LocaleKeys.makeOrderRetail_scan_productsScanned.tr()),
             Row(
               children: [
@@ -129,7 +129,7 @@ class _MakeOrderRetailScanState extends State<MakeOrderRetailScan> {
                 Expanded(
                     flex: 4,
                     child: IziText.body(
-                        color: IziColors.darkGrey,
+                        color: context.iziColors.darkGrey,
                         textAlign: TextAlign.center,
                         text: ru.gtSm()
                             ? LocaleKeys.makeOrderRetail_scan_unitPrice.tr()
@@ -138,7 +138,7 @@ class _MakeOrderRetailScanState extends State<MakeOrderRetailScan> {
                 Expanded(
                     flex: ru.gtXs()?4:8,
                     child: IziText.body(
-                        color: IziColors.darkGrey,
+                        color: context.iziColors.darkGrey,
                         textAlign: TextAlign.center,
                         text: ru.gtSm()
                             ? LocaleKeys.makeOrderRetail_scan_totalPrice.tr()
@@ -153,8 +153,8 @@ class _MakeOrderRetailScanState extends State<MakeOrderRetailScan> {
                 shrinkWrap: true,
                             itemCount: widget.state.itemsSelected.length,
                             separatorBuilder: (context, index) {
-              return const Divider(
-                color: IziColors.grey35,
+              return Divider(
+                color: context.iziColors.grey35,
                 height: 1,
                 thickness: 1,
                 indent: 8,
@@ -191,23 +191,23 @@ class _MakeOrderRetailScanState extends State<MakeOrderRetailScan> {
                 child: Container(
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(8),
-                    color: IziColors.grey25,
+                    color: context.iziColors.grey25,
                   ),
                   clipBehavior: Clip.antiAlias,
                   child: item.imagen == null || item.imagen?.isEmpty == true
-                      ? const FittedBox(
+                      ? FittedBox(
                           child:
-                              Icon(IziIcons.dish, color: IziColors.warmLighten))
+                              Icon(IziIcons.dish, color: context.iziColors.warmLighten))
                       : CachedNetworkImage(
                           imageUrl: item.imagen ?? "",
                           fit: BoxFit.cover,
-                          placeholder: (context, url) => const Center(
+                          placeholder: (context, url) => Center(
                               child: CircularProgressIndicator(
-                                  strokeWidth: 2, color: IziColors.dark)),
+                                  strokeWidth: 2, color: context.iziColors.dark)),
                           errorWidget: (context, url, error) {
-                            return const FittedBox(
+                            return FittedBox(
                                 child: Icon(IziIcons.dish,
-                                    color: IziColors.warmLighten));
+                                    color: context.iziColors.warmLighten));
                           },
                         ),
                 ),
@@ -227,7 +227,7 @@ class _MakeOrderRetailScanState extends State<MakeOrderRetailScan> {
                       mobile: !(ru.gtMd() || (ru.gtSm() && ru.isVertical())),
                       height: 1,
                       textAlign: TextAlign.left,
-                      color: IziColors.dark,
+                      color: context.iziColors.dark,
                       text: item.nombre,
                       fontWeight: FontWeight.w500,
                       maxLines: 5),
@@ -238,18 +238,18 @@ class _MakeOrderRetailScanState extends State<MakeOrderRetailScan> {
                         TextSpan(
                             text:
                                 "${LocaleKeys.makeOrderRetail_scan_quantity.tr()}: ",
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontFamily:
                                   IziTypographyConfig.familyHindSiliguri,
-                              color: IziColors.darkGrey,
+                              color: context.iziColors.darkGrey,
                               fontWeight: FontWeight.w400,
                             )),
                         TextSpan(
                             text: "${item.cantidad}",
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontFamily:
                                   IziTypographyConfig.familyHindSiliguri,
-                              color: IziColors.primaryDarken,
+                              color: context.iziColors.primaryDarken,
                               fontWeight: FontWeight.w600,
                             )),
                       ]))
@@ -264,7 +264,7 @@ class _MakeOrderRetailScanState extends State<MakeOrderRetailScan> {
               padding: const EdgeInsets.only(left: 8),
               child: IziText.body(
                   textAlign: TextAlign.center,
-                  color: IziColors.grey,
+                  color: context.iziColors.grey,
                   text: item.taxPrice.moneyFormat(
                       currency: widget.state.currentCurrency?.simbolo, digitsTaxes: authState.taxesStrategy.decimals),
                   fontWeight: FontWeight.w500),
@@ -276,7 +276,7 @@ class _MakeOrderRetailScanState extends State<MakeOrderRetailScan> {
               padding: const EdgeInsets.only(left: 8),
               child: IziText.body(
                   textAlign: TextAlign.center,
-                  color: IziColors.grey,
+                  color: context.iziColors.grey,
                   text: (item.taxPrice).moneyFormat(
                       currency: widget.state.currentCurrency?.simbolo, digitsTaxes: authState.taxesStrategy.decimals),
                   fontWeight: FontWeight.w500),
@@ -306,9 +306,9 @@ class _MakeOrderRetailScanState extends State<MakeOrderRetailScan> {
           onTap: () {
             _back();
           },
-          child: const Padding(
-            padding: EdgeInsets.all(20),
-            child: Icon(IziIcons.leftB, color: IziColors.grey, size: 50),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Icon(IziIcons.leftB, color: context.iziColors.grey, size: 50),
           ),
         ),
         if (widget.state.itemsSelected.isNotEmpty)
@@ -360,7 +360,7 @@ class _MakeOrderRetailScanState extends State<MakeOrderRetailScan> {
                 style: TextStyle(
                   fontSize: size,
                   fontWeight: FontWeight.w600,
-                  color: IziColors.dark,
+                  color: context.iziColors.dark,
                 ),
               )
             ],

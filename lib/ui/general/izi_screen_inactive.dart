@@ -61,7 +61,7 @@ class _IziScreenInactiveState extends State<IziScreenInactive> {
             child: BackdropFilter(
               filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
               child: Container(
-                color: IziColors.white.withOpacity(0.6),
+                color: context.iziColors.white.withOpacity(0.6),
               ),
             ),
           ),
@@ -74,23 +74,23 @@ class _IziScreenInactiveState extends State<IziScreenInactive> {
                   IziText.titleBig(
                     cropText: false,
                     textAlign: TextAlign.center,
-                    color: IziColors.dark,
+                    color: context.iziColors.dark,
                     text: LocaleKeys.general_body_thisScreenClose.tr(args: [_timeRemaining.toString()]),
                     fontWeight: FontWeight.w600,
                     maxLines: 5,
                   ),
                   const SizedBox(height: 8),
                   IziText.bodyBig(
-                    color: IziColors.darkGrey,
+                    color: context.iziColors.darkGrey,
                     text: LocaleKeys.general_buttons_pressToContinue.tr(),
                     fontWeight: FontWeight.w600,
                     maxLines: 5,
                   ),
                   const SizedBox(height: 8),
-                  const SizedBox(
+                  SizedBox(
                     width: 15,
                     height: 15,
-                    child: CircularProgressIndicator(color: IziColors.primary, strokeWidth: 2),
+                    child: CircularProgressIndicator(color: context.iziColors.primary, strokeWidth: 2),
                   ),
                 ],
               ),

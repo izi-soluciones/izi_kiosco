@@ -110,7 +110,7 @@ class _MakeOrderRetailInitState extends State<MakeOrderRetailInit> {
                               textAlign: TextAlign.center,
                               style:  TextStyle(
                                   fontSize: ru.gtMd() || (ru.gtSm() && ru.isVertical())?30:24,
-                                  color: IziColors.darkGrey85,
+                                  color: context.iziColors.darkGrey85,
                                   fontWeight: FontWeight.w500),
                             )
                           ],
@@ -145,7 +145,7 @@ class _MakeOrderRetailInitState extends State<MakeOrderRetailInit> {
     return Container(
       height: height,
       decoration: BoxDecoration(
-          color: IziColors.dark, borderRadius: BorderRadius.circular(8)),
+          color: context.iziColors.dark, borderRadius: BorderRadius.circular(8)),
     );
   }
 
@@ -181,8 +181,8 @@ class _MakeOrderRetailInitState extends State<MakeOrderRetailInit> {
       size = 50;
     }
     return Shimmer.fromColors(
-      baseColor: IziColors.grey25,
-      highlightColor: IziColors.lightGrey30,
+      baseColor: context.iziColors.grey25,
+      highlightColor: context.iziColors.lightGrey30,
       direction: ShimmerDirection.ltr,
       period: const Duration(seconds: 1),
       child: DynamicList(
@@ -257,7 +257,7 @@ class _MakeOrderRetailInitState extends State<MakeOrderRetailInit> {
       children: [
         Icon(
           icon,
-          color: IziColors.primary,
+          color: context.iziColors.primary,
           size: sizeIcon,
         ),
         SizedBox(
@@ -270,7 +270,7 @@ class _MakeOrderRetailInitState extends State<MakeOrderRetailInit> {
             maxLines: 5,
             style: TextStyle(
                 fontSize: sizeText,
-                color: IziColors.primary,
+                color: context.iziColors.primary,
                 fontWeight: FontWeight.w500),
           ),
         )

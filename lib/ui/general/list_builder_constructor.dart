@@ -29,7 +29,7 @@ class ListBuilderConstructor extends StatelessWidget {
       },
       notificationPredicate: onRefresh==null?(_)=>false:(_)=>true,
 
-      color: IziColors.darkGrey,
+      color: context.iziColors.darkGrey,
       child: Scrollbar(
         controller: controller,
         thickness: 5,
