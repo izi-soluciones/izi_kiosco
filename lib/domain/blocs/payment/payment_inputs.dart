@@ -71,12 +71,6 @@ class PaymentInputs{
     return InputObj(
       value: value,
       validator: (val) {
-        if(val.isEmpty){
-          return InputError.required;
-        }
-        if(num.tryParse(val)==null){
-          return InputError.invalid;
-        }
         return null;
       },
     );

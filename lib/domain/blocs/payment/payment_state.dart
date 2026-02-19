@@ -133,6 +133,7 @@ class PaymentState extends Equatable {
   final Charge? brebCharge;
   final bool brebLoading;
   final int? qrPaymentKey;
+  final String phonePrefix;
 
   final bool qrLoading;
   final num tipAmount;
@@ -185,6 +186,7 @@ class PaymentState extends Equatable {
         this.brebCharge,
         this.brebLoading = false,
         this.countryTaxes,
+        required this.phonePrefix,
         this.qrPaymentKey});
 
   factory PaymentState.init() => PaymentState(
@@ -204,6 +206,7 @@ class PaymentState extends Equatable {
       complement: PaymentInputs.complementInput(),
       documentNumber: PaymentInputs.documentNumberInput(),
       withException: false,
+      phonePrefix: "+591",
       phoneNumber: PaymentInputs.phoneNumberInput(),
       qrLoading: false,
       brebCharge: null,
@@ -242,6 +245,7 @@ class PaymentState extends Equatable {
         bool? brebLoading,
       Sucursal? casaMatriz,
         ParamsBo? paramsBo,
+      String? phonePrefix,
         ParamsCo? paramsCo,
         PaymentCountryTaxes? countryTaxes,
       PaymentObj? paymentObj}) {
@@ -250,6 +254,7 @@ class PaymentState extends Equatable {
         status: status ?? this.status,
         errorDescription: errorDescription ?? this.errorDescription,
         step: step ?? this.step,
+        phonePrefix: phonePrefix ?? this.phonePrefix,
         paymentType: paymentType ?? this.paymentType,
         usaSiat: usaSiat ?? this.usaSiat,
         queryBusinessList: queryBusinessList ?? this.queryBusinessList,
@@ -289,6 +294,7 @@ class PaymentState extends Equatable {
         currentCurrency,
         cashAmount,
         paymentType,
+    phonePrefix,
         currentCashRegister,
         withException,
         businessName,

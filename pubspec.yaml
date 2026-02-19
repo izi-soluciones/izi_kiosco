@@ -77,6 +77,8 @@ dependencies:
   jwt_decoder: ^2.0.1
   firebase_app_check: ^0.2.0
   decimal: 2.3.3
+  country_picker: ^2.0.27
+  phone_numbers_parser: ^9.0.19
 
 dev_dependencies:
   flutter_test:
@@ -153,7 +155,7 @@ flutter:
         - asset: 'assets/fonts/HindSiliguri-SemiBold.ttf'
     - family: IziIcons
       fonts:
-        - asset: assets/icons/Iconsizi.ttf
+        - asset: assets/icons/Iconsizi-2.ttf
     - family: Monaco
       fonts:
         - asset: 'assets/fonts/Monaco.ttf'

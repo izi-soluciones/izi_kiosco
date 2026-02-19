@@ -56,6 +56,37 @@ class AppConstants{
     CategoryIcons(["niños"], Icons.child_care_outlined),
     CategoryIcons(["otras"], Icons.restaurant)
   ];
+  static const List<String> favoriteCountriesPhone = [
+  'BO', // Bolivia
+  'CO', // Colombia
+];
+static const List<String> countriesPhone=[
+  'AR', // Argentina
+  'BR', // Brasil
+  'CL', // Chile
+  'CR', // Costa Rica
+  'CU', // Cuba
+  'DO', // República Dominicana
+  'EC', // Ecuador
+  'SV', // El Salvador
+  'GT', // Guatemala
+  'HN', // Honduras
+  'MX', // México
+  'NI', // Nicaragua
+  'PA', // Panamá
+  'PY', // Paraguay
+  'PE', // Perú
+  'UY', // Uruguay
+  'VE', // Venezuela
+  'US', // Estados Unidos
+  'ES', // España
+  'CA', // Canadá
+  'IT', // Italia
+  'DE', // Alemania
+  'FR', // Francia
+  'GB', // Reino Unido
+];
+  
 }
 class CategoryIcons{
   final List<String> name;
