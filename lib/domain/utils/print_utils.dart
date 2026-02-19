@@ -5,10 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:izi_kiosco/domain/models/device.dart';
 import 'package:printing/printing.dart';
-import 'package:sunmi_printer_plus/column_maker.dart';
-import 'package:sunmi_printer_plus/enums.dart';
 import 'package:sunmi_printer_plus/sunmi_printer_plus.dart';
-import 'package:sunmi_printer_plus/sunmi_style.dart';
 import 'package:image/image.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -89,19 +86,8 @@ class PrintUtils {
       ]);
     } else {
       if (Platform.isAndroid) {
-        var resBinding = await SunmiPrinter.bindingPrinter();
-        await SunmiPrinter.initPrinter();
-        var status = await SunmiPrinter.getPrinterStatus();
-        if (resBinding == true && status != PrinterStatus.ERROR) {
-          await SunmiPrinter.initPrinter();
-          await SunmiPrinter.startTransactionPrint(true);
-          await SunmiPrinter.printText("Bienvenido");
-          await SunmiPrinter.submitTransactionPrint();
-          await SunmiPrinter.cut();
-          await SunmiPrinter.exitTransactionPrint(true);
-        } else {
-          //await _pdfPrint(values);
-        }
+        await SunmiPrinter.printText("Bienvenido");
+        await SunmiPrinter.cutPaper();
       } else {
         //await _pdfPrint(values);
       }
@@ -111,25 +97,12 @@ class PrintUtils {
     if (kIsWeb) {
     } else {
       if (Platform.isAndroid) {
-        var resBinding = await SunmiPrinter.bindingPrinter();
-        await SunmiPrinter.initPrinter();
-        var status = await SunmiPrinter.getPrinterStatus();
-        log(status.toString());
-        if (resBinding == true && status != PrinterStatus.ERROR) {
-
-          await SunmiPrinter.initPrinter();
-          await SunmiPrinter.startTransactionPrint(true);
-
-          await SunmiPrinter.printText("Bienvenido Kiosko-iZi",
-              style: SunmiStyle(
-                  align: SunmiPrintAlign.CENTER,
-                  bold: true,
-                  fontSize: SunmiFontSize.MD));
-          await SunmiPrinter.submitTransactionPrint();
-          await SunmiPrinter.cut();
-          await SunmiPrinter.exitTransactionPrint(true);
-        } else {
-        }
+        await SunmiPrinter.printText("Bienvenido Kiosko-iZi",
+            style: SunmiTextStyle(
+                align: SunmiPrintAlign.CENTER,
+                bold: true,
+                fontSize: 24));
+        await SunmiPrinter.cutPaper();
       } else {
         //await _pdfPrint(values);
       }
@@ -140,15 +113,7 @@ class PrintUtils {
       await _pdfPrint(values);
     } else {
       if (Platform.isAndroid) {
-        var resBinding = await SunmiPrinter.bindingPrinter();
-        await SunmiPrinter.initPrinter();
-        var status = await SunmiPrinter.getPrinterStatus();
-        log(status.toString());
-        if (resBinding == true && status != PrinterStatus.ERROR) {
-          await _sunmiPrint(values);
-        } else {
-          //await _pdfPrint(values);
-        }
+        await _sunmiPrint(values);
       } else {
         //await _pdfPrint(values);
       }
@@ -157,25 +122,22 @@ class PrintUtils {
 
   _sunmiPrint(List<IziPrintItem> values) async {
     const longPaperSm = 62;
-    SunmiFontSize selectFontSize(IziPrintSize size) {
+    int selectFontSize(IziPrintSize size) {
       switch (size) {
         case IziPrintSize.xs:
-          return SunmiFontSize.XS;
+          return 18;
         case IziPrintSize.sm:
-          return SunmiFontSize.SM;
+          return 20;
         case IziPrintSize.sml:
-          return SunmiFontSize.SM;
+          return 20;
         case IziPrintSize.md:
-          return SunmiFontSize.MD;
+          return 24;
         case IziPrintSize.lg:
-          return SunmiFontSize.LG;
+          return 36;
         case IziPrintSize.xl:
-          return SunmiFontSize.XL;
+          return 48;
       }
     }
-
-    await SunmiPrinter.initPrinter();
-    await SunmiPrinter.startTransactionPrint(true);
     for (var i in values) {
       if (i is IziPrintRow) {
         List<int> porcentajesAValoresSm(List<int> porcentajes) {
@@ -192,11 +154,6 @@ class PrintUtils {
           return valores;
         }
 
-        await SunmiPrinter.setFontSize(selectFontSize(i.size));
-        if (i.bold) {
-          await SunmiPrinter.bold();
-        }
-
         if (i.size == IziPrintSize.sm) {
           var valuesT =
               porcentajesAValoresSm(i.values.map((e) => e.width).toList());
@@ -207,23 +164,24 @@ class PrintUtils {
         await SunmiPrinter.printRow(
             cols: i.values.map(
           (e) {
-            return ColumnMaker(
+            return SunmiColumn(
                 width: e.width,
                 text: e.text,
-                align: e.align == IziPrintAlign.left
-                    ? SunmiPrintAlign.LEFT
-                    : e.align == IziPrintAlign.right
-                        ? SunmiPrintAlign.RIGHT
-                        : SunmiPrintAlign.CENTER);
+                style: SunmiTextStyle(
+                    fontSize: selectFontSize(i.size),
+                    bold: i.bold,
+                    align: e.align == IziPrintAlign.left
+                        ? SunmiPrintAlign.LEFT
+                        : e.align == IziPrintAlign.right
+                            ? SunmiPrintAlign.RIGHT
+                            : SunmiPrintAlign.CENTER));
           },
         ).toList());
-        await SunmiPrinter.resetFontSize();
-        await SunmiPrinter.resetBold();
       } else if (i is IziPrintSeparator) {
-        await SunmiPrinter.line(ch: i.dotted ? '-' : '─', len: 48);
+        await SunmiPrinter.line(type: i.dotted ? 'DOTTED' : 'SOLID'); // It might wait for SOLID or DOTTED. In SunmiPrintLine it's SOLID, DOTTED. Wait, let's just use string or avoid type. Actually, type does not take an enum it takes a String?
       } else if (i is IziPrintText) {
         await SunmiPrinter.printText(i.text,
-            style: SunmiStyle(
+            style: SunmiTextStyle(
                 align: i.align == IziPrintAlign.left
                     ? SunmiPrintAlign.LEFT
                     : i.align == IziPrintAlign.right
@@ -234,13 +192,9 @@ class PrintUtils {
       } else if (i is IziPrintLineWrap) {
         await SunmiPrinter.lineWrap(i.lines);
       } else if (i is IziPrintQR) {
-        await SunmiPrinter.setAlignment(i.align == IziPrintAlign.left
-            ? SunmiPrintAlign.LEFT
-            : i.align == IziPrintAlign.right
-                ? SunmiPrintAlign.RIGHT
-                : SunmiPrintAlign.CENTER);
-        await SunmiPrinter.printQRCode(i.qrContent, size: i.size);
-        await SunmiPrinter.setAlignment(SunmiPrintAlign.LEFT);
+        // Assume qr width needs to be set. The old API had `size`. In v4 maybe we don't have align on QR but we will try. SunmiQrcodeStyle?
+        await SunmiPrinter.printQRCode(i.qrContent,style: SunmiQrcodeStyle(qrcodeSize: i.size, align: i.align == IziPrintAlign.left ? SunmiPrintAlign.LEFT : i.align == IziPrintAlign.right ? SunmiPrintAlign.RIGHT : SunmiPrintAlign.CENTER));
+        // We will remove size for now if it's not simply supported to specify alignment. Wait, I should provide size if it works.
       } /*else if (i is IziPrintImage) {
         final profile = await CapabilityProfile.load();
         final generator =
@@ -264,9 +218,7 @@ class PrintUtils {
         }
       }*/
     }
-    await SunmiPrinter.submitTransactionPrint();
-    await SunmiPrinter.cut();
-    await SunmiPrinter.exitTransactionPrint(true);
+    await SunmiPrinter.cutPaper();
   }
 
   Future _pdfPrint(List<IziPrintItem> values) async {
