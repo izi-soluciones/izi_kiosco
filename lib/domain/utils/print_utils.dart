@@ -178,7 +178,9 @@ class PrintUtils {
           },
         ).toList());
       } else if (i is IziPrintSeparator) {
-        await SunmiPrinter.line(type: i.dotted ? 'DOTTED' : 'SOLID'); // It might wait for SOLID or DOTTED. In SunmiPrintLine it's SOLID, DOTTED. Wait, let's just use string or avoid type. Actually, type does not take an enum it takes a String?
+        await SunmiPrinter.lineWrap(5);
+        await SunmiPrinter.line(type: i.dotted ? 'DOTTED' : 'SOLID');
+        await SunmiPrinter.lineWrap(5); // It might wait for SOLID or DOTTED. In SunmiPrintLine it's SOLID, DOTTED. Wait, let's just use string or avoid type. Actually, type does not take an enum it takes a String?
       } else if (i is IziPrintText) {
         await SunmiPrinter.printText(i.text,
             style: SunmiTextStyle(
@@ -190,7 +192,7 @@ class PrintUtils {
                 bold: i.bold,
                 fontSize: selectFontSize(i.size)));
       } else if (i is IziPrintLineWrap) {
-        await SunmiPrinter.lineWrap(i.lines);
+        await SunmiPrinter.lineWrap(i.lines*5);
       } else if (i is IziPrintQR) {
         // Assume qr width needs to be set. The old API had `size`. In v4 maybe we don't have align on QR but we will try. SunmiQrcodeStyle?
         await SunmiPrinter.printQRCode(i.qrContent,style: SunmiQrcodeStyle(qrcodeSize: i.size, align: i.align == IziPrintAlign.left ? SunmiPrintAlign.LEFT : i.align == IziPrintAlign.right ? SunmiPrintAlign.RIGHT : SunmiPrintAlign.CENTER));
