@@ -159,6 +159,9 @@ flutter:
     - family: Monaco
       fonts:
         - asset: 'assets/fonts/Monaco.ttf'
+    - family: FlagIcons
+      fonts:
+        - asset: assets/icons/FlagIcons.woff2
   # fonts:
   #   - family: Schyler
   #     fonts:
