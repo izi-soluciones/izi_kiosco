@@ -298,7 +298,6 @@ class _PaymentPageInvoiceState extends State<PaymentPageInvoice> {
                   labelInput: LocaleKeys.payment_inputs_phoneNumber_label.tr(),
                   inputHintText: LocaleKeys.payment_inputs_phoneNumber_placeholder.tr(),
                   bigLabel: (ru.gtMd() || (ru.gtSm() && ru.isVertical())),
-                  inputMaxLength: 8,
                   inputFormatters: [
                     FilteringTextInputFormatter.allow(RegExp('[0-9]'))
                   ],
