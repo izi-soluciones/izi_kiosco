@@ -723,7 +723,7 @@ class PaymentBloc extends Cubit<PaymentState> {
     qrStream = _socketRepository.listenPayment(charge: charge).listen(
       (event) async {
         if (event is Map && event["statusVenta"] == "success") {
-            if (event["uuidFactura"] is String) {
+            if (event["uuidFactura"] is String && authState.currentDevice?.config.noPrintRollo!=true) {
               await _printRollo(authState, idInvoice: event["uuidFactura"]);
             }
           if (timer != null) {

@@ -58,6 +58,7 @@ class ConfigDevice {
   final bool descargarQR;
   final bool ocultarCash;
   final bool facturaCompacto;
+  final bool noPrintRollo;
   final IziColorPalette? colors;
   final KioskColors kioskColors;
 
@@ -73,6 +74,7 @@ class ConfigDevice {
       required this.isRetailBarcode,
       required this.token,
       this.ipLinkser,
+      required this.noPrintRollo,
       required this.descargarQR,
       required this.ocultarCash,
       required this.facturaCompacto,
@@ -116,6 +118,7 @@ class ConfigDevice {
       facturaCompacto: jsonObj?["facturaCompacto"] is bool ? jsonObj!["facturaCompacto"] : false,
       isRetailBarcode: jsonObj?["isRetailBarcode"] is bool ? jsonObj!["isRetailBarcode"] : false,
       colors: IziColorPalette.fromMap(jsonObj?["colors"]),
+      noPrintRollo: jsonObj?["noPrintRollo"] is bool ? jsonObj!["noPrintRollo"] : false,
       kioskColors: KioskColors.fromJson(jsonObj?["kioskColors"]),
     );
     return config;
