@@ -153,7 +153,7 @@ flutter:
         - asset: 'assets/fonts/HindSiliguri-SemiBold.ttf'
     - family: IziIcons
       fonts:
-        - asset: assets/icons/Iconsizi.ttf
+        - asset: assets/icons/Iconsizi_2.ttf
     - family: Monaco
       fonts:
         - asset: 'assets/fonts/Monaco.ttf'
