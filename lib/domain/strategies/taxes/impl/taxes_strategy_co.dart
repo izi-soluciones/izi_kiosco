@@ -56,7 +56,7 @@ class TaxesStrategyCo implements TaxesStrategy{
   int decimals= 0;
   
   @override
-  bool showQR = false;
+  bool showQR = true;
 
 
   @override

@@ -1,5 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:izi_design_system/molecules/izi_snack_bar.dart';
@@ -11,6 +12,7 @@ import 'package:izi_kiosco/ui/modals/warning_config_modal.dart';
 import 'package:izi_kiosco/ui/pages/make_order_page/views/make_order_confirm.dart';
 import 'package:izi_kiosco/ui/pages/make_order_page/views/make_order_detail.dart';
 import 'package:izi_kiosco/ui/pages/make_order_page/views/make_order_detail_vertical.dart';
+import 'package:izi_kiosco/domain/models/item.dart';
 import 'package:izi_kiosco/ui/pages/make_order_page/views/make_order_select.dart';
 import 'package:izi_kiosco/ui/pages/make_order_page/views/make_order_type.dart';
 import 'package:izi_kiosco/ui/pages/make_order_page/widgets/make_order_shimmer.dart';
@@ -28,6 +30,8 @@ class MakeOrderPage extends StatefulWidget {
 
 class _MakeOrderPageState extends State<MakeOrderPage> {
   late PageController pageController;
+  FocusNode focusNodeKeyboard = FocusNode();
+  String barCode = "";
   @override
   void initState() {
     pageController= PageController(initialPage: widget.isRetail?1:0);
@@ -36,7 +40,13 @@ class _MakeOrderPageState extends State<MakeOrderPage> {
   @override
   Widget build(BuildContext context) {
     final ru = ResponsiveUtils(context);
-    return BlocConsumer<MakeOrderBloc, MakeOrderState>(
+    return KeyboardListener(
+      focusNode: focusNodeKeyboard,
+      autofocus: true,
+      onKeyEvent: (value) {
+        _verifyKeyboard(value);
+      },
+      child: BlocConsumer<MakeOrderBloc, MakeOrderState>(
       listenWhen: (previous, current) {
         return previous.status!=current.status || previous.step != current.step;
       },
@@ -104,6 +114,45 @@ class _MakeOrderPageState extends State<MakeOrderPage> {
             MakeOrderConfirm(state: state)
           ],
         );
-      });
+      }),
+    );
+  }
+
+  _verifyKeyboard(
+    value,
+  ) {
+    if (value is KeyDownEvent) {
+      if (value.logicalKey.keyLabel == 'Enter' ||
+          value.logicalKey.keyId == 4294967309) {
+        _verifyBarCode(context, null);
+      }
+      if (value.character != null) {
+        RegExp regex = RegExp(r'^[a-zA-Z0-9 ]+$');
+        if (regex.hasMatch(value.character!)) {
+          barCode += value.character ?? "";
+        }
+      }
+    }
+  }
+
+  _verifyBarCode(BuildContext context, String? value) {
+    if (barCode.isEmpty) return;
+    final state = context.read<MakeOrderBloc>().state;
+    Item? foundItem;
+    for (var cat in state.categories) {
+      try {
+        foundItem = cat.items.firstWhere((element) =>
+            element.codigoBarras?.toLowerCase() == barCode.toLowerCase());
+        break;
+      } catch (e) {}
+    }
+
+    if (foundItem != null) {
+      var itemAdd = foundItem.copyWith();
+      itemAdd.cantidad = 1;
+      context.read<MakeOrderBloc>().addItem(item: itemAdd);
+    }
+    focusNodeKeyboard.requestFocus();
+    barCode = "";
   }
 }

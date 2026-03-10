@@ -56,7 +56,6 @@ class PaymentBloc extends Cubit<PaymentState> {
   final SocketRepository _socketRepository;
   PaymentConfig? countryConfig;
   CancelToken cancelToken = CancelToken();
-  int? _contribuyenteId;
 
   PaymentBloc(
       this._comandaRepository, this._businessRepository, this._socketRepository)
@@ -327,15 +326,16 @@ class PaymentBloc extends Cubit<PaymentState> {
 
   @override
   Future<void> close() async {
-    if (state.brebCharge != null &&
-        state.brebCharge!.cobroHandle != null &&
-        _contribuyenteId != null &&
-        state.status != PaymentStatus.successInvoice &&
+    if (state.status != PaymentStatus.successInvoice &&
         state.status != PaymentStatus.successPayment &&
-        state.status != PaymentStatus.paymentProcessed) {
-      await _comandaRepository.cancelBrebKey(
-          contribuyenteId: _contribuyenteId!,
-          handle: state.brebCharge!.cobroHandle!);
+        state.status != PaymentStatus.paymentProcessed &&
+        state.paymentObj != null && (state.paymentObj?.uuid ?? "").isNotEmpty) {
+      // Intentamos cancelar genéricamente cualquier cobro que haya quedado pendiente
+      try {
+        await _comandaRepository.cancelPaymentAttempt(uuid: state.paymentObj!.uuid!);
+      } catch (e) {
+        log("Error al cancelar el intento de pago: $e");
+      }
     }
     _socketRepository.closeQrListening();
     qrStream?.cancel();
@@ -662,7 +662,6 @@ class PaymentBloc extends Cubit<PaymentState> {
       if(!_validateInputs()){
         return false;
       }
-      _contribuyenteId = authState.currentContribuyente?.id;
       emit(state.copyWith(
         status: PaymentStatus.brebLoading,
         brebLoading: true,
@@ -723,7 +722,7 @@ class PaymentBloc extends Cubit<PaymentState> {
     qrStream = _socketRepository.listenPayment(charge: charge).listen(
       (event) async {
         if (event is Map && event["statusVenta"] == "success") {
-            if (event["uuidFactura"] is String) {
+            if (event["uuidFactura"] is String && authState.currentDevice?.config.noPrintRollo!=true) {
               await _printRollo(authState, idInvoice: event["uuidFactura"]);
             }
           if (timer != null) {

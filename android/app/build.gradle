@@ -33,7 +33,7 @@ if (flutterVersionName == null) {
 
 android {
     namespace "com.izisoluciones.kiosco.izi_kiosco"
-    compileSdkVersion 35
+    compileSdkVersion 36
     ndkVersion flutter.ndkVersion
 
     compileOptions {
