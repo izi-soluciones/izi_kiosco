@@ -496,5 +496,8 @@ abstract class  LocaleKeys {
   static const warningStore_title = 'warningStore.title';
   static const warningStore_description = 'warningStore.description';
   static const warningStore = 'warningStore';
+  static const demoPayment_title = 'demoPayment.title';
+  static const demoPayment_body = 'demoPayment.body';
+  static const demoPayment = 'demoPayment';
 
 }

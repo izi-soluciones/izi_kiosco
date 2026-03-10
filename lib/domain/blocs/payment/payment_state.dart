@@ -27,7 +27,8 @@ enum PaymentStatus {
   markCreateError,
   processingInvoice,
   processingOrder,
-  setInputs
+  setInputs,
+  demoPayment
 }
 
 

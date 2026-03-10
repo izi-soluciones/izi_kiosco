@@ -622,5 +622,9 @@
   "warningStore": {
     "title": "La sucursal no tiene configurado un almacen para procesar el pedido",
     "description": "Informa a un administrador sobre el problema"
+  },
+  "demoPayment": {
+    "title": "Cobro de demostración",
+    "body": "Estás realizando un cobro de prueba. Presiona confirmar para simular el pago exitoso."
   }
 }
