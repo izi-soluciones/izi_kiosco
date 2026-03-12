@@ -21,5 +21,8 @@ abstract class AuthRepository{
   Future<void> addDevice(AddKioskDto addKioskDto);
 
   Future<LoginResponse> login(LoginRequest loginRequest);
+  
+  Future<String> createKioskSession();
+  Future<Map<String, dynamic>> pollKioskSession(String sessionId);
 
 }

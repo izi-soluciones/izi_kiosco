@@ -62,5 +62,14 @@ class AuthRepositoryTest extends AuthRepository{
     throw UnimplementedError();
   }
 
+  @override
+  Future<String> createKioskSession() async{
+    throw "error";
+  }
+
+  @override
+  Future<Map<String, dynamic>> pollKioskSession(String sessionId) async{
+    throw "error";
+  }
 
 }
