@@ -1,6 +1,8 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:izi_design_system/atoms/izi_typography.dart';
@@ -12,6 +14,7 @@ import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/payment/payment_bloc.dart';
 import 'package:izi_kiosco/ui/general/izi_header_kiosk.dart';
 import 'package:izi_kiosco/ui/utils/money_formatter.dart';
+import 'package:izi_kiosco/ui/utils/web_image.dart';
 
 class PaymentPageBREB extends StatefulWidget {
   final PaymentState state;
@@ -106,13 +109,20 @@ class _PaymentPageBREBState extends State<PaymentPageBREB> {
                           ),
                           const SizedBox(height: 24),
 
-                          // Ícono de breb forzado
-                          Align(
-                            alignment: Alignment.center,
-                            child: Icon(
-                              IziIcons.cash,
-                              color: context.iziColors.primary,
-                              size: 150,
+                          // Ícono de breb forzado o QR si existe
+                          Flexible(
+                            child: ConstrainedBox(
+                              constraints: const BoxConstraints(maxHeight: 250),
+                              child: (charge?.qrUrl != null || charge?.qrBase64 != null) 
+                                ? _brebQrWidget() 
+                                : Align(
+                                    alignment: Alignment.center,
+                                    child: Icon(
+                                      IziIcons.cash,
+                                      color: context.iziColors.primary,
+                                      size: 150,
+                                    ),
+                                  ),
                             ),
                           ),
                           const SizedBox(height: 24),
@@ -203,5 +213,28 @@ class _PaymentPageBREBState extends State<PaymentPageBREB> {
         ),
       ],
     );
+  }
+
+  Widget _brebQrWidget() {
+    final charge = widget.state.brebCharge;
+    if (charge?.qrUrl != null) {
+      return kIsWeb
+          ? Center(
+              child: AspectRatio(
+                  aspectRatio: 1,
+                  child: WebImage(imageUrl: charge!.qrUrl!)),
+            )
+          : Image.network(charge!.qrUrl!, fit: BoxFit.contain);
+    }
+    if (charge?.qrBase64 != null) {
+      return AspectRatio(
+          aspectRatio: 1,
+          child: Image.memory(
+            const Base64Decoder().convert(charge!.qrBase64!),
+            fit: BoxFit.contain,
+            gaplessPlayback: true,
+          ));
+    }
+    return const SizedBox.shrink();
   }
 }
