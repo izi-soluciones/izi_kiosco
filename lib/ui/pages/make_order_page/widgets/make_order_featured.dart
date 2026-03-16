@@ -56,7 +56,7 @@ class MakeOrderFeatured extends StatelessWidget {
                                   borderRadius: const BorderRadius.only(topRight: Radius.circular(8),bottomRight: Radius.circular(8))
                               ),
                               padding: const EdgeInsets.all(8),
-                              child: IziText.body(color: context.iziColors.white, text: item.nombre, fontWeight: FontWeight.w600),
+                              child: IziText.body(color: context.iziColors.white, text: item.nombreMostrar, fontWeight: FontWeight.w600),
                             ),
                           ),
                         )

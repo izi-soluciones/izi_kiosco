@@ -63,7 +63,7 @@ class MakeOrderItemSm extends StatelessWidget {
                         fontWeight: FontWeight.w500,
                           maxLines: 1,
                           color: context.iziColors.dark,
-                          text: item.nombre,
+                          text: item.nombreMostrar,
                           textAlign: TextAlign.center),
                       IziText.body(
                           color: context.iziColors.grey,
