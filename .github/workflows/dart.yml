@@ -1,0 +1,62 @@
+name: Kiosco Build & Deploy
+
+on:
+  push:
+    branches:
+      - alpha
+      - 'releases/**'
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ (github.ref_name == 'alpha') && 'staging' || 'production' }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.38.2'
+          channel: stable
+          cache: true
+
+      - name: Set flavor
+        run: |
+          if [[ "${GITHUB_REF_NAME}" == "alpha" ]]; then
+            echo "FLAVOR=stg" >> $GITHUB_ENV
+          elif [[ "${GITHUB_REF_NAME}" == releases/* ]]; then
+            echo "FLAVOR=prod" >> $GITHUB_ENV
+          fi
+
+      - name: Configure SSH for private packages
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.DESIGN_SYSTEM_DEPLOY_KEY }}" > ~/.ssh/design_system_key
+          chmod 600 ~/.ssh/design_system_key
+          ssh-keyscan github.com >> ~/.ssh/known_hosts
+          echo "Host github.com
+            IdentityFile ~/.ssh/design_system_key
+            StrictHostKeyChecking no" >> ~/.ssh/config
+
+      - name: Build Kiosco
+        run: |
+          flutter pub get
+          flutter build web \
+            --dart-define=FLAVOR=$FLAVOR \
+            --release
+
+      - name: Connect to Twingate
+        uses: twingate/github-action@v1
+        with:
+          service-key: ${{ secrets.TWINGATE_SERVICE_KEY }}
+
+      - name: Deploy Kiosco
+        run: |
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > /tmp/deploy_key
+          chmod 600 /tmp/deploy_key
+          scp -o StrictHostKeyChecking=no -i /tmp/deploy_key \
+            -r ./build/web/* \
+            "admin@${{ secrets.DEPLOY_HOST }}:${{ secrets.DEPLOY_PATH }}/"
+          rm /tmp/deploy_key
