@@ -11,6 +11,18 @@ class AssetsKeys{
   static const String envBeta="assets/.env.beta";
   static const String envIzify="assets/.env.izify";
   static const String envPcbba="assets/.env.pcbba";
+
+  static String envForFlavor(String flavor) {
+    switch (flavor) {
+      case 'prod':  return envProd;
+      case 'stg':   return envStg;
+      case 'local': return envLocal;
+      case 'izify': return envIzify;
+      case 'pcbba': return envPcbba;
+      default:      return envLocal;
+    }
+  }
+
   static const String iziWebUrl="https://izisoluciones.com/";
   static const String izifyLoadingImage="assets/icons/izify.png";
   static const String izifySplashScreenImage="assets/icons/izify.png";

@@ -10,12 +10,16 @@ class LoginState extends Equatable{
   final InputObj tokenCard;
   final InputObj deviceId;
 
+  final String? sessionId;
+  final String? qrUrl;
 
   const LoginState({
     required this.status,
     required this.token,
     required this.tokenCard,
-    required this.deviceId
+    required this.deviceId,
+    this.sessionId,
+    this.qrUrl
   });
 
 
@@ -24,7 +28,9 @@ class LoginState extends Equatable{
     status: LoginStatus.init,
     token: LoginInputs.tokenInput(),
     tokenCard: LoginInputs.tokenCardInput(),
-    deviceId: LoginInputs.deviceInput()
+    deviceId: LoginInputs.deviceInput(),
+    sessionId: null,
+    qrUrl: null
   );
 
 
@@ -32,13 +38,17 @@ class LoginState extends Equatable{
     LoginStatus? status,
     InputObj? token,
     InputObj? tokenCard,
-    InputObj? deviceId
+    InputObj? deviceId,
+    String? sessionId,
+    String? qrUrl
   }){
     return LoginState(
       status: status??this.status,
       token: token?? this.token,
       deviceId: deviceId?? this.deviceId,
-      tokenCard: tokenCard?? this.tokenCard
+      tokenCard: tokenCard?? this.tokenCard,
+      sessionId: sessionId?? this.sessionId,
+      qrUrl: qrUrl?? this.qrUrl
     );
 
   }
@@ -53,7 +63,9 @@ class LoginState extends Equatable{
     status,
     token,
     deviceId,
-    tokenCard
+    tokenCard,
+    sessionId,
+    qrUrl
   ];
 
 

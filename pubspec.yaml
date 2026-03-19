@@ -34,7 +34,7 @@ dependencies:
     # path: /Users/macbookm2pro/Documents/izi/izi-design-system-flutter
     path: /Users/ezabaw/dev/izi-design-system-flutter
     #git:
-    #  url: https://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@github.com/izi-soluciones/izi-design-system-flutter.git
+    #  url: url: git@github.com:izi-soluciones/izi-design-system-flutter.git
 
 
   # The following adds the Cupertino Icons font to your application.
@@ -79,6 +79,7 @@ dependencies:
   firebase_app_check: ^0.2.0
   decimal: 2.3.3
   nsd: ^4.1.0
+  qr_flutter: ^4.1.0
 
 dev_dependencies:
   flutter_test:
@@ -113,12 +114,9 @@ flutter:
   # the material Icons class.
   uses-material-design: true
   assets:
-    - assets/.env.beta
-    - assets/.env.dev
     - assets/.env.local
     - assets/.env.prod
     - assets/.env.stg
-    - assets/.env.alpha
     - assets/.env.pcbba
     - assets/.env.izify
     - assets/translations/
