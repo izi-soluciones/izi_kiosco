@@ -1,6 +1,8 @@
+import 'dart:async';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:izi_kiosco/data/local/local_storage_credentials.dart';
 import 'package:izi_kiosco/data/utils/business_utils.dart';
 import 'package:izi_kiosco/data/utils/token_utils.dart';
@@ -16,7 +18,51 @@ part 'login_inputs.dart';
 
 class LoginBloc extends Cubit<LoginState>{
   final AuthRepository _authRepository;
-  LoginBloc(this._authRepository):super(LoginState.init());
+  StreamSubscription? _pollingSubscription;
+
+  LoginBloc(this._authRepository):super(LoginState.init()){
+    generateQrSession();
+  }
+
+  generateQrSession() async {
+    try {
+      emit(state.copyWith(status: LoginStatus.waitingLogin));
+      String sessionId = await _authRepository.createKioskSession();
+      String baseUrl = dotenv.env['ADMIN_URL'] ?? 'https://app.izi.bo'; 
+      String url = "$baseUrl/#/kiosco-login?session_id=$sessionId";
+      debugPrint("QR URL: $url");
+      emit(state.copyWith(qrUrl: url, sessionId: sessionId, status: LoginStatus.init));
+      _startPolling(sessionId);
+    } catch(e) {
+      debugPrint(e.toString());
+      emit(state.copyWith(status: LoginStatus.errorLogin));
+      emit(state.copyWith(status: LoginStatus.init));
+    }
+  }
+
+  _startPolling(String sessionId) {
+    _pollingSubscription?.cancel();
+    _pollingSubscription = Stream.periodic(const Duration(seconds: 3)).listen((_) async {
+      try {
+        var res = await _authRepository.pollKioskSession(sessionId);
+        if (res["status"] == "authorized") {
+           _pollingSubscription?.cancel();
+           await TokenUtils.saveToken(res["accessToken"]);
+           await TokenUtils.saveTokenCard(res["tarjetaToken"]);
+           await _authRepository.getDevice();
+           emit(state.copyWith(status: LoginStatus.successLogin));
+        }
+      } catch(e) {
+        debugPrint(e.toString());
+      }
+    });
+  }
+
+  @override
+  Future<void> close() {
+    _pollingSubscription?.cancel();
+    return super.close();
+  }
 
   login()async{
     try{

@@ -76,6 +76,7 @@ dependencies:
   jwt_decoder: ^2.0.1
   firebase_app_check: ^0.2.0
   decimal: 2.3.3
+  qr_flutter: ^4.1.0
 
 dev_dependencies:
   flutter_test:

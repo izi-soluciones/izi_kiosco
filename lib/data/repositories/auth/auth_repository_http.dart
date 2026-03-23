@@ -191,6 +191,37 @@ class AuthRepositoryHttp extends AuthRepository{
       throw(e.toString());
     }
   }
+  @override
+  Future<String> createKioskSession() async{
+    String path="/kiosco/auth/session";
+    var response=await _dioClient.post(
+        uri: path,
+        options: Options(headers: {"no-auth":true}, responseType: ResponseType.json)
+    );
+    if(response.statusCode==200 || response.statusCode==201)
+    {
+      return response.data["sessionId"];
+    }
+    else{
+      throw response.data;
+    }
+  }
+
+  @override
+  Future<Map<String, dynamic>> pollKioskSession(String sessionId) async{
+    String path="/kiosco/auth/session/$sessionId";
+    var response=await _dioClient.get(
+        uri: path,
+        options: Options(headers: {"no-auth":true}, responseType: ResponseType.json)
+    );
+    if(response.statusCode==200)
+    {
+      return response.data;
+    }
+    else{
+      throw response.data;
+    }
+  }
 
 
 }
