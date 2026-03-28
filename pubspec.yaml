@@ -77,6 +77,8 @@ dependencies:
   firebase_app_check: ^0.2.0
   decimal: 2.3.3
   qr_flutter: ^4.1.0
+  country_picker: ^2.0.27
+  phone_numbers_parser: ^9.0.19
 
 dev_dependencies:
   flutter_test:
@@ -155,6 +157,9 @@ flutter:
     - family: Monaco
       fonts:
         - asset: 'assets/fonts/Monaco.ttf'
+    - family: FlagIcons
+      fonts:
+        - asset: assets/icons/FlagIcons.woff2
   # fonts:
   #   - family: Schyler
   #     fonts:

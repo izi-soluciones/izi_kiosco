@@ -7,9 +7,11 @@ import 'package:izi_design_system/atoms/izi_link.dart';
 import 'package:izi_design_system/atoms/izi_typography.dart';
 import 'package:izi_design_system/molecules/izi_btn.dart';
 import 'package:izi_design_system/molecules/izi_input.dart';
+import 'package:izi_design_system/molecules/izi_phone_code_selector.dart';
 import 'package:izi_design_system/tokens/colors.dart';
 import 'package:izi_design_system/tokens/izi_icons.dart';
 import 'package:izi_design_system/tokens/types.dart';
+import 'package:izi_kiosco/app/values/app_constants.dart';
 import 'package:izi_kiosco/app/values/locale_keys.g.dart';
 import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/page_utils/page_utils_bloc.dart';
@@ -274,26 +276,46 @@ class _PaymentPageInvoiceState extends State<PaymentPageInvoice> {
           const SizedBox(
             height: 16,
           ),
-          IziInput(
-            labelInput: LocaleKeys.payment_inputs_phoneNumber_label.tr(),
-            inputHintText: LocaleKeys.payment_inputs_phoneNumber_placeholder.tr(),
-            bigLabel: (ru.gtMd() || (ru.gtSm() && ru.isVertical())),
-            inputMaxLength: 8,
-            inputFormatters: [
-              FilteringTextInputFormatter.allow(RegExp('[0-9]'))
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                  padding: const EdgeInsets.only(top: 26.0),
+                  child: IziPhoneCodeSelector(
+                    inputSize: (ru.gtMd() || (ru.gtSm() && ru.isVertical()))
+                        ? InputSize.big
+                        : InputSize.normal,
+                    favoriteCountries: AppConstants.favoriteCountriesPhone,
+                    countries: AppConstants.countriesPhone,
+                    phonePrefix: widget.state.phonePrefix, onChanged: (value){
+                        context.read<PaymentBloc>().changeInputs(phonePrefix: value);
+                        context.read<PaymentBloc>().validateInput(phoneNumber: true);
+                  
+                    }),
+                ),
+              Expanded(
+                child: IziInput(
+                  labelInput: LocaleKeys.payment_inputs_phoneNumber_label.tr(),
+                  inputHintText: LocaleKeys.payment_inputs_phoneNumber_placeholder.tr(),
+                  bigLabel: (ru.gtMd() || (ru.gtSm() && ru.isVertical())),
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(RegExp('[0-9]'))
+                  ],
+                  controller: phoneController,
+                  inputSize: (ru.gtMd() || (ru.gtSm() && ru.isVertical()))
+                      ? InputSize.big
+                      : InputSize.normal,
+                  onEditingComplete: () {
+                      context.read<PaymentBloc>().validateInput(phoneNumber: true);
+                  },
+                  onChanged: (value, valueRaw) {
+                      context.read<PaymentBloc>().changeInputs(phoneNumber: value);
+                  },
+                  error: _getErrorsPhoneNumber(widget.state.phoneNumber.inputError),
+                  inputType: ((ru.gtSm() && ru.isVertical()))?InputType.keyboard:InputType.number,
+                ),
+              ),
             ],
-            controller: phoneController,
-            inputSize: (ru.gtMd() || (ru.gtSm() && ru.isVertical()))
-                ? InputSize.big
-                : InputSize.normal,
-            onEditingComplete: () {
-              context.read<PaymentBloc>().validateInput(phoneNumber: true);
-            },
-            onChanged: (value, valueRaw) {
-                context.read<PaymentBloc>().changeInputs(phoneNumber: value);
-            },
-            error: _getErrorsPhoneNumber(widget.state.phoneNumber.inputError),
-            inputType: ((ru.gtSm() && ru.isVertical()))?InputType.keyboard:InputType.number,
           ),
           const SizedBox(height: 8),
           IziText.label(

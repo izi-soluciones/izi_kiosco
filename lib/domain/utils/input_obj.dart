@@ -34,6 +34,15 @@ class InputObj extends Equatable{
     error = valueRequired!=null && valueRequired.isEmpty?null:validator(value);
     return InputObj(inputError: error,value: value,validator: validator);
   }
+  copyWith({String? value, InputError? Function()? inputError, InputError? Function(String)? validator, bool? loading}){
+    return InputObj(
+      value: value ?? this.value,
+      inputError: inputError !=null? inputError(): this.inputError,
+      validator: validator ?? this.validator,
+      loading: loading ?? this.loading
+    );
+  }
+
 
 
   @override

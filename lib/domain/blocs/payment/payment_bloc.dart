@@ -37,6 +37,7 @@ import 'package:izi_kiosco/domain/utils/print/print_template.dart';
 import 'package:izi_kiosco/domain/utils/print_utils.dart';
 import 'dart:io';
 import 'package:izi_kiosco/ui/utils/money_formatter.dart';
+import 'package:phone_numbers_parser/phone_numbers_parser.dart';
 import 'package:universal_html/html.dart' as html;
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -148,6 +149,26 @@ class PaymentBloc extends Cubit<PaymentState> {
     }
   }
 
+  InputObj _validatePhone(){
+      if (state.phoneNumber.value.isEmpty) return state.phoneNumber.copyWith(inputError: ()=>InputError.required);
+
+      try {
+        final fullNumber = "${state.phonePrefix}${state.phoneNumber.value}";
+
+        final phone = PhoneNumber.parse(
+          fullNumber,
+        );
+
+        if (!phone.isValid()) {
+          return state.phoneNumber.copyWith(inputError: ()=>InputError.invalid);
+        }
+
+        return state.phoneNumber.copyWith(inputError: ()=>null);
+      } catch (_) {
+        return state.phoneNumber.copyWith(inputError: ()=>InputError.invalid);
+      }
+    }
+  
   validateInput(
       {bool documentNumber = false,
       bool businessName = false,
@@ -158,8 +179,8 @@ class PaymentBloc extends Cubit<PaymentState> {
       bool lastDigits = false,
       bool phoneNumber = false}) {
     if (phoneNumber) {
-      emit(state.copyWith(phoneNumber: state.phoneNumber.validateError()));
-      return state.phoneNumber.validateError().inputError == null;
+      emit(state.copyWith(phoneNumber: _validatePhone()));
+      return _validatePhone().inputError == null;
     }
 
     if (documentNumber) {
@@ -198,13 +219,13 @@ class PaymentBloc extends Cubit<PaymentState> {
       String? businessName,
       String? authorization,
       String? invoiceNumber,
+        String? phonePrefix,
       String? email,
         String? firstDigits,
         String? lastDigits,
       String? phoneNumber}) {
     if (phoneNumber != null) {
-      emit(state.copyWith(
-          phoneNumber: state.phoneNumber.changeValue(phoneNumber)));
+      emit(state.copyWith(phoneNumber: state.phoneNumber.changeValue(phoneNumber)));
     }
     if (isManual != null) {
       emit(state.copyWith(isManual: isManual));
@@ -229,6 +250,9 @@ class PaymentBloc extends Cubit<PaymentState> {
     if (email != null) {
       emit(state.copyWith(
           email: state.email.changeValue(email)));
+    }
+    if(phonePrefix !=null){
+      emit(state.copyWith(phonePrefix: phonePrefix));
     }
   }
 
@@ -306,7 +330,7 @@ class PaymentBloc extends Cubit<PaymentState> {
             .validateError(valueRequired: state.businessName.value),
         businessName: state.businessName
             .validateError(valueRequired: state.documentNumber.value),
-        phoneNumber: state.phoneNumber.validateError()));
+        phoneNumber: _validatePhone()));
 
     if (state.documentNumber.inputError != null) {
       return false;
@@ -363,7 +387,7 @@ class PaymentBloc extends Cubit<PaymentState> {
           razonSocial: state.businessName.value.isEmpty
               ? "S/N"
               : state.businessName.value,
-          telefonoComprador: state.phoneNumber.value,
+          telefonoComprador: state.phoneNumber.value.isNotEmpty?"${state.phonePrefix}${state.phoneNumber.value}":null,
           correoElectronico: state.email.value.isNotEmpty?state.email.value:null
           );
 
@@ -538,7 +562,7 @@ class PaymentBloc extends Cubit<PaymentState> {
           razonSocial: state.businessName.value.isEmpty
               ? "S/N"
               : state.businessName.value,
-           telefonoComprador: state.phoneNumber.value,
+          telefonoComprador: state.phoneNumber.value.isNotEmpty?"${state.phonePrefix}${state.phoneNumber.value}":null,
           correoElectronico: state.email.value.isNotEmpty?state.email.value:null);
       countryConfig?.setParamsPayment(newPayment);
 
@@ -563,7 +587,7 @@ class PaymentBloc extends Cubit<PaymentState> {
             : state.complement.value,
         razonSocial:
             state.businessName.value.isEmpty ? "S/N" : state.businessName.value,
-        telefonoComprador: state.phoneNumber.value,
+        telefonoComprador: state.phoneNumber.value.isNotEmpty?"${state.phonePrefix}${state.phoneNumber.value}":null,
           correoElectronico: state.email.value.isNotEmpty?state.email.value:null);
     countryConfig?.setParamsPayment(newPayment);
 
@@ -1089,7 +1113,7 @@ class PaymentBloc extends Cubit<PaymentState> {
               : state.complement.value,
         nit: state.documentNumber.value.isEmpty ? "0" : state.documentNumber.value,
         razonSocial: state.businessName.value.isEmpty ? "S/N" : state.businessName.value,
-        telefonoComprador: state.phoneNumber.value,
+        telefonoComprador: state.phoneNumber.value.isNotEmpty?"${state.phonePrefix}${state.phoneNumber.value}":null,
         correoElectronico: state.email.value
         );
       countryConfig?.setParamsOrderPayment(ventaData);
