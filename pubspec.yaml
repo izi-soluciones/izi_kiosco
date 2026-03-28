@@ -127,6 +127,7 @@ flutter:
     - assets/splash_screen.json
     - assets/lottie_ok.json
     - assets/izi_loading.json
+    - assets/qr_demo.png
 
   # To add assets to your application, add an assets section, like this:
   # assets:
