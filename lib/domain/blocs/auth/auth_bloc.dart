@@ -66,7 +66,7 @@ class AuthBloc extends Cubit<AuthState> {
         return emit(state.copyWith(status: AuthStatus.noAuth));
       }
       await TokenUtils.saveToken(token);
-      if(tokenCard!=null){
+      if(tokenCard!=null && tokenCard.trim().isNotEmpty){
         await TokenUtils.saveTokenCard(tokenCard);
       }
       emit(state.copyWith(status: AuthStatus.init));

@@ -23,6 +23,7 @@ import 'package:izi_kiosco/data/repositories/comanda/comanda_repository_http.dar
 import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/make_order/make_order_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/page_utils/page_utils_bloc.dart';
+import 'package:izi_kiosco/domain/blocs/pos_config/pos_config_bloc.dart';
 import 'package:izi_kiosco/ui/general/izi_loading.dart';
 import 'package:izi_kiosco/ui/pages/splash_page/splash_page.dart';
 import 'package:izi_kiosco/ui/utils/responsive_utils.dart';
@@ -81,6 +82,10 @@ class MyApp extends StatelessWidget {
             create: (context) => MakeOrderBloc(
                 ComandaRepositoryHttp(),
                 BusinessRepositoryHttp())),
+        BlocProvider(
+          create: (context) => PosConfigBloc(context.read<AuthBloc>()),
+          lazy: false,
+        ),
       ],
       child: BlocBuilder<AuthBloc, AuthState>(
         buildWhen: (previous, current) {

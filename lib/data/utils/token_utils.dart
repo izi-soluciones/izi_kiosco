@@ -43,4 +43,32 @@ class TokenUtils{
     SharedPreferences prefs=await SharedPreferences.getInstance();
     await prefs.remove("tokenCard");
   }
+
+  static Future<void> savePosIp(String ip)async{
+    SharedPreferences prefs=await SharedPreferences.getInstance();
+    await prefs.setString("posIp", ip);
+  }
+  static Future<String?> getPosIp()async{
+    SharedPreferences prefs=await SharedPreferences.getInstance();
+    String? ip=prefs.getString("posIp");
+    return ip;
+  }
+  static Future<void> deletePosIp()async{
+    SharedPreferences prefs=await SharedPreferences.getInstance();
+    await prefs.remove("posIp");
+  }
+
+  static Future<void> savePosToken(String token)async{
+    SharedPreferences prefs=await SharedPreferences.getInstance();
+    await prefs.setString("posToken", token);
+  }
+  static Future<String?> getPosToken()async{
+    SharedPreferences prefs=await SharedPreferences.getInstance();
+    String? token=prefs.getString("posToken");
+    return token;
+  }
+  static Future<void> deletePosToken()async{
+    SharedPreferences prefs=await SharedPreferences.getInstance();
+    await prefs.remove("posToken");
+  }
 }

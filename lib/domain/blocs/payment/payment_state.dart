@@ -154,6 +154,7 @@ class PaymentState extends Equatable {
   final ParamsBo? paramsBo;
   final ParamsCo? paramsCo;
   final PaymentCountryTaxes? countryTaxes;
+  final String? izifyPosIp;
 
   const PaymentState(
       {
@@ -186,6 +187,7 @@ class PaymentState extends Equatable {
         this.brebCharge,
         this.brebLoading = false,
         this.countryTaxes,
+        this.izifyPosIp,
         this.qrPaymentKey});
 
   factory PaymentState.init() => PaymentState(
@@ -209,6 +211,7 @@ class PaymentState extends Equatable {
       qrLoading: false,
       brebCharge: null,
       brebLoading: false,
+      izifyPosIp: null,
       casaMatriz: null);
 
   copyWith(
@@ -245,6 +248,7 @@ class PaymentState extends Equatable {
         ParamsBo? paramsBo,
         ParamsCo? paramsCo,
         PaymentCountryTaxes? countryTaxes,
+        String? izifyPosIp,
       PaymentObj? paymentObj}) {
     return PaymentState(
         casaMatriz: casaMatriz ?? this.casaMatriz,
@@ -278,6 +282,7 @@ class PaymentState extends Equatable {
       brebLoading: brebLoading ?? this.brebLoading,
       paymentObj: paymentObj ?? this.paymentObj,
       countryTaxes: countryTaxes ?? this.countryTaxes,
+      izifyPosIp: izifyPosIp ?? this.izifyPosIp,
     );
   }
 
@@ -306,5 +311,6 @@ class PaymentState extends Equatable {
     qrAmount,
     qrPaymentKey,
     qrLoading,
+    izifyPosIp,
       ];
 }

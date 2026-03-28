@@ -112,44 +112,67 @@ public class MainActivity extends FlutterActivity {
 
                 } else if ("row".equals(type)) {
                      List<Map<String, Object>> columns = (List<Map<String, Object>>) item.get("cols");
-                     int paperWidth = 576; // Assuming 80mm
-                     int currentPos = 0;
                      
-                     // Reset to start
-                     AutoReplyPrint.INSTANCE.CP_Pos_SetHorizontalAbsolutePrintPosition(h, 0);
-
+                     int totalWidthUnits = 0;
                      for(Map<String, Object> col : columns) {
+                         totalWidthUnits += (Integer) col.get("width");
+                     }
+                     if (totalWidthUnits == 0) totalWidthUnits = 1;
+
+                     int charsPerLine = 48; // Standard Font A on 80mm
+                     int size = (item.containsKey("size") && item.get("size") != null) ? (Integer) item.get("size") : 0;
+                     int scale = size > 3 ? 1 : 0;
+                     if (scale == 1) charsPerLine = 24;
+                     
+                     StringBuilder rowBuilder = new StringBuilder();
+                     int remainingChars = charsPerLine;
+
+                     for(int j = 0; j < columns.size(); j++) {
+                         Map<String, Object> col = columns.get(j);
                          String text = (String) col.get("text");
-                         int widthPercent = (Integer) col.get("width");
+                         if (text == null) text = "";
+                         int widthUnit = (Integer) col.get("width");
                          String align = (String) col.get("align");
                          
-                         // Determine start position for this column
-                         // Actually, we should set position *before* printing the text?
-                         // Or use ColumnMaker style? AutoReplyPrint doesn't seem to have high level column API.
-                         // We will just print at absolute positions.
+                         int colChars;
+                         if (j == columns.size() - 1) {
+                             colChars = remainingChars; 
+                             if (colChars < 0) colChars = 0;
+                         } else {
+                             colChars = (charsPerLine * widthUnit) / totalWidthUnits; 
+                             remainingChars -= colChars;
+                         }
                          
-                         int colWidth = (paperWidth * widthPercent) / 100;
+                         if (text.length() > colChars && colChars > 0) {
+                             text = text.substring(0, colChars);
+                         }
                          
-                         // Set position. 
-                         // Note: If we align RIGHT within the column, we might need to adjust currentPos.
-                         // Simple approach: Set pos to `currentPos`, check align? 
-                         // AutoReplyPrint alignment is global or paragraph based. 
-                         // Setting alignment might cause a newline or not. 
-                         // Safe bet: Default LEFT, calculate position manually.
+                         int spacesToPad = colChars - text.length();
+                         if (spacesToPad < 0) spacesToPad = 0;
                          
-                         AutoReplyPrint.INSTANCE.CP_Pos_SetHorizontalAbsolutePrintPosition(h, currentPos);
-                         
-                         // If center/right within the column, we'd need to measure text width? 
-                         // Too complex for basic implementations without font metrics. 
-                         // We will just align LEFT at the column start for now, or trust simple alignment commands if they don't break line.
-                         // But changing alignment usually affects the whole line buffer.
-                         
-                         // Let's just print text at the position.
-                         AutoReplyPrint.INSTANCE.CP_Pos_PrintTextInUTF8(h, new WString(text));
-                         
-                         currentPos += colWidth;
+                         String paddedText;
+                         if ("center".equals(align)) {
+                             int leftPad = spacesToPad / 2;
+                             int rightPad = spacesToPad - leftPad;
+                             paddedText = new String(new char[leftPad]).replace('\0', ' ') + text + new String(new char[rightPad]).replace('\0', ' ');
+                         } else if ("right".equals(align)) {
+                             paddedText = new String(new char[spacesToPad]).replace('\0', ' ') + text;
+                         } else { // default left
+                             paddedText = text + new String(new char[spacesToPad]).replace('\0', ' ');
+                         }
+                         rowBuilder.append(paddedText);
                      }
+                     
+                     boolean bold = (item.containsKey("bold") && item.get("bold") != null) ? (Boolean) item.get("bold") : false;
+                     AutoReplyPrint.INSTANCE.CP_Pos_SetTextBold(h, bold ? 1 : 0);
+                     AutoReplyPrint.INSTANCE.CP_Pos_SetTextScale(h, scale, scale);
+                     
+                     AutoReplyPrint.INSTANCE.CP_Pos_PrintTextInUTF8(h, new WString(rowBuilder.toString()));
                      AutoReplyPrint.INSTANCE.CP_Pos_FeedLine(h, 1);
+                     
+                     // Reset styles
+                     AutoReplyPrint.INSTANCE.CP_Pos_SetTextScale(h, 0, 0);
+                     AutoReplyPrint.INSTANCE.CP_Pos_SetTextBold(h, 0);
                      
                 } else if ("qrcode".equals(type)) {
                     String content = (String) item.get("content");
@@ -158,6 +181,9 @@ public class MainActivity extends FlutterActivity {
                     AutoReplyPrint.INSTANCE.CP_Pos_PrintQRCode(h, 0, AutoReplyPrint.CP_QRCodeECC_L, content);
                     AutoReplyPrint.INSTANCE.CP_Pos_SetAlignment(h, AutoReplyPrint.CP_Pos_Alignment_Left);
                 } else if ("cut".equals(type)) {
+                    // Explicitly feed lines before cutting. 
+                    // Some printers ignore cut commands if the paper hasn't advanced past the print head.
+                    AutoReplyPrint.INSTANCE.CP_Pos_FeedLine(h, 4);
                     AutoReplyPrint.INSTANCE.CP_Pos_FeedAndHalfCutPaper(h);
                 } else if ("line".equals(type)) {
                      boolean dotted = (Boolean) item.get("dotted");

@@ -1,4 +1,6 @@
 import 'dart:convert';
+import 'package:crypto/crypto.dart';
+import 'package:http/http.dart' as http;
 
 import 'package:dio/dio.dart';
 //import 'package:firebase_app_check/firebase_app_check.dart';
@@ -704,7 +706,70 @@ class ComandaRepositoryHttp extends ComandaRepository {
       throw error.toString();
     }
   }
+  @override
+  Future<CardPayment> callCardPaymentIzify({required String amount, required String ipPort, required String token, required String currency, required String cardType}) async {
+    try {
+      final String reference = "KOS-${DateTime.now().millisecondsSinceEpoch.toString().substring(5)}";
+      
+      final payloadStr = "$amount|$currency|$reference";
+      final dataToHash = "$payloadStr|$token";
+      final bytes = utf8.encode(dataToHash);
+      final signature = sha256.convert(bytes).toString();
 
+      final res = await http.post(
+        Uri.parse('http://$ipPort/pay'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token'
+        },
+        body: jsonEncode({
+          "amount": amount,
+          "currency": currency,
+          "reference": reference,
+          "signature": signature,
+          "cardType": cardType,
+          "quotas": 0,
+          "sendTicket": 0
+        })
+      );
+
+      if (res.statusCode >= 200 && res.statusCode < 300) {
+        try {
+          if (res.body.isEmpty) {
+            return CardPayment(
+              response: "Aprobada", 
+              cardNumber: "****",
+              date: DateTime.now().toIso8601String().split('T').first,
+              hour: DateTime.now().toIso8601String().split('T').last.substring(0, 5)
+            );
+          }
+          final data = jsonDecode(res.body);
+          if (data is Map && data["success"] != null && data["success"] == false) {
+             throw data["message"] ?? "Transacción rechazada por el POS";
+          }
+          return CardPayment(
+               response: "Aprobada", 
+               cardNumber: data is Map ? (data["cardNumber"] ?? "****") : "****",
+               date: DateTime.now().toIso8601String().split('T').first,
+               hour: DateTime.now().toIso8601String().split('T').last.substring(0, 5)
+          );
+        } catch (e) {
+          if (e is FormatException) {
+            return CardPayment(
+               response: "Aprobada", 
+               cardNumber: "****",
+               date: DateTime.now().toIso8601String().split('T').first,
+               hour: DateTime.now().toIso8601String().split('T').last.substring(0, 5)
+            );
+          }
+          rethrow;
+        }
+      }
+      throw "Error procesando el pago en el POS: ${res.statusCode}";
+    } catch (error) {
+      throw error.toString();
+    }
+  }
   @override
   Future<void> markPaymentATC(String chargeUuid, int? internalId) async {
     try {

@@ -32,17 +32,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  Timer? timer;
-  bool errorPressed = false;
   VideoPlayerController? _controller;
-  _startTimer() {
-    timer?.cancel();
-    timer = Timer(const Duration(seconds: 4), () {
-      setState(() {
-        errorPressed = true;
-      });
-    });
-  }
 
   @override
   void dispose() {
@@ -269,6 +259,10 @@ class _HomePageState extends State<HomePage> {
                       Positioned.fill(
                         child: Listener(
                           onPointerDown: (val){
+                            // Ignore taps in the top-left config area (200x200)
+                            if (val.localPosition.dx < 200 && val.localPosition.dy < 200) {
+                              return;
+                            }
                             setState(() {
                               showVideo=false;
                               GoRouter.of(context).goNamed(RoutesKeys.makeOrder);
@@ -340,18 +334,17 @@ class _HomePageState extends State<HomePage> {
                         left: 0,
                         child: GestureDetector(
                           behavior: HitTestBehavior.opaque,
-                            onTapDown: (details) {
-                              _startTimer();
-                            },
-                            onTapUp: (details) {
-                              timer?.cancel();
-                              if (errorPressed) {
-                                context.read<PageUtilsBloc>().initScreenActive(context.read<AuthBloc>().state);
-                                GoRouter.of(context)
-                                    .goNamed(RoutesKeys.errorPayments);
+                            onLongPress: () {
+                              if (mounted) {
+                                setState(() {
+                                  showVideo = false;
+                                });
                               }
+                              context.read<PageUtilsBloc>().initScreenActive(context.read<AuthBloc>().state);
+                              GoRouter.of(context)
+                                  .goNamed(RoutesKeys.errorPayments);
                             },
-                            child: const SizedBox(width: 100,height: 100,)
+                            child: const SizedBox(width: 200,height: 200,)
                         )
                     )
                   ],

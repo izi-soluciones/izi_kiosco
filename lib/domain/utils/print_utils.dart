@@ -74,6 +74,8 @@ class IziPrintLineWrap extends IziPrintItem {
   IziPrintLineWrap({required this.lines});
 }
 
+class IziPrintCut extends IziPrintItem {}
+
 abstract class IziPrintItem {}
 
 class PrintUtils {
@@ -207,6 +209,8 @@ class PrintUtils {
           'type': 'feed',
           'lines': i.lines
         });
+      } else if (i is IziPrintCut) {
+        items.add({'type': 'cut'});
       } else if (i is IziPrintImage) {
         items.add({
           'type': 'image',
@@ -299,6 +303,8 @@ class PrintUtils {
                 fontSize: selectFontSize(i.size)));
       } else if (i is IziPrintLineWrap) {
         await SunmiPrinter.lineWrap(i.lines);
+      } else if (i is IziPrintCut) {
+        await SunmiPrinter.cut();
       } else if (i is IziPrintQR) {
         await SunmiPrinter.setAlignment(i.align == IziPrintAlign.left
             ? SunmiPrintAlign.LEFT

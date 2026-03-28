@@ -4,6 +4,7 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
 import 'package:izi_kiosco/domain/repositories/business_repository.dart';
+import 'package:izi_kiosco/data/utils/token_utils.dart';
 import 'package:izi_kiosco/domain/utils/crash_report.dart';
 part 'home_state.dart';
 
@@ -17,6 +18,12 @@ class HomeBloc extends Cubit<HomeState>{
   HomeBloc(this._businessRepository):super(HomeState.init());
 
   verifyServerPos(AuthState authState)async{
+    final savedIzifyPosIp = await TokenUtils.getPosIp();
+    if (savedIzifyPosIp != null && savedIzifyPosIp.isNotEmpty) {
+      emit(state.copyWith(statusServer: true, statusServerPos: true));
+      return;
+    }
+
     if(authState.currentDevice?.config.ipLinkser!=null || authState.currentDevice?.config.ipAtc!=null){
 
 
