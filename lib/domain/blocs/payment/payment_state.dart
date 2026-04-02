@@ -28,12 +28,21 @@ enum PaymentStatus {
   processingInvoice,
   processingOrder,
   setInputs,
-  demoPayment
+  demoPayment,
 }
 
+enum PaymentCountryTaxes { bolivia, colombia }
 
-enum PaymentCountryTaxes {bolivia, colombia}
-enum PaymentType { cash, card, qr, bankTransfer, gitCard, others, cashRegister, breb}
+enum PaymentType {
+  cash,
+  card,
+  qr,
+  bankTransfer,
+  gitCard,
+  others,
+  cashRegister,
+  breb,
+}
 
 class ParamsCo extends Equatable {
   final String? identificationType;
@@ -71,29 +80,30 @@ class ParamsCo extends Equatable {
       personType: personType ?? this.personType,
       ivaResponsability: ivaResponsability ?? this.ivaResponsability,
       taxResponsability: taxResponsability ?? this.taxResponsability,
-      listIdentificationType: listIdentificationType ?? this.listIdentificationType,
+      listIdentificationType:
+          listIdentificationType ?? this.listIdentificationType,
       listPersonType: listPersonType ?? this.listPersonType,
-      listIvaResponsability: listIvaResponsability ?? this.listIvaResponsability,
-      listTaxResponsability: listTaxResponsability ?? this.listTaxResponsability,
+      listIvaResponsability:
+          listIvaResponsability ?? this.listIvaResponsability,
+      listTaxResponsability:
+          listTaxResponsability ?? this.listTaxResponsability,
     );
   }
 
   @override
   List<Object?> get props => [
-        identificationType,
-        personType,
-        ivaResponsability,
-        taxResponsability
-      ];
+    identificationType,
+    personType,
+    ivaResponsability,
+    taxResponsability,
+  ];
 }
+
 class ParamsBo extends Equatable {
   final DocumentType? documentType;
   final List<DocumentType> documentTypes;
 
-  const ParamsBo({
-    this.documentType,
-    this.documentTypes = const [],
-  });
+  const ParamsBo({this.documentType, this.documentTypes = const []});
 
   ParamsBo copyWith({
     DocumentType? documentType,
@@ -126,7 +136,6 @@ class PaymentState extends Equatable {
   final InputObj phoneNumber;
   final InputObj email;
 
-
   //VARIABLES
   final num? qrAmount;
   final Charge? qrCharge;
@@ -134,6 +143,7 @@ class PaymentState extends Equatable {
   final Charge? brebCharge;
   final bool brebLoading;
   final int? qrPaymentKey;
+  final String phonePrefix;
 
   final bool qrLoading;
   final num tipAmount;
@@ -150,132 +160,138 @@ class PaymentState extends Equatable {
 
   final bool usaSiat;
 
-
   final ParamsBo? paramsBo;
   final ParamsCo? paramsCo;
   final PaymentCountryTaxes? countryTaxes;
   final String? izifyPosIp;
 
-  const PaymentState(
-      {
-      this.errorDescription,
-        required this.paymentObj,
-      required this.cashAmount,
-      required this.economicActivity,
-      required this.currentCurrency,
-      required this.paymentType,
-      required this.step,
-      required this.status,
-      required this.casaMatriz,
-      this.currentCashRegister,
-      this.paramsBo,
-      this.paramsCo,
-      required this.isManual,
-      required this.usaSiat,
-      required this.queryBusinessList,
-      required this.tipAmount,
-      required this.businessName,
-      required this.email,
-      required this.complement,
-      required this.documentNumber,
-      required this.withException,
-      required this.phoneNumber,
-        required this.qrLoading,
-        this.qrAmount,
-        this.qrCharge,
-        this.qrWait = false,
-        this.brebCharge,
-        this.brebLoading = false,
-        this.countryTaxes,
-        this.izifyPosIp,
-        this.qrPaymentKey});
+  const PaymentState({
+    this.errorDescription,
+    required this.paymentObj,
+    required this.cashAmount,
+    required this.economicActivity,
+    required this.currentCurrency,
+    required this.paymentType,
+    required this.step,
+    required this.status,
+    required this.casaMatriz,
+    this.currentCashRegister,
+    this.paramsBo,
+    this.paramsCo,
+    required this.isManual,
+    required this.usaSiat,
+    required this.queryBusinessList,
+    required this.tipAmount,
+    required this.businessName,
+    required this.email,
+    required this.complement,
+    required this.documentNumber,
+    required this.withException,
+    required this.phoneNumber,
+    required this.qrLoading,
+    this.qrAmount,
+    this.qrCharge,
+    this.qrWait = false,
+    this.brebCharge,
+    this.brebLoading = false,
+    this.countryTaxes,
+    this.izifyPosIp,
+    required this.phonePrefix,
+    this.qrPaymentKey,
+  });
 
   factory PaymentState.init() => PaymentState(
-      status: PaymentStatus.waitingGet,
-      paymentObj: null,
-      cashAmount: 0,
-      tipAmount: 0,
-      economicActivity: "",
-      usaSiat: false,
-      queryBusinessList: const [],
-      paymentType: PaymentType.others,
-      step: 5,
-      isManual: false,
-      currentCurrency: null,
-      email: PaymentInputs.emailInput(),
-      businessName: PaymentInputs.businessNameInput(),
-      complement: PaymentInputs.complementInput(),
-      documentNumber: PaymentInputs.documentNumberInput(),
-      withException: false,
-      phoneNumber: PaymentInputs.phoneNumberInput(),
-      qrLoading: false,
-      brebCharge: null,
-      brebLoading: false,
-      izifyPosIp: null,
-      casaMatriz: null);
+    status: PaymentStatus.waitingGet,
+    paymentObj: null,
+    cashAmount: 0,
+    tipAmount: 0,
+    economicActivity: "",
+    usaSiat: false,
+    queryBusinessList: const [],
+    paymentType: PaymentType.others,
+    step: 5,
+    isManual: false,
+    currentCurrency: null,
+    email: PaymentInputs.emailInput(),
+    businessName: PaymentInputs.businessNameInput(),
+    complement: PaymentInputs.complementInput(),
+    documentNumber: PaymentInputs.documentNumberInput(),
+    withException: false,
+    phonePrefix: "+591",
+    phoneNumber: PaymentInputs.phoneNumberInput(),
+    qrLoading: false,
+    brebCharge: null,
+    brebLoading: false,
+    izifyPosIp: null,
+    casaMatriz: null,
+  );
 
-  copyWith(
-      {
-      PaymentStatus? status,
-      String? errorDescription,
-      int? step,
-      num? cashAmount,
-      List<CashRegister>? cashRegisters,
-      CashRegister? currentCashRegister,
-      Currency? currentCurrency,
-      PaymentType? paymentType,
-      List<Payment>? payments,
-      List<PaymentMethod>? paymentMethods,
-      bool? usaSiat,
-      num? tipAmount,
-      List<Customer>? queryBusinessList,
-      bool? isManual,
-      bool? withException,
-      InputObj? documentNumber,
-      InputObj? complement,
-      InputObj? businessName,
-      InputObj? email,
-      String? economicActivity,
-        InputObj? phoneNumber,
-        Charge? Function()? qrCharge,
-        num? qrAmount,
-        int? qrPaymentKey,
-        bool? qrWait,
-        bool? qrLoading,
-        Charge? brebCharge,
-        bool? brebLoading,
-      Sucursal? casaMatriz,
-        ParamsBo? paramsBo,
-        ParamsCo? paramsCo,
-        PaymentCountryTaxes? countryTaxes,
-        String? izifyPosIp,
-      PaymentObj? paymentObj}) {
+  copyWith({
+    PaymentStatus? status,
+    String? errorDescription,
+    int? step,
+    num? cashAmount,
+    List<CashRegister>? cashRegisters,
+    CashRegister? currentCashRegister,
+    Currency? currentCurrency,
+    PaymentType? paymentType,
+    List<Payment>? payments,
+    List<PaymentMethod>? paymentMethods,
+    bool? usaSiat,
+    num? tipAmount,
+    List<Customer>? queryBusinessList,
+    bool? isManual,
+    bool? withException,
+    InputObj? documentNumber,
+    InputObj? complement,
+    InputObj? businessName,
+    InputObj? email,
+    String? economicActivity,
+    InputObj? phoneNumber,
+    Charge? Function()? qrCharge,
+    num? qrAmount,
+    int? qrPaymentKey,
+    bool? qrWait,
+    bool? qrLoading,
+    Charge? brebCharge,
+    bool? brebLoading,
+    Sucursal? casaMatriz,
+    ParamsBo? paramsBo,
+    String? phonePrefix,
+    ParamsCo? paramsCo,
+    PaymentCountryTaxes? countryTaxes,
+    String? izifyPosIp,
+    PaymentObj? paymentObj,
+  }) {
     return PaymentState(
-        casaMatriz: casaMatriz ?? this.casaMatriz,
-        status: status ?? this.status,
-        errorDescription: errorDescription ?? this.errorDescription,
-        step: step ?? this.step,
-        paymentType: paymentType ?? this.paymentType,
-        usaSiat: usaSiat ?? this.usaSiat,
-        queryBusinessList: queryBusinessList ?? this.queryBusinessList,
-        economicActivity: economicActivity ?? this.economicActivity,
-        cashAmount: cashAmount ?? this.cashAmount,
-        currentCurrency: currentCurrency ?? this.currentCurrency,
-        currentCashRegister: currentCashRegister ?? this.currentCashRegister,
-        tipAmount: tipAmount ?? this.tipAmount,
-        withException: withException ?? this.withException,
-        businessName: businessName ?? this.businessName,
-        email: email ?? this.email,
-        complement: complement ?? this.complement,
-        documentNumber: documentNumber ?? this.documentNumber,
+      casaMatriz: casaMatriz ?? this.casaMatriz,
+      status: status ?? this.status,
+      errorDescription: errorDescription ?? this.errorDescription,
+      step: step ?? this.step,
+      phonePrefix: phonePrefix ?? this.phonePrefix,
+      paymentType: paymentType ?? this.paymentType,
+      usaSiat: usaSiat ?? this.usaSiat,
+      queryBusinessList: queryBusinessList ?? this.queryBusinessList,
+      economicActivity: economicActivity ?? this.economicActivity,
+      cashAmount: cashAmount ?? this.cashAmount,
+      currentCurrency: currentCurrency ?? this.currentCurrency,
+      currentCashRegister: currentCashRegister ?? this.currentCashRegister,
+      tipAmount: tipAmount ?? this.tipAmount,
+      withException: withException ?? this.withException,
+      businessName: businessName ?? this.businessName,
+      email: email ?? this.email,
+      complement: complement ?? this.complement,
+      documentNumber: documentNumber ?? this.documentNumber,
 
-        paramsBo: paramsBo ?? this.paramsBo,
-        paramsCo: paramsCo ?? this.paramsCo,
-        isManual: isManual ?? this.isManual,
+      paramsBo: paramsBo ?? this.paramsBo,
+      paramsCo: paramsCo ?? this.paramsCo,
+      isManual: isManual ?? this.isManual,
       qrAmount: qrAmount ?? this.qrAmount,
       phoneNumber: phoneNumber ?? this.phoneNumber,
-      qrCharge: qrCharge !=null?qrCharge() : this.qrCharge,
-      qrPaymentKey: qrPaymentKey == -1?null: qrPaymentKey ?? this.qrPaymentKey,
+      qrCharge: qrCharge != null ? qrCharge() : this.qrCharge,
+      qrPaymentKey: qrPaymentKey == -1
+          ? null
+          : qrPaymentKey ?? this.qrPaymentKey,
       qrLoading: qrLoading ?? this.qrLoading,
       qrWait: qrWait ?? this.qrWait,
       brebCharge: brebCharge ?? this.brebCharge,
@@ -288,29 +304,30 @@ class PaymentState extends Equatable {
 
   @override
   List<Object?> get props => [
-        status,
-        step,
-        paymentObj,
-        tipAmount,
-        currentCurrency,
-        cashAmount,
-        paymentType,
-        currentCashRegister,
-        withException,
-        businessName,
-        email,
-        complement,
-        documentNumber,
-        paramsBo,
-        paramsCo,
-        isManual,
-        qrWait,
-        queryBusinessList,
+    status,
+    step,
+    paymentObj,
+    tipAmount,
+    currentCurrency,
+    cashAmount,
+    paymentType,
+    phonePrefix,
+    currentCashRegister,
+    withException,
+    businessName,
+    email,
+    complement,
+    documentNumber,
+    paramsBo,
+    paramsCo,
+    isManual,
+    qrWait,
+    queryBusinessList,
     phoneNumber,
     qrCharge,
     qrAmount,
     qrPaymentKey,
     qrLoading,
     izifyPosIp,
-      ];
+  ];
 }

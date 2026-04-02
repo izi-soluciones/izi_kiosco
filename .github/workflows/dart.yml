@@ -60,3 +60,31 @@ jobs:
             -r ./build/web/* \
             "admin@${{ secrets.DEPLOY_HOST }}:${{ secrets.DEPLOY_PATH }}/"
           rm /tmp/deploy_key
+
+      # -------------------------------------------------------
+      # Build y Deploy IZIFY (solo en release/*)
+      # -------------------------------------------------------
+      - name: Build and Deploy IZIFY (PROD only)
+        if: startsWith(github.ref, 'refs/heads/releases/')
+        run: |
+          # Reemplazar assets web con los de izify
+          cp web/favicon_izify.png web/favicon.png
+          cp web/index.izify.html  web/index.html
+          cp web/icons_izify/*     web/icons/
+
+          flutter build web \
+            --dart-define=FLAVOR=izify \
+            --release
+
+          # Restaurar assets originales para builds siguientes
+          git checkout -- web/favicon.png web/index.html web/icons/
+
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > /tmp/deploy_key
+          chmod 600 /tmp/deploy_key
+          echo "Deploying IZIFY to ${{ secrets.DEPLOY_HOST }}:${{ secrets.DEPLOY_PATH_IZIFY }}"
+          scp -v -o StrictHostKeyChecking=no -i /tmp/deploy_key \
+            -r ./build/web/* \
+            "admin@${{ secrets.DEPLOY_HOST }}:${{ secrets.DEPLOY_PATH_IZIFY }}/"
+          echo "IZIFY deploy done"
+          rm /tmp/deploy_key
+

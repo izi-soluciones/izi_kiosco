@@ -144,7 +144,13 @@ class PrintUtils {
       await _pdfPrint(values);
     } else {
       if (Platform.isAndroid) {
-        if (device?.config.descargarQR == true) {
+        if (device?.config.printSat == true) {
+          try {
+            await _satPrint(values);
+          } catch (e) {
+            log("SatPrint failed: $e");
+          }
+        } else if (device?.config.descargarQR == true) {
           try {
             await _autoReplyPrint(values);
           } catch (e) {
@@ -168,6 +174,61 @@ class PrintUtils {
         //await _pdfPrint(values);
       }
     }
+  }
+
+  _satPrint(List<IziPrintItem> values) async {
+    List<Map<String, Object>> items = [];
+    for (var i in values) {
+      if (i is IziPrintText) {
+        items.add({
+          'type': 'text',
+          'text': i.text,
+          'size': i.size.index,
+          'bold': i.bold,
+          'align': i.align.toString().split('.').last,
+        });
+      } else if (i is IziPrintRow) {
+         items.add({
+           'type': 'row',
+           'size': i.size.index,
+           'bold': i.bold,
+           'cols': i.values.map((c) => {
+             'text': c.text,
+             'width': c.width,
+             'align': c.align.toString().split('.').last,
+           }).toList(),
+         });
+      } else if (i is IziPrintQR) {
+        items.add({
+          'type': 'qrcode',
+          'content': i.qrContent,
+          'size': i.size,
+          'align': i.align.toString().split('.').last,
+        });
+      } else if (i is IziPrintSeparator) {
+        items.add({
+          'type': 'line',
+          'dotted': i.dotted
+        });
+      } else if (i is IziPrintLineWrap) {
+        items.add({
+          'type': 'feed',
+          'lines': i.lines
+        });
+      } else if (i is IziPrintCut) {
+        items.add({'type': 'cut'});
+      } else if (i is IziPrintImage) {
+        items.add({
+          'type': 'image',
+          'data': i.image,
+          'align': i.align.toString().split('.').last,
+          'size': i.size
+        });
+      }
+    }
+    items.add({'type': 'cut'});
+    
+    await platform.invokeMethod('printSat', {'items': items});
   }
 
   _autoReplyPrint(List<IziPrintItem> values) async {
