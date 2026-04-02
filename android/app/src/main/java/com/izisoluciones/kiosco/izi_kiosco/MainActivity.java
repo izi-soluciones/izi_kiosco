@@ -265,21 +265,24 @@ public class MainActivity extends FlutterActivity {
         UsbDevice targetDevice = null;
         
         try {
-            // 1. Find the specific SAT printer first
+            android.util.Log.i("MainActivity", "1. printWithSat started. Beginning device search...");
             for (UsbDevice device : mUsbManager.getDeviceList().values()) {
+                android.util.Log.i("MainActivity", "Found USB Device VID: " + device.getVendorId() + " PID: " + device.getProductId() + " Name: " + device.getDeviceName());
                 if ((device.getProductId() == 8211 && device.getVendorId() == 1305) ||
                     (device.getProductId() == 8213 && device.getVendorId() == 1305)) {
                     targetDevice = device;
+                    android.util.Log.i("MainActivity", "-> Specific SAT Printer matched!");
                     break;
                 }
             }
 
-            // Fallback: try to find ANY printer
             if (targetDevice == null) {
+                android.util.Log.i("MainActivity", "2. SAT specific NOT found. Falling back to class search...");
                 for (UsbDevice device : mUsbManager.getDeviceList().values()) {
                     for (int i = 0; i < device.getInterfaceCount(); i++) {
                         if (device.getInterface(i).getInterfaceClass() == UsbConstants.USB_CLASS_PRINTER) {
                             targetDevice = device;
+                            android.util.Log.i("MainActivity", "-> General Printer class matched on: " + device.getDeviceName());
                             break;
                         }
                     }
@@ -288,11 +291,13 @@ public class MainActivity extends FlutterActivity {
             }
 
             if (targetDevice == null) {
-                System.out.println("No USB printer found.");
+                android.util.Log.e("MainActivity", "No USB printer found. Aborting print.");
                 return false;
             }
 
+            android.util.Log.i("MainActivity", "3. Checking permissions for " + targetDevice.getDeviceName());
             if (!mUsbManager.hasPermission(targetDevice)) {
+                android.util.Log.i("MainActivity", "-> Requesting permission explicitly...");
                 int flags = PendingIntent.FLAG_UPDATE_CURRENT;
                 if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
                     flags |= PendingIntent.FLAG_IMMUTABLE;
@@ -303,139 +308,158 @@ public class MainActivity extends FlutterActivity {
                 int times = 0;
                 while (!mUsbManager.hasPermission(targetDevice) && times < 4) {
                     times++;
+                    android.util.Log.i("MainActivity", "-> Polling permission wait " + times);
                     Thread.sleep(1000);
                 }
             }
 
             if (mUsbManager.hasPermission(targetDevice)) {
+                android.util.Log.i("MainActivity", "4. Permission active. Attaching to device driver...");
                 if (mUsbDriver.usbAttached(targetDevice)) {
+                    android.util.Log.i("MainActivity", "-> Device driver attached successfully. Opening...");
                     if (mUsbDriver.openUsbDevice(targetDevice)) {
+                        android.util.Log.i("MainActivity", "-> Device opened and channel secured!");
                         isConnected = true;
+                    } else {
+                        android.util.Log.e("MainActivity", "-> FAILED to open device connection.");
                     }
+                } else {
+                    android.util.Log.e("MainActivity", "-> FAILED to attach usb driver.");
                 }
+            } else {
+                android.util.Log.w("MainActivity", "-> Permissions were REJECTED or timeout.");
             }
 
             if (!isConnected) {
-                System.out.println("Failed to open USB printer.");
+                android.util.Log.e("MainActivity", "5. Print canceled: isConnected unresolved.");
                 return false;
             }
 
             mUsbDriver.write(PrintCmd.SetClean());
+            byte[] resetLineSpacing = new byte[]{0x1B, 0x32}; // ESC 2 (Default Line Spacing ~ 30 dots)
+            mUsbDriver.write(resetLineSpacing);
+            android.util.Log.d("MainActivity", "-> Payload Size: " + items.size() + " components received from Dart.");
 
             for (Map<String, Object> item : items) {
-                String type = (String) item.get("type");
-                if ("text".equals(type)) {
-                    String text = (String) item.get("text");
-                    String align = (String) item.get("align");
-                    boolean bold = (Boolean) item.get("bold");
-                    int size = (Integer) item.get("size");
+                try {
+                    String type = (String) item.get("type");
+                    android.util.Log.d("MainActivity", "Processing print element type: " + type);
 
-                    if ("center".equals(align)) {
-                        mUsbDriver.write(PrintCmd.SetAlignment(1));
-                    } else if ("right".equals(align)) {
-                        mUsbDriver.write(PrintCmd.SetAlignment(2));
-                    } else {
-                        mUsbDriver.write(PrintCmd.SetAlignment(0));
-                    }
+                    if ("text".equals(type)) {
+                        String text = (String) item.get("text");
+                        String align = (String) item.get("align");
+                        boolean bold = (Boolean) item.get("bold");
+                        int size = (Integer) item.get("size");
 
-                    mUsbDriver.write(PrintCmd.SetBold(bold ? 1 : 0));
-                    int scale = size > 3 ? 1 : 0;
-                    mUsbDriver.write(PrintCmd.SetSizetext(scale, scale));
-
-                    if (text != null && text.length() > 0) {
-                        mUsbDriver.write(PrintCmd.PrintString(text, 0));
-                    }
-                    mUsbDriver.write(PrintCmd.PrintFeedline(1));
-
-                    mUsbDriver.write(PrintCmd.SetSizetext(0, 0));
-                    mUsbDriver.write(PrintCmd.SetBold(0));
-                    mUsbDriver.write(PrintCmd.SetAlignment(0));
-
-                } else if ("row".equals(type)) {
-                    List<Map<String, Object>> columns = (List<Map<String, Object>>) item.get("cols");
-                    int totalWidthUnits = 0;
-                    for (Map<String, Object> col : columns) {
-                        totalWidthUnits += (Integer) col.get("width");
-                    }
-                    if (totalWidthUnits == 0) totalWidthUnits = 1;
-
-                    int charsPerLine = 48;
-                    int size = (item.containsKey("size") && item.get("size") != null) ? (Integer) item.get("size") : 0;
-                    int scale = size > 3 ? 1 : 0;
-                    if (scale == 1) charsPerLine = 24;
-
-                    StringBuilder rowBuilder = new StringBuilder();
-                    int remainingChars = charsPerLine;
-
-                    for (int j = 0; j < columns.size(); j++) {
-                        Map<String, Object> col = columns.get(j);
-                        String text = (String) col.get("text");
-                        if (text == null) text = "";
-                        int widthUnit = (Integer) col.get("width");
-                        String align = (String) col.get("align");
-
-                        int colChars;
-                        if (j == columns.size() - 1) {
-                            colChars = remainingChars; 
-                            if (colChars < 0) colChars = 0;
-                        } else {
-                            colChars = (charsPerLine * widthUnit) / totalWidthUnits; 
-                            remainingChars -= colChars;
-                        }
-
-                        if (text.length() > colChars && colChars > 0) {
-                            text = text.substring(0, colChars);
-                        }
-
-                        int spacesToPad = colChars - text.length();
-                        if (spacesToPad < 0) spacesToPad = 0;
-
-                        String paddedText;
                         if ("center".equals(align)) {
-                            int leftPad = spacesToPad / 2;
-                            int rightPad = spacesToPad - leftPad;
-                            paddedText = new String(new char[leftPad]).replace('\0', ' ') + text + new String(new char[rightPad]).replace('\0', ' ');
+                            mUsbDriver.write(PrintCmd.SetAlignment(1));
                         } else if ("right".equals(align)) {
-                            paddedText = new String(new char[spacesToPad]).replace('\0', ' ') + text;
-                        } else { 
-                            paddedText = text + new String(new char[spacesToPad]).replace('\0', ' ');
+                            mUsbDriver.write(PrintCmd.SetAlignment(2));
+                        } else {
+                            mUsbDriver.write(PrintCmd.SetAlignment(0));
                         }
-                        rowBuilder.append(paddedText);
+
+                        mUsbDriver.write(PrintCmd.SetBold(bold ? 1 : 0));
+                        int scale = size > 3 ? 1 : 0;
+                        mUsbDriver.write(PrintCmd.SetSizetext(scale, scale));
+
+                        if (text != null && text.length() > 0) {
+                            mUsbDriver.write(PrintCmd.PrintString(text, 0));
+                        }
+
+                        mUsbDriver.write(PrintCmd.SetSizetext(0, 0));
+                        mUsbDriver.write(PrintCmd.SetBold(0));
+                        mUsbDriver.write(PrintCmd.SetAlignment(0));
+
+                    } else if ("row".equals(type)) {
+                        List<Map<String, Object>> columns = (List<Map<String, Object>>) item.get("cols");
+                        int totalWidthUnits = 0;
+                        for (Map<String, Object> col : columns) {
+                            totalWidthUnits += (Integer) col.get("width");
+                        }
+                        if (totalWidthUnits == 0) totalWidthUnits = 1;
+
+                        int charsPerLine = 48;
+                        int size = (item.containsKey("size") && item.get("size") != null) ? (Integer) item.get("size") : 0;
+                        int scale = size > 3 ? 1 : 0;
+                        if (scale == 1) charsPerLine = 24;
+
+                        StringBuilder rowBuilder = new StringBuilder();
+                        int remainingChars = charsPerLine;
+
+                        for (int j = 0; j < columns.size(); j++) {
+                            Map<String, Object> col = columns.get(j);
+                            String text = (String) col.get("text");
+                            if (text == null) text = "";
+                            int widthUnit = (Integer) col.get("width");
+                            String align = (String) col.get("align");
+
+                            int colChars;
+                            if (j == columns.size() - 1) {
+                                colChars = remainingChars; 
+                                if (colChars < 0) colChars = 0;
+                            } else {
+                                colChars = (charsPerLine * widthUnit) / totalWidthUnits; 
+                                remainingChars -= colChars;
+                            }
+
+                            if (text.length() > colChars && colChars > 0) {
+                                text = text.substring(0, colChars);
+                            }
+
+                            int spacesToPad = colChars - text.length();
+                            if (spacesToPad < 0) spacesToPad = 0;
+
+                            String paddedText;
+                            if ("center".equals(align)) {
+                                int leftPad = spacesToPad / 2;
+                                int rightPad = spacesToPad - leftPad;
+                                paddedText = new String(new char[leftPad]).replace('\0', ' ') + text + new String(new char[rightPad]).replace('\0', ' ');
+                            } else if ("right".equals(align)) {
+                                paddedText = new String(new char[spacesToPad]).replace('\0', ' ') + text;
+                            } else { 
+                                paddedText = text + new String(new char[spacesToPad]).replace('\0', ' ');
+                            }
+                            rowBuilder.append(paddedText);
+                        }
+
+                        boolean bold = (item.containsKey("bold") && item.get("bold") != null) ? (Boolean) item.get("bold") : false;
+                        mUsbDriver.write(PrintCmd.SetBold(bold ? 1 : 0));
+                        mUsbDriver.write(PrintCmd.SetSizetext(scale, scale));
+                        mUsbDriver.write(PrintCmd.PrintString(rowBuilder.toString(), 0));
+
+                        mUsbDriver.write(PrintCmd.SetSizetext(0, 0));
+                        mUsbDriver.write(PrintCmd.SetBold(0));
+
+                    } else if ("qrcode".equals(type)) {
+                        String content = (String) item.get("content");
+                        mUsbDriver.write(PrintCmd.SetAlignment(1));
+                        mUsbDriver.write(PrintCmd.PrintQrcode(content, 25, 6, 1));
+                        mUsbDriver.write(PrintCmd.SetAlignment(0));
+
+                    } else if ("cut".equals(type)) {
+                        mUsbDriver.write(PrintCmd.PrintFeedline(4));
+                        mUsbDriver.write(PrintCmd.PrintCutpaper(0));
+                        try {
+                            Thread.sleep(1500); // Pause bulk transfer to allow hardware mechanical cut
+                        } catch (InterruptedException e) {}
+
+                    } else if ("line".equals(type)) {
+                        boolean dotted = (Boolean) item.get("dotted");
+                        char lineChar = dotted ? '-' : '─';
+                        StringBuilder sb = new StringBuilder();
+                        for(int c=0; c<48; c++) sb.append(lineChar);
+                        mUsbDriver.write(PrintCmd.PrintString(sb.toString(), 0));
+
+                    } else if ("feed".equals(type)) {
+                        int lines = (Integer) item.get("lines");
+                        mUsbDriver.write(PrintCmd.PrintFeedline(lines));
+
+                    } else if ("image".equals(type)) {
+                        // Ignored or left to future implementation
                     }
-
-                    boolean bold = (item.containsKey("bold") && item.get("bold") != null) ? (Boolean) item.get("bold") : false;
-                    mUsbDriver.write(PrintCmd.SetBold(bold ? 1 : 0));
-                    mUsbDriver.write(PrintCmd.SetSizetext(scale, scale));
-                    mUsbDriver.write(PrintCmd.PrintString(rowBuilder.toString(), 0));
-                    mUsbDriver.write(PrintCmd.PrintFeedline(1));
-
-                    mUsbDriver.write(PrintCmd.SetSizetext(0, 0));
-                    mUsbDriver.write(PrintCmd.SetBold(0));
-
-                } else if ("qrcode".equals(type)) {
-                    String content = (String) item.get("content");
-                    mUsbDriver.write(PrintCmd.SetAlignment(1));
-                    mUsbDriver.write(PrintCmd.PrintQrcode(content, 25, 6, 1));
-                    mUsbDriver.write(PrintCmd.SetAlignment(0));
-
-                } else if ("cut".equals(type)) {
-                    mUsbDriver.write(PrintCmd.PrintFeedline(4));
-                    mUsbDriver.write(PrintCmd.PrintCutpaper(0));
-
-                } else if ("line".equals(type)) {
-                    boolean dotted = (Boolean) item.get("dotted");
-                    char lineChar = dotted ? '-' : '─';
-                    StringBuilder sb = new StringBuilder();
-                    for(int c=0; c<48; c++) sb.append(lineChar);
-                    mUsbDriver.write(PrintCmd.PrintString(sb.toString(), 0));
-                    mUsbDriver.write(PrintCmd.PrintFeedline(1));
-
-                } else if ("feed".equals(type)) {
-                    int lines = (Integer) item.get("lines");
-                    mUsbDriver.write(PrintCmd.PrintFeedline(lines));
-
-                } else if ("image".equals(type)) {
-                    // Ignored or left to future implementation
+                } catch (Throwable innerException) {
+                    android.util.Log.e("MainActivity", "Failed to print individual item: " + innerException.getMessage());
                 }
             }
             

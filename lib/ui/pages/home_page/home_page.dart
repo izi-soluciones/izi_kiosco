@@ -21,6 +21,7 @@ import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/home/home_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/page_utils/page_utils_bloc.dart';
 import 'package:izi_kiosco/ui/general/custom_icons/kiosk_hand_icon.dart';
+import 'package:izi_kiosco/ui/general/widgets/password_modal.dart';
 import 'package:izi_kiosco/ui/utils/responsive_utils.dart';
 import 'package:video_player/video_player.dart';
 
@@ -334,15 +335,24 @@ class _HomePageState extends State<HomePage> {
                         left: 0,
                         child: GestureDetector(
                           behavior: HitTestBehavior.opaque,
-                            onLongPress: () {
-                              if (mounted) {
-                                setState(() {
-                                  showVideo = false;
-                                });
+                            onLongPress: () async {
+                              final pin = context.read<AuthBloc>().state.currentDevice?.config.pin;
+                              final correctPin = (pin != null && pin.isNotEmpty) ? pin : '4321';
+                              
+                              final result = await showDialog<bool>(
+                                context: context,
+                                builder: (ctx) => PasswordModal(correctPin: correctPin),
+                              );
+                              
+                              if (result == true) {
+                                if (mounted) {
+                                  setState(() {
+                                    showVideo = false;
+                                  });
+                                }
+                                context.read<PageUtilsBloc>().initScreenActive(context.read<AuthBloc>().state);
+                                GoRouter.of(context).goNamed(RoutesKeys.errorPayments);
                               }
-                              context.read<PageUtilsBloc>().initScreenActive(context.read<AuthBloc>().state);
-                              GoRouter.of(context)
-                                  .goNamed(RoutesKeys.errorPayments);
                             },
                             child: const SizedBox(width: 200,height: 200,)
                         )

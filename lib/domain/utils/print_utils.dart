@@ -113,6 +113,14 @@ class PrintUtils {
     if (kIsWeb) {
     } else {
       if (Platform.isAndroid) {
+        log("iZi Kiosco: printTest - Attempting _satPrint for SDK verification.");
+        try {
+          await _satPrint([IziPrintText(text: "SAT Printer OK", size: IziPrintSize.md, bold: true, align: IziPrintAlign.center)]);
+          log("iZi Kiosco: printTest - _satPrint dispatched.");
+        } catch (e) {
+          log("iZi Kiosco: printTest - _satPrint failed: $e");
+        }
+
         var resBinding = await SunmiPrinter.bindingPrinter();
         await SunmiPrinter.initPrinter();
         var status = await SunmiPrinter.getPrinterStatus();
@@ -146,7 +154,9 @@ class PrintUtils {
       if (Platform.isAndroid) {
         if (device?.config.printSat == true) {
           try {
+            log("iZi Kiosco: Routing to _satPrint...");
             await _satPrint(values);
+            log("iZi Kiosco: _satPrint finished resolving channel.");
           } catch (e) {
             log("SatPrint failed: $e");
           }
@@ -228,7 +238,9 @@ class PrintUtils {
     }
     items.add({'type': 'cut'});
     
-    await platform.invokeMethod('printSat', {'items': items});
+    log("iZi Kiosco: Invoking platform channel 'printSat' with ${items.length} items");
+    var res = await platform.invokeMethod('printSat', {'items': items});
+    log("iZi Kiosco: platform method returned $res");
   }
 
   _autoReplyPrint(List<IziPrintItem> values) async {

@@ -1133,6 +1133,7 @@ class PaymentBloc extends Cubit<PaymentState> {
 
   _printRolloOrder(AuthState authState,
       {required int orderNumber, int? customOrderNumber}) async {
+    log("iZi Kiosco: [DEBUG] _printRolloOrder invoked for orderNumber: $orderNumber");
     var tmp = await PrintTemplate.order80(
         orderNumber,
         customOrderNumber,
@@ -1143,20 +1144,25 @@ class PaymentBloc extends Cubit<PaymentState> {
               taxesStrategy: authState.taxesStrategy
         );
     var printUtils = PrintUtils();
+    log("iZi Kiosco: [DEBUG] _printRolloOrder dispatching ${tmp.length} PrintItems directly to printUtils...");
     await printUtils.print(tmp, authState.currentDevice);
   }
 
   _printRollo(AuthState authState, {String? idInvoice, Invoice? invoice, int? orderNumber, int? customOrderNumber}) async {
     try{
+      log("iZi Kiosco: [DEBUG] _printRollo invoked. idInvoice=$idInvoice, orderNumber=$orderNumber");
       List<IziPrintItem> tmp = [];
 
       if (idInvoice == null && invoice == null && orderNumber == null) {
+        log("iZi Kiosco: [DEBUG] Aborting _printRollo, all tracking variables are null.");
         return;
       }
       if (idInvoice != null) {
         invoice = await _comandaRepository.getInvoice(idInvoice);
+        log("iZi Kiosco: [DEBUG] Resolved explicit Invoice object from comanda repository? ${invoice != null}");
       }
       if(orderNumber!=null){
+        log("iZi Kiosco: [DEBUG] Formatting Order template natively...");
         tmp = await PrintTemplate.order80(
               orderNumber,
               customOrderNumber,
@@ -1168,6 +1174,7 @@ class PaymentBloc extends Cubit<PaymentState> {
           );
       }
       if(invoice==null){
+        log("iZi Kiosco: [DEBUG] WARNING: invoice remained perfectly null, pushing purely order bytes (${tmp.length} items)...");
         var printUtils = PrintUtils();
         await printUtils.print(tmp, authState.currentDevice);
         return;
@@ -1175,6 +1182,7 @@ class PaymentBloc extends Cubit<PaymentState> {
 
       if(authState.currentDevice?.config.facturaCompacto==true
       ){
+        log("iZi Kiosco: [DEBUG] Compiling compact invoice template!");
         tmp = await PrintTemplate.printInvoiceCompact(
           authState.currentContribuyente!,
           authState.currentSucursal!,
@@ -1185,6 +1193,7 @@ class PaymentBloc extends Cubit<PaymentState> {
         );
       }
       else{
+        log("iZi Kiosco: [DEBUG] Compiling standard full sequential invoice template with explicit cut divider!");
         tmp.add(IziPrintLineWrap(lines: 2));
         if (orderNumber != null) {
           tmp.add(IziPrintCut());
@@ -1207,10 +1216,11 @@ class PaymentBloc extends Cubit<PaymentState> {
       }
 
       var printUtils = PrintUtils();
+      log("iZi Kiosco: [DEBUG] Submitting FULL hybrid batch configuration to print core: ${tmp.length} items");
       await printUtils.print(tmp, authState.currentDevice);
     }
-    catch(e){
-      log(e.toString());
+    catch(e, stacktrace){
+      log("iZi Kiosco: [DEBUG ERROR] _printRollo failure -> ${e.toString()} \nStacktrace: $stacktrace");
     }
   }
 

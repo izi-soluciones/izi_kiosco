@@ -340,10 +340,10 @@
         }
       },
       "businessName": {
-        "label": "Ingresa la razón social (opcional)",
-        "placeholder": "Ingresa tu nombre o razon social",
+        "label": "Ingresa el nombre (opcional)",
+        "placeholder": "Ingresa tu nombre",
         "errors": {
-          "required": "La razón social es requerida"
+          "required": "El nombre es requerido"
         }
       },
       "email": {

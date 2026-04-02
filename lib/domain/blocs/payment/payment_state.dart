@@ -217,7 +217,7 @@ class PaymentState extends Equatable {
     complement: PaymentInputs.complementInput(),
     documentNumber: PaymentInputs.documentNumberInput(),
     withException: false,
-    phonePrefix: "+591",
+    phonePrefix: const String.fromEnvironment('FLAVOR', defaultValue: 'local') == 'izify' ? '+57' : '+591',
     phoneNumber: PaymentInputs.phoneNumberInput(),
     qrLoading: false,
     brebCharge: null,

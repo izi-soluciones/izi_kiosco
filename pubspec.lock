@@ -539,7 +539,7 @@ packages:
       path: "/Users/ezabaw/dev/izi-design-system-flutter"
       relative: false
     source: path
-    version: "0.0.2"
+    version: "0.0.4"
   js:
     dependency: transitive
     description:

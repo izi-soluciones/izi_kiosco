@@ -53,8 +53,6 @@ class AuthBloc extends Cubit<AuthState> {
 
   Future<void> verify() async {
     try {
-      PrintUtils().printTest();
-      
       String? token = Uri.base.queryParameters["token"] ?? await TokenUtils.getToken();
       String? tokenCard = Uri.base.queryParameters["tokenCard"] ?? await TokenUtils.getTokenCard();
       if (token == null) {
