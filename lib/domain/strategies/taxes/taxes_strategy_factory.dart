@@ -11,7 +11,7 @@ class TaxesStrategyFactory{
     if(contribuyente?.usaSiat==true || (contribuyente?.habilitadoFacturacion ==true && contribuyente?.config?["paisId"]=="BO")){
       return TaxesStrategyBo();
     }
-    if(contribuyente?.habilitadoFacturacion == true && contribuyente?.config is Map && contribuyente?.config?["paisId"]=="CO"){
+    if(contribuyente?.config is Map && contribuyente?.config?["paisId"]=="CO"){
       return TaxesStrategyCo();
     }
     return TaxesStrategyDefault();
