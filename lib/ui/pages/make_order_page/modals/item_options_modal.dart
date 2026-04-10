@@ -94,7 +94,7 @@ class _ItemOptionsModalState extends State<ItemOptionsModal> {
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            BackModalHeader(title: LocaleKeys.makeOrder_subtitles_itemOptions.tr(args: [itemEdit?.nombre??""])),
+            BackModalHeader(title: LocaleKeys.makeOrder_subtitles_itemOptions.tr(args: [itemEdit?.nombreMostrar??""])),
             Flexible(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,

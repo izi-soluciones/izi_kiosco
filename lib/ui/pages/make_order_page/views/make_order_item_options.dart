@@ -136,7 +136,7 @@ class _MakeOrderItemOptionsState extends State<MakeOrderItemOptions> {
                                     fontWeight: FontWeight.w500,
                                     maxLines: 5,
                                     color: context.iziColors.dark,
-                                    text: widget.item.nombre,
+                                    text: widget.item.nombreMostrar,
                                     textAlign: TextAlign.center),
                                 IziText.body(
                                     color: context.iziColors.grey,
