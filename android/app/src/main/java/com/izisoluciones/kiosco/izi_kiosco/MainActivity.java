@@ -438,7 +438,7 @@ public class MainActivity extends FlutterActivity {
                         mUsbDriver.write(PrintCmd.SetAlignment(0));
 
                     } else if ("cut".equals(type)) {
-                        mUsbDriver.write(PrintCmd.PrintFeedline(4));
+                        mUsbDriver.write(PrintCmd.PrintFeedline(7)); // Increased to safely clear mechanical blade
                         mUsbDriver.write(PrintCmd.PrintCutpaper(0));
                         try {
                             Thread.sleep(1500); // Pause bulk transfer to allow hardware mechanical cut
