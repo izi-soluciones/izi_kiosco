@@ -13,7 +13,7 @@ class TaxesStrategyCo implements TaxesStrategy{
         if(parametrosFacturacionItem.co?.impuestos.isEmpty==true){
           return precioItem;
         }
-        precioItem = Calc.roundConservador(precioItem);
+        precioItem = Calc.roundConservador(precioItem, 0);
         if (parametrosFacturacionItem.co?.impuestosIn==true) {
             double amount = 0;
             double rate = 0;
