@@ -30,7 +30,7 @@ class PrintTemplate {
   Contribuyente contribuyente,
   Sucursal sucursal,
   Invoice factura,{required TaxesStrategy taxesStrategy})async {
-    if(contribuyente.habilitadoFacturacion == true && contribuyente.config["paisId"]=="CO"){
+    if(contribuyente.config["paisId"]=="CO"){
       return invoice80Co(contribuyente,sucursal,factura,taxesStrategy: taxesStrategy);
     }
     return await invoice80(contribuyente,sucursal,factura,taxesStrategy: taxesStrategy);
