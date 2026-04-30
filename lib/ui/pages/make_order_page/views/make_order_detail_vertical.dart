@@ -197,7 +197,7 @@ class _MakeOrderDetailStateVertical extends State<MakeOrderDetailVertical> {
               flex:4,
               child: IziText.body(
                   color: context.iziColors.dark,
-                  text: item.nombre,
+                  text: item.nombreMostrar,
                   fontWeight: FontWeight.w600,
                   maxLines: 2),
             ),

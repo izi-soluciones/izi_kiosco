@@ -195,7 +195,7 @@ class _MakeOrderDetailState extends State<MakeOrderDetail> {
                       padding: const EdgeInsets.only(right: 16),
                       child: IziText.body(
                           color: context.iziColors.dark,
-                          text: item.nombre,
+                          text: item.nombreMostrar,
                           fontWeight: FontWeight.w600,
                           maxLines: 2),
                     ),

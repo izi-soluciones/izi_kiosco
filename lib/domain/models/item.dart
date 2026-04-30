@@ -26,6 +26,9 @@ class Item {
   String? subCategoria;
   bool kioscoOcultarLlevar;
   bool kioscoOcultarAqui;
+  String? nombreComercialKiosko;
+
+  String get nombreMostrar => (nombreComercialKiosko != null && nombreComercialKiosko!.trim().isNotEmpty) ? nombreComercialKiosko! : nombre;
 
 
 
@@ -52,6 +55,7 @@ class Item {
       required this.subCategoria,
       required this.kioscoOcultarAqui,
       required this.kioscoOcultarLlevar,
+      this.nombreComercialKiosko,
       this.precioModUnitario =0,
         this.precioModificadores = 0,
         this.parametrosFacturacion,
@@ -83,6 +87,7 @@ class Item {
         id: json["id"] ?? 0,
         kioscoOcultarAqui: json["kioscoOcultarAqui"] is bool? json["kioscoOcultarAqui"]: false,
         kioscoOcultarLlevar: json["kioscoOcultarLlevar"] is bool? json["kioscoOcultarLlevar"]: false,
+        nombreComercialKiosko: json["nombreComercialKiosko"],
         valor: json["valor"]);
   }
 
@@ -108,6 +113,7 @@ class Item {
       parametrosFacturacion: parametrosFacturacion,
       kioscoOcultarAqui: kioscoOcultarAqui,
       kioscoOcultarLlevar: kioscoOcultarLlevar,
+      nombreComercialKiosko: nombreComercialKiosko,
       codigoBarras: codigoBarras);
 
   Map<String,dynamic> toJson(){

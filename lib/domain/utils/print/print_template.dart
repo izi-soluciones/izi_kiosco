@@ -21,7 +21,7 @@ class PrintTemplate {
   Sucursal sucursal,
   Invoice factura,
   {int? orderNumber, int? customOrderNumber, required TaxesStrategy taxesStrategy})async {
-    if(contribuyente.habilitadoFacturacion == true && contribuyente.config["paisId"]=="CO"){
+    if(contribuyente.config["paisId"]=="CO"){
       return invoiceCompactCo(factura,contribuyente,sucursal, orderNumber: orderNumber, customOrderNumber: customOrderNumber,taxesStrategy: taxesStrategy);
     }
     return await invoiceCompact(factura,contribuyente,sucursal, orderNumber: orderNumber, customOrderNumber: customOrderNumber,taxesStrategy: taxesStrategy);
@@ -30,7 +30,7 @@ class PrintTemplate {
   Contribuyente contribuyente,
   Sucursal sucursal,
   Invoice factura,{required TaxesStrategy taxesStrategy})async {
-    if(contribuyente.habilitadoFacturacion == true && contribuyente.config["paisId"]=="CO"){
+    if(contribuyente.config["paisId"]=="CO"){
       return invoice80Co(contribuyente,sucursal,factura,taxesStrategy: taxesStrategy);
     }
     return await invoice80(contribuyente,sucursal,factura,taxesStrategy: taxesStrategy);

@@ -228,7 +228,7 @@ class _MakeOrderRetailScanState extends State<MakeOrderRetailScan> {
                       height: 1,
                       textAlign: TextAlign.left,
                       color: context.iziColors.dark,
-                      text: item.nombre,
+                      text: item.nombreMostrar,
                       fontWeight: FontWeight.w500,
                       maxLines: 5),
                   const SizedBox(height: 8,),

@@ -338,13 +338,13 @@ class _MakeOrderConfirmState extends State<MakeOrderConfirm> {
                   IziText.body(
                       textAlign: TextAlign.left,
                       color: context.iziColors.dark,
-                      text: item.nombre,
+                      text: item.nombreMostrar,
                       fontWeight: FontWeight.w600,
                       maxLines: 10):
                   IziText.title(
                       textAlign: TextAlign.left,
                       color: context.iziColors.dark,
-                      text: item.nombre,
+                      text: item.nombreMostrar,
                       fontWeight: FontWeight.w600,
                       maxLines: 10),
 

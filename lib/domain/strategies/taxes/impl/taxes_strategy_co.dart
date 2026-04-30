@@ -13,7 +13,7 @@ class TaxesStrategyCo implements TaxesStrategy{
         if(parametrosFacturacionItem.co?.impuestos.isEmpty==true){
           return precioItem;
         }
-        precioItem = Calc.roundConservador(precioItem);
+        precioItem = Calc.roundConservador(precioItem, 0);
         if (parametrosFacturacionItem.co?.impuestosIn==true) {
             double amount = 0;
             double rate = 0;
@@ -26,7 +26,7 @@ class TaxesStrategyCo implements TaxesStrategy{
                     }
             }
             double unitarioIncluido = Calc.div(Calc.div(Calc.sub(precioItem, amount), Calc.add(1, Calc.div(rate, 100))), cantidad);
-            unitarioIncluido = Calc.roundCeil(unitarioIncluido);
+            unitarioIncluido = Calc.roundConservador(unitarioIncluido, 2);
             precio = unitarioIncluido;
 
             precioItem = Calc.mul(cantidad, precio);
@@ -44,7 +44,7 @@ class TaxesStrategyCo implements TaxesStrategy{
 
             totalImpuestos = Calc.roundConservador(totalImpuestos);
         }
-        return Calc.add(precioItem, Calc.roundConservador(totalImpuestos));
+        return Calc.roundConservador(Calc.add(precioItem, Calc.roundConservador(totalImpuestos)), 0);
   }
 
   @override

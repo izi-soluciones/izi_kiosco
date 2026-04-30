@@ -76,7 +76,7 @@ class MakeOrderItemLg extends StatelessWidget {
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              IziText.titleSmall(height: 1.1,maxLines: 3,color: context.iziColors.dark, text: item.nombre,textAlign: TextAlign.start),
+                              IziText.titleSmall(height: 1.1,maxLines: 3,color: context.iziColors.dark, text: item.nombreMostrar,textAlign: TextAlign.start),
                               if(item.descripcion!=null)
                               const SizedBox(height: 4,),
                               if(item.descripcion!=null && ru.gtXs())
