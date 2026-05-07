@@ -160,14 +160,11 @@ class PrintUtils {
           } catch (e) {
             log("SatPrint failed: $e");
           }
-        } else if (device?.config.descargarQR == true) {
+        } else if (device?.config.printAutoReply == true) {
           try {
             await _autoReplyPrint(values);
           } catch (e) {
             log("AutoReplyPrint failed: $e");
-             // Fallback or just log? User asked to "add a flow", implies valid alternative. 
-             // But if specific device is new, maybe fallback isn't desired. 
-             // I'll keep it exclusive for now as per request "utilizar el dsk nuevo".
           }
         } else {
           var resBinding = await SunmiPrinter.bindingPrinter();

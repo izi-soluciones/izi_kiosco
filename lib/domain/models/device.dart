@@ -63,6 +63,7 @@ class ConfigDevice {
   final String? token;
   final bool descargarQR;
   final bool printSat;
+  final bool printAutoReply;
   final bool ocultarCash;
   final bool facturaCompacto;
   final bool noPrintRollo;
@@ -90,6 +91,7 @@ class ConfigDevice {
       required this.noPrintRollo,
       required this.descargarQR,
       required this.printSat,
+      required this.printAutoReply,
       required this.ocultarCash,
       required this.facturaCompacto,
       this.video,
@@ -135,6 +137,7 @@ class ConfigDevice {
       token: jsonObj?["token"] is String ? jsonObj!["token"] : null,
       descargarQR: jsonObj?["descargarQR"] is bool ? jsonObj!["descargarQR"] : false,
       printSat: jsonObj?["printSat"] is bool ? jsonObj!["printSat"] : false,
+      printAutoReply: jsonObj?["printAutoReply"] is bool ? jsonObj!["printAutoReply"] : false,
       ocultarCash: jsonObj?["ocultarCash"] is bool ? jsonObj!["ocultarCash"] : false,
       facturaCompacto: jsonObj?["facturaCompacto"] is bool ? jsonObj!["facturaCompacto"] : false,
       isRetailBarcode: jsonObj?["isRetailBarcode"] is bool ? jsonObj!["isRetailBarcode"] : false,
