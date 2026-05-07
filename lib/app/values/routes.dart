@@ -16,6 +16,7 @@ import 'package:izi_kiosco/domain/blocs/payment/payment_bloc.dart';
 import 'package:izi_kiosco/domain/models/payment_obj.dart';
 import 'package:izi_kiosco/ui/general/main_layout/main_layout.dart';
 import 'package:izi_kiosco/ui/pages/error_payment_page/error_payment_page.dart';
+import 'package:izi_kiosco/ui/pages/pos_config_page/pos_config_page.dart';
 import 'package:izi_kiosco/ui/pages/home_page/home_page.dart';
 import 'package:izi_kiosco/ui/pages/login_page/login_page.dart';
 import 'package:izi_kiosco/ui/pages/make_order_page/make_order_page.dart';
@@ -39,116 +40,149 @@ class Routes {
             child: BlocProvider(
               create: (context) => LoginBloc(AuthRepositoryHttp()),
               child: MainLayout(
-                  currentLocation: state.fullPath ?? "",
-                  hideDrawer: true,
-                  hideBottomNav: true,
-                  onPop: null,
-                  child: const LoginPage()),
+                currentLocation: state.fullPath ?? "",
+                hideDrawer: true,
+                hideBottomNav: true,
+                onPop: null,
+                child: const LoginPage(),
+              ),
             ),
           );
         },
       ),
       ShellRoute(
-          builder: (context, state, child) {
-            return MainLayout(
-              currentLocation: state.fullPath ?? "",
-              hideDrawer: true,
-              hideBottomNav: true,
-              onPop: () {
-                return RoutesKeys.home;
-              },
-              child: child,
-            );
-          },
-          routes: [
-            GoRoute(
-              name: RoutesKeys.home,
-              path: RoutesKeys.homeLink,
-              pageBuilder: (BuildContext context, GoRouterState state) {
-                return NoTransitionPage(
-                    child: BlocProvider(
-                      create: (context) => HomeBloc(BusinessRepositoryHttp())..verifyServerPos(context.read<AuthBloc>().state),
-                      child:const HomePage(),
-                    ));
-              },
-            ),
-            GoRoute(
-              name: RoutesKeys.errorPayments,
-              path: RoutesKeys.errorPaymentsLik,
-              pageBuilder: (BuildContext context, GoRouterState state) {
-                return const NoTransitionPage(
-                    child: ErrorPaymentPage());
-              },
-            ),
-            GoRoute(
-              name: RoutesKeys.makeOrderRetail,
-              path: RoutesKeys.makeOrderRetailLink,
-              pageBuilder: (BuildContext context, GoRouterState state) {
-                return NoTransitionPage(
-                    child: BlocProvider(
-                      create: (context) => MakeOrderRetailBloc(
-                          ComandaRepositoryHttp(), BusinessRepositoryHttp())
-                        ..init(context.read<AuthBloc>().state),
-                      child: const MakeOrderRetailPage(),
-                    ));
-              },
-            ),
-            GoRoute(
-              name: RoutesKeys.makeOrder,
-              path: RoutesKeys.makeOrderLink,
-              pageBuilder: (BuildContext context, GoRouterState state) {
-                String? tableId;
-                int? numberDiners;
-                bool fromTables = false;
-                bool isRetail = context.read<AuthBloc>().state.currentDevice?.config.isRetail==true;
-                if (state.extra is Map) {
-                  tableId = (state.extra as Map)["tableId"];
-                  numberDiners = (state.extra as Map)["numberDiners"];
-                  fromTables = (state.extra as Map)["fromTables"] ?? false;
-                }
-                return NoTransitionPage(
-                    child: BlocProvider(
-                  create: (context){
-                    if(isRetail){
+        builder: (context, state, child) {
+          return MainLayout(
+            currentLocation: state.fullPath ?? "",
+            hideDrawer: true,
+            hideBottomNav: true,
+            onPop: () {
+              return RoutesKeys.home;
+            },
+            child: child,
+          );
+        },
+        routes: [
+          GoRoute(
+            name: RoutesKeys.home,
+            path: RoutesKeys.homeLink,
+            pageBuilder: (BuildContext context, GoRouterState state) {
+              return NoTransitionPage(
+                child: BlocProvider(
+                  create: (context) =>
+                      HomeBloc(BusinessRepositoryHttp())
+                        ..verifyServerPos(context.read<AuthBloc>().state),
+                  child: const HomePage(),
+                ),
+              );
+            },
+          ),
+          GoRoute(
+            name: RoutesKeys.errorPayments,
+            path: RoutesKeys.errorPaymentsLik,
+            pageBuilder: (BuildContext context, GoRouterState state) {
+              return const NoTransitionPage(child: ErrorPaymentPage());
+            },
+          ),
+          GoRoute(
+            name: RoutesKeys.posConfig,
+            path: RoutesKeys.posConfigLink,
+            pageBuilder: (BuildContext context, GoRouterState state) {
+              return const NoTransitionPage(child: PosConfigPage());
+            },
+          ),
+          GoRoute(
+            name: RoutesKeys.makeOrderRetail,
+            path: RoutesKeys.makeOrderRetailLink,
+            pageBuilder: (BuildContext context, GoRouterState state) {
+              return NoTransitionPage(
+                child: BlocProvider(
+                  create: (context) => MakeOrderRetailBloc(
+                    ComandaRepositoryHttp(),
+                    BusinessRepositoryHttp(),
+                  )..init(context.read<AuthBloc>().state),
+                  child: const MakeOrderRetailPage(),
+                ),
+              );
+            },
+          ),
+          GoRoute(
+            name: RoutesKeys.makeOrder,
+            path: RoutesKeys.makeOrderLink,
+            pageBuilder: (BuildContext context, GoRouterState state) {
+              String? tableId;
+              int? numberDiners;
+              bool fromTables = false;
+              bool isRetail =
+                  context
+                      .read<AuthBloc>()
+                      .state
+                      .currentDevice
+                      ?.config
+                      .isRetail ==
+                  true;
+              if (state.extra is Map) {
+                tableId = (state.extra as Map)["tableId"];
+                numberDiners = (state.extra as Map)["numberDiners"];
+                fromTables = (state.extra as Map)["fromTables"] ?? false;
+              }
+              return NoTransitionPage(
+                child: BlocProvider(
+                  create: (context) {
+                    if (isRetail) {
                       return MakeOrderBloc(
-                      ComandaRepositoryHttp(), BusinessRepositoryHttp(),
-                      numberDiners: numberDiners,
-                      tableId: tableId)..init(context.read<AuthBloc>().state, true)..changeStepStatus(1);
+                          ComandaRepositoryHttp(),
+                          BusinessRepositoryHttp(),
+                          numberDiners: numberDiners,
+                          tableId: tableId,
+                        )
+                        ..init(context.read<AuthBloc>().state, true)
+                        ..changeStepStatus(1);
                     }
                     return MakeOrderBloc(
-                      ComandaRepositoryHttp(), BusinessRepositoryHttp(),
+                      ComandaRepositoryHttp(),
+                      BusinessRepositoryHttp(),
                       numberDiners: numberDiners,
-                      tableId: tableId,);
+                      tableId: tableId,
+                    );
                   },
-                  child: MakeOrderPage(fromTables: fromTables,isRetail: isRetail),
-                ));
-              },
-            ),
-            GoRoute(
-              name: RoutesKeys.payment,
-              path: RoutesKeys.paymentLink,
-              pageBuilder: (BuildContext context, GoRouterState state) {
-                if (state.extra is PaymentObj) {
-                  PaymentObj paymentObj = state.extra as PaymentObj;
-                  return NoTransitionPage(
-                    child: BlocProvider(
-                      create: (context) => PaymentBloc(ComandaRepositoryHttp(),
-                          BusinessRepositoryHttp(), SocketRepositoryHttp())
-                        ..initOrder(
-                            paymentObj: paymentObj,
-                            authState: context.read<AuthBloc>().state),
-                      child: Scaffold(
-                          backgroundColor: context.iziColors.lightGrey30,
-                          body: PaymentPage()),
+                  child: MakeOrderPage(
+                    fromTables: fromTables,
+                    isRetail: isRetail,
+                  ),
+                ),
+              );
+            },
+          ),
+          GoRoute(
+            name: RoutesKeys.payment,
+            path: RoutesKeys.paymentLink,
+            pageBuilder: (BuildContext context, GoRouterState state) {
+              if (state.extra is PaymentObj) {
+                PaymentObj paymentObj = state.extra as PaymentObj;
+                return NoTransitionPage(
+                  child: BlocProvider(
+                    create: (context) =>
+                        PaymentBloc(
+                          ComandaRepositoryHttp(),
+                          BusinessRepositoryHttp(),
+                          SocketRepositoryHttp(),
+                        )..initOrder(
+                          paymentObj: paymentObj,
+                          authState: context.read<AuthBloc>().state,
+                        ),
+                    child: Scaffold(
+                      backgroundColor: context.iziColors.lightGrey30,
+                      body: PaymentPage(),
                     ),
-                  );
-                }
-                return const NoTransitionPage(
-                  child: Scaffold()
+                  ),
                 );
-              },
-            )
-          ]),
+              }
+              return const NoTransitionPage(child: Scaffold());
+            },
+          ),
+        ],
+      ),
     ];
   }
 }

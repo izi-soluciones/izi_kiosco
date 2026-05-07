@@ -1,4 +1,3 @@
-
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -19,6 +18,7 @@ import 'package:izi_kiosco/domain/blocs/payment/payment_bloc.dart';
 import 'package:izi_kiosco/domain/utils/input_obj.dart';
 import 'package:izi_kiosco/ui/general/izi_header_kiosk.dart';
 import 'package:izi_kiosco/ui/pages/payment_page/modals/card_type_atc_modal.dart';
+import 'package:izi_kiosco/ui/pages/payment_page/modals/card_type_izify_modal.dart';
 import 'package:izi_kiosco/ui/pages/payment_page/views/country_form/payment_page_invoice_form.dart';
 import 'package:izi_kiosco/ui/utils/custom_alerts.dart';
 import 'package:izi_kiosco/ui/utils/dynamic_list.dart';
@@ -370,13 +370,37 @@ class _PaymentPageInvoiceState extends State<PaymentPageInvoice> {
   }
 
   _paymentCard() {
-    if (authState.currentDevice?.config.ipLinkser !=
-        null) {
+    if (widget.state.izifyPosIp != null) {
+      _paymentCardIzify(context);
+    } else if (authState.currentDevice?.config.ipLinkser != null) {
       _paymentCardLinkser(context);
-    } else if (authState.currentDevice?.config.ipAtc !=
-        null) {
+    } else if (authState.currentDevice?.config.ipAtc != null) {
       _paymentCardATC(context);
     }
+  }
+
+  _paymentCardIzify(BuildContext context) async {
+    CustomAlerts.defaultAlert(
+            context: context,
+            dismissible: true,
+            defaultScroll: false,
+            child: CardTypeIzifyModal(
+                amount: (widget.state.paymentObj?.amount ?? 0)))
+        .then((value) async {
+      if (value is String) {
+        context.read<PageUtilsBloc>().closeScreenActive();
+        var status = await context.read<PaymentBloc>().makeCardPayment(
+            authState,
+            izify: true,
+            cardType: value);
+        if (!mounted) {
+          return;
+        }
+        if (!status) {
+          context.read<PageUtilsBloc>().initScreenActiveInvoiced(authState);
+        }
+      }
+    });
   }
 
   _paymentCardLinkser(BuildContext context) async {

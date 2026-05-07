@@ -1,6 +1,8 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+
+import 'package:izi_kiosco/ui/pages/payment_page/modals/card_type_izify_modal.dart';
 import 'package:go_router/go_router.dart';
 import 'package:izi_design_system/atoms/izi_typography.dart';
 import 'package:izi_design_system/tokens/colors.dart';
@@ -108,7 +110,7 @@ class PaymentPageSelection extends StatelessWidget {
             color: context.iziColors.primaryDarken,
             text: LocaleKeys.payment_buttons_qr.tr(),
         ),
-        if(authState.currentDevice?.config.ipAtc!=null||authState.currentDevice?.config.ipLinkser!=null )
+        if(state.izifyPosIp != null || authState.currentDevice?.config.ipAtc!=null||authState.currentDevice?.config.ipLinkser!=null )
           PaymentMethodBtn(
             onPressed: (){
               _selectPayment(PaymentType.card,context,authState);
@@ -153,7 +155,9 @@ class PaymentPageSelection extends StatelessWidget {
   }
 
   _paymentCard(BuildContext context, AuthState authState) {
-    if (authState.currentDevice?.config.ipLinkser !=
+    if (state.izifyPosIp != null) {
+      _paymentCardIzify(context, authState);
+    } else if (authState.currentDevice?.config.ipLinkser !=
         null) {
       _paymentCardLinkser(context, authState);
     } else if (authState.currentDevice?.config.ipAtc !=
@@ -169,6 +173,27 @@ class PaymentPageSelection extends StatelessWidget {
         .makeCardPayment(authState, linkser: true).then((status){
       if (!status) {
         context.read<PageUtilsBloc>().initScreenActiveInvoiced(authState);
+      }
+    });
+  }
+
+  _paymentCardIzify(BuildContext context, AuthState authState) async {
+    CustomAlerts.defaultAlert(
+        context: context,
+        dismissible: true,
+        defaultScroll: false,
+        child: CardTypeIzifyModal(
+            amount: (state.paymentObj?.amount ?? 0)))
+        .then((value) async {
+      if (value is String) {
+        context.read<PageUtilsBloc>().closeScreenActive();
+        context
+            .read<PaymentBloc>()
+            .makeCardPayment(authState, izify: true, cardType: value).then((status){
+          if (!status) {
+            context.read<PageUtilsBloc>().initScreenActiveInvoiced(authState);
+          }
+        });
       }
     });
   }

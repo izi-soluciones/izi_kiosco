@@ -4,6 +4,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_web_plugins/url_strategy.dart'
 if (dart.library.html) 'package:flutter_web_plugins/url_strategy.dart' as web_url;
@@ -21,6 +22,7 @@ void main() async {
     web_url.usePathUrlStrategy();
   }
   WidgetsFlutterBinding.ensureInitialized();
+  SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
   await dotenv.load(fileName: AssetsKeys.envForFlavor(_flavor));
   await EasyLocalization.ensureInitialized();
   await Firebase.initializeApp(

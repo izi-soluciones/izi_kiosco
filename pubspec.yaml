@@ -76,7 +76,9 @@ dependencies:
   jwt_decoder: ^2.0.1
   firebase_app_check: ^0.2.0
   decimal: 2.3.3
+  nsd: ^4.1.0
   qr_flutter: ^4.1.0
+  web_socket_channel: ^3.0.3
   country_picker: ^2.0.27
   phone_numbers_parser: ^9.0.19
 

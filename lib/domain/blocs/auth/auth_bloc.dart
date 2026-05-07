@@ -53,8 +53,6 @@ class AuthBloc extends Cubit<AuthState> {
 
   Future<void> verify() async {
     try {
-      PrintUtils().printTest();
-      
       String? token = Uri.base.queryParameters["token"] ?? await TokenUtils.getToken();
       String? tokenCard = Uri.base.queryParameters["tokenCard"] ?? await TokenUtils.getTokenCard();
       if (token == null) {
@@ -66,7 +64,7 @@ class AuthBloc extends Cubit<AuthState> {
         return emit(state.copyWith(status: AuthStatus.noAuth));
       }
       await TokenUtils.saveToken(token);
-      if(tokenCard!=null){
+      if(tokenCard!=null && tokenCard.trim().isNotEmpty){
         await TokenUtils.saveTokenCard(tokenCard);
       }
       emit(state.copyWith(status: AuthStatus.init));

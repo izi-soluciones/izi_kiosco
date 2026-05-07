@@ -4,6 +4,7 @@ import 'dart:developer';
 import 'dart:math' as math;
 import 'package:collection/collection.dart';
 import 'package:dio/dio.dart';
+import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -30,6 +31,7 @@ import 'package:izi_kiosco/domain/models/person_type.dart';
 import 'package:izi_kiosco/domain/models/tax_responsability.dart';
 import 'package:izi_kiosco/domain/repositories/business_repository.dart';
 import 'package:izi_kiosco/domain/repositories/comanda_repository.dart';
+import 'package:izi_kiosco/data/utils/token_utils.dart';
 import 'package:izi_kiosco/domain/repositories/socket_repository.dart';
 import 'package:izi_kiosco/domain/utils/crash_report.dart';
 import 'package:izi_kiosco/domain/utils/input_obj.dart';
@@ -131,13 +133,20 @@ class PaymentBloc extends Cubit<PaymentState> {
       }
 
       await countryConfig?.setParams(authState.currentContribuyente!,authState.currentSucursal!);
-
+      String? savedIzifyPosIp = await TokenUtils.getPosIp();
+      if (savedIzifyPosIp == null) {
+        final ecopayIp = authState.currentDevice?.config.ipEcopay;
+        if (ecopayIp != null) {
+          savedIzifyPosIp = ecopayIp.contains(':') ? ecopayIp : '$ecopayIp:8081';
+        }
+      }
       emit(state.copyWith(
           status: PaymentStatus.successGet,
           step: 1,
           economicActivity: economicActivity,
           currentCurrency: currentCurrency,
           paymentObj: paymentObj,
+          izifyPosIp: savedIzifyPosIp,
           countryTaxes:countryTaxes,
           cashRegisters: cashRegisters,
           currentCashRegister: currentCashRegister));
@@ -368,8 +377,68 @@ class PaymentBloc extends Cubit<PaymentState> {
     return super.close();
   }
 
+  Future<bool> _verifyIzifySocket() async {
+    try {
+      final posIpRaw = state.izifyPosIp;
+      if (posIpRaw == null) return false;
+      final posIp = posIpRaw.split(':')[0];
+      
+      final channel = WebSocketChannel.connect(Uri.parse('ws://$posIp:8081/payment-updates'));
+      await channel.ready.timeout(const Duration(seconds: 4));
+      await channel.sink.close();
+      return true;
+    } catch (e) {
+      log('WebSocket verification failed: $e');
+      return false;
+    }
+  }
+
+  Future<bool> _waitForIzifyPaymentStatus() async {
+    final posIpRaw = state.izifyPosIp;
+    if (posIpRaw == null) return false;
+    final posIp = posIpRaw.split(':')[0];
+    
+    try {
+      final channel = WebSocketChannel.connect(Uri.parse('ws://$posIp:8081/payment-updates'));
+      
+      final result = await channel.stream.firstWhere((message) {
+        try {
+          final data = jsonDecode(message.toString());
+          return data['status'] == 'SUCCESS' || data['status'] == 'ERROR';
+        } catch (_) {
+          return false;
+        }
+      }).timeout(const Duration(seconds: 90));
+
+      await channel.sink.close();
+      
+      final data = jsonDecode(result.toString());
+      return data['status'] == 'SUCCESS';
+    } catch (e) {
+      log('Izify WS wait failed: $e');
+      return false;
+    }
+  }
+
+  Future<Map<String, String>?> _getIzifyIpAndToken(AuthState authState) async {
+    final ipPort = await TokenUtils.getPosIp();
+    final posToken = await TokenUtils.getPosToken();
+    if (ipPort != null && posToken != null) {
+      return {'ipPort': ipPort, 'token': posToken};
+    }
+    
+    final ipEcopay = authState.currentDevice?.config.ipEcopay;
+    final tokenEcopay = authState.currentDevice?.config.token;
+    if (ipEcopay != null && tokenEcopay != null) {
+      final ipWithPort = ipEcopay.contains(':') ? ipEcopay : '$ipEcopay:8081';
+      return {'ipPort': ipWithPort, 'token': tokenEcopay};
+    }
+    
+    return null;
+  }
+
   Future<bool> _makeCardRetailPayment(AuthState authState,
-      {bool atc = false, bool linkser = false, bool contactless = true}) async {
+      {bool atc = false, bool linkser = false, bool izify = false, bool contactless = true, String cardType = "DEBITO"}) async {
     try {
       emit(state.copyWith(step: 4));
 
@@ -401,7 +470,23 @@ class PaymentBloc extends Cubit<PaymentState> {
         return true;
       }
       CardPayment cardPayment;
-      if (linkser) {
+      if (izify) {
+        final isSocketAlive = await _verifyIzifySocket();
+        if (!isSocketAlive) {
+          throw Exception("Terminal POS sin conexión al socket");
+        }
+        final creds = await _getIzifyIpAndToken(authState);
+        if (creds == null) {
+          throw Exception("No se encontraron credenciales del POS");
+        }
+        final currencyIso = state.countryTaxes == PaymentCountryTaxes.colombia ? "COP" : "BOB";
+        cardPayment = await _comandaRepository.callCardPaymentIzify(
+            ipPort: creds['ipPort']!,
+            token: creds['token']!,
+            currency: currencyIso,
+            cardType: cardType,
+            amount: (state.paymentObj?.amount ?? 0).toStringAsFixed(2));
+      } else if (linkser) {
         cardPayment = await _comandaRepository.callCardPayment(
             amount: _getIntFromDecimal(
                 _roundToNDecimals(state.paymentObj?.amount ?? 0, 2)),
@@ -417,17 +502,24 @@ class PaymentBloc extends Cubit<PaymentState> {
             rethrow;
         }
       }
-      emit(state.copyWith(status: PaymentStatus.processingOrder));
       var success = false;
-      for (var i = 0; i < 10; i++) {
-        try {
-          await _comandaRepository.markPaymentATC(
-              state.paymentObj?.uuid ?? "", charge.intentoPago);
-          success = true;
-          break;
-        } catch (e) {
-          await Future.delayed(Duration(seconds: 1 * (i + 1)));
-          log(e.toString());
+      bool isTerminalApproved = true;
+      if (izify) {
+        isTerminalApproved = await _waitForIzifyPaymentStatus();
+      }
+      emit(state.copyWith(status: PaymentStatus.processingOrder));
+      
+      if (isTerminalApproved) {
+        for (var i = 0; i < 10; i++) {
+          try {
+            await _comandaRepository.markPaymentATC(
+                state.paymentObj?.uuid ?? "", charge.intentoPago);
+            success = true;
+            break;
+          } catch (e) {
+            await Future.delayed(Duration(seconds: 1 * (i + 1)));
+            log(e.toString());
+          }
         }
       }
       if (!success) {
@@ -459,7 +551,7 @@ class PaymentBloc extends Cubit<PaymentState> {
   }
 
   Future<bool> _makeCardOrderPayment(AuthState authState,
-      {bool atc = false, bool linkser = false, bool contactless = true}) async {
+      {bool atc = false, bool linkser = false, bool izify = false, bool contactless = true, String cardType = "DEBITO"}) async {
     try {
       emit(state.copyWith(step: 4));
 
@@ -474,7 +566,23 @@ class PaymentBloc extends Cubit<PaymentState> {
         return true;
       }
       CardPayment cardPayment;
-      if (linkser) {
+      if (izify) {
+        final isSocketAlive = await _verifyIzifySocket();
+        if (!isSocketAlive) {
+          throw Exception("Terminal POS sin conexión al socket");
+        }
+        final creds = await _getIzifyIpAndToken(authState);
+        if (creds == null) {
+          throw Exception("No se encontraron credenciales del POS");
+        }
+        final currencyIso = state.countryTaxes == PaymentCountryTaxes.colombia ? "COP" : "BOB";
+        cardPayment = await _comandaRepository.callCardPaymentIzify(
+            ipPort: creds['ipPort']!,
+            token: creds['token']!,
+            currency: currencyIso,
+            cardType: cardType,
+            amount: (state.paymentObj?.amount ?? 0).toStringAsFixed(2));
+      } else if (linkser) {
         cardPayment = await _comandaRepository.callCardPayment(
             amount: _getIntFromDecimal(
                 _roundToNDecimals(state.paymentObj?.amount ?? 0, 2)),
@@ -490,16 +598,23 @@ class PaymentBloc extends Cubit<PaymentState> {
             rethrow;
         }
       }
-      emit(state.copyWith(status: PaymentStatus.processingOrder));
       var success = false;
-      for (var i = 0; i < 10; i++) {
-        try {
-          await _comandaRepository.markPaymentATC( charge.uuid, null);
-          success = true;
-          break;
-        } catch (e) {
-          await Future.delayed(Duration(seconds: 1 * (i + 1)));
-          log(e.toString());
+      bool isTerminalApproved = true;
+      if (izify) {
+        isTerminalApproved = await _waitForIzifyPaymentStatus();
+      }
+      emit(state.copyWith(status: PaymentStatus.processingOrder));
+      
+      if (isTerminalApproved) {
+        for (var i = 0; i < 10; i++) {
+          try {
+            await _comandaRepository.markPaymentATC( charge.uuid, null);
+            success = true;
+            break;
+          } catch (e) {
+            await Future.delayed(Duration(seconds: 1 * (i + 1)));
+            log(e.toString());
+          }
         }
       }
       if (!success) {
@@ -531,17 +646,17 @@ class PaymentBloc extends Cubit<PaymentState> {
   }
 
   Future<bool> makeCardPayment(AuthState authState,
-      {bool atc = false, bool linkser = false, bool contactless = true}) async {
+      {bool atc = false, bool linkser = false, bool izify = false, bool contactless = true, String cardType = "DEBITO"}) async {
     if ((authState.currentContribuyente?.habilitadoFacturacion!=true||(_validateInputs() &&
-        (atc || linkser))) &&
+        (atc || linkser || izify))) &&
         state.paymentObj?.isComanda == true) {
       return await _makeCardOrderPayment(authState,
-          atc: atc, contactless: contactless, linkser: linkser);
+          atc: atc, contactless: contactless, linkser: linkser, izify: izify, cardType: cardType);
     } else if (((authState.currentContribuyente?.habilitadoFacturacion!=true)||(_validateInputs() &&
-        (atc || linkser))) &&
+        (atc || linkser || izify))) &&
         state.paymentObj?.isComanda == false) {
       return await _makeCardRetailPayment(authState,
-          atc: atc, contactless: contactless, linkser: linkser);
+          atc: atc, contactless: contactless, linkser: linkser, izify: izify, cardType: cardType);
     }
     return false;
   }
@@ -1018,6 +1133,7 @@ class PaymentBloc extends Cubit<PaymentState> {
 
   _printRolloOrder(AuthState authState,
       {required int orderNumber, int? customOrderNumber}) async {
+    log("iZi Kiosco: [DEBUG] _printRolloOrder invoked for orderNumber: $orderNumber");
     var tmp = await PrintTemplate.order80(
         orderNumber,
         customOrderNumber,
@@ -1028,20 +1144,25 @@ class PaymentBloc extends Cubit<PaymentState> {
               taxesStrategy: authState.taxesStrategy
         );
     var printUtils = PrintUtils();
+    log("iZi Kiosco: [DEBUG] _printRolloOrder dispatching ${tmp.length} PrintItems directly to printUtils...");
     await printUtils.print(tmp, authState.currentDevice);
   }
 
   _printRollo(AuthState authState, {String? idInvoice, Invoice? invoice, int? orderNumber, int? customOrderNumber}) async {
     try{
+      log("iZi Kiosco: [DEBUG] _printRollo invoked. idInvoice=$idInvoice, orderNumber=$orderNumber");
       List<IziPrintItem> tmp = [];
 
       if (idInvoice == null && invoice == null && orderNumber == null) {
+        log("iZi Kiosco: [DEBUG] Aborting _printRollo, all tracking variables are null.");
         return;
       }
       if (idInvoice != null) {
         invoice = await _comandaRepository.getInvoice(idInvoice);
+        log("iZi Kiosco: [DEBUG] Resolved explicit Invoice object from comanda repository? ${invoice != null}");
       }
       if(orderNumber!=null){
+        log("iZi Kiosco: [DEBUG] Formatting Order template natively...");
         tmp = await PrintTemplate.order80(
               orderNumber,
               customOrderNumber,
@@ -1053,6 +1174,7 @@ class PaymentBloc extends Cubit<PaymentState> {
           );
       }
       if(invoice==null){
+        log("iZi Kiosco: [DEBUG] WARNING: invoice remained perfectly null, pushing purely order bytes (${tmp.length} items)...");
         var printUtils = PrintUtils();
         await printUtils.print(tmp, authState.currentDevice);
         return;
@@ -1060,6 +1182,7 @@ class PaymentBloc extends Cubit<PaymentState> {
 
       if(authState.currentDevice?.config.facturaCompacto==true
       ){
+        log("iZi Kiosco: [DEBUG] Compiling compact invoice template!");
         tmp = await PrintTemplate.printInvoiceCompact(
           authState.currentContribuyente!,
           authState.currentSucursal!,
@@ -1070,7 +1193,11 @@ class PaymentBloc extends Cubit<PaymentState> {
         );
       }
       else{
+        log("iZi Kiosco: [DEBUG] Compiling standard full sequential invoice template with explicit cut divider!");
         tmp.add(IziPrintLineWrap(lines: 2));
+        if (orderNumber != null) {
+          tmp.add(IziPrintCut());
+        }
         if(authState.currentSucursal?.config is Map &&
           (authState.currentSucursal?.config as Map)["tipoFacturaVentas"] == "compacto"
         ){
@@ -1089,10 +1216,11 @@ class PaymentBloc extends Cubit<PaymentState> {
       }
 
       var printUtils = PrintUtils();
+      log("iZi Kiosco: [DEBUG] Submitting FULL hybrid batch configuration to print core: ${tmp.length} items");
       await printUtils.print(tmp, authState.currentDevice);
     }
-    catch(e){
-      log(e.toString());
+    catch(e, stacktrace){
+      log("iZi Kiosco: [DEBUG ERROR] _printRollo failure -> ${e.toString()} \nStacktrace: $stacktrace");
     }
   }
 

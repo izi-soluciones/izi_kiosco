@@ -48,7 +48,9 @@ class LoginBloc extends Cubit<LoginState>{
         if (res["status"] == "authorized") {
            _pollingSubscription?.cancel();
            await TokenUtils.saveToken(res["accessToken"]);
-           await TokenUtils.saveTokenCard(res["tarjetaToken"]);
+           if (res["tarjetaToken"] != null && res["tarjetaToken"].toString().isNotEmpty) {
+             await TokenUtils.saveTokenCard(res["tarjetaToken"]);
+           }
            await _authRepository.getDevice();
            emit(state.copyWith(status: LoginStatus.successLogin));
         }

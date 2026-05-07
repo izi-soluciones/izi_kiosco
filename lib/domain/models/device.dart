@@ -42,6 +42,12 @@ class Device {
 class ConfigDevice {
   final String? ipAtc;
   final String? ipLinkser;
+  final String? ipEcopay;
+  final String? mqttClientId;
+  final String? mqttUserName;
+  final String? mqttPassword;
+  final String? commerceId;
+  final String? cajaId;
   final String? video;
   final bool demo;
   final bool isRetail;
@@ -56,6 +62,8 @@ class ConfigDevice {
   final bool? sortByPriority;
   final String? token;
   final bool descargarQR;
+  final bool printSat;
+  final bool printAutoReply;
   final bool ocultarCash;
   final bool facturaCompacto;
   final bool noPrintRollo;
@@ -74,8 +82,16 @@ class ConfigDevice {
       required this.isRetailBarcode,
       required this.token,
       this.ipLinkser,
+      this.ipEcopay,
+      this.mqttClientId,
+      this.mqttUserName,
+      this.mqttPassword,
+      this.commerceId,
+      this.cajaId,
       required this.noPrintRollo,
       required this.descargarQR,
+      required this.printSat,
+      required this.printAutoReply,
       required this.ocultarCash,
       required this.facturaCompacto,
       this.video,
@@ -91,6 +107,12 @@ class ConfigDevice {
     var config = ConfigDevice(
       ipAtc: jsonObj?["ipAtc"] is String ? jsonObj!["ipAtc"] : null,
       ipLinkser: jsonObj?["ipLinkser"] is String ? jsonObj!["ipLinkser"] : null,
+      ipEcopay: jsonObj?["ipEcopay"] is String ? jsonObj!["ipEcopay"] : null,
+      mqttClientId: (jsonObj?["ecopayConfig"] is Map) ? jsonObj!["ecopayConfig"]["mqttClientId"] : jsonObj?["mqttClientId"],
+      mqttUserName: (jsonObj?["ecopayConfig"] is Map) ? jsonObj!["ecopayConfig"]["mqttUserName"] : jsonObj?["mqttUserName"],
+      mqttPassword: (jsonObj?["ecopayConfig"] is Map) ? jsonObj!["ecopayConfig"]["mqttPassword"] : jsonObj?["mqttPassword"],
+      commerceId: (jsonObj?["ecopayConfig"] is Map) ? jsonObj!["ecopayConfig"]["commerceId"]?.toString() : jsonObj?["commerceId"]?.toString(),
+      cajaId: (jsonObj?["ecopayConfig"] is Map) ? jsonObj!["ecopayConfig"]["cajaId"]?.toString() : jsonObj?["cajaId"]?.toString(),
       video: jsonObj?["video"] is String ? jsonObj!["video"] : null,
       demo: jsonObj?["demo"] is bool ? jsonObj!["demo"] : false,
       isRetail: jsonObj?["isRetail"] is bool ? jsonObj!["isRetail"] : false,
@@ -114,6 +136,8 @@ class ConfigDevice {
       jsonObj?["ordenarPrioridad"] is bool ? jsonObj!["ordenarPrioridad"] : null,
       token: jsonObj?["token"] is String ? jsonObj!["token"] : null,
       descargarQR: jsonObj?["descargarQR"] is bool ? jsonObj!["descargarQR"] : false,
+      printSat: jsonObj?["printSat"] is bool ? jsonObj!["printSat"] : false,
+      printAutoReply: jsonObj?["printAutoReply"] is bool ? jsonObj!["printAutoReply"] : false,
       ocultarCash: jsonObj?["ocultarCash"] is bool ? jsonObj!["ocultarCash"] : false,
       facturaCompacto: jsonObj?["facturaCompacto"] is bool ? jsonObj!["facturaCompacto"] : false,
       isRetailBarcode: jsonObj?["isRetailBarcode"] is bool ? jsonObj!["isRetailBarcode"] : false,

@@ -21,6 +21,7 @@ import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/home/home_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/page_utils/page_utils_bloc.dart';
 import 'package:izi_kiosco/ui/general/custom_icons/kiosk_hand_icon.dart';
+import 'package:izi_kiosco/ui/general/widgets/password_modal.dart';
 import 'package:izi_kiosco/ui/utils/responsive_utils.dart';
 import 'package:video_player/video_player.dart';
 
@@ -32,17 +33,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  Timer? timer;
-  bool errorPressed = false;
   VideoPlayerController? _controller;
-  _startTimer() {
-    timer?.cancel();
-    timer = Timer(const Duration(seconds: 4), () {
-      setState(() {
-        errorPressed = true;
-      });
-    });
-  }
 
   @override
   void dispose() {
@@ -269,6 +260,10 @@ class _HomePageState extends State<HomePage> {
                       Positioned.fill(
                         child: Listener(
                           onPointerDown: (val){
+                            // Ignore taps in the top-left config area (200x200)
+                            if (val.localPosition.dx < 200 && val.localPosition.dy < 200) {
+                              return;
+                            }
                             setState(() {
                               showVideo=false;
                               GoRouter.of(context).goNamed(RoutesKeys.makeOrder);
@@ -340,18 +335,26 @@ class _HomePageState extends State<HomePage> {
                         left: 0,
                         child: GestureDetector(
                           behavior: HitTestBehavior.opaque,
-                            onTapDown: (details) {
-                              _startTimer();
-                            },
-                            onTapUp: (details) {
-                              timer?.cancel();
-                              if (errorPressed) {
+                            onLongPress: () async {
+                              final pin = context.read<AuthBloc>().state.currentDevice?.config.pin;
+                              final correctPin = (pin != null && pin.isNotEmpty) ? pin : '4321';
+                              
+                              final result = await showDialog<bool>(
+                                context: context,
+                                builder: (ctx) => PasswordModal(correctPin: correctPin),
+                              );
+                              
+                              if (result == true) {
+                                if (mounted) {
+                                  setState(() {
+                                    showVideo = false;
+                                  });
+                                }
                                 context.read<PageUtilsBloc>().initScreenActive(context.read<AuthBloc>().state);
-                                GoRouter.of(context)
-                                    .goNamed(RoutesKeys.errorPayments);
+                                GoRouter.of(context).goNamed(RoutesKeys.errorPayments);
                               }
                             },
-                            child: const SizedBox(width: 100,height: 100,)
+                            child: const SizedBox(width: 200,height: 200,)
                         )
                     )
                   ],

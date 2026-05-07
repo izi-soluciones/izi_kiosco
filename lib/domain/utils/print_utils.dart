@@ -74,6 +74,8 @@ class IziPrintLineWrap extends IziPrintItem {
   IziPrintLineWrap({required this.lines});
 }
 
+class IziPrintCut extends IziPrintItem {}
+
 abstract class IziPrintItem {}
 
 class PrintUtils {
@@ -111,6 +113,14 @@ class PrintUtils {
     if (kIsWeb) {
     } else {
       if (Platform.isAndroid) {
+        log("iZi Kiosco: printTest - Attempting _satPrint for SDK verification.");
+        try {
+          await _satPrint([IziPrintText(text: "SAT Printer OK", size: IziPrintSize.md, bold: true, align: IziPrintAlign.center)]);
+          log("iZi Kiosco: printTest - _satPrint dispatched.");
+        } catch (e) {
+          log("iZi Kiosco: printTest - _satPrint failed: $e");
+        }
+
         var resBinding = await SunmiPrinter.bindingPrinter();
         await SunmiPrinter.initPrinter();
         var status = await SunmiPrinter.getPrinterStatus();
@@ -135,24 +145,154 @@ class PrintUtils {
       }
     }
   }
+  static const platform = MethodChannel('com.izisoluciones.kiosco/print');
+
   print(List<IziPrintItem> values, Device? device) async {
     if (kIsWeb) {
       await _pdfPrint(values);
     } else {
       if (Platform.isAndroid) {
-        var resBinding = await SunmiPrinter.bindingPrinter();
-        await SunmiPrinter.initPrinter();
-        var status = await SunmiPrinter.getPrinterStatus();
-        log(status.toString());
-        if (resBinding == true && status != PrinterStatus.ERROR) {
-          await _sunmiPrint(values);
+        if (device?.config.printSat == true) {
+          try {
+            log("iZi Kiosco: Routing to _satPrint...");
+            await _satPrint(values);
+            log("iZi Kiosco: _satPrint finished resolving channel.");
+          } catch (e) {
+            log("SatPrint failed: $e");
+          }
+        } else if (device?.config.printAutoReply == true) {
+          try {
+            await _autoReplyPrint(values);
+          } catch (e) {
+            log("AutoReplyPrint failed: $e");
+          }
         } else {
-          //await _pdfPrint(values);
+          var resBinding = await SunmiPrinter.bindingPrinter();
+          await SunmiPrinter.initPrinter();
+          var status = await SunmiPrinter.getPrinterStatus();
+          log(status.toString());
+          if (resBinding == true && status != PrinterStatus.ERROR) {
+            await _sunmiPrint(values);
+          } else {
+            //await _pdfPrint(values);
+          }
         }
       } else {
         //await _pdfPrint(values);
       }
     }
+  }
+
+  _satPrint(List<IziPrintItem> values) async {
+    List<Map<String, Object>> items = [];
+    for (var i in values) {
+      if (i is IziPrintText) {
+        items.add({
+          'type': 'text',
+          'text': i.text,
+          'size': i.size.index,
+          'bold': i.bold,
+          'align': i.align.toString().split('.').last,
+        });
+      } else if (i is IziPrintRow) {
+         items.add({
+           'type': 'row',
+           'size': i.size.index,
+           'bold': i.bold,
+           'cols': i.values.map((c) => {
+             'text': c.text,
+             'width': c.width,
+             'align': c.align.toString().split('.').last,
+           }).toList(),
+         });
+      } else if (i is IziPrintQR) {
+        items.add({
+          'type': 'qrcode',
+          'content': i.qrContent,
+          'size': i.size,
+          'align': i.align.toString().split('.').last,
+        });
+      } else if (i is IziPrintSeparator) {
+        items.add({
+          'type': 'line',
+          'dotted': i.dotted
+        });
+      } else if (i is IziPrintLineWrap) {
+        items.add({
+          'type': 'feed',
+          'lines': i.lines
+        });
+      } else if (i is IziPrintCut) {
+        items.add({'type': 'cut'});
+      } else if (i is IziPrintImage) {
+        items.add({
+          'type': 'image',
+          'data': i.image,
+          'align': i.align.toString().split('.').last,
+          'size': i.size
+        });
+      }
+    }
+    items.add({'type': 'cut'});
+    
+    log("iZi Kiosco: Invoking platform channel 'printSat' with ${items.length} items");
+    var res = await platform.invokeMethod('printSat', {'items': items});
+    log("iZi Kiosco: platform method returned $res");
+  }
+
+  _autoReplyPrint(List<IziPrintItem> values) async {
+    List<Map<String, Object>> items = [];
+    for (var i in values) {
+      if (i is IziPrintText) {
+        items.add({
+          'type': 'text',
+          'text': i.text,
+          'size': i.size.index,
+          'bold': i.bold,
+          'align': i.align.toString().split('.').last,
+        });
+      } else if (i is IziPrintRow) {
+         items.add({
+           'type': 'row',
+           'size': i.size.index,
+           'bold': i.bold,
+           'cols': i.values.map((c) => {
+             'text': c.text,
+             'width': c.width,
+             'align': c.align.toString().split('.').last,
+           }).toList(),
+         });
+      } else if (i is IziPrintQR) {
+        items.add({
+          'type': 'qrcode',
+          'content': i.qrContent,
+          'size': i.size,
+          'align': i.align.toString().split('.').last,
+        });
+      } else if (i is IziPrintSeparator) {
+        items.add({
+          'type': 'line',
+          'dotted': i.dotted
+        });
+      } else if (i is IziPrintLineWrap) {
+        items.add({
+          'type': 'feed',
+          'lines': i.lines
+        });
+      } else if (i is IziPrintCut) {
+        items.add({'type': 'cut'});
+      } else if (i is IziPrintImage) {
+        items.add({
+          'type': 'image',
+          'data': i.image,
+          'align': i.align.toString().split('.').last,
+          'size': i.size
+        });
+      }
+    }
+    items.add({'type': 'cut'});
+    
+    await platform.invokeMethod('print', {'items': items});
   }
 
   _sunmiPrint(List<IziPrintItem> values) async {
@@ -233,6 +373,8 @@ class PrintUtils {
                 fontSize: selectFontSize(i.size)));
       } else if (i is IziPrintLineWrap) {
         await SunmiPrinter.lineWrap(i.lines);
+      } else if (i is IziPrintCut) {
+        await SunmiPrinter.cut();
       } else if (i is IziPrintQR) {
         await SunmiPrinter.setAlignment(i.align == IziPrintAlign.left
             ? SunmiPrintAlign.LEFT
