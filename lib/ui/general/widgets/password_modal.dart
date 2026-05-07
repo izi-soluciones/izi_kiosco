@@ -1,4 +1,5 @@
 import 'dart:ui';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:izi_design_system/molecules/izi_btn.dart';
@@ -6,6 +7,7 @@ import 'package:izi_design_system/molecules/izi_btn_icon.dart';
 import 'package:izi_design_system/molecules/izi_input.dart';
 import 'package:izi_design_system/molecules/izi_snack_bar.dart';
 import 'package:izi_design_system/tokens/types.dart';
+import 'package:izi_kiosco/app/values/locale_keys.g.dart';
 import 'package:izi_kiosco/domain/blocs/page_utils/page_utils_bloc.dart';
 import 'package:izi_kiosco/ui/utils/responsive_utils.dart';
 
@@ -46,7 +48,7 @@ class _PasswordModalState extends State<PasswordModal> {
       _pinController.text = "";
       context.read<PageUtilsBloc>().showSnackBar(
         snackBar: SnackBarInfo(
-          text: "El pin no es correcto",
+          text: LocaleKeys.passwordModal_errors_wrongPin.tr(),
           snackBarType: SnackBarType.warning,
         ),
       );
@@ -139,7 +141,7 @@ class _PasswordModalState extends State<PasswordModal> {
                     buttonSize: ButtonSize.medium,
                     buttonType: ButtonType.secondary,
                     buttonOnPressed: () => _submitPin(),
-                    buttonText: "Confirmar",
+                    buttonText: LocaleKeys.passwordModal_buttons_confirm.tr(),
                   ),
                 ],
               ),
@@ -153,7 +155,7 @@ class _PasswordModalState extends State<PasswordModal> {
                     buttonOnPressed: () {
                       Navigator.of(context).pop(false);
                     },
-                    buttonText: "Cancelar",
+                    buttonText: LocaleKeys.passwordModal_buttons_cancel.tr(),
                   ),
                 ],
               ),

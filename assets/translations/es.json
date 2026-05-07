@@ -626,5 +626,43 @@
   "demoPayment": {
     "title": "Cobro de demostración",
     "body": "Estás realizando un cobro de prueba. Presiona confirmar para simular el pago exitoso."
+  },
+  "passwordModal": {
+    "errors": {
+      "wrongPin": "El pin no es correcto"
+    },
+    "buttons": {
+      "confirm": "Confirmar",
+      "cancel": "Cancelar"
+    }
+  },
+  "posConfig": {
+    "title": "Configuración de POS Izify",
+    "sections": {
+      "pairedTerminal": "Terminal Emparejado",
+      "manualConnection": "Conexión Manual",
+      "advancedParams": "Parámetros Avanzados EcoPay",
+      "discovery": "Descubrimiento Automático"
+    },
+    "inputs": {
+      "ipHint": "Ej: 192.168.1.100",
+      "ipLabel": "IP del POS",
+      "mqttClientId": "mqttClientId (Ej: CAJA1000023)",
+      "mqttUserName": "mqttUserName (Ej: 1000023)",
+      "mqttPassword": "mqttPassword (Ej: PWD023)",
+      "commerceId": "commerceId (Ej: 22000001)",
+      "cajaId": "cajaId (Ej: 1)"
+    },
+    "buttons": {
+      "unpair": "Desvincular",
+      "connect": "Conectar",
+      "search": "Buscar",
+      "searching": "Buscando...",
+      "pair": "Vincular"
+    },
+    "messages": {
+      "paired": "POS Emparejado correctamente",
+      "noTerminals": "No se encontraron terminales"
+    }
   }
 }

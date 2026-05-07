@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -6,6 +7,7 @@ import 'package:izi_design_system/molecules/izi_btn.dart';
 import 'package:izi_design_system/molecules/izi_snack_bar.dart';
 import 'package:izi_design_system/tokens/colors.dart';
 import 'package:izi_design_system/tokens/types.dart';
+import 'package:izi_kiosco/app/values/locale_keys.g.dart';
 import 'package:izi_kiosco/domain/blocs/page_utils/page_utils_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/pos_config/pos_config_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
@@ -69,7 +71,7 @@ class _PosConfigPageState extends State<PosConfigPage> {
           appBar: AppBar(
             title: IziText.titleMedium(
               color: context.iziColors.dark,
-              text: "Configuración de POS Izify",
+              text: LocaleKeys.posConfig_title.tr(),
             ),
             backgroundColor: context.iziColors.white,
             leading: IconButton(
@@ -99,7 +101,7 @@ class _PosConfigPageState extends State<PosConfigPage> {
             if (state.status == PosConfigStatus.paired) {
               context.read<PageUtilsBloc>().showSnackBar(
                 snackBar: SnackBarInfo(
-                  text: "POS Emparejado correctamente",
+                  text: LocaleKeys.posConfig_messages_paired.tr(),
                   snackBarType: SnackBarType.success,
                 ),
               );
@@ -115,7 +117,7 @@ class _PosConfigPageState extends State<PosConfigPage> {
                   if (state.pairedDevice != null) ...[
                     IziText.titleSmall(
                       color: context.iziColors.dark,
-                      text: "Terminal Emparejado",
+                      text: LocaleKeys.posConfig_sections_pairedTerminal.tr(),
                     ),
                     const SizedBox(height: 8),
                     Card(
@@ -165,7 +167,7 @@ class _PosConfigPageState extends State<PosConfigPage> {
                           child: IziBtn(
                             buttonSize: ButtonSize.small,
                             buttonType: ButtonType.secondary,
-                            buttonText: "Desvincular",
+                            buttonText: LocaleKeys.posConfig_buttons_unpair.tr(),
                             buttonOnPressed: () {
                               context.read<PosConfigBloc>().unpair();
                             },
@@ -180,7 +182,7 @@ class _PosConfigPageState extends State<PosConfigPage> {
                     // --- Manual Pairing Section ---
                     IziText.titleSmall(
                       color: context.iziColors.dark,
-                      text: "Conexión Manual",
+                      text: LocaleKeys.posConfig_sections_manualConnection.tr(),
                     ),
                     const SizedBox(height: 12),
                     Row(
@@ -189,8 +191,8 @@ class _PosConfigPageState extends State<PosConfigPage> {
                         child: TextField(
                           controller: _ipController,
                           decoration: InputDecoration(
-                            hintText: "Ej: 192.168.1.100",
-                            labelText: "IP del POS",
+                            hintText: LocaleKeys.posConfig_inputs_ipHint.tr(),
+                            labelText: LocaleKeys.posConfig_inputs_ipLabel.tr(),
                             border: const OutlineInputBorder(),
                             filled: true,
                             fillColor: context.iziColors.white,
@@ -223,7 +225,7 @@ class _PosConfigPageState extends State<PosConfigPage> {
                           : IziBtn(
                               buttonSize: ButtonSize.medium,
                               buttonType: ButtonType.primary,
-                              buttonText: "Conectar",
+                              buttonText: LocaleKeys.posConfig_buttons_connect.tr(),
                               buttonOnPressed: () {
                                 FocusScope.of(context).unfocus();
                                 context
@@ -260,7 +262,7 @@ class _PosConfigPageState extends State<PosConfigPage> {
                           IziText.body(
                             color: context.iziColors.primary,
                             fontWeight: FontWeight.w600,
-                            text: "Parámetros Avanzados EcoPay",
+                            text: LocaleKeys.posConfig_sections_advancedParams.tr(),
                           ),
                         ],
                       ),
@@ -271,7 +273,7 @@ class _PosConfigPageState extends State<PosConfigPage> {
                     TextField(
                       controller: _mqttClientIdController,
                       decoration: InputDecoration(
-                        labelText: "mqttClientId (Ej: CAJA1000023)",
+                        labelText: LocaleKeys.posConfig_inputs_mqttClientId.tr(),
                         border: const OutlineInputBorder(),
                         filled: true,
                         fillColor: context.iziColors.white,
@@ -281,7 +283,7 @@ class _PosConfigPageState extends State<PosConfigPage> {
                     TextField(
                       controller: _mqttUserNameController,
                       decoration: InputDecoration(
-                        labelText: "mqttUserName (Ej: 1000023)",
+                        labelText: LocaleKeys.posConfig_inputs_mqttUserName.tr(),
                         border: const OutlineInputBorder(),
                         filled: true,
                         fillColor: context.iziColors.white,
@@ -291,7 +293,7 @@ class _PosConfigPageState extends State<PosConfigPage> {
                     TextField(
                       controller: _mqttPasswordController,
                       decoration: InputDecoration(
-                        labelText: "mqttPassword (Ej: PWD023)",
+                        labelText: LocaleKeys.posConfig_inputs_mqttPassword.tr(),
                         border: const OutlineInputBorder(),
                         filled: true,
                         fillColor: context.iziColors.white,
@@ -301,7 +303,7 @@ class _PosConfigPageState extends State<PosConfigPage> {
                     TextField(
                       controller: _commerceIdController,
                       decoration: InputDecoration(
-                        labelText: "commerceId (Ej: 22000001)",
+                        labelText: LocaleKeys.posConfig_inputs_commerceId.tr(),
                         border: const OutlineInputBorder(),
                         filled: true,
                         fillColor: context.iziColors.white,
@@ -311,7 +313,7 @@ class _PosConfigPageState extends State<PosConfigPage> {
                     TextField(
                       controller: _cajaIdController,
                       decoration: InputDecoration(
-                        labelText: "cajaId (Ej: 1)",
+                        labelText: LocaleKeys.posConfig_inputs_cajaId.tr(),
                         border: const OutlineInputBorder(),
                         filled: true,
                         fillColor: context.iziColors.white,
@@ -326,15 +328,15 @@ class _PosConfigPageState extends State<PosConfigPage> {
                     children: [
                       IziText.titleSmall(
                         color: context.iziColors.dark,
-                        text: "Descubrimiento Automático",
+                        text: LocaleKeys.posConfig_sections_discovery.tr(),
                       ),
                       IziBtn(
                         buttonSize: ButtonSize.small,
                         buttonType: ButtonType.secondary,
                         buttonText:
                             state.status == PosConfigStatus.discovering
-                                ? "Buscando..."
-                                : "Buscar",
+                                ? LocaleKeys.posConfig_buttons_searching.tr()
+                                : LocaleKeys.posConfig_buttons_search.tr(),
                         buttonOnPressed: () {
                           if (state.status == PosConfigStatus.discovering) {
                             context.read<PosConfigBloc>().endDiscovery();
@@ -362,7 +364,7 @@ class _PosConfigPageState extends State<PosConfigPage> {
                         child: IziText.body(
                           color: context.iziColors.darkGrey,
                           fontWeight: FontWeight.normal,
-                          text: "No se encontraron terminales",
+                          text: LocaleKeys.posConfig_messages_noTerminals.tr(),
                         ),
                       ),
                     ),
@@ -389,7 +391,7 @@ class _PosConfigPageState extends State<PosConfigPage> {
                         trailing: IziBtn(
                           buttonSize: ButtonSize.small,
                           buttonType: ButtonType.primary,
-                          buttonText: "Vincular",
+                          buttonText: LocaleKeys.posConfig_buttons_pair.tr(),
                           buttonOnPressed: () {
                             context.read<PosConfigBloc>().pairDevice(device);
                           },
