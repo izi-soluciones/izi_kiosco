@@ -185,11 +185,13 @@ class PaymentPageSelection extends StatelessWidget {
         child: CardTypeIzifyModal(
             amount: (state.paymentObj?.amount ?? 0)))
         .then((value) async {
-      if (value is String) {
+      if (value is Map) {
+        final cardType = value['cardType'] as String;
+        final quotas = value['quotas'] as int;
         context.read<PageUtilsBloc>().closeScreenActive();
         context
             .read<PaymentBloc>()
-            .makeCardPayment(authState, izify: true, cardType: value).then((status){
+            .makeCardPayment(authState, izify: true, cardType: cardType, quotas: quotas).then((status){
           if (!status) {
             context.read<PageUtilsBloc>().initScreenActiveInvoiced(authState);
           }

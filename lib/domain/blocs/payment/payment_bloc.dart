@@ -438,7 +438,7 @@ class PaymentBloc extends Cubit<PaymentState> {
   }
 
   Future<bool> _makeCardRetailPayment(AuthState authState,
-      {bool atc = false, bool linkser = false, bool izify = false, bool contactless = true, String cardType = "DEBITO"}) async {
+      {bool atc = false, bool linkser = false, bool izify = false, bool contactless = true, String cardType = "DEBITO", int quotas = 0}) async {
     try {
       emit(state.copyWith(step: 4));
 
@@ -479,12 +479,13 @@ class PaymentBloc extends Cubit<PaymentState> {
         if (creds == null) {
           throw Exception("No se encontraron credenciales del POS");
         }
-        final currencyIso = state.countryTaxes == PaymentCountryTaxes.colombia ? "COP" : "BOB";
+        final currencyIso = "COP";
         cardPayment = await _comandaRepository.callCardPaymentIzify(
             ipPort: creds['ipPort']!,
             token: creds['token']!,
             currency: currencyIso,
             cardType: cardType,
+            quotas: quotas,
             amount: (state.paymentObj?.amount ?? 0).toStringAsFixed(2));
       } else if (linkser) {
         cardPayment = await _comandaRepository.callCardPayment(
@@ -551,7 +552,7 @@ class PaymentBloc extends Cubit<PaymentState> {
   }
 
   Future<bool> _makeCardOrderPayment(AuthState authState,
-      {bool atc = false, bool linkser = false, bool izify = false, bool contactless = true, String cardType = "DEBITO"}) async {
+      {bool atc = false, bool linkser = false, bool izify = false, bool contactless = true, String cardType = "DEBITO", int quotas = 0}) async {
     try {
       emit(state.copyWith(step: 4));
 
@@ -575,12 +576,13 @@ class PaymentBloc extends Cubit<PaymentState> {
         if (creds == null) {
           throw Exception("No se encontraron credenciales del POS");
         }
-        final currencyIso = state.countryTaxes == PaymentCountryTaxes.colombia ? "COP" : "BOB";
+        final currencyIso = "COP";
         cardPayment = await _comandaRepository.callCardPaymentIzify(
             ipPort: creds['ipPort']!,
             token: creds['token']!,
             currency: currencyIso,
             cardType: cardType,
+            quotas: quotas,
             amount: (state.paymentObj?.amount ?? 0).toStringAsFixed(2));
       } else if (linkser) {
         cardPayment = await _comandaRepository.callCardPayment(
@@ -646,17 +648,17 @@ class PaymentBloc extends Cubit<PaymentState> {
   }
 
   Future<bool> makeCardPayment(AuthState authState,
-      {bool atc = false, bool linkser = false, bool izify = false, bool contactless = true, String cardType = "DEBITO"}) async {
+      {bool atc = false, bool linkser = false, bool izify = false, bool contactless = true, String cardType = "DEBITO", int quotas = 0}) async {
     if ((authState.currentContribuyente?.habilitadoFacturacion!=true||(_validateInputs() &&
         (atc || linkser || izify))) &&
         state.paymentObj?.isComanda == true) {
       return await _makeCardOrderPayment(authState,
-          atc: atc, contactless: contactless, linkser: linkser, izify: izify, cardType: cardType);
+          atc: atc, contactless: contactless, linkser: linkser, izify: izify, cardType: cardType, quotas: quotas);
     } else if (((authState.currentContribuyente?.habilitadoFacturacion!=true)||(_validateInputs() &&
         (atc || linkser || izify))) &&
         state.paymentObj?.isComanda == false) {
       return await _makeCardRetailPayment(authState,
-          atc: atc, contactless: contactless, linkser: linkser, izify: izify, cardType: cardType);
+          atc: atc, contactless: contactless, linkser: linkser, izify: izify, cardType: cardType, quotas: quotas);
     }
     return false;
   }

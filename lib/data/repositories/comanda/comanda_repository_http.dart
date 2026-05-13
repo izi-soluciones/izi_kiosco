@@ -707,7 +707,7 @@ class ComandaRepositoryHttp extends ComandaRepository {
     }
   }
   @override
-  Future<CardPayment> callCardPaymentIzify({required String amount, required String ipPort, required String token, required String currency, required String cardType}) async {
+  Future<CardPayment> callCardPaymentIzify({required String amount, required String ipPort, required String token, required String currency, required String cardType, required int quotas}) async {
     try {
       final String reference = "KOS-${DateTime.now().millisecondsSinceEpoch.toString().substring(5)}";
       
@@ -728,7 +728,7 @@ class ComandaRepositoryHttp extends ComandaRepository {
           "reference": reference,
           "signature": signature,
           "cardType": cardType,
-          "quotas": 0,
+          "quotas": quotas,
           "sendTicket": 0
         })
       );
