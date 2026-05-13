@@ -479,7 +479,7 @@ class PaymentBloc extends Cubit<PaymentState> {
         if (creds == null) {
           throw Exception("No se encontraron credenciales del POS");
         }
-        final currencyIso = "COP";
+        const currencyIso = "COP";
         cardPayment = await _comandaRepository.callCardPaymentIzify(
             ipPort: creds['ipPort']!,
             token: creds['token']!,

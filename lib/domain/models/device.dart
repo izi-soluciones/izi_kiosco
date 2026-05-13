@@ -65,6 +65,8 @@ class ConfigDevice {
   final bool printSat;
   final bool printAutoReply;
   final bool ocultarCash;
+  final bool ocultarQr;
+  final bool ocultarBreb;
   final bool facturaCompacto;
   final bool noPrintRollo;
   final IziColorPalette? colors;
@@ -93,6 +95,8 @@ class ConfigDevice {
       required this.printSat,
       required this.printAutoReply,
       required this.ocultarCash,
+      required this.ocultarQr,
+      required this.ocultarBreb,
       required this.facturaCompacto,
       this.video,
         required this.pin,
@@ -139,6 +143,8 @@ class ConfigDevice {
       printSat: jsonObj?["printSat"] is bool ? jsonObj!["printSat"] : false,
       printAutoReply: jsonObj?["printAutoReply"] is bool ? jsonObj!["printAutoReply"] : false,
       ocultarCash: jsonObj?["ocultarCash"] is bool ? jsonObj!["ocultarCash"] : false,
+      ocultarQr: jsonObj?["ocultarQr"] is bool ? jsonObj!["ocultarQr"] : false,
+      ocultarBreb: jsonObj?["ocultarBreb"] is bool ? jsonObj!["ocultarBreb"] : false,
       facturaCompacto: jsonObj?["facturaCompacto"] is bool ? jsonObj!["facturaCompacto"] : false,
       isRetailBarcode: jsonObj?["isRetailBarcode"] is bool ? jsonObj!["isRetailBarcode"] : false,
       colors: IziColorPalette.fromMap(jsonObj?["colors"]),

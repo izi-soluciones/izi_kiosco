@@ -92,7 +92,7 @@ class PaymentPageSelection extends StatelessWidget {
       crossAxisAlignment: WrapCrossAlignment.center,
       alignment: WrapAlignment.center,
       children: [
-        if(authState.taxesStrategy.showBreB)
+        if(authState.taxesStrategy.showBreB && authState.currentDevice?.config.ocultarBreb != true)
         PaymentMethodBtn(
             onPressed: (){
               _selectPayment(PaymentType.breb,context,authState);
@@ -101,7 +101,7 @@ class PaymentPageSelection extends StatelessWidget {
             color: context.iziColors.primaryDarken,
             text: LocaleKeys.payment_buttons_breB.tr(),
         ),
-        if(authState.taxesStrategy.showQR)
+        if(authState.taxesStrategy.showQR && authState.currentDevice?.config.ocultarQr != true)
         PaymentMethodBtn(
             onPressed: (){
               _selectPayment(PaymentType.qr,context,authState);

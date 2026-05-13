@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer';
 import 'package:crypto/crypto.dart';
 import 'package:http/http.dart' as http;
 
@@ -735,6 +736,7 @@ class ComandaRepositoryHttp extends ComandaRepository {
 
       if (res.statusCode >= 200 && res.statusCode < 300) {
         try {
+          log(res.body);
           if (res.body.isEmpty) {
             return CardPayment(
               response: "Aprobada", 
@@ -744,6 +746,7 @@ class ComandaRepositoryHttp extends ComandaRepository {
             );
           }
           final data = jsonDecode(res.body);
+          log(data.toString());
           if (data is Map && data["success"] != null && data["success"] == false) {
              throw data["message"] ?? "Transacción rechazada por el POS";
           }
@@ -754,6 +757,7 @@ class ComandaRepositoryHttp extends ComandaRepository {
                hour: DateTime.now().toIso8601String().split('T').last.substring(0, 5)
           );
         } catch (e) {
+          log(e.toString());
           if (e is FormatException) {
             return CardPayment(
                response: "Aprobada", 
