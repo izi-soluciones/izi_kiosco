@@ -437,6 +437,80 @@ class PaymentBloc extends Cubit<PaymentState> {
     return null;
   }
 
+  Future<CardPayment> _callCardProvider(AuthState authState,
+      {required bool izify, required bool linkser, required bool contactless,
+       required String cardType, required int quotas}) async {
+    if (izify) {
+      final isSocketAlive = await _verifyIzifySocket();
+      if (!isSocketAlive) {
+        throw Exception("Terminal POS sin conexión al socket");
+      }
+      final creds = await _getIzifyIpAndToken(authState);
+      if (creds == null) {
+        throw Exception("No se encontraron credenciales del POS");
+      }
+      const currencyIso = "COP";
+      return _comandaRepository.callCardPaymentIzify(
+          ipPort: creds['ipPort']!,
+          token: creds['token']!,
+          currency: currencyIso,
+          cardType: cardType,
+          quotas: quotas,
+          amount: (state.paymentObj?.amount ?? 0).toStringAsFixed(2));
+    }
+    if (linkser) {
+      return _comandaRepository.callCardPayment(
+          amount: _getIntFromDecimal(
+              _roundToNDecimals(state.paymentObj?.amount ?? 0, 2)),
+          ip: authState.currentDevice!.config.ipLinkser!);
+    }
+    return _comandaRepository.callCardPaymentATC(
+        amount: (state.paymentObj?.amount ?? 0).moneyFormat(digitsTaxes: authState.taxesStrategy.decimals),
+        ip: authState.currentDevice!.config.ipAtc!,
+        cancelToken: cancelToken,
+        contactless: contactless);
+  }
+
+  Future<(bool, Object?)> _retryMarkPayment(String uuid, int? internalId) async {
+    Object? lastError;
+    for (var i = 0; i < 10; i++) {
+      try {
+        await _comandaRepository.markPaymentATC(uuid, internalId);
+        return (true, null);
+      } catch (e) {
+        lastError = e;
+        await Future.delayed(Duration(seconds: 1 * (i + 1)));
+        log(e.toString());
+      }
+    }
+    return (false, lastError);
+  }
+
+  Future<void> _saveCardError(CardPayment cp, String response, String reportMsg) async {
+    cp.response = response;
+    CrashReport.report(reportMsg, cp.toJson().toString());
+    await LocalStorageCardErrors.saveCardErrors(jsonEncode(cp.toJson()));
+  }
+
+  void _emitCardError(AuthState authState) {
+    if (authState.currentContribuyente?.habilitadoFacturacion == true) {
+      emit(state.copyWith(status: PaymentStatus.cardError, step: 2));
+    } else {
+      emit(state.copyWith(status: PaymentStatus.cardError, step: 1));
+    }
+    emit(state.copyWith(status: PaymentStatus.successGet));
+  }
+
+  void _emitMarkFailedFallback() {
+    emit(state.copyWith(step: 6, status: PaymentStatus.paymentProcessed));
+    timerSuccess = Timer(
+      const Duration(seconds: 30),
+      () async {
+        emit(state.copyWith(status: PaymentStatus.successInvoice));
+      },
+    );
+  }
+
   Future<bool> _makeCardRetailPayment(AuthState authState,
       {bool atc = false, bool linkser = false, bool izify = false, bool contactless = true, String cardType = "DEBITO", int quotas = 0}) async {
     try {
@@ -460,7 +534,7 @@ class PaymentBloc extends Cubit<PaymentState> {
           correoElectronico: state.email.value.isNotEmpty?state.email.value:null
           );
 
-      countryConfig?.setParamsPayment(newPayment);    
+      countryConfig?.setParamsPayment(newPayment);
 
       Charge charge =
           await _comandaRepository.generatePaymentAttempt(newPayment);
@@ -469,84 +543,34 @@ class PaymentBloc extends Cubit<PaymentState> {
         emit(state.copyWith(step: 8, status: PaymentStatus.demoPayment, qrCharge: () => charge));
         return true;
       }
-      CardPayment cardPayment;
+
+      final cardPayment = await _callCardProvider(authState,
+          izify: izify, linkser: linkser, contactless: contactless,
+          cardType: cardType, quotas: quotas);
+
       if (izify) {
-        final isSocketAlive = await _verifyIzifySocket();
-        if (!isSocketAlive) {
-          throw Exception("Terminal POS sin conexión al socket");
-        }
-        final creds = await _getIzifyIpAndToken(authState);
-        if (creds == null) {
-          throw Exception("No se encontraron credenciales del POS");
-        }
-        const currencyIso = "COP";
-        cardPayment = await _comandaRepository.callCardPaymentIzify(
-            ipPort: creds['ipPort']!,
-            token: creds['token']!,
-            currency: currencyIso,
-            cardType: cardType,
-            quotas: quotas,
-            amount: (state.paymentObj?.amount ?? 0).toStringAsFixed(2));
-      } else if (linkser) {
-        cardPayment = await _comandaRepository.callCardPayment(
-            amount: _getIntFromDecimal(
-                _roundToNDecimals(state.paymentObj?.amount ?? 0, 2)),
-            ip: authState.currentDevice!.config.ipLinkser!);
-      } else {
-        try {
-          cardPayment = await _comandaRepository.callCardPaymentATC(
-              amount: (state.paymentObj?.amount ?? 0).moneyFormat(digitsTaxes: authState.taxesStrategy.decimals),
-              ip: authState.currentDevice!.config.ipAtc!,
-              cancelToken: cancelToken,
-              contactless: contactless);
-        } catch (e) {
-            rethrow;
+        final approved = await _waitForIzifyPaymentStatus();
+        if (!approved) {
+          await _saveCardError(cardPayment, "Rechazada", "Izify terminal rejected payment");
+          _emitCardError(authState);
+          return false;
         }
       }
-      var success = false;
-      bool isTerminalApproved = true;
-      if (izify) {
-        isTerminalApproved = await _waitForIzifyPaymentStatus();
-      }
+
       emit(state.copyWith(status: PaymentStatus.processingOrder));
-      
-      if (isTerminalApproved) {
-        for (var i = 0; i < 10; i++) {
-          try {
-            await _comandaRepository.markPaymentATC(
-                state.paymentObj?.uuid ?? "", charge.intentoPago);
-            success = true;
-            break;
-          } catch (e) {
-            await Future.delayed(Duration(seconds: 1 * (i + 1)));
-            log(e.toString());
-          }
-        }
-      }
-      if (!success) {
-        CrashReport.report("Error complete payment POS", cardPayment.toJson().toString());
-        await LocalStorageCardErrors.saveCardErrors(
-            jsonEncode(cardPayment.toJson()));
-        emit(state.copyWith(step: 6, status: PaymentStatus.paymentProcessed));
-        timerSuccess = Timer(
-          const Duration(seconds: 30),
-          () async {
-            emit(state.copyWith(status: PaymentStatus.successInvoice));
-          },
-        );
-        return false;
-      } else {
-        return true;
-      }
+
+      final (marked, lastError) = await _retryMarkPayment(
+          state.paymentObj?.uuid ?? "", charge.intentoPago);
+      if (marked) return true;
+
+      await _saveCardError(cardPayment,
+          "Aprobada - Error sync server: ${lastError ?? 'desconocido'}",
+          "Error complete payment POS");
+      _emitMarkFailedFallback();
+      return false;
     } catch (e) {
       log(e.toString());
-      if(authState.currentContribuyente?.habilitadoFacturacion==true){
-        emit(state.copyWith(status: PaymentStatus.cardError,step: 2));
-      }
-      else{
-        emit(state.copyWith(status: PaymentStatus.cardError,step: 1));
-      }
-      emit(state.copyWith(status: PaymentStatus.successGet));
+      _emitCardError(authState);
       return false;
     }
   }
@@ -566,83 +590,33 @@ class PaymentBloc extends Cubit<PaymentState> {
         emit(state.copyWith(step: 8, status: PaymentStatus.demoPayment, qrCharge: () => charge));
         return true;
       }
-      CardPayment cardPayment;
+
+      final cardPayment = await _callCardProvider(authState,
+          izify: izify, linkser: linkser, contactless: contactless,
+          cardType: cardType, quotas: quotas);
+
       if (izify) {
-        final isSocketAlive = await _verifyIzifySocket();
-        if (!isSocketAlive) {
-          throw Exception("Terminal POS sin conexión al socket");
-        }
-        final creds = await _getIzifyIpAndToken(authState);
-        if (creds == null) {
-          throw Exception("No se encontraron credenciales del POS");
-        }
-        final currencyIso = "COP";
-        cardPayment = await _comandaRepository.callCardPaymentIzify(
-            ipPort: creds['ipPort']!,
-            token: creds['token']!,
-            currency: currencyIso,
-            cardType: cardType,
-            quotas: quotas,
-            amount: (state.paymentObj?.amount ?? 0).toStringAsFixed(2));
-      } else if (linkser) {
-        cardPayment = await _comandaRepository.callCardPayment(
-            amount: _getIntFromDecimal(
-                _roundToNDecimals(state.paymentObj?.amount ?? 0, 2)),
-            ip: authState.currentDevice!.config.ipLinkser!);
-      } else {
-        try {
-          cardPayment = await _comandaRepository.callCardPaymentATC(
-              amount: (state.paymentObj?.amount ?? 0).moneyFormat(digitsTaxes: authState.taxesStrategy.decimals),
-              cancelToken: cancelToken,
-              ip: authState.currentDevice!.config.ipAtc!,
-              contactless: contactless);
-        } catch (e) {
-            rethrow;
+        final approved = await _waitForIzifyPaymentStatus();
+        if (!approved) {
+          await _saveCardError(cardPayment, "Rechazada", "Izify terminal rejected payment");
+          _emitCardError(authState);
+          return false;
         }
       }
-      var success = false;
-      bool isTerminalApproved = true;
-      if (izify) {
-        isTerminalApproved = await _waitForIzifyPaymentStatus();
-      }
+
       emit(state.copyWith(status: PaymentStatus.processingOrder));
-      
-      if (isTerminalApproved) {
-        for (var i = 0; i < 10; i++) {
-          try {
-            await _comandaRepository.markPaymentATC( charge.uuid, null);
-            success = true;
-            break;
-          } catch (e) {
-            await Future.delayed(Duration(seconds: 1 * (i + 1)));
-            log(e.toString());
-          }
-        }
-      }
-      if (!success) {
-        CrashReport.report("Error complete payment POS", cardPayment.toJson().toString());
-        await LocalStorageCardErrors.saveCardErrors(
-            jsonEncode(cardPayment.toJson()));
-        emit(state.copyWith(step: 6, status: PaymentStatus.paymentProcessed));
-        timerSuccess = Timer(
-          const Duration(seconds: 30),
-          () async {
-            emit(state.copyWith(status: PaymentStatus.successInvoice));
-          },
-        );
-        return false;
-      } else {
-        return true;
-      }
+
+      final (marked, lastError) = await _retryMarkPayment(charge.uuid, null);
+      if (marked) return true;
+
+      await _saveCardError(cardPayment,
+          "Aprobada - Error sync server: ${lastError ?? 'desconocido'}",
+          "Error complete payment POS");
+      _emitMarkFailedFallback();
+      return false;
     } catch (e) {
       log(e.toString());
-      if(authState.currentContribuyente?.habilitadoFacturacion==true){
-        emit(state.copyWith(status: PaymentStatus.cardError,step: 2));
-      }
-      else{
-        emit(state.copyWith(status: PaymentStatus.cardError,step: 1));
-      }
-      emit(state.copyWith(status: PaymentStatus.successGet));
+      _emitCardError(authState);
       return false;
     }
   }
