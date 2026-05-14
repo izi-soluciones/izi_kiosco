@@ -291,6 +291,7 @@ abstract class  LocaleKeys {
   static const payment_messages_errorBreB = 'payment.messages.errorBreB';
   static const payment_messages_processingOrder = 'payment.messages.processingOrder';
   static const payment_messages_processingInvoice = 'payment.messages.processingInvoice';
+  static const payment_messages_processingInvoiceElectronic = 'payment.messages.processingInvoiceElectronic';
   static const payment_messages = 'payment.messages';
   static const payment = 'payment';
   static const tapOnPhone_title = 'tapOnPhone.title';

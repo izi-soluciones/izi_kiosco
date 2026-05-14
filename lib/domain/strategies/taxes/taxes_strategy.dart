@@ -8,12 +8,14 @@ abstract class TaxesStrategy{
   bool showBreB;
   String brandName;
   int decimals;
+  String labelProcessingInvoice;
 
   TaxesStrategy({
     required this.showQR,
     required this.showBreB,
     required this.decimals,
-    required this.brandName
+    required this.brandName,
+    required this.labelProcessingInvoice
   });
 
   String? countryCode;

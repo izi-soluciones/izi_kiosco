@@ -98,7 +98,7 @@ class PaymentPage extends StatelessWidget {
         }
         if(state.status == PaymentStatus.processingInvoice){
           context.read<PageUtilsBloc>().closeScreenActive();
-          context.read<PageUtilsBloc>().showLoading(LocaleKeys.payment_messages_processingInvoice.tr());
+          context.read<PageUtilsBloc>().showLoading(context.read<AuthBloc>().state.taxesStrategy.labelProcessingInvoice.tr());
         }
         if(state.status == PaymentStatus.processingOrder){
           context.read<PageUtilsBloc>().closeScreenActive();

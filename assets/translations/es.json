@@ -369,7 +369,8 @@
       "errorCard": "Ocurrió un problema al generar el cobro por POS",
       "errorBreB": "Ocurrió un problema al generar el cobro por Bre-B",
       "processingOrder": "Procesando orden",
-      "processingInvoice": "Procesando factura"
+      "processingInvoice": "Procesando factura",
+      "processingInvoiceElectronic": "Procesando factura electrónica"
     }
   },
   "tapOnPhone": {
