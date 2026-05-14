@@ -242,7 +242,8 @@
     "title": "Inicio",
     "drawer": "Inicio",
     "subtitles":{
-      "iziSlogan": "Es fácil, es {{brand_name}}"
+      "iziSlogan": "Es fácil, es iZi",
+      "izifySlogan": "Tu negocio en modo fácil"
     },
     "body": {
       "order": "Ordena",
