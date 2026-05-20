@@ -236,7 +236,8 @@ class PosConfigBloc extends Cubit<PosConfigState> {
 
   Future<void> unpair() async {
     if (state.pairedDevice != null) {
-      final token = await TokenUtils.getTokenCard();
+      String? token = await TokenUtils.getPosToken();
+      token ??= authBloc.state.currentDevice?.config.token;
       try {
         await http
             .post(
