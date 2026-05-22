@@ -66,7 +66,7 @@ static List<IziPrintItem> invoice80Co(
   items.add(IziPrintSeparator(dotted: true)); // Separador dash
 
   items.add(IziPrintText(
-    text: "FACTURA", // Título del documento
+    text: "Factura Electrónica de Venta", // Título del documento
     size: IziPrintSize.md, // Más grande
     bold: true,
     align: IziPrintAlign.center,
@@ -229,7 +229,7 @@ static List<IziPrintItem> invoice80Co(
   items.add(IziPrintSeparator());
 
   // ======== FOOTER (Corregido y ajustado) ========
-  final cufe = invoice.customFactura["CO"]?["factura"]?["cufe"];
+  final cufe = invoice.customFactura["CO"]?["factura"]?["cufe"] ?? invoice.customFactura["CO"]?["cufe"];
   if (cufe != null) {
     items.add(IziPrintText(
       text: "Autorización: ${invoice.customFactura["CO"]?["resolution"] ?? ''}",
@@ -253,7 +253,13 @@ static List<IziPrintItem> invoice80Co(
   
   items.add(IziPrintSeparator());
   items.add(IziPrintText(
-    text: "Generada a través de ${taxesStrategy.brandName}",
+    text: "Software: IZI SOLUCIONES DIGITALES S.A.S.",
+    size: IziPrintSize.xs,
+    bold: true,
+    align: IziPrintAlign.center,
+  ));
+  items.add(IziPrintText(
+    text: "efactura: Conexus IT S.A.S.",
     size: IziPrintSize.xs,
     bold: true,
     align: IziPrintAlign.center,

@@ -191,6 +191,7 @@ abstract class  LocaleKeys {
   static const home_title = 'home.title';
   static const home_drawer = 'home.drawer';
   static const home_subtitles_iziSlogan = 'home.subtitles.iziSlogan';
+  static const home_subtitles_izifySlogan = 'home.subtitles.izifySlogan';
   static const home_subtitles = 'home.subtitles';
   static const home_body_order = 'home.body.order';
   static const home_body_and = 'home.body.and';
@@ -291,6 +292,7 @@ abstract class  LocaleKeys {
   static const payment_messages_errorBreB = 'payment.messages.errorBreB';
   static const payment_messages_processingOrder = 'payment.messages.processingOrder';
   static const payment_messages_processingInvoice = 'payment.messages.processingInvoice';
+  static const payment_messages_processingInvoiceElectronic = 'payment.messages.processingInvoiceElectronic';
   static const payment_messages = 'payment.messages';
   static const payment = 'payment';
   static const tapOnPhone_title = 'tapOnPhone.title';

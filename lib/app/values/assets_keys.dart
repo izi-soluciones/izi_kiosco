@@ -26,6 +26,7 @@ class AssetsKeys{
   static const String iziWebUrl="https://izisoluciones.com/";
   static const String izifyLoadingImage="assets/icons/izify.png";
   static const String izifySplashScreenImage="assets/icons/izify.png";
+  static const String izifyIconH="assets/icons/izify-icon-h.png";
 
   static const String iziLogo="assets/izi_logo.png";
   static const String cityGraphic="assets/graphics/city_1.png";

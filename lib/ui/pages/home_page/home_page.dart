@@ -152,7 +152,7 @@ class _HomePageState extends State<HomePage> {
                           children: [
                             IziText.titleBig(
                                 color: context.iziColors.primary,
-                                text: LocaleKeys.home_subtitles_iziSlogan.tr(),
+                                text: dotenv.env[EnvKeys.brandName]=="iZi"?LocaleKeys.home_subtitles_iziSlogan.tr():LocaleKeys.home_subtitles_izifySlogan.tr(),
                                 fontWeight: FontWeight.w400),
                             const SizedBox(height: 32,),
                             Expanded(
@@ -236,13 +236,13 @@ class _HomePageState extends State<HomePage> {
                                       ),),
                                       Padding(
                                         padding: EdgeInsets.only(left: ru.height*0.005,bottom: ru.height*0.002),
-                                        child: FittedBox(
-                                          child: dotenv.env[EnvKeys.brandName]=="iZi"? Icon(
+                                        child: dotenv.env[EnvKeys.brandName]=="iZi"?FittedBox(
+                                          child: Icon(
                                             IziIcons.izi,
                                             color: context.iziColors.primary,
                                             size: 40,
-                                          ):Image.asset(dotenv.env[EnvKeys.appIcon]??"", width: 60, height: 60,),
-                                        ),
+                                          )
+                                        ):Image.asset(AssetsKeys.izifyIconH, width: 60,),
                                       ),
                                     ],
                                   ),
