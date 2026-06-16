@@ -1180,25 +1180,43 @@ class PaymentBloc extends Cubit<PaymentState> {
         return;
       }
 
-      if(authState.currentDevice?.config.facturaCompacto==true
-      ){
-        log("iZi Kiosco: [DEBUG] Compiling compact invoice template!");
-        tmp = await PrintTemplate.printInvoiceCompact(
-          authState.currentContribuyente!,
-          authState.currentSucursal!,
-          invoice,
-          orderNumber: orderNumber,
-          customOrderNumber: customOrderNumber,
-              taxesStrategy: authState.taxesStrategy
-        );
+      final backendItems = invoice.customFactura["printItems"];
+      final backendFormat = invoice.customFactura["printItemsFormat"];
+      List<IziPrintItem>? backendTicket;
+      if (backendItems is List && backendItems.isNotEmpty) {
+        backendTicket = IziPrintItem.listFromJson(backendItems);
+        if (backendTicket.isEmpty) backendTicket = null;
+      }
+
+      final backendCompacto = backendTicket != null && backendFormat == 'compacto';
+      final useCompact = backendTicket != null
+          ? backendCompacto
+          : authState.currentDevice?.config.facturaCompacto == true;
+
+      if(useCompact){
+        log("iZi Kiosco: [DEBUG] Compact mode (backend=${backendTicket != null}): replacing tmp");
+        if (backendTicket != null) {
+          tmp = backendTicket;
+        } else {
+          tmp = await PrintTemplate.printInvoiceCompact(
+            authState.currentContribuyente!,
+            authState.currentSucursal!,
+            invoice,
+            orderNumber: orderNumber,
+            customOrderNumber: customOrderNumber,
+                taxesStrategy: authState.taxesStrategy
+          );
+        }
       }
       else{
-        log("iZi Kiosco: [DEBUG] Compiling standard full sequential invoice template with explicit cut divider!");
+        log("iZi Kiosco: [DEBUG] Full mode: appending invoice payload after order");
         tmp.add(IziPrintLineWrap(lines: 2));
         if (orderNumber != null) {
           tmp.add(IziPrintCut());
         }
-        if(authState.currentSucursal?.config is Map &&
+        if (backendTicket != null) {
+          tmp.addAll(backendTicket);
+        } else if(authState.currentSucursal?.config is Map &&
           (authState.currentSucursal?.config as Map)["tipoFacturaVentas"] == "compacto"
         ){
           tmp.addAll(await PrintTemplate.printInvoiceCompact(
