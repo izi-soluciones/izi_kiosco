@@ -1,6 +1,7 @@
 
 
 import 'package:izi_kiosco/domain/models/contribuyente.dart';
+import 'package:izi_kiosco/domain/models/modulos.dart';
 import 'package:izi_kiosco/domain/strategies/taxes/impl/taxes_strategy_bo.dart';
 import 'package:izi_kiosco/domain/strategies/taxes/impl/taxes_strategy_co.dart';
 import 'package:izi_kiosco/domain/strategies/taxes/impl/taxes_strategy_default.dart';
@@ -8,7 +9,7 @@ import 'package:izi_kiosco/domain/strategies/taxes/taxes_strategy.dart';
 
 class TaxesStrategyFactory{
   static TaxesStrategy taxes(Contribuyente? contribuyente){
-    if(contribuyente?.usaSiat==true || (contribuyente?.tieneFacturacion ==true && contribuyente?.config?["paisId"]=="BO")){
+    if(contribuyente?.usaSiat==true || (contribuyente?.tieneModulo(Modulo.facturacion) ==true && contribuyente?.config?["paisId"]=="BO")){
       return TaxesStrategyBo();
     }
     if(contribuyente?.config is Map && contribuyente?.config?["paisId"]=="CO"){

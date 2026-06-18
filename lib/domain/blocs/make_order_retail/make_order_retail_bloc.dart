@@ -8,6 +8,7 @@ import 'package:izi_kiosco/domain/dto/new_sale_link_dto.dart';
 import 'package:izi_kiosco/domain/models/cash_register.dart';
 import 'package:izi_kiosco/domain/models/currency.dart';
 import 'package:izi_kiosco/domain/models/item.dart';
+import 'package:izi_kiosco/domain/models/modulos.dart';
 import 'package:izi_kiosco/domain/models/sale_link.dart';
 import 'package:izi_kiosco/domain/repositories/business_repository.dart';
 import 'package:izi_kiosco/domain/repositories/comanda_repository.dart';
@@ -54,7 +55,7 @@ class MakeOrderRetailBloc extends Cubit<MakeOrderRetailState> {
         return;
       }
 
-      if (authState.currentDevice?.config.actividadEconomica ==null && authState.currentContribuyente?.tieneFacturacion==true) {
+      if (authState.currentDevice?.config.actividadEconomica ==null && authState.currentContribuyente?.tieneModulo(Modulo.facturacion)==true) {
         emit(state.copyWith(status: MakeOrderRetailStatus.errorActivity));
         emit(state.copyWith(status: MakeOrderRetailStatus.waitingGet));
         return;

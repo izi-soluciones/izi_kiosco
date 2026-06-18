@@ -24,6 +24,7 @@ import 'package:izi_kiosco/domain/models/document_type.dart';
 import 'package:izi_kiosco/domain/models/identification_type.dart';
 import 'package:izi_kiosco/domain/models/invoice.dart';
 import 'package:izi_kiosco/domain/models/iva_responsability.dart';
+import 'package:izi_kiosco/domain/models/modulos.dart';
 import 'package:izi_kiosco/domain/models/payment.dart';
 import 'package:izi_kiosco/domain/models/payment_method.dart';
 import 'package:izi_kiosco/domain/models/payment_obj.dart';
@@ -125,7 +126,7 @@ class PaymentBloc extends Cubit<PaymentState> {
       }
       
 
-      if(authState.currentContribuyente?.tieneFacturacion==true){
+      if(authState.currentContribuyente?.tieneModulo(Modulo.facturacion)==true){
         PaymentStatus? statusVerification = authState.taxesStrategy.verifyParameters(authState.currentContribuyente, authState.currentSucursal, authState.currentDevice, economicActivity);
         if(statusVerification!=null){
           return emit(state.copyWith(status: statusVerification));
@@ -312,7 +313,7 @@ class PaymentBloc extends Cubit<PaymentState> {
         );
         return;
       }
-      if(authState.currentContribuyente?.tieneFacturacion==true || authState.currentDevice?.config.isRetail!=true){
+      if(authState.currentContribuyente?.tieneModulo(Modulo.facturacion)==true || authState.currentDevice?.config.isRetail!=true){
         emit(state.copyWith(
             paymentType: paymentType,
             step: 2,
@@ -539,7 +540,7 @@ class PaymentBloc extends Cubit<PaymentState> {
       }
     } catch (e) {
       log(e.toString());
-      if(authState.currentContribuyente?.tieneFacturacion==true){
+      if(authState.currentContribuyente?.tieneModulo(Modulo.facturacion)==true){
         emit(state.copyWith(status: PaymentStatus.cardError,step: 2));
       }
       else{
@@ -634,7 +635,7 @@ class PaymentBloc extends Cubit<PaymentState> {
       }
     } catch (e) {
       log(e.toString());
-      if(authState.currentContribuyente?.tieneFacturacion==true){
+      if(authState.currentContribuyente?.tieneModulo(Modulo.facturacion)==true){
         emit(state.copyWith(status: PaymentStatus.cardError,step: 2));
       }
       else{
@@ -647,12 +648,12 @@ class PaymentBloc extends Cubit<PaymentState> {
 
   Future<bool> makeCardPayment(AuthState authState,
       {bool atc = false, bool linkser = false, bool izify = false, bool contactless = true, String cardType = "DEBITO"}) async {
-    if ((authState.currentContribuyente?.tieneFacturacion!=true||(_validateInputs() &&
+    if ((authState.currentContribuyente?.tieneModulo(Modulo.facturacion)!=true||(_validateInputs() &&
         (atc || linkser || izify))) &&
         state.paymentObj?.isComanda == true) {
       return await _makeCardOrderPayment(authState,
           atc: atc, contactless: contactless, linkser: linkser, izify: izify, cardType: cardType);
-    } else if (((authState.currentContribuyente?.tieneFacturacion!=true)||(_validateInputs() &&
+    } else if (((authState.currentContribuyente?.tieneModulo(Modulo.facturacion)!=true)||(_validateInputs() &&
         (atc || linkser || izify))) &&
         state.paymentObj?.isComanda == false) {
       return await _makeCardRetailPayment(authState,
@@ -738,7 +739,7 @@ class PaymentBloc extends Cubit<PaymentState> {
   Timer? timerSuccess;
   Future<bool> generateQR(AuthState authState) async {
     try {
-      if (_validateInputs() || authState.currentContribuyente?.tieneFacturacion!=true) {
+      if (_validateInputs() || authState.currentContribuyente?.tieneModulo(Modulo.facturacion)!=true) {
         emit(state.copyWith(step: 3));
         if (state.paymentObj?.isComanda == true) {
           return await _generateOrderQR(authState);
@@ -753,7 +754,7 @@ class PaymentBloc extends Cubit<PaymentState> {
           qrLoading: false,
           qrCharge: () => null,
           status: PaymentStatus.qrError));
-      if(authState.currentContribuyente?.tieneFacturacion==true){
+      if(authState.currentContribuyente?.tieneModulo(Modulo.facturacion)==true){
         emit(state.copyWith(step: 2, status: PaymentStatus.successGet));
       }
       else{
@@ -867,7 +868,7 @@ class PaymentBloc extends Cubit<PaymentState> {
 
   Future<bool> generateBREB(AuthState authState) async {
     try {
-      if (_validateInputs() || authState.currentContribuyente?.tieneFacturacion!=true) {
+      if (_validateInputs() || authState.currentContribuyente?.tieneModulo(Modulo.facturacion)!=true) {
         if (state.paymentObj?.isComanda == true) {
           return await _generateOrderBREB(authState);
         } else {
@@ -882,7 +883,7 @@ class PaymentBloc extends Cubit<PaymentState> {
         status: PaymentStatus.brebError,
         errorDescription: e.toString(),
       ));
-      if(authState.currentContribuyente?.tieneFacturacion==true){
+      if(authState.currentContribuyente?.tieneModulo(Modulo.facturacion)==true){
         emit(state.copyWith(step: 2, status: PaymentStatus.successGet));
       }
       else{
@@ -1115,7 +1116,7 @@ class PaymentBloc extends Cubit<PaymentState> {
   }
 
   cancelQR(AuthState authState){
-    if(authState.currentContribuyente?.tieneFacturacion==true){
+    if(authState.currentContribuyente?.tieneModulo(Modulo.facturacion)==true){
       emit(state.copyWith(step: 2,qrLoading: false,qrCharge: ()=>null));
     }
     else{
@@ -1125,7 +1126,7 @@ class PaymentBloc extends Cubit<PaymentState> {
 
   cancelBREB(AuthState authState) {
     emit(state.copyWith(
-      step: authState.currentContribuyente?.tieneFacturacion == true ? 2 : 1,
+      step: authState.currentContribuyente?.tieneModulo(Modulo.facturacion) == true ? 2 : 1,
       brebLoading: false,
       brebCharge: null,
     ));
@@ -1414,7 +1415,7 @@ class PaymentBloc extends Cubit<PaymentState> {
 
   PaymentCountryTaxes? _setCountryConfig(Contribuyente contribuyente){
 
-    if(contribuyente.tieneFacturacion==true){
+    if(contribuyente.tieneModulo(Modulo.facturacion)==true){
       if(contribuyente.usaSiat==true || (contribuyente.config is Map && contribuyente.config["paisId"] == "BO")){
         countryConfig = PaymentConfig(
           setParams: _setParamsBo,
