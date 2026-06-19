@@ -1,6 +1,7 @@
 enum Modulo {
   ventas,
   facturacion,
+  contabilidad,
   restaurantes,
   cajas,
   mesas,
@@ -9,6 +10,12 @@ enum Modulo {
   cobros,
   terminal,
   retail,
+  compras,
+  clientes,
+  proveedores,
+  pedidos,
+  reportes,
+  dispositivos,
 }
 
 class Modulos {
