@@ -289,6 +289,7 @@ abstract class  LocaleKeys {
   static const payment_messages_errorGet = 'payment.messages.errorGet';
   static const payment_messages_errorQR = 'payment.messages.errorQR';
   static const payment_messages_errorCard = 'payment.messages.errorCard';
+  static const payment_messages_pendingCard = 'payment.messages.pendingCard';
   static const payment_messages_errorBreB = 'payment.messages.errorBreB';
   static const payment_messages_processingOrder = 'payment.messages.processingOrder';
   static const payment_messages_processingInvoice = 'payment.messages.processingInvoice';
@@ -515,6 +516,7 @@ abstract class  LocaleKeys {
   static const posConfig_sections = 'posConfig.sections';
   static const posConfig_inputs_ipHint = 'posConfig.inputs.ipHint';
   static const posConfig_inputs_ipLabel = 'posConfig.inputs.ipLabel';
+  static const posConfig_inputs_pinLabel = 'posConfig.inputs.pinLabel';
   static const posConfig_inputs_mqttClientId = 'posConfig.inputs.mqttClientId';
   static const posConfig_inputs_mqttUserName = 'posConfig.inputs.mqttUserName';
   static const posConfig_inputs_mqttPassword = 'posConfig.inputs.mqttPassword';

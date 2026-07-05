@@ -3,12 +3,16 @@ class CardPayment{
   String date;
   String hour;
   String? cardNumber;
+  /// Reference sent to the Izify POS in the `/pay` body. Kept so the caller can
+  /// poll `/payment-status/{reference}` as a fallback to the WebSocket.
+  String? reference;
 
   CardPayment({
     required this.response,
     required this.cardNumber,
     required this.date,
-    required this.hour
+    required this.hour,
+    this.reference,
 });
 
   factory CardPayment.fromJson(Map json)=>CardPayment(

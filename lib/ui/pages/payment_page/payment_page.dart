@@ -61,6 +61,18 @@ class PaymentPage extends StatelessWidget {
                   text: LocaleKeys.payment_messages_errorCard.tr(),
                   snackBarType: SnackBarType.error));
         }
+        if(state.status== PaymentStatus.cardPending){
+          // PENDING: outcome unknown, the card may or may not have been charged.
+          // Do NOT auto-retry; surface it to the operator to verify/reconcile.
+          context.read<PageUtilsBloc>().closeLoading();
+          context.read<PageUtilsBloc>().initScreenActiveInvoiced(context.read<AuthBloc>().state);
+          context.read<PageUtilsBloc>().showSnackBar(
+              snackBar: SnackBarInfo(
+                  text: state.errorDescription != null && state.errorDescription!.isNotEmpty
+                      ? "${LocaleKeys.payment_messages_pendingCard.tr()} (${state.errorDescription})"
+                      : LocaleKeys.payment_messages_pendingCard.tr(),
+                  snackBarType: SnackBarType.warning));
+        }
         if (state.status == PaymentStatus.brebError) {
           context.read<PageUtilsBloc>().closeLoading();
           context.read<PageUtilsBloc>().showSnackBar(

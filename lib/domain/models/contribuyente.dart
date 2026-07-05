@@ -1,3 +1,5 @@
+import 'package:izi_kiosco/domain/models/modulos.dart';
+
 class Contribuyente {
   Contribuyente({
     this.id,
@@ -28,6 +30,7 @@ class Contribuyente {
     this.habilitadoFacturacion,
     this.habilitadoTerminal,
     this.habilitadoMesas,
+    this.modulos,
     this.usaSiat,
     this.configTerminada,
     this.configCobros,
@@ -78,7 +81,18 @@ class Contribuyente {
   bool? habilitadoFacturacion;
   bool? habilitadoTerminal;
   bool? habilitadoMesas;
+  Modulos? modulos;
   bool? usaSiat;
+
+  bool get tieneFacturacion {
+    if (modulos != null) return modulos!.facturacionEnabled;
+    return habilitadoFacturacion == true;
+  }
+
+  bool get tieneVentas {
+    if (modulos != null) return modulos!.ventasEnabled;
+    return habilitadoVentas == true;
+  }
   bool? configTerminada;
   dynamic configCobros;
   dynamic config;
@@ -121,6 +135,7 @@ class Contribuyente {
     habilitadoFacturacion : json['habilitadoFacturacion'],
     habilitadoTerminal : json['habilitadoTerminal'],
       habilitadoMesas : json['habilitadoMesas'],
+    modulos : json['modulos'] is Map<String,dynamic> ? Modulos.fromJson(json['modulos'] as Map<String,dynamic>) : null,
     usaSiat : json['usaSiat'],
     configTerminada : json['configTerminada'],
     configCobros : json['configCobros'],
@@ -172,6 +187,7 @@ class Contribuyente {
       habilitadoFacturacion : json['habilitadoFacturacion'],
       habilitadoTerminal : json['habilitadoTerminal'],
       habilitadoMesas : json['habilitadoMesas'],
+      modulos : json['modulos'] is Map<String,dynamic> ? Modulos.fromJson(json['modulos'] as Map<String,dynamic>) : null,
       usaSiat : json['usaSiat'],
       configTerminada : json['configTerminada'],
       configCobros : json['configCobros'],

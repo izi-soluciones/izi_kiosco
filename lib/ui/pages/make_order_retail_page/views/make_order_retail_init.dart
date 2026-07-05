@@ -32,7 +32,7 @@ class _MakeOrderRetailInitState extends State<MakeOrderRetailInit> {
   @override
   Widget build(BuildContext context) {
     final ru = ResponsiveUtils(context);
-    final canInvoice=context.read<AuthBloc>().state.currentContribuyente?.habilitadoFacturacion==true;
+    final canInvoice=context.read<AuthBloc>().state.currentContribuyente?.tieneFacturacion==true;
     return KeyboardListener(
       focusNode: focusNodeKeyboard,
       autofocus: true,

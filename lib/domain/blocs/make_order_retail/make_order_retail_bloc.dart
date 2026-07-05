@@ -54,7 +54,7 @@ class MakeOrderRetailBloc extends Cubit<MakeOrderRetailState> {
         return;
       }
 
-      if (authState.currentDevice?.config.actividadEconomica ==null && authState.currentContribuyente?.habilitadoFacturacion==true) {
+      if (authState.currentDevice?.config.actividadEconomica ==null && authState.currentContribuyente?.tieneFacturacion==true) {
         emit(state.copyWith(status: MakeOrderRetailStatus.errorActivity));
         emit(state.copyWith(status: MakeOrderRetailStatus.waitingGet));
         return;

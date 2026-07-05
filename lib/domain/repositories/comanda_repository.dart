@@ -7,6 +7,7 @@ import 'package:izi_kiosco/domain/dto/paid_charge_dto.dart';
 import 'package:izi_kiosco/domain/dto/payment_attempt_dto.dart';
 import 'package:izi_kiosco/domain/dto/payment_dto.dart';
 import 'package:izi_kiosco/domain/models/card_payment.dart';
+import 'package:izi_kiosco/domain/models/pos_payment_result.dart';
 import 'package:izi_kiosco/domain/models/category_order.dart';
 import 'package:izi_kiosco/domain/models/charge.dart';
 import 'package:izi_kiosco/domain/models/comanda.dart';
@@ -56,6 +57,14 @@ abstract class ComandaRepository {
       {required String amount, required String ip, required CancelToken cancelToken,required bool contactless});
   Future<CardPayment> callCardPaymentIzify(
       {required String amount, required String ipPort, required String token, required String currency, required String cardType, required int quotas});
+
+  /// Polling fallback for the `/payment-updates` WebSocket. Calls
+  /// `GET /payment-status/{reference}` on the Izify POS. Returns the parsed
+  /// result when available, or `null` when there is no result yet (404) or the
+  /// request could not be completed, so the caller can keep polling until its
+  /// own overall timeout.
+  Future<PosPaymentResult?> pollIzifyPaymentStatus(
+      {required String ipPort, required String token, required String reference});
 
   Future<Comanda> markAsCreated(String orderUuid);
 

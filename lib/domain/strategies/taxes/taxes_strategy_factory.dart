@@ -8,7 +8,7 @@ import 'package:izi_kiosco/domain/strategies/taxes/taxes_strategy.dart';
 
 class TaxesStrategyFactory{
   static TaxesStrategy taxes(Contribuyente? contribuyente){
-    if(contribuyente?.usaSiat==true || (contribuyente?.habilitadoFacturacion ==true && contribuyente?.config?["paisId"]=="BO")){
+    if(contribuyente?.usaSiat==true || (contribuyente?.tieneFacturacion ==true && contribuyente?.config?["paisId"]=="BO")){
       return TaxesStrategyBo();
     }
     if(contribuyente?.config is Map && contribuyente?.config?["paisId"]=="CO"){

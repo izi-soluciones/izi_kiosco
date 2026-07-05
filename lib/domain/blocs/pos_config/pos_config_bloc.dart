@@ -134,14 +134,22 @@ class PosConfigBloc extends Cubit<PosConfigState> {
     }
   }
 
-  Future<void> pairManually(String ip, {int port = 8081, String? mqttClientId, String? mqttUserName, String? mqttPassword, String? commerceId, String? cajaId}) async {
+  /// Extracts the 5-digit PIN embedded in the mDNS service name
+  /// `izify-POS-<pin>`. Returns null when the name doesn't match (e.g. a
+  /// manually-paired device), in which case the caller must supply the pin.
+  static String? pinFromServiceName(String name) {
+    final match = RegExp(r'izify-POS-(\d{5})$').firstMatch(name);
+    return match?.group(1);
+  }
+
+  Future<void> pairManually(String ip, {int port = 8081, String? pin, String? mqttClientId, String? mqttUserName, String? mqttPassword, String? commerceId, String? cajaId}) async {
     final trimmedIp = ip.trim();
     if (trimmedIp.isEmpty) return;
     final device = PosDevice(name: "POS ($trimmedIp)", ip: trimmedIp, port: port);
-    await pairDevice(device, mqttClientId: mqttClientId, mqttUserName: mqttUserName, mqttPassword: mqttPassword, commerceId: commerceId, cajaId: cajaId);
+    await pairDevice(device, pin: pin, mqttClientId: mqttClientId, mqttUserName: mqttUserName, mqttPassword: mqttPassword, commerceId: commerceId, cajaId: cajaId);
   }
 
-  Future<void> pairDevice(PosDevice device, {String? mqttClientId, String? mqttUserName, String? mqttPassword, String? commerceId, String? cajaId}) async {
+  Future<void> pairDevice(PosDevice device, {String? pin, String? mqttClientId, String? mqttUserName, String? mqttPassword, String? commerceId, String? cajaId}) async {
     emit(state.copyWith(status: PosConfigStatus.pairing));
 
     final deviceConfig = authBloc.state.currentDevice?.config;
@@ -153,6 +161,22 @@ class PosConfigBloc extends Cubit<PosConfigState> {
     final finalCommerceId = commerceId?.isNotEmpty == true ? commerceId : deviceConfig?.commerceId;
     final finalCajaId = cajaId?.isNotEmpty == true ? cajaId : deviceConfig?.cajaId;
 
+    // The POS now requires the 5-digit PIN from its mDNS service name
+    // (izify-POS-<pin>) in the /pair body. Prefer an explicitly provided pin,
+    // otherwise derive it from the discovered service name.
+    final finalPin = (pin != null && pin.isNotEmpty)
+        ? pin
+        : pinFromServiceName(device.name);
+    if (finalPin == null) {
+      emit(
+        state.copyWith(
+          status: PosConfigStatus.error,
+          errorMessage: "Falta el PIN del POS para emparejar",
+        ),
+      );
+      return;
+    }
+
     try {
       final res = await http
           .post(
@@ -160,6 +184,7 @@ class PosConfigBloc extends Cubit<PosConfigState> {
             headers: {'Content-Type': 'application/json'},
             body: jsonEncode({
               "kioskId": kioskId,
+              "pin": finalPin,
               if (finalMqttClientId != null) "mqttClientId": finalMqttClientId,
               if (finalMqttUserName != null) "mqttUserName": finalMqttUserName,
               if (finalMqttPassword != null) "mqttPassword": finalMqttPassword,

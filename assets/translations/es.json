@@ -368,6 +368,7 @@
       "errorGet": "Ocurrió un error al obtener los datos",
       "errorQR": "Ocurrió un problema al generar el QR",
       "errorCard": "Ocurrió un problema al generar el cobro por POS",
+      "pendingCard": "Pago sin confirmar — verifique antes de reintentar",
       "errorBreB": "Ocurrió un problema al generar el cobro por Bre-B",
       "processingOrder": "Procesando orden",
       "processingInvoice": "Procesando factura",
@@ -649,6 +650,7 @@
     "inputs": {
       "ipHint": "Ej: 192.168.1.100",
       "ipLabel": "IP del POS",
+      "pinLabel": "PIN del POS (5 dígitos)",
       "mqttClientId": "mqttClientId (Ej: CAJA1000023)",
       "mqttUserName": "mqttUserName (Ej: 1000023)",
       "mqttPassword": "mqttPassword (Ej: PWD023)",

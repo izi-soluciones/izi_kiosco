@@ -134,7 +134,7 @@ class PaymentPageSelection extends StatelessWidget {
 
 
   _selectPayment(PaymentType paymentType,BuildContext context, AuthState authState){
-    if(authState.currentContribuyente?.habilitadoFacturacion==true || (authState.currentDevice?.config.isRetail!=true && authState.currentDevice?.config.isRetailBarcode!=true)){
+    if(authState.currentContribuyente?.tieneFacturacion==true || (authState.currentDevice?.config.isRetail!=true && authState.currentDevice?.config.isRetailBarcode!=true)){
       context.read<PaymentBloc>().selectPayment(paymentType,authState);
     }
     else{

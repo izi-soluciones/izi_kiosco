@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
 
@@ -76,7 +77,95 @@ class IziPrintLineWrap extends IziPrintItem {
 
 class IziPrintCut extends IziPrintItem {}
 
-abstract class IziPrintItem {}
+abstract class IziPrintItem {
+  static IziPrintAlign _alignFor(dynamic v) {
+    switch (v) {
+      case 'center':
+        return IziPrintAlign.center;
+      case 'right':
+        return IziPrintAlign.right;
+      default:
+        return IziPrintAlign.left;
+    }
+  }
+
+  static IziPrintSize _sizeFor(dynamic v) {
+    switch (v) {
+      case 'xs':
+        return IziPrintSize.xs;
+      case 'sml':
+        return IziPrintSize.sml;
+      case 'md':
+        return IziPrintSize.md;
+      case 'lg':
+        return IziPrintSize.lg;
+      case 'xl':
+        return IziPrintSize.xl;
+      case 'sm':
+      default:
+        return IziPrintSize.sm;
+    }
+  }
+
+  static IziPrintItem? fromJson(dynamic raw) {
+    if (raw is! Map) return null;
+    final type = raw['type'];
+    switch (type) {
+      case 'text':
+        return IziPrintText(
+            text: raw['text']?.toString() ?? '',
+            size: _sizeFor(raw['size']),
+            bold: raw['bold'] == true,
+            align: _alignFor(raw['align']));
+      case 'row':
+        final colsRaw = raw['cols'];
+        final cols = <IziPrintColumn>[];
+        if (colsRaw is List) {
+          for (final c in colsRaw) {
+            if (c is Map) {
+              cols.add(IziPrintColumn(
+                  text: c['text']?.toString() ?? '',
+                  width: (c['width'] is num) ? (c['width'] as num).toInt() : 0,
+                  align: _alignFor(c['align'])));
+            }
+          }
+        }
+        return IziPrintRow(cols,
+            size: _sizeFor(raw['size']), bold: raw['bold'] == true);
+      case 'separator':
+        return IziPrintSeparator(dotted: raw['dotted'] == true);
+      case 'lineWrap':
+        return IziPrintLineWrap(
+            lines: raw['lines'] is num ? (raw['lines'] as num).toInt() : 1);
+      case 'qr':
+        return IziPrintQR(raw['content']?.toString() ?? '',
+            size: raw['size'] is num ? (raw['size'] as num).toInt() : 2,
+            align: _alignFor(raw['align']));
+      case 'image':
+        try {
+          final bytes = base64Decode(raw['data']?.toString() ?? '');
+          return IziPrintImage(bytes,
+              size: raw['size'] is num ? (raw['size'] as num).toInt() : 70,
+              align: _alignFor(raw['align']));
+        } catch (_) {
+          return null;
+        }
+      case 'cut':
+        return IziPrintCut();
+      default:
+        return null;
+    }
+  }
+
+  static List<IziPrintItem> listFromJson(List<dynamic> raw) {
+    final out = <IziPrintItem>[];
+    for (final r in raw) {
+      final item = fromJson(r);
+      if (item != null) out.add(item);
+    }
+    return out;
+  }
+}
 
 class PrintUtils {
   printDummy() async {
@@ -146,6 +235,19 @@ class PrintUtils {
     }
   }
   static const platform = MethodChannel('com.izisoluciones.kiosco/print');
+
+  Future<bool> printFromJson(List<dynamic>? raw, Device? device) async {
+    if (raw == null || raw.isEmpty) return false;
+    final items = IziPrintItem.listFromJson(raw);
+    if (items.isEmpty) return false;
+    try {
+      await print(items, device);
+      return true;
+    } catch (e) {
+      log("kiosco printFromJson failed: $e");
+      return false;
+    }
+  }
 
   print(List<IziPrintItem> values, Device? device) async {
     if (kIsWeb) {
