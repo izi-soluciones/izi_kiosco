@@ -21,7 +21,6 @@ class PosConfigPage extends StatefulWidget {
 
 class _PosConfigPageState extends State<PosConfigPage> {
   final TextEditingController _ipController = TextEditingController();
-  final TextEditingController _pinController = TextEditingController();
   final TextEditingController _mqttClientIdController = TextEditingController();
   final TextEditingController _mqttUserNameController = TextEditingController();
   final TextEditingController _mqttPasswordController = TextEditingController();
@@ -46,7 +45,6 @@ class _PosConfigPageState extends State<PosConfigPage> {
   @override
   void dispose() {
     _ipController.dispose();
-    _pinController.dispose();
     _mqttClientIdController.dispose();
     _mqttUserNameController.dispose();
     _mqttPasswordController.dispose();
@@ -207,7 +205,6 @@ class _PosConfigPageState extends State<PosConfigPage> {
                                   .read<PosConfigBloc>()
                                   .pairManually(
                                     _ipController.text,
-                                    pin: _pinController.text,
                                     mqttClientId: _mqttClientIdController.text,
                                     mqttUserName: _mqttUserNameController.text,
                                     mqttPassword: _mqttPasswordController.text,
@@ -244,21 +241,6 @@ class _PosConfigPageState extends State<PosConfigPage> {
                               },
                             ),
                     ],
-                  ),
-                  const SizedBox(height: 12),
-                  // PIN from the POS mDNS service name (izify-POS-<pin>).
-                  // Only needed for manual pairing; discovered devices supply
-                  // it automatically from the service name.
-                  TextField(
-                    controller: _pinController,
-                    keyboardType: TextInputType.number,
-                    maxLength: 5,
-                    decoration: InputDecoration(
-                      labelText: LocaleKeys.posConfig_inputs_pinLabel.tr(),
-                      border: const OutlineInputBorder(),
-                      filled: true,
-                      fillColor: context.iziColors.white,
-                    ),
                   ),
                   const SizedBox(height: 16),
                   InkWell(

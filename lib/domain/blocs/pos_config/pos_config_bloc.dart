@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -5,6 +6,7 @@ import 'package:nsd/nsd.dart' as nsd;
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:async';
+import 'package:izi_kiosco/app/values/locale_keys.g.dart';
 import 'package:izi_kiosco/data/utils/token_utils.dart';
 import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
 
@@ -134,44 +136,36 @@ class PosConfigBloc extends Cubit<PosConfigState> {
     }
   }
 
-  /// Extracts the 5-digit PIN embedded in the mDNS service name
-  /// `izify-POS-<pin>`. Returns null when the name doesn't match (e.g. a
-  /// manually-paired device), in which case the caller must supply the pin.
-  static String? pinFromServiceName(String name) {
-    final match = RegExp(r'izify-POS-(\d{5})$').firstMatch(name);
-    return match?.group(1);
-  }
-
-  Future<void> pairManually(String ip, {int port = 8081, String? pin, String? mqttClientId, String? mqttUserName, String? mqttPassword, String? commerceId, String? cajaId}) async {
+  Future<void> pairManually(String ip, {int port = 8081, String? mqttClientId, String? mqttUserName, String? mqttPassword, String? commerceId, String? cajaId}) async {
     final trimmedIp = ip.trim();
     if (trimmedIp.isEmpty) return;
     final device = PosDevice(name: "POS ($trimmedIp)", ip: trimmedIp, port: port);
-    await pairDevice(device, pin: pin, mqttClientId: mqttClientId, mqttUserName: mqttUserName, mqttPassword: mqttPassword, commerceId: commerceId, cajaId: cajaId);
+    await pairDevice(device, mqttClientId: mqttClientId, mqttUserName: mqttUserName, mqttPassword: mqttPassword, commerceId: commerceId, cajaId: cajaId);
   }
 
-  Future<void> pairDevice(PosDevice device, {String? pin, String? mqttClientId, String? mqttUserName, String? mqttPassword, String? commerceId, String? cajaId}) async {
+  Future<void> pairDevice(PosDevice device, {String? mqttClientId, String? mqttUserName, String? mqttPassword, String? commerceId, String? cajaId}) async {
     emit(state.copyWith(status: PosConfigStatus.pairing));
 
     final deviceConfig = authBloc.state.currentDevice?.config;
     final kioskId = authBloc.state.currentDevice?.nombre ?? 'KIOSK-001';
-    
+
     final finalMqttClientId = mqttClientId?.isNotEmpty == true ? mqttClientId : deviceConfig?.mqttClientId;
     final finalMqttUserName = mqttUserName?.isNotEmpty == true ? mqttUserName : deviceConfig?.mqttUserName;
     final finalMqttPassword = mqttPassword?.isNotEmpty == true ? mqttPassword : deviceConfig?.mqttPassword;
     final finalCommerceId = commerceId?.isNotEmpty == true ? commerceId : deviceConfig?.commerceId;
     final finalCajaId = cajaId?.isNotEmpty == true ? cajaId : deviceConfig?.cajaId;
 
-    // The POS now requires the 5-digit PIN from its mDNS service name
-    // (izify-POS-<pin>) in the /pair body. Prefer an explicitly provided pin,
-    // otherwise derive it from the discovered service name.
-    final finalPin = (pin != null && pin.isNotEmpty)
-        ? pin
-        : pinFromServiceName(device.name);
-    if (finalPin == null) {
+    // The shared admin PIN is the backend device config's pin. It is sent
+    // automatically on every pairing (discovered or manual) - never typed by
+    // the user - and the POS stores it (trust-on-first-pair) as its own
+    // config-entry PIN. The POS rejects a blank pin with HTTP 400, so abort
+    // early with a clear error when the device has no backend PIN.
+    final finalPin = deviceConfig?.pin;
+    if (finalPin == null || finalPin.isEmpty) {
       emit(
         state.copyWith(
           status: PosConfigStatus.error,
-          errorMessage: "Falta el PIN del POS para emparejar",
+          errorMessage: LocaleKeys.posConfig_messages_missingPin.tr(),
         ),
       );
       return;

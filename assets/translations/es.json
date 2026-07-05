@@ -630,6 +630,26 @@
     "title": "Cobro de demostración",
     "body": "Estás realizando un cobro de prueba. Presiona confirmar para simular el pago exitoso."
   },
+  "errorPayments": {
+    "columns": {
+      "status": "Estado",
+      "action": "Acción"
+    },
+    "status": {
+      "success": "Aprobado",
+      "declined": "Rechazado",
+      "pending": "Sin confirmar",
+      "unknown": "Desconocido"
+    },
+    "retry": {
+      "button": "Reintentar",
+      "confirmTitle": "Reintentar pago",
+      "confirmBody": "¿Desea reintentar el cobro de esta transacción?",
+      "confirmWarning": "El pago anterior no fue confirmado. Verifique que no se haya cobrado antes de reintentar.",
+      "confirm": "Reintentar",
+      "cancel": "Cancelar"
+    }
+  },
   "passwordModal": {
     "errors": {
       "wrongPin": "El pin no es correcto"
@@ -650,7 +670,6 @@
     "inputs": {
       "ipHint": "Ej: 192.168.1.100",
       "ipLabel": "IP del POS",
-      "pinLabel": "PIN del POS (5 dígitos)",
       "mqttClientId": "mqttClientId (Ej: CAJA1000023)",
       "mqttUserName": "mqttUserName (Ej: 1000023)",
       "mqttPassword": "mqttPassword (Ej: PWD023)",
@@ -666,7 +685,8 @@
     },
     "messages": {
       "paired": "POS Emparejado correctamente",
-      "noTerminals": "No se encontraron terminales"
+      "noTerminals": "No se encontraron terminales",
+      "missingPin": "Este dispositivo no tiene un PIN configurado. Configúrelo en el backend antes de emparejar."
     }
   }
 }

@@ -336,9 +336,15 @@ class _HomePageState extends State<HomePage> {
                         child: GestureDetector(
                           behavior: HitTestBehavior.opaque,
                             onLongPress: () async {
+                              // The admin config-entry PIN is the backend device
+                              // config's pin (the same shared PIN sent to the POS
+                              // on pairing). '4321' is an EMERGENCY FALLBACK to
+                              // avoid locking out an operator when the backend PIN
+                              // is unset; remove it once every device has a
+                              // backend-provisioned PIN.
                               final pin = context.read<AuthBloc>().state.currentDevice?.config.pin;
                               final correctPin = (pin != null && pin.isNotEmpty) ? pin : '4321';
-                              
+
                               final result = await showDialog<bool>(
                                 context: context,
                                 builder: (ctx) => PasswordModal(correctPin: correctPin),

@@ -502,6 +502,22 @@ abstract class  LocaleKeys {
   static const demoPayment_title = 'demoPayment.title';
   static const demoPayment_body = 'demoPayment.body';
   static const demoPayment = 'demoPayment';
+  static const errorPayments_columns_status = 'errorPayments.columns.status';
+  static const errorPayments_columns_action = 'errorPayments.columns.action';
+  static const errorPayments_columns = 'errorPayments.columns';
+  static const errorPayments_status_success = 'errorPayments.status.success';
+  static const errorPayments_status_declined = 'errorPayments.status.declined';
+  static const errorPayments_status_pending = 'errorPayments.status.pending';
+  static const errorPayments_status_unknown = 'errorPayments.status.unknown';
+  static const errorPayments_status = 'errorPayments.status';
+  static const errorPayments_retry_button = 'errorPayments.retry.button';
+  static const errorPayments_retry_confirmTitle = 'errorPayments.retry.confirmTitle';
+  static const errorPayments_retry_confirmBody = 'errorPayments.retry.confirmBody';
+  static const errorPayments_retry_confirmWarning = 'errorPayments.retry.confirmWarning';
+  static const errorPayments_retry_confirm = 'errorPayments.retry.confirm';
+  static const errorPayments_retry_cancel = 'errorPayments.retry.cancel';
+  static const errorPayments_retry = 'errorPayments.retry';
+  static const errorPayments = 'errorPayments';
   static const passwordModal_errors_wrongPin = 'passwordModal.errors.wrongPin';
   static const passwordModal_errors = 'passwordModal.errors';
   static const passwordModal_buttons_confirm = 'passwordModal.buttons.confirm';
@@ -516,7 +532,6 @@ abstract class  LocaleKeys {
   static const posConfig_sections = 'posConfig.sections';
   static const posConfig_inputs_ipHint = 'posConfig.inputs.ipHint';
   static const posConfig_inputs_ipLabel = 'posConfig.inputs.ipLabel';
-  static const posConfig_inputs_pinLabel = 'posConfig.inputs.pinLabel';
   static const posConfig_inputs_mqttClientId = 'posConfig.inputs.mqttClientId';
   static const posConfig_inputs_mqttUserName = 'posConfig.inputs.mqttUserName';
   static const posConfig_inputs_mqttPassword = 'posConfig.inputs.mqttPassword';
@@ -531,6 +546,7 @@ abstract class  LocaleKeys {
   static const posConfig_buttons = 'posConfig.buttons';
   static const posConfig_messages_paired = 'posConfig.messages.paired';
   static const posConfig_messages_noTerminals = 'posConfig.messages.noTerminals';
+  static const posConfig_messages_missingPin = 'posConfig.messages.missingPin';
   static const posConfig_messages = 'posConfig.messages';
   static const posConfig = 'posConfig';
 

@@ -774,7 +774,9 @@ class ComandaRepositoryHttp extends ComandaRepository {
               cardNumber: "****",
               date: DateTime.now().toIso8601String().split('T').first,
               hour: DateTime.now().toIso8601String().split('T').last.substring(0, 5),
-              reference: reference
+              reference: reference,
+              amount: amount,
+              currency: currency
             );
           }
           final data = jsonDecode(res.body);
@@ -787,7 +789,9 @@ class ComandaRepositoryHttp extends ComandaRepository {
                cardNumber: data is Map ? (data["cardNumber"] ?? "****") : "****",
                date: DateTime.now().toIso8601String().split('T').first,
                hour: DateTime.now().toIso8601String().split('T').last.substring(0, 5),
-               reference: reference
+               reference: reference,
+               amount: amount,
+               currency: currency
           );
         } catch (e) {
           log(e.toString());
@@ -797,7 +801,9 @@ class ComandaRepositoryHttp extends ComandaRepository {
                cardNumber: "****",
                date: DateTime.now().toIso8601String().split('T').first,
                hour: DateTime.now().toIso8601String().split('T').last.substring(0, 5),
-               reference: reference
+               reference: reference,
+               amount: amount,
+               currency: currency
             );
           }
           rethrow;
