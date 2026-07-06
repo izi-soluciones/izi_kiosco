@@ -32,7 +32,9 @@ import 'package:izi_kiosco/domain/repositories/comanda_repository.dart';
 import 'package:izi_kiosco/domain/dto/internal_movement_dto.dart';
 
 class ComandaRepositoryHttp extends ComandaRepository {
-  final DioClient _dioClient = DioClient();
+  final DioClient _dioClient;
+
+  ComandaRepositoryHttp({DioClient? dioClient}) : _dioClient = dioClient ?? DioClient();
 
   @override
   Future<List<Comanda>> getComandas(

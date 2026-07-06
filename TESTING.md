@@ -15,7 +15,7 @@ fvm flutter test test/domain/models    # run one folder
 fvm flutter test --coverage            # generate coverage/lcov.info
 ```
 
-Current status: **197 tests, all green**, across 22 test files.
+Current status: **220 tests, all green**, across 26 test files.
 
 ## Test dependencies added
 
@@ -53,8 +53,23 @@ test/
 | Print parsing | `domain/utils/print_utils_test.dart` | `IziPrintItem.fromJson`/`listFromJson` for every element type + defaults, `String.capitalize` |
 | Models | `domain/models/*_test.dart` | `CardPayment` retry classification, `PosPaymentResult`, `Modulos`, `Currency`, `Payment`, `Customer`, `User`, `Login*`, `Item` (price-list filtering, `nombreMostrar`, `toJson`), `Charge` (qr url vs base64, nested token), `Room` (`$numberDecimal`), `SaleLink` |
 | DTOs | `domain/dto/dto_test.dart` | `AddKioskDto`, `PaidChargeDto`, `NewSaleLinkDto`, `FiltersComanda`, `InternalMovementDto` |
-| Storage | `data/**` | `TokenUtils`, `BusinessUtils`, `UserUtils`, `LocalStorage*` round trips (mocked `SharedPreferences`); AES credential encryption |
+| Storage | `data/utils/**`, `data/local/**` | `TokenUtils`, `BusinessUtils`, `UserUtils`, `LocalStorage*` round trips (mocked `SharedPreferences`); AES credential encryption |
+| HTTP repositories | `data/repositories/*_http_test.dart` | `PosRepositoryHttp`, `AuthRepositoryHttp`, `BusinessRepositoryHttp`, `ComandaRepositoryHttp` (Dio-based methods): endpoint paths, query/body payloads, response parsing, non-200 error propagation — via a mocked `DioClient` |
 | BLoCs | `domain/blocs/*_test.dart` | `PosConfigurationBloc`, `AddKioskBloc`, `MakeOrderRetailBloc` (full happy + error paths), `MakeOrderBloc` cart logic, `PageUtilsBloc` UI state |
+
+## Repository testability seam
+
+The `*RepositoryHttp` classes used to construct `DioClient()` inline, which made
+the network layer impossible to mock. Each now takes an **optional** injected
+client:
+
+```dart
+AuthRepositoryHttp({DioClient? dioClient}) : _dioClient = dioClient ?? DioClient();
+```
+
+All production call sites use the no-arg form, so behavior is unchanged; tests
+pass a `MockDioClient` (see `test/helpers/mocks.dart`) and stub
+`get`/`post`/`put`. This is the only production change made for testing.
 
 ## Bugs / observations surfaced while writing tests
 
@@ -74,14 +89,18 @@ tests) — they are candidates for a follow-up fix, not fixed here:
    check).
 5. **`LocalStorageCardErrors`** has no purge/clear method; the list grows
    unbounded.
+6. **`Comanda.fromJson` crashes on missing dates** — `fecha`/`creado` are read
+   via `DateTime.tryParse(json["..."])` with no null guard, so a payload
+   missing either key throws `type 'Null' is not a subtype of type 'String'`
+   instead of falling back to `DateTime.now()`. Surfaced by the comanda
+   repository tests (which supply the dates to work around it).
 
 ## Not yet covered (follow-up work)
 
-- **HTTP repositories** (`data/repositories/**_http.dart`): each constructs its
-  own `DioClient()` internally (`final DioClient _dioClient = DioClient();`), so
-  the network layer is not injectable and cannot be mocked without a small
-  refactor (constructor-inject `DioClient`, and inject `Dio` into `DioClient`).
-  Recommended next step to unlock repository-level tests.
+- **HTTP repositories — raw `http` paths**: the card-payment/Izify methods in
+  `ComandaRepositoryHttp` (`callCardPaymentIzify`, `pollIzifyPaymentStatus`) use
+  the `http` package directly rather than `DioClient`, so they are not covered
+  by the `MockDioClient` seam. They would need an injected `http.Client`.
 - **`SocketRepository`**: uses `socket_io_client` directly; needs a socket
   abstraction or integration test harness.
 - **Side-effect-heavy BLoCs**: `PaymentBloc`, `AuthBloc`, `HomeBloc`,

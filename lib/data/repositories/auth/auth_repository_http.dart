@@ -9,7 +9,9 @@ import 'package:izi_kiosco/domain/models/user.dart';
 import 'package:izi_kiosco/domain/repositories/auth_repository.dart';
 
 class AuthRepositoryHttp extends AuthRepository{
-  final DioClient _dioClient = DioClient();
+  final DioClient _dioClient;
+
+  AuthRepositoryHttp({DioClient? dioClient}) : _dioClient = dioClient ?? DioClient();
 
   @override
   Future<List<Contribuyente>> getContribuyentes() async{
