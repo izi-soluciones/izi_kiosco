@@ -13,6 +13,7 @@ import 'package:izi_kiosco/data/local/local_storage_card_errors.dart';
 import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/page_utils/page_utils_bloc.dart';
 import 'package:izi_kiosco/domain/models/card_payment.dart';
+import 'package:izi_kiosco/domain/utils/print_utils.dart';
 import 'package:izi_kiosco/ui/utils/responsive_utils.dart';
 
 import 'package:flutter/services.dart';
@@ -26,6 +27,7 @@ class ErrorPaymentPage extends StatefulWidget {
 
 class _ErrorPaymentPageState extends State<ErrorPaymentPage> {
   List<CardPayment> list = [];
+  bool _printingTest = false;
   @override
   void initState() {
     LocalStorageCardErrors.getErrors().then((value) {
@@ -182,6 +184,33 @@ class _ErrorPaymentPageState extends State<ErrorPaymentPage> {
                     ),
                   ),
                   
+                  Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: IziBtn(
+                      buttonText: _printingTest
+                          ? "Imprimiendo..."
+                          : "Imprimir prueba",
+                      buttonType: ButtonType.terciary,
+                      buttonSize: ButtonSize.medium,
+                      buttonOnPressed: _printingTest
+                          ? null
+                          : () async {
+                              setState(() => _printingTest = true);
+                              try {
+                                await PrintUtils().printTest(
+                                    device: context
+                                        .read<AuthBloc>()
+                                        .state
+                                        .currentDevice);
+                              } finally {
+                                if (mounted) {
+                                  setState(() => _printingTest = false);
+                                }
+                              }
+                            },
+                    ),
+                  ),
+
                   Padding(
                     padding: const EdgeInsets.all(16),
                     child: IziBtn(

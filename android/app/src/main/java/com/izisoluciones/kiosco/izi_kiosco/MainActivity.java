@@ -23,6 +23,18 @@ import com.printsdk.usbsdk.UsbDriver;
 public class MainActivity extends FlutterActivity {
     private static final String CHANNEL = "com.izisoluciones.kiosco/print";
 
+    // Masung/SAT kiosk printer (IP1000 family): VID 0x0519, PIDs 0x2013/0x2015/0x2017
+    private static final int SAT_VID = 1305;
+    private static final int[] SAT_PIDS = {8211, 8213, 8215};
+
+    // The printer defaults to a Chinese (GBK) text mode. For Spanish receipts we
+    // cancel Kanji mode (FS .) and select an ESC/POS Latin codepage (ESC t n),
+    // encoding text with the matching Java charset ourselves instead of relying
+    // on PrintCmd.PrintString (which mangles accented characters).
+    private static final int SAT_CODEPAGE = 16; // ESC t 16 = Windows-1252
+    private static final java.nio.charset.Charset SAT_CHARSET =
+            java.nio.charset.Charset.forName("windows-1252");
+
     @Override
     public void configureFlutterEngine(@NonNull FlutterEngine flutterEngine) {
         super.configureFlutterEngine(flutterEngine);
@@ -61,6 +73,11 @@ public class MainActivity extends FlutterActivity {
                                 } else {
                                     result.error("INVALID_ARGUMENT", "Items are null", null);
                                 }
+                            } else if (call.method.equals("hasSatPrinter")) {
+                                // Exact VID/PID match only: used by Dart to auto-route to the SAT
+                                // path without a backend flag. Kept strict so kiosks with other
+                                // USB printers (e.g. AutoReply/Caysn) are not captured by mistake.
+                                result.success(findSatDevice(false) != null);
                             } else {
                                 result.notImplemented();
                             }
@@ -258,37 +275,90 @@ public class MainActivity extends FlutterActivity {
         }
     }
 
+    private boolean isSatVidPid(UsbDevice device) {
+        if (device.getVendorId() != SAT_VID) return false;
+        for (int pid : SAT_PIDS) {
+            if (device.getProductId() == pid) return true;
+        }
+        return false;
+    }
+
+    private UsbDevice findSatDevice(boolean allowGenericPrinterClass) {
+        UsbManager usbManager = (UsbManager) getSystemService(Context.USB_SERVICE);
+        if (usbManager == null) return null;
+        for (UsbDevice device : usbManager.getDeviceList().values()) {
+            if (isSatVidPid(device)) {
+                return device;
+            }
+        }
+        if (allowGenericPrinterClass) {
+            for (UsbDevice device : usbManager.getDeviceList().values()) {
+                for (int i = 0; i < device.getInterfaceCount(); i++) {
+                    if (device.getInterface(i).getInterfaceClass() == UsbConstants.USB_CLASS_PRINTER) {
+                        return device;
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    // Encode and send text using the Latin codepage selected at print start.
+    private void satWriteText(UsbDriver driver, String text, boolean appendNewline) {
+        if (text != null && text.length() > 0) {
+            driver.write(text.getBytes(SAT_CHARSET));
+        }
+        if (appendNewline) {
+            driver.write(new byte[]{0x0A});
+        }
+    }
+
+    // Print a bitmap as an ESC/POS raster image (GS v 0). targetWidth is in
+    // printer dots (80mm head = 576 dots); the bitmap is scaled proportionally.
+    private void satPrintBitmap(UsbDriver driver, android.graphics.Bitmap bitmap, int targetWidth) {
+        if (targetWidth < 8) targetWidth = 8;
+        if (targetWidth > 576) targetWidth = 576;
+        int width = targetWidth & ~7; // multiple of 8
+        int height = Math.max(1, bitmap.getHeight() * width / bitmap.getWidth());
+        android.graphics.Bitmap scaled = android.graphics.Bitmap.createScaledBitmap(bitmap, width, height, true);
+
+        int bytesPerRow = width / 8;
+        byte[] raster = new byte[bytesPerRow * height];
+        int[] pixels = new int[width * height];
+        scaled.getPixels(pixels, 0, width, 0, 0, width, height);
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                int p = pixels[y * width + x];
+                int alpha = (p >>> 24) & 0xFF;
+                int r = (p >> 16) & 0xFF, g = (p >> 8) & 0xFF, b = p & 0xFF;
+                int luminance = (r * 299 + g * 587 + b * 114) / 1000;
+                boolean black = alpha > 127 && luminance < 128;
+                if (black) {
+                    raster[y * bytesPerRow + (x >> 3)] |= (byte) (0x80 >> (x & 7));
+                }
+            }
+        }
+
+        byte[] header = new byte[]{
+                0x1D, 0x76, 0x30, 0x00,
+                (byte) (bytesPerRow & 0xFF), (byte) ((bytesPerRow >> 8) & 0xFF),
+                (byte) (height & 0xFF), (byte) ((height >> 8) & 0xFF)
+        };
+        byte[] payload = new byte[header.length + raster.length];
+        System.arraycopy(header, 0, payload, 0, header.length);
+        System.arraycopy(raster, 0, payload, header.length, raster.length);
+        driver.write(payload);
+    }
+
     private boolean printWithSat(List<Map<String, Object>> items) {
         UsbManager mUsbManager = (UsbManager) getSystemService(Context.USB_SERVICE);
         UsbDriver mUsbDriver = new UsbDriver(mUsbManager, this);
         boolean isConnected = false;
         UsbDevice targetDevice = null;
-        
+
         try {
             android.util.Log.i("MainActivity", "1. printWithSat started. Beginning device search...");
-            for (UsbDevice device : mUsbManager.getDeviceList().values()) {
-                android.util.Log.i("MainActivity", "Found USB Device VID: " + device.getVendorId() + " PID: " + device.getProductId() + " Name: " + device.getDeviceName());
-                if ((device.getProductId() == 8211 && device.getVendorId() == 1305) ||
-                    (device.getProductId() == 8213 && device.getVendorId() == 1305)) {
-                    targetDevice = device;
-                    android.util.Log.i("MainActivity", "-> Specific SAT Printer matched!");
-                    break;
-                }
-            }
-
-            if (targetDevice == null) {
-                android.util.Log.i("MainActivity", "2. SAT specific NOT found. Falling back to class search...");
-                for (UsbDevice device : mUsbManager.getDeviceList().values()) {
-                    for (int i = 0; i < device.getInterfaceCount(); i++) {
-                        if (device.getInterface(i).getInterfaceClass() == UsbConstants.USB_CLASS_PRINTER) {
-                            targetDevice = device;
-                            android.util.Log.i("MainActivity", "-> General Printer class matched on: " + device.getDeviceName());
-                            break;
-                        }
-                    }
-                    if (targetDevice != null) break;
-                }
-            }
+            targetDevice = findSatDevice(true);
 
             if (targetDevice == null) {
                 android.util.Log.e("MainActivity", "No USB printer found. Aborting print.");
@@ -338,6 +408,8 @@ public class MainActivity extends FlutterActivity {
             mUsbDriver.write(PrintCmd.SetClean());
             byte[] resetLineSpacing = new byte[]{0x1B, 0x32}; // ESC 2 (Default Line Spacing ~ 30 dots)
             mUsbDriver.write(resetLineSpacing);
+            mUsbDriver.write(new byte[]{0x1C, 0x2E}); // FS . : cancel Chinese/Kanji mode
+            mUsbDriver.write(new byte[]{0x1B, 0x74, (byte) SAT_CODEPAGE}); // ESC t : Latin codepage
             android.util.Log.d("MainActivity", "-> Payload Size: " + items.size() + " components received from Dart.");
 
             for (Map<String, Object> item : items) {
@@ -363,9 +435,7 @@ public class MainActivity extends FlutterActivity {
                         int scale = size > 3 ? 1 : 0;
                         mUsbDriver.write(PrintCmd.SetSizetext(scale, scale));
 
-                        if (text != null && text.length() > 0) {
-                            mUsbDriver.write(PrintCmd.PrintString(text, 0));
-                        }
+                        satWriteText(mUsbDriver, text, true);
 
                         mUsbDriver.write(PrintCmd.SetSizetext(0, 0));
                         mUsbDriver.write(PrintCmd.SetBold(0));
@@ -426,7 +496,7 @@ public class MainActivity extends FlutterActivity {
                         boolean bold = (item.containsKey("bold") && item.get("bold") != null) ? (Boolean) item.get("bold") : false;
                         mUsbDriver.write(PrintCmd.SetBold(bold ? 1 : 0));
                         mUsbDriver.write(PrintCmd.SetSizetext(scale, scale));
-                        mUsbDriver.write(PrintCmd.PrintString(rowBuilder.toString(), 0));
+                        satWriteText(mUsbDriver, rowBuilder.toString(), true);
 
                         mUsbDriver.write(PrintCmd.SetSizetext(0, 0));
                         mUsbDriver.write(PrintCmd.SetBold(0));
@@ -446,17 +516,39 @@ public class MainActivity extends FlutterActivity {
 
                     } else if ("line".equals(type)) {
                         boolean dotted = (Boolean) item.get("dotted");
-                        char lineChar = dotted ? '-' : '─';
-                        StringBuilder sb = new StringBuilder();
-                        for(int c=0; c<48; c++) sb.append(lineChar);
-                        mUsbDriver.write(PrintCmd.PrintString(sb.toString(), 0));
+                        byte[] line = new byte[49];
+                        // 0xC4 is the single horizontal box-drawing char in CP437
+                        byte lineByte = dotted ? (byte) '-' : (byte) 0xC4;
+                        for (int c = 0; c < 48; c++) line[c] = lineByte;
+                        line[48] = 0x0A;
+                        if (!dotted) mUsbDriver.write(new byte[]{0x1B, 0x74, 0x00}); // ESC t 0: CP437
+                        mUsbDriver.write(line);
+                        if (!dotted) mUsbDriver.write(new byte[]{0x1B, 0x74, (byte) SAT_CODEPAGE});
 
                     } else if ("feed".equals(type)) {
                         int lines = (Integer) item.get("lines");
                         mUsbDriver.write(PrintCmd.PrintFeedline(lines));
 
                     } else if ("image".equals(type)) {
-                        // Ignored or left to future implementation
+                        byte[] imgData = (byte[]) item.get("data");
+                        if (imgData != null) {
+                            android.graphics.Bitmap bitmap =
+                                    android.graphics.BitmapFactory.decodeByteArray(imgData, 0, imgData.length);
+                            if (bitmap != null) {
+                                String align = (String) item.get("align");
+                                Integer size = (Integer) item.get("size");
+                                // Dart sends 'size' as a nominal square dimension (~70 for logos);
+                                // map it to printer dots with a 2x factor so logos stay readable.
+                                int targetWidth = (size != null && size > 0) ? size * 2 : 240;
+                                if ("center".equals(align)) {
+                                    mUsbDriver.write(PrintCmd.SetAlignment(1));
+                                } else if ("right".equals(align)) {
+                                    mUsbDriver.write(PrintCmd.SetAlignment(2));
+                                }
+                                satPrintBitmap(mUsbDriver, bitmap, targetWidth);
+                                mUsbDriver.write(PrintCmd.SetAlignment(0));
+                            }
+                        }
                     }
                 } catch (Throwable innerException) {
                     android.util.Log.e("MainActivity", "Failed to print individual item: " + innerException.getMessage());
