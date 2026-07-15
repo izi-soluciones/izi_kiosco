@@ -226,7 +226,13 @@ class PrintUtils {
         IziPrintColumn(text: "Bs. 30,00", width: 30, align: IziPrintAlign.right),
       ], size: IziPrintSize.sm),
       IziPrintSeparator(dotted: true),
-      IziPrintQR("https://izi.bo", size: 4),
+      // URL larga estilo SIAT: valida que los QR de facturas (150+ chars)
+      // se impriman correctamente, no solo contenidos cortos.
+      IziPrintQR(
+          "https://pilotosiat.impuestos.gob.bo/consulta/QR?nit=123456789"
+          "&cuf=ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF012345"
+          "6789ABCDEF0123456789&numero=12345&t=2",
+          size: 3),
       IziPrintLineWrap(lines: 1),
       IziPrintText(
           text: "Impresión OK",

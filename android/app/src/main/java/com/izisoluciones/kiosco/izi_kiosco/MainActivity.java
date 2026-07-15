@@ -350,6 +350,56 @@ public class MainActivity extends FlutterActivity {
         driver.write(payload);
     }
 
+    // QR byte-mode capacity per version at error correction level M.
+    private static final int[] QR_CAPACITY_M = {
+            14, 26, 42, 62, 84, 106, 122, 152, 180, 213,
+            251, 287, 331, 362, 412, 450, 504, 560, 624, 666,
+            711, 779, 857, 911, 997, 1059, 1125, 1190, 1264, 1370,
+            1452, 1538, 1628, 1722, 1809, 1911, 1989, 2099, 2213, 2331
+    };
+
+    // Print a QR on the SAT/Masung printer. The firmware has no ESC/POS QR
+    // support (GS ( k prints as literal text and GS v 0 raster prints
+    // nothing); it only understands the SDK's proprietary DC3 raster
+    // command, which QRCodeInfo generates. The stock PrintCmd.PrintQrcode
+    // wrapper never sets the QR version, so any content beyond ~25 chars
+    // (invoice URLs) failed encoding and returned null. Here the version is
+    // chosen to fit the content, escalating if the encoder still refuses.
+    private void satPrintQr(UsbDriver driver, String content, int size) {
+        try {
+            int contentLen = content.getBytes(java.nio.charset.StandardCharsets.UTF_8).length;
+            int version = 1;
+            while (version < 40 && contentLen > QR_CAPACITY_M[version - 1]) version++;
+
+            for (; version <= 40; version++) {
+                int modules = 17 + 4 * version;
+                // Dart QR sizes mirror the Sunmi module scale (invoices use
+                // 2-3); map to dots per module and shrink to fit 576-dot paper.
+                int module = size + 2;
+                if (module < 2) module = 2;
+                if (module > 8) module = 8;
+                while (module > 2 && modules * module > 576) module--;
+
+                com.printsdk.qrcode.util.QRCodeInfo qr = new com.printsdk.qrcode.util.QRCodeInfo();
+                qr.setVersion(version);
+                qr.setmSide(module);
+                // lMargin travels as ONE byte in the DC3 command, in units of
+                // 8 dots; passing dots overflows the 576-dot row and the QR
+                // prints wrapped/split.
+                qr.setlMargin(Math.max((576 - modules * module) / 16, 0));
+                byte[] cmd = qr.GetQRBCode(content, 1);
+                if (cmd != null && cmd.length > 0) {
+                    driver.write(cmd);
+                    driver.write(new byte[]{0x0A});
+                    return;
+                }
+            }
+            android.util.Log.e("MainActivity", "satPrintQr: could not encode " + contentLen + " bytes");
+        } catch (Throwable e) {
+            android.util.Log.e("MainActivity", "satPrintQr failed: " + e.getMessage());
+        }
+    }
+
     private boolean printWithSat(List<Map<String, Object>> items) {
         UsbManager mUsbManager = (UsbManager) getSystemService(Context.USB_SERVICE);
         UsbDriver mUsbDriver = new UsbDriver(mUsbManager, this);
@@ -503,9 +553,12 @@ public class MainActivity extends FlutterActivity {
 
                     } else if ("qrcode".equals(type)) {
                         String content = (String) item.get("content");
-                        mUsbDriver.write(PrintCmd.SetAlignment(1));
-                        mUsbDriver.write(PrintCmd.PrintQrcode(content, 25, 6, 1));
-                        mUsbDriver.write(PrintCmd.SetAlignment(0));
+                        Integer sizeObj = (item.get("size") instanceof Integer) ? (Integer) item.get("size") : null;
+                        if (content != null && content.length() > 0) {
+                            mUsbDriver.write(PrintCmd.SetAlignment(1));
+                            satPrintQr(mUsbDriver, content, sizeObj != null ? sizeObj : 3);
+                            mUsbDriver.write(PrintCmd.SetAlignment(0));
+                        }
 
                     } else if ("cut".equals(type)) {
                         mUsbDriver.write(PrintCmd.PrintFeedline(7)); // Increased to safely clear mechanical blade
