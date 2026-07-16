@@ -16,6 +16,47 @@ import 'package:izi_kiosco/ui/utils/money_formatter.dart';
 
 class PrintTemplate {
 
+  /// Garantiza que un ticket de factura incluya el QR fiscal. Los tickets
+  /// compuestos por el backend (customFactura["printItems"]) pueden venir
+  /// sin item de QR; en ese caso se agrega aquí con las mismas reglas que
+  /// las plantillas locales: URL SIAT si hay cuf, si no el enlace al PDF.
+  /// Las prefacturas y facturas sin datos fiscales ni PDF quedan igual.
+  static List<IziPrintItem> ensureInvoiceQr(List<IziPrintItem> items,
+      Invoice invoice, Contribuyente contribuyente) {
+    if (items.any((i) => i is IziPrintQR)) return items;
+
+    final qrItems = <IziPrintItem>[];
+    if (invoice.prefactura != 1 && invoice.customFactura["siat"] is Map) {
+      final nit = invoice.emisor;
+      final cuf = invoice.customFactura["siat"]["cuf"];
+      final number = invoice.numero;
+      final production = contribuyente.customData is Map &&
+          contribuyente.customData["configSiat"] is Map &&
+          contribuyente.customData["configSiat"]["codigoAmbiente"] == 1;
+      final host = production
+          ? "https://siat.impuestos.gob.bo"
+          : "https://pilotosiat.impuestos.gob.bo";
+      qrItems.add(IziPrintQR(
+          "$host/consulta/QR?nit=$nit&cuf=$cuf&numero=$number&t=2",
+          size: 2));
+    } else if (invoice.pdfRollo != null || invoice.pdfCarta != null) {
+      qrItems.add(IziPrintQR(invoice.pdfRollo ?? invoice.pdfCarta!, size: 2));
+    }
+    if (qrItems.isEmpty) return items;
+    qrItems.add(IziPrintLineWrap(lines: 1));
+    qrItems.add(IziPrintText(
+        text: "Visualice su factura desde el QR",
+        size: IziPrintSize.sm,
+        align: IziPrintAlign.center));
+
+    final out = List.of(items);
+    // Antes del corte final si existe, para no imprimir tras el cut.
+    final insertAt =
+        (out.isNotEmpty && out.last is IziPrintCut) ? out.length - 1 : out.length;
+    out.insertAll(insertAt, qrItems);
+    return out;
+  }
+
   static Future<List<IziPrintItem>>  printInvoiceCompact(
   Contribuyente contribuyente,
   Sucursal sucursal,

@@ -358,14 +358,47 @@ public class MainActivity extends FlutterActivity {
             1452, 1538, 1628, 1722, 1809, 1911, 1989, 2099, 2213, 2331
     };
 
-    // Print a QR on the SAT/Masung printer. The firmware has no ESC/POS QR
-    // support (GS ( k prints as literal text and GS v 0 raster prints
-    // nothing); it only understands the SDK's proprietary DC3 raster
-    // command, which QRCodeInfo generates. The stock PrintCmd.PrintQrcode
-    // wrapper never sets the QR version, so any content beyond ~25 chars
-    // (invoice URLs) failed encoding and returned null. Here the version is
-    // chosen to fit the content, escalating if the encoder still refuses.
-    private void satPrintQr(UsbDriver driver, String content, int size) {
+    // The two Masung/SAT printer firmware generations seen in the field share
+    // VID:PID 0519:2013 but speak DIFFERENT graphics command sets:
+    //  - "Masung Printer"          -> only the SDK's proprietary DC3 command
+    //    (standard GS ( k prints as literal text, GS v 0 prints nothing)
+    //  - "IP1000 Printer USB001"   -> standard ESC/POS (GS ( k and GS v 0 ok;
+    //    the DC3 stream half-parses into buffer garbage that bleeds into
+    //    later prints)
+    // The USB product string is the only reliable discriminator.
+    private static boolean usesDc3Graphics(UsbDevice device) {
+        String product = device.getProductName();
+        return product != null && product.toLowerCase(java.util.Locale.US).contains("masung");
+    }
+
+    // Print a QR using the standard ESC/POS symbol commands (GS ( k): the
+    // firmware picks the QR version automatically for any content length.
+    private void satPrintQrEscPos(UsbDriver driver, String content, int size) {
+        byte[] data = content.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+        if (data.length == 0 || data.length > 7000) return;
+        int module = size + 2;
+        if (module < 3) module = 3;
+        if (module > 8) module = 8;
+        driver.write(new byte[]{0x1D, 0x28, 0x6B, 0x04, 0x00, 0x31, 0x41, 0x32, 0x00}); // model 2
+        driver.write(new byte[]{0x1D, 0x28, 0x6B, 0x03, 0x00, 0x31, 0x43, (byte) module});
+        driver.write(new byte[]{0x1D, 0x28, 0x6B, 0x03, 0x00, 0x31, 0x45, 0x31}); // ECC M
+        int len = data.length + 3;
+        byte[] store = new byte[8 + data.length];
+        store[0] = 0x1D; store[1] = 0x28; store[2] = 0x6B;
+        store[3] = (byte) (len & 0xFF); store[4] = (byte) ((len >> 8) & 0xFF);
+        store[5] = 0x31; store[6] = 0x50; store[7] = 0x30;
+        System.arraycopy(data, 0, store, 8, data.length);
+        driver.write(store);
+        driver.write(new byte[]{0x1D, 0x28, 0x6B, 0x03, 0x00, 0x31, 0x51, 0x30});
+        driver.write(new byte[]{0x0A});
+    }
+
+    // Print a QR via the SDK's proprietary DC3 command (QRCodeInfo). The
+    // stock PrintCmd.PrintQrcode wrapper never sets the QR version, so any
+    // content beyond ~25 chars (invoice URLs) failed encoding and returned
+    // null. Here the version is chosen to fit the content, escalating if
+    // the encoder still refuses.
+    private void satPrintQrDc3(UsbDriver driver, String content, int size) {
         try {
             int contentLen = content.getBytes(java.nio.charset.StandardCharsets.UTF_8).length;
             int version = 1;
@@ -394,9 +427,9 @@ public class MainActivity extends FlutterActivity {
                     return;
                 }
             }
-            android.util.Log.e("MainActivity", "satPrintQr: could not encode " + contentLen + " bytes");
+            android.util.Log.e("MainActivity", "satPrintQrDc3: could not encode " + contentLen + " bytes");
         } catch (Throwable e) {
-            android.util.Log.e("MainActivity", "satPrintQr failed: " + e.getMessage());
+            android.util.Log.e("MainActivity", "satPrintQrDc3 failed: " + e.getMessage());
         }
     }
 
@@ -460,6 +493,7 @@ public class MainActivity extends FlutterActivity {
             mUsbDriver.write(resetLineSpacing);
             mUsbDriver.write(new byte[]{0x1C, 0x2E}); // FS . : cancel Chinese/Kanji mode
             mUsbDriver.write(new byte[]{0x1B, 0x74, (byte) SAT_CODEPAGE}); // ESC t : Latin codepage
+            final boolean dc3Graphics = usesDc3Graphics(targetDevice);
             android.util.Log.d("MainActivity", "-> Payload Size: " + items.size() + " components received from Dart.");
 
             for (Map<String, Object> item : items) {
@@ -556,7 +590,11 @@ public class MainActivity extends FlutterActivity {
                         Integer sizeObj = (item.get("size") instanceof Integer) ? (Integer) item.get("size") : null;
                         if (content != null && content.length() > 0) {
                             mUsbDriver.write(PrintCmd.SetAlignment(1));
-                            satPrintQr(mUsbDriver, content, sizeObj != null ? sizeObj : 3);
+                            if (dc3Graphics) {
+                                satPrintQrDc3(mUsbDriver, content, sizeObj != null ? sizeObj : 3);
+                            } else {
+                                satPrintQrEscPos(mUsbDriver, content, sizeObj != null ? sizeObj : 3);
+                            }
                             mUsbDriver.write(PrintCmd.SetAlignment(0));
                         }
 
