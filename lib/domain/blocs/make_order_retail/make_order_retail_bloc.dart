@@ -33,7 +33,17 @@ class MakeOrderRetailBloc extends Cubit<MakeOrderRetailState> {
         catalog: authState.currentSucursal?.catalogo ?? "", sortByPriority: false
       );
 
-      
+      String? priceList = authState.catalog?.listaPrecio;
+      if (priceList != null) {
+        for (var item in list) {
+          PrecioVenta? aux = item.preciosVenta.firstWhereOrNull((element) {
+            return element.listaPrecio == priceList;
+          });
+          if (aux != null) {
+            item.precioUnitario = aux.precio;
+          }
+        }
+      }
 
 
       List<CashRegister> cashRegisters =
