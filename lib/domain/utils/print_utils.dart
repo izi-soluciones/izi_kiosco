@@ -198,43 +198,68 @@ class PrintUtils {
       }
     }
   }
-  printTest() async {
-    if (kIsWeb) {
-    } else {
-      if (Platform.isAndroid) {
-        log("iZi Kiosco: printTest - Attempting _satPrint for SDK verification.");
-        try {
-          await _satPrint([IziPrintText(text: "SAT Printer OK", size: IziPrintSize.md, bold: true, align: IziPrintAlign.center)]);
-          log("iZi Kiosco: printTest - _satPrint dispatched.");
-        } catch (e) {
-          log("iZi Kiosco: printTest - _satPrint failed: $e");
-        }
-
-        var resBinding = await SunmiPrinter.bindingPrinter();
-        await SunmiPrinter.initPrinter();
-        var status = await SunmiPrinter.getPrinterStatus();
-        log(status.toString());
-        if (resBinding == true && status != PrinterStatus.ERROR) {
-
-          await SunmiPrinter.initPrinter();
-          await SunmiPrinter.startTransactionPrint(true);
-
-          await SunmiPrinter.printText("Bienvenido Kiosko-iZi",
-              style: SunmiStyle(
-                  align: SunmiPrintAlign.CENTER,
-                  bold: true,
-                  fontSize: SunmiFontSize.MD));
-          await SunmiPrinter.submitTransactionPrint();
-          await SunmiPrinter.cut();
-          await SunmiPrinter.exitTransactionPrint(true);
-        } else {
-        }
-      } else {
-        //await _pdfPrint(values);
-      }
-    }
+  // Prints a diagnostic ticket through the SAME routing used for real
+  // receipts (printSat / printAutoReply flags, SAT auto-detection, Sunmi
+  // fallback), so it validates the exact path a sale would take.
+  printTest({Device? device}) async {
+    final items = <IziPrintItem>[
+      IziPrintText(
+          text: "Prueba de impresión",
+          size: IziPrintSize.lg,
+          bold: true,
+          align: IziPrintAlign.center),
+      IziPrintText(
+          text: "Kiosko iZi", size: IziPrintSize.md, align: IziPrintAlign.center),
+      IziPrintSeparator(),
+      IziPrintText(
+          text: "Acentos: áéíóúñÑ ÁÉÍÓÚ ¿¡",
+          size: IziPrintSize.sm,
+          align: IziPrintAlign.left),
+      IziPrintRow([
+        IziPrintColumn(text: "Artículo", width: 50),
+        IziPrintColumn(text: "Cant.", width: 20, align: IziPrintAlign.center),
+        IziPrintColumn(text: "Total", width: 30, align: IziPrintAlign.right),
+      ], size: IziPrintSize.sm, bold: true),
+      IziPrintRow([
+        IziPrintColumn(text: "Café con leche", width: 50),
+        IziPrintColumn(text: "2", width: 20, align: IziPrintAlign.center),
+        IziPrintColumn(text: "Bs. 30,00", width: 30, align: IziPrintAlign.right),
+      ], size: IziPrintSize.sm),
+      IziPrintSeparator(dotted: true),
+      // URL larga estilo SIAT: valida que los QR de facturas (150+ chars)
+      // se impriman correctamente, no solo contenidos cortos.
+      IziPrintQR(
+          "https://pilotosiat.impuestos.gob.bo/consulta/QR?nit=123456789"
+          "&cuf=ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF012345"
+          "6789ABCDEF0123456789&numero=12345&t=2",
+          size: 3),
+      IziPrintLineWrap(lines: 1),
+      IziPrintText(
+          text: "Impresión OK",
+          size: IziPrintSize.md,
+          bold: true,
+          align: IziPrintAlign.center),
+    ];
+    await print(items, device);
   }
   static const platform = MethodChannel('com.izisoluciones.kiosco/print');
+
+  // Cached result of native SAT/Masung USB printer detection. The kiosk
+  // printer is built in, so one probe per app session is enough.
+  static bool? _satPrinterDetected;
+
+  Future<bool> _hasSatPrinter() async {
+    if (_satPrinterDetected != null) return _satPrinterDetected!;
+    if (kIsWeb || !Platform.isAndroid) return _satPrinterDetected = false;
+    try {
+      _satPrinterDetected =
+          await platform.invokeMethod('hasSatPrinter') == true;
+    } catch (e) {
+      log("hasSatPrinter probe failed: $e");
+      _satPrinterDetected = false;
+    }
+    return _satPrinterDetected!;
+  }
 
   Future<bool> printFromJson(List<dynamic>? raw, Device? device) async {
     if (raw == null || raw.isEmpty) return false;
@@ -254,7 +279,11 @@ class PrintUtils {
       await _pdfPrint(values);
     } else {
       if (Platform.isAndroid) {
-        if (device?.config.printSat == true) {
+        // Routing precedence: explicit backend flags first (printSat,
+        // printAutoReply), then hardware auto-detection of the SAT/Masung
+        // kiosk printer, and finally the Sunmi built-in printer as default.
+        if (device?.config.printSat == true ||
+            (device?.config.printAutoReply != true && await _hasSatPrinter())) {
           try {
             log("iZi Kiosco: Routing to _satPrint...");
             await _satPrint(values);

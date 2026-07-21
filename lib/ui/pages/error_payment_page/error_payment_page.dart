@@ -15,6 +15,7 @@ import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/page_utils/page_utils_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/payment/payment_bloc.dart';
 import 'package:izi_kiosco/domain/models/card_payment.dart';
+import 'package:izi_kiosco/domain/utils/print_utils.dart';
 
 import 'package:flutter/services.dart';
 
@@ -28,6 +29,7 @@ class ErrorPaymentPage extends StatefulWidget {
 class _ErrorPaymentPageState extends State<ErrorPaymentPage> {
   List<CardPayment> list = [];
   bool _retrying = false;
+  bool _printingTest = false;
 
   @override
   void initState() {
@@ -322,6 +324,33 @@ class _ErrorPaymentPageState extends State<ErrorPaymentPage> {
                           GoRouter.of(context).goNamed(LocaleKeys.home);
                           context.read<AuthBloc>().verify();
                         },
+                      ),
+                    ),
+
+                    Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: IziBtn(
+                        buttonText: _printingTest
+                            ? "Imprimiendo..."
+                            : "Imprimir prueba",
+                        buttonType: ButtonType.terciary,
+                        buttonSize: ButtonSize.medium,
+                        buttonOnPressed: _printingTest
+                            ? null
+                            : () async {
+                                setState(() => _printingTest = true);
+                                try {
+                                  await PrintUtils().printTest(
+                                      device: context
+                                          .read<AuthBloc>()
+                                          .state
+                                          .currentDevice);
+                                } finally {
+                                  if (mounted) {
+                                    setState(() => _printingTest = false);
+                                  }
+                                }
+                              },
                       ),
                     ),
 

@@ -1653,7 +1653,8 @@ class PaymentBloc extends Cubit<PaymentState> {
           "iZi Kiosco: [DEBUG] Compact mode (backend=${backendTicket != null}): replacing tmp",
         );
         if (backendTicket != null) {
-          tmp = backendTicket;
+          tmp = PrintTemplate.ensureInvoiceQr(
+              backendTicket, invoice, authState.currentContribuyente!);
         } else {
           tmp = await PrintTemplate.printInvoiceCompact(
             authState.currentContribuyente!,
@@ -1673,7 +1674,8 @@ class PaymentBloc extends Cubit<PaymentState> {
           tmp.add(IziPrintCut());
         }
         if (backendTicket != null) {
-          tmp.addAll(backendTicket);
+          tmp.addAll(PrintTemplate.ensureInvoiceQr(
+              backendTicket, invoice, authState.currentContribuyente!));
         } else if (authState.currentSucursal?.config is Map &&
             (authState.currentSucursal?.config as Map)["tipoFacturaVentas"] ==
                 "compacto") {
