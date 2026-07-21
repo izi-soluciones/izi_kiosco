@@ -144,6 +144,7 @@ class MakeOrderBloc extends Cubit<MakeOrderState> {
             });
             if (aux != null) {
               item.precioUnitario = aux.precio;
+              _setItemPrice(item, 0);
             }
           }
         }
