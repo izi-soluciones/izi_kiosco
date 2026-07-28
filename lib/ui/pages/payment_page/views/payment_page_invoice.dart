@@ -387,12 +387,15 @@ class _PaymentPageInvoiceState extends State<PaymentPageInvoice> {
             child: CardTypeIzifyModal(
                 amount: (widget.state.paymentObj?.amount ?? 0)))
         .then((value) async {
-      if (value is String) {
+      if (value is Map) {
+        final cardType = value['cardType'] as String;
+        final quotas = value['quotas'] as int;
         context.read<PageUtilsBloc>().closeScreenActive();
         var status = await context.read<PaymentBloc>().makeCardPayment(
             authState,
             izify: true,
-            cardType: value);
+            cardType: cardType,
+            quotas: quotas);
         if (!mounted) {
           return;
         }

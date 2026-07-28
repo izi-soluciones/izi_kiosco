@@ -72,6 +72,7 @@ class _PaymentPageDemoState extends State<PaymentPageDemo> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               IziBtn(
+                key: const Key('demo_proceed_btn'),
                 buttonText: LocaleKeys.payment_buttons_proceedPayment.tr(),
                 buttonType: ButtonType.primary,
                 buttonSize: ButtonSize.large,

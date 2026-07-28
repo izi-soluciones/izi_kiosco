@@ -38,14 +38,12 @@ class TaxesStrategyCo implements TaxesStrategy{
                 totalImpuestos = Calc.add(totalImpuestos, element.monto);
             } else {
                 double impuesto = Calc.roundConservador(
-                    Calc.div(Calc.mul(precioItem, element.rate), 100)
+                    Calc.div(Calc.mul(precioItem, element.rate), 100), 2
                 );
                 totalImpuestos = Calc.add(totalImpuestos, impuesto);
             }
-
-            totalImpuestos = Calc.roundConservador(totalImpuestos);
         }
-        return Calc.roundConservador(Calc.add(precioItem, Calc.roundConservador(totalImpuestos)), 0);
+        return Calc.roundConservador(Calc.add(precioItem, Calc.roundConservador(totalImpuestos, 2)), 0);
   }
 
   @override

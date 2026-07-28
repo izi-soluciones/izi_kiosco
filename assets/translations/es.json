@@ -368,6 +368,7 @@
       "errorGet": "Ocurrió un error al obtener los datos",
       "errorQR": "Ocurrió un problema al generar el QR",
       "errorCard": "Ocurrió un problema al generar el cobro por POS",
+      "pendingCard": "Pago sin confirmar — verifique antes de reintentar",
       "errorBreB": "Ocurrió un problema al generar el cobro por Bre-B",
       "processingOrder": "Procesando orden",
       "processingInvoice": "Procesando factura",
@@ -629,6 +630,26 @@
     "title": "Cobro de demostración",
     "body": "Estás realizando un cobro de prueba. Presiona confirmar para simular el pago exitoso."
   },
+  "errorPayments": {
+    "columns": {
+      "status": "Estado",
+      "action": "Acción"
+    },
+    "status": {
+      "success": "Aprobado",
+      "declined": "Rechazado",
+      "pending": "Sin confirmar",
+      "unknown": "Desconocido"
+    },
+    "retry": {
+      "button": "Reintentar",
+      "confirmTitle": "Reintentar pago",
+      "confirmBody": "¿Desea reintentar el cobro de esta transacción?",
+      "confirmWarning": "El pago anterior no fue confirmado. Verifique que no se haya cobrado antes de reintentar.",
+      "confirm": "Reintentar",
+      "cancel": "Cancelar"
+    }
+  },
   "passwordModal": {
     "errors": {
       "wrongPin": "El pin no es correcto"
@@ -664,7 +685,8 @@
     },
     "messages": {
       "paired": "POS Emparejado correctamente",
-      "noTerminals": "No se encontraron terminales"
+      "noTerminals": "No se encontraron terminales",
+      "missingPin": "Este dispositivo no tiene un PIN configurado. Configúrelo en el backend antes de emparejar."
     }
   }
 }

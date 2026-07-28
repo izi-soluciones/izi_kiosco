@@ -112,6 +112,7 @@ class _HomePageState extends State<HomePage> {
                     state.currentDevice?.config.timeVideo==0 && state.currentDevice?.config.video != null?
                     Positioned.fill(
                       child: GestureDetector(
+                        key: const Key('home_start_area'),
                         behavior: HitTestBehavior.opaque,
                         onTap: () {
                           if(context.read<AuthBloc>().state.currentDevice?.config.isRetail==true && context.read<AuthBloc>().state.currentDevice?.config.isRetailBarcode==true){
@@ -134,6 +135,7 @@ class _HomePageState extends State<HomePage> {
                         ),
                       ),
                     ):GestureDetector(
+                      key: const Key('home_start_area'),
                       behavior: HitTestBehavior.opaque,
                       onTap: () {
                         if(context.read<AuthBloc>().state.currentDevice?.config.isRetail==true && context.read<AuthBloc>().state.currentDevice?.config.isRetailBarcode==true){
@@ -334,11 +336,18 @@ class _HomePageState extends State<HomePage> {
                       top: 0,
                         left: 0,
                         child: GestureDetector(
+                          key: const Key('home_admin_corner'),
                           behavior: HitTestBehavior.opaque,
                             onLongPress: () async {
+                              // The admin config-entry PIN is the backend device
+                              // config's pin (the same shared PIN sent to the POS
+                              // on pairing). '4321' is an EMERGENCY FALLBACK to
+                              // avoid locking out an operator when the backend PIN
+                              // is unset; remove it once every device has a
+                              // backend-provisioned PIN.
                               final pin = context.read<AuthBloc>().state.currentDevice?.config.pin;
                               final correctPin = (pin != null && pin.isNotEmpty) ? pin : '4321';
-                              
+
                               final result = await showDialog<bool>(
                                 context: context,
                                 builder: (ctx) => PasswordModal(correctPin: correctPin),
