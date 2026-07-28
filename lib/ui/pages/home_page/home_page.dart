@@ -112,6 +112,7 @@ class _HomePageState extends State<HomePage> {
                     state.currentDevice?.config.timeVideo==0 && state.currentDevice?.config.video != null?
                     Positioned.fill(
                       child: GestureDetector(
+                        key: const Key('home_start_area'),
                         behavior: HitTestBehavior.opaque,
                         onTap: () {
                           if(context.read<AuthBloc>().state.currentDevice?.config.isRetail==true && context.read<AuthBloc>().state.currentDevice?.config.isRetailBarcode==true){
@@ -134,6 +135,7 @@ class _HomePageState extends State<HomePage> {
                         ),
                       ),
                     ):GestureDetector(
+                      key: const Key('home_start_area'),
                       behavior: HitTestBehavior.opaque,
                       onTap: () {
                         if(context.read<AuthBloc>().state.currentDevice?.config.isRetail==true && context.read<AuthBloc>().state.currentDevice?.config.isRetailBarcode==true){
@@ -334,6 +336,7 @@ class _HomePageState extends State<HomePage> {
                       top: 0,
                         left: 0,
                         child: GestureDetector(
+                          key: const Key('home_admin_corner'),
                           behavior: HitTestBehavior.opaque,
                             onLongPress: () async {
                               // The admin config-entry PIN is the backend device

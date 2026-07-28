@@ -104,6 +104,7 @@ class _MakeOrderDetailState extends State<MakeOrderDetail> {
           ),
           Expanded(
             child: MakeOrderAmountBtn(
+                key: const Key('order_confirm_btn'),
                 medium:true,
                 noAmount: ru.width<500,
                 onPressed: _getTotal() > 0
@@ -148,6 +149,7 @@ class _MakeOrderDetailState extends State<MakeOrderDetail> {
               Expanded(
                 flex: 8,
                 child: MakeOrderAmountBtn(
+                    key: const Key('order_confirm_btn'),
                     onPressed: _getTotal() > 0
                         ? () {
                       _next(context);
