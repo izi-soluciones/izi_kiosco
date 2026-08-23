@@ -42,9 +42,10 @@ class ConfigDevice {
   final bool isRetail;
   final String? almacen;
   final String? actividadEconomica;
+  final bool logImpresion;
 
   const ConfigDevice(
-      {this.ipAtc,required this.actividadEconomica,required this.almacen, required this.isRetail,this.ipLinkser, this.video, this.timeMessage,required this.demo});
+      {this.ipAtc,required this.actividadEconomica,required this.almacen, required this.isRetail,this.ipLinkser, this.video, this.timeMessage,required this.demo, this.logImpresion=true});
 
   factory ConfigDevice.fromJson(dynamic json) {
     Map? jsonObj = json is Map ? json : null;
@@ -59,6 +60,8 @@ class ConfigDevice {
       actividadEconomica:jsonObj?["actividadEconomica"] is int ? (jsonObj?["actividadEconomica"] as int).toString(): jsonObj?["actividadEconomica"] is String ?  jsonObj!["actividadEconomica"] : null,
       timeMessage:
           jsonObj?["timeMessage"] is int ? jsonObj!["timeMessage"] : null,
+      logImpresion:
+          jsonObj?["logImpresion"] is bool ? jsonObj!["logImpresion"] : true,
     );
   }
 }

@@ -301,7 +301,9 @@
       "waitingTime": "Tiempo de espera estimado: 5 minutos.",
       "canRetirePurchase": "Puedes retirar tu compra",
       "someProblem": "¿Ocurrió algun problema?",
-      "areYouSureCancel": "¿Cancelar el pago con tarjeta?"
+      "areYouSureCancel": "¿Cancelar el pago con tarjeta?",
+      "orderNumber": "Tu número de orden",
+      "printError": "No pudimos imprimir tu comprobante. Anota tu número y acércate a caja."
     },
     "buttons": {
       "qr": "QR",

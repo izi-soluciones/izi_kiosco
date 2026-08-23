@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:developer';
 import 'dart:io';
 
@@ -11,6 +12,10 @@ import 'package:sunmi_printer_plus/sunmi_style.dart';
 import 'package:image/image.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
+import 'package:izi_kiosco/app/values/app_constants.dart';
+import 'package:izi_kiosco/domain/utils/print/print_result.dart';
+import 'package:izi_kiosco/domain/utils/print/web_print_stub.dart'
+    if (dart.library.html) 'package:izi_kiosco/domain/utils/print/web_print_html.dart';
 
 class IziPrintText extends IziPrintItem {
   String text;
@@ -126,23 +131,37 @@ class PrintUtils {
       }
     }
   }
-  print(List<IziPrintItem> values) async {
-    if (kIsWeb) {
-      await _pdfPrint(values);
-    } else {
-      if (Platform.isAndroid) {
-        var resBinding = await SunmiPrinter.bindingPrinter();
-        await SunmiPrinter.initPrinter();
-        var status = await SunmiPrinter.getPrinterStatus();
-        log(status.toString());
-        if (resBinding == true && status != PrinterStatus.ERROR) {
-          await _sunmiPrint(values);
-        } else {
-          await _pdfPrint(values);
-        }
+  Future<PrintResult> print(List<IziPrintItem> values) async {
+    var cronometro = Stopwatch()..start();
+    try {
+      if (kIsWeb) {
+        return await _pdfPrint(values);
       } else {
-        //await _pdfPrint(values);
+        if (Platform.isAndroid) {
+          var resBinding = await SunmiPrinter.bindingPrinter();
+          await SunmiPrinter.initPrinter();
+          var status = await SunmiPrinter.getPrinterStatus();
+          log(status.toString());
+          if (resBinding == true && status != PrinterStatus.ERROR) {
+            await _sunmiPrint(values);
+            return PrintResult.exito(
+                PrintVia.sunmi, cronometro.elapsedMilliseconds);
+          } else {
+            log("Sunmi no disponible ($status), se imprime por PDF");
+            return await _pdfPrint(values);
+          }
+        } else {
+          return PrintResult.fallo(PrintVia.ninguna,
+              cronometro.elapsedMilliseconds, "Plataforma sin impresión");
+        }
       }
+    } catch (e) {
+      return PrintResult.fallo(
+          kIsWeb ? PrintVia.webPdf : PrintVia.sunmi,
+          cronometro.elapsedMilliseconds,
+          e.toString());
+    } finally {
+      cronometro.stop();
     }
   }
 
@@ -258,7 +277,7 @@ class PrintUtils {
     await SunmiPrinter.exitTransactionPrint(true);
   }
 
-  Future _pdfPrint(List<IziPrintItem> values) async {
+  Future<PrintResult> _pdfPrint(List<IziPrintItem> values) async {
     const double xs = 6;
     const double sm = 7;
     const double md = 12;
@@ -367,6 +386,21 @@ class PrintUtils {
         }));
 
     var bytes = await pdf.save();
-    await Printing.layoutPdf(onLayout: (format)=>bytes,format: PdfPageFormat.roll80,usePrinterSettings: false);
+    if (kIsWeb) {
+      return await printPdfWeb(bytes, AppConstants.printTimeout);
+    }
+    var cronometro = Stopwatch()..start();
+    try {
+      var enviado = await Printing.layoutPdf(onLayout: (format)=>bytes,format: PdfPageFormat.roll80,usePrinterSettings: false)
+          .timeout(AppConstants.printTimeout);
+      return enviado
+          ? PrintResult.exito(PrintVia.webPdf, cronometro.elapsedMilliseconds)
+          : PrintResult.fallo(PrintVia.webPdf, cronometro.elapsedMilliseconds,
+              "El sistema rechazó o canceló la impresión");
+    } on TimeoutException {
+      return PrintResult.porTiempo(PrintVia.webPdf, cronometro.elapsedMilliseconds);
+    } finally {
+      cronometro.stop();
+    }
   }
 }

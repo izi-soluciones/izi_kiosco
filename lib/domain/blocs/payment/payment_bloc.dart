@@ -5,7 +5,6 @@ import 'dart:math' as math;
 import 'package:collection/collection.dart';
 import 'package:dio/dio.dart';
 import 'package:equatable/equatable.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:izi_kiosco/app/values/app_constants.dart';
 import 'package:izi_kiosco/data/local/local_storage_card_errors.dart';
@@ -28,7 +27,11 @@ import 'package:izi_kiosco/domain/repositories/business_repository.dart';
 import 'package:izi_kiosco/domain/repositories/comanda_repository.dart';
 import 'package:izi_kiosco/domain/repositories/socket_repository.dart';
 import 'package:izi_kiosco/domain/utils/input_obj.dart';
+import 'package:izi_kiosco/data/repositories/print_log/print_log_repository_http.dart';
+import 'package:izi_kiosco/domain/repositories/print_log_repository.dart';
+import 'package:izi_kiosco/domain/utils/print/print_result.dart';
 import 'package:izi_kiosco/domain/utils/print/print_template.dart';
+import 'package:izi_kiosco/domain/utils/print/print_tracking_service.dart';
 import 'package:izi_kiosco/domain/utils/print_utils.dart';
 import 'package:izi_kiosco/ui/utils/money_formatter.dart';
 part 'payment_state.dart';
@@ -39,13 +42,24 @@ class PaymentBloc extends Cubit<PaymentState> {
   StreamSubscription? qrStream;
   final BusinessRepository _businessRepository;
   final SocketRepository _socketRepository;
+  final PrintUtils _printUtils;
+  final PrintTrackingService _printTrackingService;
   CancelToken cancelToken = CancelToken();
   PaymentBloc(
-      this._comandaRepository, this._businessRepository, this._socketRepository)
-      : super(PaymentState.init());
+      this._comandaRepository, this._businessRepository, this._socketRepository,
+      {PrintUtils? printUtils,
+      PrintTrackingService? printTrackingService,
+      PrintLogRepository? printLogRepository})
+      : _printUtils = printUtils ?? PrintUtils(),
+        _printTrackingService = printTrackingService ??
+            PrintTrackingService(printLogRepository ?? PrintLogRepositoryHttp()),
+        super(PaymentState.init());
 
   initOrder(
       {required PaymentObj paymentObj, required AuthState authState}) async {
+    unawaited(_printTrackingService.flush(
+        sucursalId: authState.currentSucursal?.id ?? 0,
+        habilitado: authState.currentDevice?.config.logImpresion ?? true));
     try {
       bool usaSiat = false;
       int casaMatrizIndex = authState.currentContribuyente?.sucursales
@@ -260,17 +274,22 @@ class PaymentBloc extends Cubit<PaymentState> {
         emit(state.copyWith(status: PaymentStatus.processingOrder));
         Comanda comanda =
             await _comandaRepository.markAsCreated(state.paymentObj?.id ?? 0);
+        bool impreso = true;
+        int? numeroOrden = comanda.numero?.toInt();
         if (comanda.custom is Map && comanda.custom["simphony"]?["header"]?["checkNumber"]!=null) {
-          _printRolloOrder(authState,
-              orderNumber: (comanda.custom["simphony"]["header"]["checkNumber"] as int),
+          numeroOrden = comanda.custom["simphony"]["header"]["checkNumber"] as int;
+          impreso = await _printRolloOrder(authState,
+              orderNumber: numeroOrden,
               customOrderNumber:null,errorSimphony: comanda.custom["errorSimphony"]==true,eatOut: true);
         }
         emit(state.copyWith(
             step: comanda.custom is Map && comanda.custom["errorSimphony"]==true?6:5,
             status: PaymentStatus.paymentProcessed,
+            orderNumber: numeroOrden,
+            printFailed: !impreso,
             paymentType: paymentType));
         timerSuccess = Timer(
-          const Duration(seconds: 10),
+          impreso ? AppConstants.successScreenTime : AppConstants.successScreenTimePrintError,
           () async {
             emit(state.copyWith(status: PaymentStatus.successInvoice));
           },
@@ -698,11 +717,15 @@ class PaymentBloc extends Cubit<PaymentState> {
     qrStream = _socketRepository.listenPayment(charge: charge).listen(
       (event) async {
         if (event is Map && event["statusVenta"] == "success") {
+          bool impreso = true;
           try {
             if (event["idFactura"] is int) {
-              await _printRollo(authState, idInvoice: event["idFactura"], orderNumber: null);
+              impreso = await _printRollo(authState, idInvoice: event["idFactura"], orderNumber: null);
             }
-          } catch (_) {}
+          } catch (e) {
+            impreso = false;
+            log("Error imprimiendo factura retail: $e");
+          }
           if (timer != null) {
             timer!.cancel();
           }
@@ -710,9 +733,12 @@ class PaymentBloc extends Cubit<PaymentState> {
             _socketRepository.closeQrListening();
             qrStream?.cancel();
           }
-          emit(state.copyWith(step: 5, status: PaymentStatus.paymentProcessed));
+          emit(state.copyWith(
+              step: 5,
+              status: PaymentStatus.paymentProcessed,
+              printFailed: !impreso));
           timerSuccess = Timer(
-            const Duration(seconds: 10),
+            impreso ? AppConstants.successScreenTime : AppConstants.successScreenTimePrintError,
             () async {
               emit(state.copyWith(status: PaymentStatus.successInvoice));
             },
@@ -841,17 +867,20 @@ class PaymentBloc extends Cubit<PaymentState> {
                 if (comanda.custom is Map && (comanda.custom["simphony"]?["header"]?["checkNumber"] != null)) {
                   numero = comanda.custom["simphony"]["header"]["checkNumber"];
                 }
-                await _printRolloOrder(authState,
+                bool impresoOrden = await _printRolloOrder(authState,
                     orderNumber: comanda.numero?.toInt() ?? 0,
                     customOrderNumber: numero?.toInt(),
                     eatOut: false);
-                if (kIsWeb) {
-                  await Future.delayed(const Duration(milliseconds: 1500));
-                }
-                await _printRollo(authState, idInvoice: comanda.factura, orderNumber: numero?.toInt()??comanda.numero?.toInt());
-                emit(state.copyWith(step: 5, status: PaymentStatus.paymentProcessed));
+                bool impresaFactura = await _printRollo(authState, idInvoice: comanda.factura, orderNumber: numero?.toInt()??comanda.numero?.toInt());
+                emit(state.copyWith(
+                    step: 5,
+                    status: PaymentStatus.paymentProcessed,
+                    orderNumber: numero?.toInt() ?? comanda.numero?.toInt(),
+                    printFailed: !impresoOrden || !impresaFactura));
                 timerSuccess = Timer(
-                  const Duration(seconds: 10),
+                  (impresoOrden && impresaFactura)
+                      ? AppConstants.successScreenTime
+                      : AppConstants.successScreenTimePrintError,
                       () async {
                     emit(state.copyWith(status: PaymentStatus.successInvoice));
                   },
@@ -871,30 +900,41 @@ class PaymentBloc extends Cubit<PaymentState> {
             timerManual?.cancel();
             timerQR?.cancel();
             timeoutTimer.cancel();
+            bool impreso = true;
+            int? numeroOrden = event["numeroCustom"] is int
+                ? event["numeroCustom"]
+                : event["numeroOrden"] is int
+                    ? event["numeroOrden"]
+                    : null;
             try {
               if (event["numeroOrden"] is int) {
-                await _printRolloOrder(authState,
+                impreso = await _printRolloOrder(authState,
                     orderNumber: event["numeroOrden"],
                     customOrderNumber: event["numeroCustom"] is int
                         ? event["numeroCustom"]
                         : null, errorSimphony: event["errorSimphony"] is bool?event["errorSimphony"]:false, eatOut: false);
               }
-              if (kIsWeb) {
-                await Future.delayed(const Duration(milliseconds: 1500));
-              }
               if (event["idFactura"] is int) {
-                await _printRollo(authState, idInvoice: event["idFactura"], orderNumber: event["numeroCustom"] is int
+                var impresaFactura = await _printRollo(authState, idInvoice: event["idFactura"], orderNumber: event["numeroCustom"] is int
                     ? event["numeroCustom"]
                     : event["numeroOrden"]);
+                impreso = impreso && impresaFactura;
               }
-            } catch (_) {}
+            } catch (e) {
+              impreso = false;
+              log("Error imprimiendo comprobantes de la orden: $e");
+            }
             if (qrStream != null) {
               _socketRepository.closeQrListening();
               qrStream?.cancel();
             }
-            emit(state.copyWith(step: 5, status: PaymentStatus.paymentProcessed));
+            emit(state.copyWith(
+                step: 5,
+                status: PaymentStatus.paymentProcessed,
+                orderNumber: numeroOrden,
+                printFailed: !impreso));
             timerSuccess = Timer(
-              const Duration(seconds: 10),
+              impreso ? AppConstants.successScreenTime : AppConstants.successScreenTimePrintError,
                   () async {
                 emit(state.copyWith(status: PaymentStatus.successInvoice));
               },
@@ -928,7 +968,7 @@ class PaymentBloc extends Cubit<PaymentState> {
     emit(state.copyWith(step: 2,qrLoading: false,qrCharge: ()=>null));
   }
 
-  _printRolloOrder(AuthState authState,
+  Future<bool> _printRolloOrder(AuthState authState,
       {required int orderNumber, int? customOrderNumber, bool? errorSimphony, required bool eatOut}) async {
     var tmp = await PrintTemplate.order80(
         orderNumber,
@@ -938,21 +978,68 @@ class PaymentBloc extends Cubit<PaymentState> {
         state.paymentObj,
         errorSimphony ?? false,
     eatOut);
-    var printUtils = PrintUtils();
-    await printUtils.print(tmp);
+    return await _printWithTracking(authState,
+        items: tmp,
+        tipoDocumento: "ORDEN",
+        numeroOrden: orderNumber,
+        numeroOrdenCustom: customOrderNumber);
   }
 
-  _printRollo(AuthState authState, {int? idInvoice, Invoice? invoice, required num? orderNumber}) async {
+  Future<bool> _printRollo(AuthState authState, {int? idInvoice, Invoice? invoice, required num? orderNumber}) async {
     if (idInvoice == null && invoice == null) {
-      return;
+      return true;
     }
     if (idInvoice != null) {
       invoice = await _comandaRepository.getInvoice(idInvoice);
     }
     var tmp = await PrintTemplate.invoiceCompact(
         invoice!, authState.currentContribuyente!, authState.currentSucursal!, orderNumber);
-    var printUtils = PrintUtils();
-    await printUtils.print(tmp);
+    return await _printWithTracking(authState,
+        items: tmp,
+        tipoDocumento: "FACTURA",
+        numeroOrden: orderNumber?.toInt(),
+        idFactura: idInvoice ?? int.tryParse(invoice.id ?? ""));
+  }
+
+  // Punto único de impresión: reintento, y un evento de log por cada intento. El logging
+  // va sin await porque nunca debe sumar latencia ni fallar el flujo de pago.
+  Future<bool> _printWithTracking(AuthState authState,
+      {required List<IziPrintItem> items,
+      required String tipoDocumento,
+      int? numeroOrden,
+      int? numeroOrdenCustom,
+      int? idFactura}) async {
+    var habilitado = authState.currentDevice?.config.logImpresion ?? true;
+    var sucursalId = authState.currentSucursal?.id ?? 0;
+    PrintResult? resultado;
+
+    for (var intento = 1; intento <= AppConstants.printMaxIntentos; intento++) {
+      resultado = await _printUtils.print(items);
+
+      unawaited(_printTrackingService.registrar(
+          _printTrackingService.construirEvento(
+            resultado: resultado,
+            tipoDocumento: tipoDocumento,
+            intento: intento,
+            dispositivoId: authState.currentDevice?.id,
+            dispositivoNombre: authState.currentDevice?.nombre,
+            cajaId: authState.currentDevice?.caja,
+            comandaId: state.paymentObj?.id,
+            comandaUuid: state.paymentObj?.uuid,
+            facturaId: idFactura,
+            numeroOrden: numeroOrden,
+            numeroOrdenCustom: numeroOrdenCustom,
+          ),
+          sucursalId: sucursalId,
+          habilitado: habilitado));
+
+      if (resultado.ok) {
+        break;
+      }
+      log("Impresión $tipoDocumento falló (intento $intento): ${resultado.error}");
+    }
+
+    return resultado?.ok ?? false;
   }
 
   double _roundToNDecimals(num num, int n) {

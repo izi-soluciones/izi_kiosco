@@ -23,6 +23,13 @@ class AppConstants{
   static const idPaymentMethodOthers=8;
   static const idPaymentMethodPOS=0;
 
+  // Mantener sincronizada con `version:` de pubspec.yaml (se envía en los logs de impresión).
+  static String appVersion="1.0.0";
+  static Duration printTimeout=const Duration(seconds: 6);
+  static int printMaxIntentos=2;
+  static Duration successScreenTime=const Duration(seconds: 10);
+  static Duration successScreenTimePrintError=const Duration(seconds: 30);
+
 
 
   static const categoryIcons=[

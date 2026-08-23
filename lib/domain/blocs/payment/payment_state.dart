@@ -71,6 +71,9 @@ class PaymentState extends Equatable {
 
   final PaymentObj? paymentObj;
 
+  final int? orderNumber;
+  final bool printFailed;
+
   final bool usaSiat;
 
   const PaymentState(
@@ -103,6 +106,8 @@ class PaymentState extends Equatable {
         this.qrAmount,
         this.qrCharge,
         this.qrWait = false,
+        this.orderNumber,
+        this.printFailed = false,
         this.qrPaymentKey});
 
   factory PaymentState.init() => PaymentState(
@@ -163,6 +168,8 @@ class PaymentState extends Equatable {
         bool? qrWait,
         bool? qrLoading,
       Sucursal? casaMatriz,
+      int? orderNumber,
+      bool? printFailed,
       PaymentObj? paymentObj}) {
     return PaymentState(
         casaMatriz: casaMatriz ?? this.casaMatriz,
@@ -193,6 +200,8 @@ class PaymentState extends Equatable {
       qrPaymentKey: qrPaymentKey == -1?null: qrPaymentKey ?? this.qrPaymentKey,
       qrLoading: qrLoading ?? this.qrLoading,
       qrWait: qrWait ?? this.qrWait,
+      orderNumber: orderNumber ?? this.orderNumber,
+      printFailed: printFailed ?? this.printFailed,
       paymentObj: paymentObj ?? this.paymentObj
     );
   }
@@ -221,6 +230,8 @@ class PaymentState extends Equatable {
     qrCharge,
     qrAmount,
     qrPaymentKey,
-    qrLoading
+    qrLoading,
+    orderNumber,
+    printFailed
       ];
 }

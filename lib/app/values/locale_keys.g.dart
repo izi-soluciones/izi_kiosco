@@ -239,6 +239,8 @@ abstract class  LocaleKeys {
   static const payment_body_canRetirePurchase = 'payment.body.canRetirePurchase';
   static const payment_body_someProblem = 'payment.body.someProblem';
   static const payment_body_areYouSureCancel = 'payment.body.areYouSureCancel';
+  static const payment_body_orderNumber = 'payment.body.orderNumber';
+  static const payment_body_printError = 'payment.body.printError';
   static const payment_body = 'payment.body';
   static const payment_buttons_qr = 'payment.buttons.qr';
   static const payment_buttons_card = 'payment.buttons.card';
