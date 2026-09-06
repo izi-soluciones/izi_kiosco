@@ -105,7 +105,7 @@ class _PaymentPageBREBState extends State<PaymentPageBREB> {
                         children: [
                           IziText.titleMedium(
                             color: context.iziColors.primaryDarken,
-                            text: "Paga a través de Bre-B",
+                            text: LocaleKeys.payment_subtitles_payWithBreB.tr(),
                           ),
                           const SizedBox(height: 24),
 
@@ -132,7 +132,7 @@ class _PaymentPageBREBState extends State<PaymentPageBREB> {
                             children: [
                               IziText.body(
                                 color: context.iziColors.darkGrey,
-                                text: "Tiempo Restante: ",
+                                text: LocaleKeys.payment_body_timeRemaining.tr(),
                                 fontWeight: FontWeight.w400,
                               ),
                               IziText.body(
@@ -149,7 +149,7 @@ class _PaymentPageBREBState extends State<PaymentPageBREB> {
                             children: [
                               IziText.titleMedium(
                                 color: context.iziColors.darkGrey,
-                                text: "Llave: ",
+                                text: LocaleKeys.payment_body_brebKey.tr(),
                                 fontWeight: FontWeight.w700,
                               ),
                               const SizedBox(height: 8),
@@ -201,7 +201,7 @@ class _PaymentPageBREBState extends State<PaymentPageBREB> {
                                 textAlign: TextAlign.center,
                                 color: context.iziColors.secondaryDarken,
                                 text:
-                                    "Si ya hiciste el pago, espera unos segundos a que recibamos la confirmación",
+                                    LocaleKeys.payment_body_waitingConfirmation.tr(),
                                 fontWeight: FontWeight.w500,
                               ),
                             ),

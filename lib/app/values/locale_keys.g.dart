@@ -53,6 +53,7 @@ abstract class  LocaleKeys {
   static const login_buttons_login = 'login.buttons.login';
   static const login_buttons = 'login.buttons';
   static const login_body_noAccount = 'login.body.noAccount';
+  static const login_body_qrInstructions = 'login.body.qrInstructions';
   static const login_body = 'login.body';
   static const login_inputs_tokenCard_label = 'login.inputs.tokenCard.label';
   static const login_inputs_tokenCard_placeholder = 'login.inputs.tokenCard.placeholder';
@@ -77,10 +78,12 @@ abstract class  LocaleKeys {
   static const login_links_createAccount = 'login.links.createAccount';
   static const login_links = 'login.links';
   static const login_subtitles_enterIzi = 'login.subtitles.enterIzi';
+  static const login_subtitles_qrLogin = 'login.subtitles.qrLogin';
   static const login_subtitles = 'login.subtitles';
   static const login_messages_waitingLogin = 'login.messages.waitingLogin';
   static const login_messages_successLogin = 'login.messages.successLogin';
   static const login_messages_errorLogin = 'login.messages.errorLogin';
+  static const login_messages_generatingQR = 'login.messages.generatingQR';
   static const login_messages = 'login.messages';
   static const login = 'login';
   static const orderList_drawer = 'orderList.drawer';
@@ -200,6 +203,9 @@ abstract class  LocaleKeys {
   static const home_body_clickToInit = 'home.body.clickToInit';
   static const home_body_anIziPlatform = 'home.body.anIziPlatform';
   static const home_body = 'home.body';
+  static const home_messages_serverDown = 'home.messages.serverDown';
+  static const home_messages_posDisconnected = 'home.messages.posDisconnected';
+  static const home_messages = 'home.messages';
   static const home = 'home';
   static const user_information_title = 'user_information.title';
   static const user_information_drawer = 'user_information.drawer';
@@ -237,6 +243,10 @@ abstract class  LocaleKeys {
   static const payment_subtitles_successOrder = 'payment.subtitles.successOrder';
   static const payment_subtitles_error = 'payment.subtitles.error';
   static const payment_subtitles_cantProcessPayment = 'payment.subtitles.cantProcessPayment';
+  static const payment_subtitles_chooseCardType = 'payment.subtitles.chooseCardType';
+  static const payment_subtitles_chooseCardPaymentType = 'payment.subtitles.chooseCardPaymentType';
+  static const payment_subtitles_payWithBreB = 'payment.subtitles.payWithBreB';
+  static const payment_subtitles_areYouSureStopTransaction = 'payment.subtitles.areYouSureStopTransaction';
   static const payment_subtitles = 'payment.subtitles';
   static const payment_body_total = 'payment.body.total';
   static const payment_body_ifAlreadyPayment = 'payment.body.ifAlreadyPayment';
@@ -244,6 +254,12 @@ abstract class  LocaleKeys {
   static const payment_body_weNotifyWhatsapp = 'payment.body.weNotifyWhatsapp';
   static const payment_body_waitingTime = 'payment.body.waitingTime';
   static const payment_body_canRetirePurchase = 'payment.body.canRetirePurchase';
+  static const payment_body_amountToPay = 'payment.body.amountToPay';
+  static const payment_body_timeRemaining = 'payment.body.timeRemaining';
+  static const payment_body_waitingConfirmation = 'payment.body.waitingConfirmation';
+  static const payment_body_brebKey = 'payment.body.brebKey';
+  static const payment_body_havingTrouble = 'payment.body.havingTrouble';
+  static const payment_body_documentFallback = 'payment.body.documentFallback';
   static const payment_body = 'payment.body';
   static const payment_buttons_qr = 'payment.buttons.qr';
   static const payment_buttons_breB = 'payment.buttons.breB';
@@ -255,6 +271,11 @@ abstract class  LocaleKeys {
   static const payment_buttons_cancelPurchase = 'payment.buttons.cancelPurchase';
   static const payment_buttons_callHelp = 'payment.buttons.callHelp';
   static const payment_buttons_makeAnotherPurchase = 'payment.buttons.makeAnotherPurchase';
+  static const payment_buttons_debit = 'payment.buttons.debit';
+  static const payment_buttons_credit = 'payment.buttons.credit';
+  static const payment_buttons_chip = 'payment.buttons.chip';
+  static const payment_buttons_contactless = 'payment.buttons.contactless';
+  static const payment_buttons_downloadQR = 'payment.buttons.downloadQR';
   static const payment_buttons = 'payment.buttons';
   static const payment_inputs_complement_label = 'payment.inputs.complement.label';
   static const payment_inputs_complement = 'payment.inputs.complement';
@@ -294,6 +315,9 @@ abstract class  LocaleKeys {
   static const payment_messages_processingInvoice = 'payment.messages.processingInvoice';
   static const payment_messages_processingInvoiceElectronic = 'payment.messages.processingInvoiceElectronic';
   static const payment_messages = 'payment.messages';
+  static const payment_links_addEmail = 'payment.links.addEmail';
+  static const payment_links_advancedData = 'payment.links.advancedData';
+  static const payment_links = 'payment.links';
   static const payment = 'payment';
   static const tapOnPhone_title = 'tapOnPhone.title';
   static const tapOnPhone_body_successPayment = 'tapOnPhone.body.successPayment';
@@ -481,7 +505,10 @@ abstract class  LocaleKeys {
   static const general_buttons_cancel = 'general.buttons.cancel';
   static const general_buttons_accept = 'general.buttons.accept';
   static const general_buttons_pressToContinue = 'general.buttons.pressToContinue';
+  static const general_buttons_reload = 'general.buttons.reload';
   static const general_buttons = 'general.buttons';
+  static const general_messages_error = 'general.messages.error';
+  static const general_messages = 'general.messages';
   static const general = 'general';
   static const warningCashRegisters_title = 'warningCashRegisters.title';
   static const warningCashRegisters_description = 'warningCashRegisters.description';
@@ -531,5 +558,15 @@ abstract class  LocaleKeys {
   static const posConfig_messages_noTerminals = 'posConfig.messages.noTerminals';
   static const posConfig_messages = 'posConfig.messages';
   static const posConfig = 'posConfig';
+  static const errorPayment_labels_number = 'errorPayment.labels.number';
+  static const errorPayment_labels_response = 'errorPayment.labels.response';
+  static const errorPayment_labels_date = 'errorPayment.labels.date';
+  static const errorPayment_labels_card = 'errorPayment.labels.card';
+  static const errorPayment_labels = 'errorPayment.labels';
+  static const errorPayment_buttons_logout = 'errorPayment.buttons.logout';
+  static const errorPayment_buttons_posConfig = 'errorPayment.buttons.posConfig';
+  static const errorPayment_buttons_closeApp = 'errorPayment.buttons.closeApp';
+  static const errorPayment_buttons = 'errorPayment.buttons';
+  static const errorPayment = 'errorPayment';
 
 }

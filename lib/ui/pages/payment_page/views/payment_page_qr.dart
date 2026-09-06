@@ -127,7 +127,7 @@ class _PaymentPageQRState extends State<PaymentPageQR> {
               Padding(
                 padding: const EdgeInsets.only(top: 16),
                 child: IziBtn(
-                  buttonText: "Descargar QR",
+                  buttonText: LocaleKeys.payment_buttons_downloadQR.tr(),
                   buttonType: ButtonType.outline,
                   buttonSize: ButtonSize.small,
                   buttonOnPressed: (){
@@ -155,7 +155,7 @@ class _PaymentPageQRState extends State<PaymentPageQR> {
                           children: [
                             IziText.body(
                                 color: context.iziColors.darkGrey,
-                                text: "Tiempo Restante: ",
+                                text: LocaleKeys.payment_body_timeRemaining.tr(),
                                 fontWeight: FontWeight.w400),
                             IziText.body(
                                 color: context.iziColors.primary,
@@ -182,7 +182,7 @@ class _PaymentPageQRState extends State<PaymentPageQR> {
                               textAlign: TextAlign.center,
                               color: context.iziColors.secondaryDarken,
                               text:
-                                  "Si ya hiciste el pago, espera unos segundos a que recibamos la confirmación",
+                                  LocaleKeys.payment_body_waitingConfirmation.tr(),
                               fontWeight: FontWeight.w500),
                         ),
                     ],

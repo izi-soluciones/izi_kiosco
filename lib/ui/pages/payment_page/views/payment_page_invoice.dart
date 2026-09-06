@@ -329,12 +329,12 @@ class _PaymentPageInvoiceState extends State<PaymentPageInvoice> {
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
               ru.gtSm()?
-          IziLinkBig(linkText: "+ Agregar correo electrónico", linkOnPressed: (){
+          IziLinkBig(linkText: LocaleKeys.payment_links_addEmail.tr(), linkOnPressed: (){
             setState(() {
               showEmail=true;
             });
           }, linkColor: context.iziColors.primary):
-          IziLink(linkText: "+ Agregar correo electrónico", linkOnPressed: (){
+          IziLink(linkText: LocaleKeys.payment_links_addEmail.tr(), linkOnPressed: (){
             setState(() {
               showEmail=true;
             });}, linkColor: context.iziColors.primary)

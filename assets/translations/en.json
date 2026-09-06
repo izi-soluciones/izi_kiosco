@@ -1,0 +1,710 @@
+{
+  "selectBusiness": {
+    "title": "Select business",
+    "buttons": {
+      "accept": "Save"
+    },
+    "inputs": {
+      "contribuyente": {
+        "label": "Business",
+        "placeholder": "Select the business"
+      },
+      "sucursal": {
+        "label": "Branch",
+        "placeholder": "Select the branch"
+      }
+    },
+    "subtitles": {
+      "select": "Select business"
+    },
+    "messages": {
+      "waitingLogin": "Signing in",
+      "successLogin": "Signed in",
+      "errorLogin": "Wrong username or password"
+    }
+  },
+  "kioskList": {
+    "title": "Select kiosk",
+    "body": {
+      "branchOffice": "Branch"
+    },
+    "button": {
+      "add": "Add kiosk"
+    }
+  },
+  "kioskNew": {
+    "title": "New kiosk",
+    "inputs": {
+      "branchOffice": {
+        "label": "Branch",
+        "placeholder": "Select the branch",
+        "error": "Select a branch"
+      },
+      "name": {
+        "label": "Name",
+        "placeholder": "Enter the name",
+        "error": "Invalid name"
+      },
+      "cashRegister": {
+        "label": "Cash register",
+        "placeholder": "Select the cash register",
+        "error": "Select a cash register"
+      }
+    },
+    "button": {
+      "add": "Add kiosk"
+    },
+    "messages": {
+      "waitingCashRegisters": "Loading cash registers",
+      "waitingSave": "Saving kiosk",
+      "errorCashRegisters": "Could not load the cash registers",
+      "errorSave": "Could not save the kiosk",
+      "successSave": "Kiosk saved"
+    }
+  },
+  "login": {
+    "title": "Sign in",
+    "buttons": {
+      "login": "Sign in"
+    },
+    "body": {
+      "noAccount": "Don't have an account?",
+      "qrInstructions": "Scan this code with your phone camera (where you have your admin web session) to authorize this kiosk."
+    },
+    "inputs": {
+      "tokenCard": {
+        "label": "Card token",
+        "placeholder": "Enter the card token",
+        "errors": {
+          "required": "Please enter the token",
+          "invalid": "Invalid token"
+        }
+      },
+      "token": {
+        "label": "Token",
+        "placeholder": "Enter the user token",
+        "errors": {
+          "required": "Please enter the token",
+          "invalid": "Invalid token"
+        }
+      },
+      "deviceId": {
+        "label": "Device ID",
+        "placeholder": "Enter the device ID",
+        "errors": {
+          "required": "Please enter the device ID",
+          "invalid": "Invalid device ID format"
+        }
+      }
+    },
+    "links": {
+      "passwordRecovery": "Recover password",
+      "createAccount": "Create an account now"
+    },
+    "subtitles": {
+      "enterIzi": "Sign in",
+      "qrLogin": "Sign in with QR"
+    },
+    "messages": {
+      "waitingLogin": "Signing in",
+      "successLogin": "Signed in",
+      "errorLogin": "Wrong username or password",
+      "generatingQR": "Generating QR code..."
+    }
+  },
+  "orderList": {
+    "drawer": "All orders",
+    "title": "All orders",
+    "buttons": {
+      "moreFilters": "More filters",
+      "print": "Print",
+      "detail": "Bill details",
+      "orderNumberDetail": "Order No. {}",
+      "checkIn": "Invoice"
+    },
+    "body": {
+      "ended": "Closed",
+      "opened": "Open",
+      "annulled": "Voided",
+      "orderHour": "Order time",
+      "orderType": "Order type",
+      "client": "Customer",
+      "orderNumber": "Order: {}",
+      "prePayment": "Paid in advance",
+      "orderDetail": "Details",
+      "invoiced": "Invoiced",
+      "noInvoiced": "Not invoiced"
+    },
+    "inputs": {
+      "search": {
+        "placeholder": "Search by order, table or product"
+      },
+      "status": {
+        "label": "Status",
+        "placeholder": "All",
+        "options": {
+          "all": "All",
+          "opened": "Open",
+          "ended": "Closed",
+          "annulled": "Voided",
+          "invoiced": "Invoiced",
+          "noInvoiced": "Not invoiced"
+        }
+      },
+      "dateStart": {
+        "label": "Issue date",
+        "placeholder": "Pick a date",
+        "prefix": "From:"
+      },
+      "dateEnd": {
+        "placeholder": "Pick a date",
+        "prefix": "To:"
+      }
+    },
+    "filters": {
+      "title": "Advanced filters",
+      "inputs": {
+        "status": {
+          "label": "Status",
+          "placeholder": "All",
+          "options": {
+            "all": "All",
+            "opened": "Open",
+            "ended": "Closed",
+            "annulled": "Voided",
+            "invoiced": "Invoiced",
+            "noInvoiced": "Not invoiced"
+          }
+        },
+        "dateStart": {
+          "label": "Issue date",
+          "placeholder": "Pick a date",
+          "prefix": "From:"
+        },
+        "dateEnd": {
+          "placeholder": "Pick a date",
+          "prefix": "To:"
+        }
+      },
+      "buttons": {
+        "apply": "Apply"
+      }
+    },
+    "messages": {
+      "errorMarkInternal": "Could not mark it as internal use",
+      "errorCancel": "Could not void the order",
+      "errorList": "Could not load the orders"
+    }
+  },
+  "orderDetails": {
+    "subtitles": {
+      "orderNumber": "Order #{}",
+      "prePayment": "Paid in advance",
+      "detail": "Details",
+      "areYouSureCancel": "Are you sure you want to void this order"
+    },
+    "body": {
+      "orderNumber": "Order No.:",
+      "orderDate": "Order date:",
+      "orderHour": "Order time",
+      "additionalNotes": "Additional notes",
+      "annulled": "Voided",
+      "invoiced": "Invoiced",
+      "internal": "Internal use",
+      "noInvoiced": "Not invoiced",
+      "subtotal": "Subtotal",
+      "discounts": "Discount",
+      "total": "Total"
+    },
+    "labels": {
+      "quantity": "Qty",
+      "item": "Item",
+      "price": "Unit price",
+      "total": "Total"
+    },
+    "buttons": {
+      "print": "Print",
+      "pay": "Close order and pay",
+      "more": "More options",
+      "accountDetail": "Bill details",
+      "orderNumberDetail": "Order No. 1",
+      "cancel": "Void order",
+      "modifyOrder": "Edit order",
+      "markAsInternal": "Mark as internal use"
+    },
+    "warning": {
+      "areYouSure": "Are you sure you want to void this order?",
+      "yes": "Yes, I'm sure",
+      "cancel": "Cancel"
+    },
+    "messages": {
+      "errorDownload": "Could not download the file"
+    }
+  },
+  "home": {
+    "title": "Home",
+    "drawer": "Home",
+    "subtitles": {
+      "iziSlogan": "It's easy, it's iZi",
+      "izifySlogan": "Your business, the easy way"
+    },
+    "body": {
+      "order": "Order",
+      "and": "and",
+      "pay": "pay",
+      "here": "here",
+      "clickToInit": "Tap here to place your order",
+      "anIziPlatform": "A platform by"
+    },
+    "messages": {
+      "serverDown": "The POS server is not responding",
+      "posDisconnected": "The POS is not connected properly"
+    }
+  },
+  "user_information": {
+    "title": "User",
+    "drawer": "User",
+    "body": {
+      "user_label": "User",
+      "email_label": "Email"
+    },
+    "links": {
+      "change_password": "Change password",
+      "sign_out": "Sign out"
+    },
+    "buttons": {
+      "editData": "Edit details"
+    }
+  },
+  "payment_type_modal": {
+    "title": "Choose a payment method",
+    "subtitles": {
+      "amountToPay": "Amount to pay"
+    },
+    "buttons": {
+      "qr": "QR payment",
+      "card": "Card payment",
+      "cash": "Cash payment",
+      "transfer": "Transfer",
+      "giftCard": "Gift Card",
+      "tapOnPhone": "Tap on Phone"
+    }
+  },
+  "payment": {
+    "titles": {
+      "paymentMethods": "Payment methods",
+      "invoiceData": "Billing details",
+      "qrPayment": "QR payment",
+      "cardPayment": "Card payment"
+    },
+    "subtitles": {
+      "selectPaymentMethod": "Choose how you want to pay",
+      "beforePaymentNeedData": "Before paying we need the following details",
+      "scanQRtoPay": "Scan the QR code to pay",
+      "enterYourCard": "Insert or tap your card on the reader",
+      "verifyPayment": "Payment verification",
+      "successPayment": "Payment successful!",
+      "successOrder": "Order created!",
+      "error": "Error",
+      "cantProcessPayment": "We couldn't process the payment",
+      "chooseCardType": "Choose a card type",
+      "chooseCardPaymentType": "Choose a card payment type",
+      "payWithBreB": "Pay with Bre-B",
+      "areYouSureStopTransaction": "Are you sure you want to stop the transaction?"
+    },
+    "body": {
+      "total": "Total",
+      "ifAlreadyPayment": "If you already paid, wait a few seconds",
+      "goToCashRegisters": "Go to one of our cash registers to complete your order",
+      "weNotifyWhatsapp": "We'll let you know on WhatsApp when your order is ready.",
+      "waitingTime": "Estimated wait time: 5 minutes.",
+      "canRetirePurchase": "You can pick up your purchase",
+      "amountToPay": "Amount to pay",
+      "timeRemaining": "Time left: ",
+      "waitingConfirmation": "If you already paid, wait a few seconds for us to get the confirmation",
+      "brebKey": "Key: ",
+      "havingTrouble": "Having trouble?",
+      "documentFallback": "number"
+    },
+    "buttons": {
+      "qr": "QR",
+      "breB": "Bre-B",
+      "card": "Card",
+      "checkout": "Pay at the register",
+      "initAgain": "Start over",
+      "proceedPayment": "Continue to payment",
+      "tryAgain": "Try again",
+      "cancelPurchase": "Cancel the purchase",
+      "callHelp": "Call an assistant",
+      "makeAnotherPurchase": "Make another purchase",
+      "debit": "Debit",
+      "credit": "Credit",
+      "chip": "Chip",
+      "contactless": "Contactless",
+      "downloadQR": "Download QR"
+    },
+    "inputs": {
+      "complement": {
+        "label": "Complement"
+      },
+      "documentType": {
+        "label": "Document type",
+        "placeholder": "Enter the {}",
+        "errors": {
+          "required": "The type is required"
+        }
+      },
+      "documentNumber": {
+        "label": "Document number (optional)",
+        "placeholder": "Enter the {}",
+        "errors": {
+          "required": "The number is required"
+        }
+      },
+      "businessName": {
+        "label": "Enter the name (optional)",
+        "placeholder": "Enter your name",
+        "errors": {
+          "required": "The name is required"
+        }
+      },
+      "email": {
+        "label": "Enter your email",
+        "placeholder": "",
+        "errors": {
+          "invalid": "Invalid email"
+        }
+      },
+      "phoneNumber": {
+        "label": "Enter your mobile number",
+        "placeholder": "Enter your phone number",
+        "description": "We'll send your digital invoice on WhatsApp.",
+        "errors": {
+          "required": "The number is required",
+          "invalid": "The number is not valid"
+        }
+      }
+    },
+    "messages": {
+      "errorGet": "Something went wrong while loading the data",
+      "errorQR": "Something went wrong while generating the QR",
+      "errorCard": "Something went wrong while starting the POS payment",
+      "errorBreB": "Something went wrong while starting the Bre-B payment",
+      "processingOrder": "Processing order",
+      "processingInvoice": "Processing invoice",
+      "processingInvoiceElectronic": "Processing electronic invoice"
+    },
+    "links": {
+      "addEmail": "+ Add email",
+      "advancedData": "Advanced details"
+    }
+  },
+  "tapOnPhone": {
+    "title": "Tap on Phone",
+    "body": {
+      "successPayment": "Payment successful",
+      "errorPayment": "Something went wrong while processing the payment",
+      "waitingPayment": "Processing payment",
+      "waitingActivate": "Activating terminal",
+      "noActiveTerminal": "Terminal inactive"
+    },
+    "labels": {
+      "returning": "Returning to the billing screen"
+    },
+    "buttons": {
+      "activateTerminal": "Activate terminal",
+      "retry": "Retry"
+    }
+  },
+  "configuration": {
+    "title": "Settings"
+  },
+  "configurationPos": {
+    "drawer": "Set up POS",
+    "title": "POS settings",
+    "subtitles": {
+      "tapOnPhone": "Tap on Phone",
+      "environment": "Working environment",
+      "tapOnPhoneDescription": "Use this integration to take credit and debit card payments with your Android device over NFC"
+    },
+    "body": {
+      "status": "Status",
+      "noConfiguration": "Not set up",
+      "noConfigurationDescription": "You don't have a valid setup registered to take payments this way",
+      "okConfiguration": "Setup complete",
+      "okConfigurationDescription": "The setup is complete and reviewed",
+      "reviewConfiguration": "Setup under review",
+      "reviewConfigurationDescription": "The setup is being reviewed manually",
+      "whenActive": "This setup will be linked to your user and the selected business and branch",
+      "serviceUnavailable": "Your device does not support this service"
+    },
+    "buttons": {
+      "activate": "Activate POS"
+    },
+    "inputs": {
+      "productionMode": {
+        "label": "Production mode",
+        "description": "Takes real payments that can only be made with real, active credit or debit cards. Transactions in this mode are real money that will be sent to the registered bank account."
+      },
+      "testMode": {
+        "label": "Test mode",
+        "description": "Takes test payments that can be made with fake cards. Payments in this mode are not real money."
+      }
+    },
+    "messages": {
+      "errorActivate": "Could not activate the terminal",
+      "successActivate": "The POS was activated",
+      "errorChangeEnvironment": "Could not change the working environment",
+      "successChangeEnvironment": "The working environment was changed"
+    }
+  },
+  "tables": {
+    "title": "Tables",
+    "drawer": "Tables",
+    "subtitles": {
+      "spaces": "Areas",
+      "cashRegisters": "Cash registers",
+      "dinersNumber": "Number of guests",
+      "areYouSureFreeTable": "Are you sure you want to free table {}?"
+    },
+    "labels": {
+      "active": "Active",
+      "close": "Closed"
+    },
+    "body": {
+      "available": "Available",
+      "reserved": "Reserved",
+      "fill": "Occupied"
+    },
+    "buttons": {
+      "makeOrder": "Create an order",
+      "tableStatus": "Table status",
+      "continue": "Continue",
+      "modifyOrder": "Edit order",
+      "printOrderDetail": "Print bill details",
+      "completeOrderDetail": "See full details",
+      "closeAndPay": "Close table & pay",
+      "orderToGo": "Takeaway order",
+      "closeTable": "Just close the table"
+    },
+    "messages": {
+      "errorGet": "Could not load the table list",
+      "errorRooms": "There are no areas created",
+      "errorGetOrder": "Could not load the order",
+      "errorCancelOrder": "Could not void the order",
+      "errorCancelTable": "Could not free the table",
+      "errorMarkInternal": "Could not mark it as internal use"
+    }
+  },
+  "makeOrderRetail": {
+    "init": {
+      "scanProducts": "Scan your products",
+      "enterInvoiceData": "Enter your billing details",
+      "selectPaymentMethod": "Choose a payment method",
+      "retirePurchase": "Pick up your purchase",
+      "pressToInit": "Press to start\nscanning your products"
+    },
+    "needHelp": {
+      "title": "Need help",
+      "askHelp": "Call an assistant",
+      "viewTutorial": "Watch tutorials"
+    },
+    "scan": {
+      "productsScanned": "Products scanned",
+      "unitPrice": "Unit price",
+      "totalPrice": "Total price",
+      "areYouSureBack": "Are you sure you want to cancel the sale?",
+      "areYouSureInitAgain": "Are you sure you want to clear the scanned items?",
+      "unitPriceAbr": "Unit price",
+      "totalPriceAbr": "Total",
+      "total": "Total",
+      "quantity": "Quantity",
+      "quantityAbr": "Qty",
+      "initAgain": "Start over",
+      "finishPurchase": "Finish the purchase and pay",
+      "finish": "Finish",
+      "waitingScan": "Hold your products' barcodes up to the scanner",
+      "waitingPurchase": "Processing purchase"
+    }
+  },
+  "helpModal": {
+    "title": "Need help?",
+    "buttons": {
+      "call": "Call an assistant"
+    },
+    "messages": {
+      "messageSent": "Help request sent"
+    }
+  },
+  "makeOrder": {
+    "title": "New order",
+    "drawer": "New order",
+    "subtitles": {
+      "itemOptions": "Options for: {}",
+      "editTable": "Edit table",
+      "numberDinners": "Number of guests",
+      "discounts": "Discounts",
+      "details": "Details",
+      "orderNumber": "Order #{}",
+      "myOrder": "My order",
+      "myPurchase": "My purchase",
+      "orderTakeOut": "Takeaway order",
+      "orderEatHere": "Eat-in order"
+    },
+    "body": {
+      "addDishesOrDrinks": "Add dishes or drinks from the list",
+      "addItems": "Add products from the list",
+      "quantity": "Quantity",
+      "items": "Items ({})",
+      "confirmOrder": "Order confirmation",
+      "confirmOrderTakeWay": "Takeaway order",
+      "confirmOrderEatHere": "Eat-in order",
+      "featured": "Recommended",
+      "selectWhere": "Choose where you'll eat today",
+      "eatHere": "Eat here",
+      "takeAway": "Takeaway"
+    },
+    "buttons": {
+      "next": "Next",
+      "confirm": "Confirm order",
+      "confirmSm": "Confirm",
+      "discount": "Discount",
+      "editDiscount": "Edit discounts",
+      "accept": "OK",
+      "save": "Save",
+      "add": "Add",
+      "cancel": "Cancel",
+      "confirmAndPay": "Confirm and pay",
+      "confirmAndPaySm": "Pay",
+      "addMore": "Add more",
+      "confirmingOrder": "Confirming order",
+      "initAgain": "Start over"
+    },
+    "inputs": {
+      "comments": {
+        "label": "Comments",
+        "placeholder": ""
+      },
+      "search": {
+        "placeholder": "Search for a product"
+      },
+      "amountOrPercentage": {
+        "label": "Amount or percentage",
+        "placeholder": "0.00"
+      },
+      "table": {
+        "label": "Table name",
+        "placeholder": "Select a table"
+      }
+    },
+    "labels": {
+      "count": "Quantity",
+      "item": "Item",
+      "discount": "Disc.",
+      "price": "Price",
+      "subtotal": "Subtotal",
+      "total": "Total"
+    },
+    "messages": {
+      "errorEmit": "Could not save the order",
+      "successEmit": "Order placed",
+      "successEdit": "Order updated"
+    }
+  },
+  "general": {
+    "errors": {
+      "input": "Invalid value"
+    },
+    "body": {
+      "sucursal": "Branch",
+      "thisScreenClose": "NEED MORE TIME?\nThis screen will close in {} seconds."
+    },
+    "buttons": {
+      "filters": "Filters",
+      "moreFilters": "More filters",
+      "yesSure": "Yes, I'm sure",
+      "cancel": "Cancel",
+      "accept": "OK",
+      "pressToContinue": "Touch the screen to continue",
+      "reload": "Reload"
+    },
+    "messages": {
+      "error": "Something went wrong"
+    }
+  },
+  "warningCashRegisters": {
+    "title": "There is no open cash register to place the order",
+    "description": "Let an administrator know about the problem"
+  },
+  "warningActivity": {
+    "title": "There is no economic activity set to process the order",
+    "description": "Let an administrator know about the problem"
+  },
+  "warningRooms": {
+    "title": "There are no areas available",
+    "description": "Use the {{brand_name}} admin app to set up the areas"
+  },
+  "warningPermissions": {
+    "title": "No permissions",
+    "description": "You don't have enough permissions to see this section"
+  },
+  "warningStore": {
+    "title": "The branch has no warehouse set to process the order",
+    "description": "Let an administrator know about the problem"
+  },
+  "demoPayment": {
+    "title": "Demo payment",
+    "body": "You're making a test payment. Press confirm to simulate a successful payment."
+  },
+  "passwordModal": {
+    "errors": {
+      "wrongPin": "The PIN is not correct"
+    },
+    "buttons": {
+      "confirm": "Confirm",
+      "cancel": "Cancel"
+    }
+  },
+  "posConfig": {
+    "title": "Izify POS settings",
+    "sections": {
+      "pairedTerminal": "Paired terminal",
+      "manualConnection": "Manual connection",
+      "advancedParams": "EcoPay advanced parameters",
+      "discovery": "Automatic discovery"
+    },
+    "inputs": {
+      "ipHint": "E.g. 192.168.1.100",
+      "ipLabel": "POS IP address",
+      "mqttClientId": "mqttClientId (e.g. CAJA1000023)",
+      "mqttUserName": "mqttUserName (e.g. 1000023)",
+      "mqttPassword": "mqttPassword (e.g. PWD023)",
+      "commerceId": "commerceId (e.g. 22000001)",
+      "cajaId": "cajaId (e.g. 1)"
+    },
+    "buttons": {
+      "unpair": "Unpair",
+      "connect": "Connect",
+      "search": "Search",
+      "searching": "Searching...",
+      "pair": "Pair"
+    },
+    "messages": {
+      "paired": "POS paired",
+      "noTerminals": "No terminals found"
+    }
+  },
+  "errorPayment": {
+    "labels": {
+      "number": "No.",
+      "response": "Response",
+      "date": "Date",
+      "card": "Card (last 4 digits)"
+    },
+    "buttons": {
+      "logout": "Sign out",
+      "posConfig": "POS settings",
+      "closeApp": "Close app"
+    }
+  }
+}

@@ -12,6 +12,7 @@ import 'package:go_router/go_router.dart';
 import 'package:izi_design_system/atoms/izi_typography.dart';
 import 'package:izi_design_system/tokens/colors.dart';
 import 'package:izi_design_system/tokens/izi_icons.dart';
+import 'package:izi_kiosco/app/utils/kiosk_locale.dart';
 import 'package:izi_kiosco/app/values/app_constants.dart';
 import 'package:izi_kiosco/app/values/assets_keys.dart';
 import 'package:izi_kiosco/app/values/env_keys.dart';
@@ -21,6 +22,7 @@ import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/home/home_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/page_utils/page_utils_bloc.dart';
 import 'package:izi_kiosco/ui/general/custom_icons/kiosk_hand_icon.dart';
+import 'package:izi_kiosco/ui/general/language_selector.dart';
 import 'package:izi_kiosco/ui/general/widgets/password_modal.dart';
 import 'package:izi_kiosco/ui/utils/responsive_utils.dart';
 import 'package:video_player/video_player.dart';
@@ -43,6 +45,13 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     _initVideo();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+      KioskLocale.reset(
+          context, context.read<AuthBloc>().state.currentDevice?.config);
+    });
     super.initState();
   }
 
@@ -96,12 +105,32 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  void _onAttractTap(PointerDownEvent val) {
+    // Ignore taps in the top-left config area (200x200)
+    if (val.localPosition.dx < 200 && val.localPosition.dy < 200) {
+      return;
+    }
+    setState(() {
+      showVideo = false;
+      GoRouter.of(context).goNamed(RoutesKeys.makeOrder);
+      context
+          .read<PageUtilsBloc>()
+          .initScreenActive(context.read<AuthBloc>().state);
+    });
+  }
+
   bool showError = true;
 
   @override
   Widget build(BuildContext context) {
     final ru = ResponsiveUtils(context);
-    return BlocBuilder<AuthBloc, AuthState>(builder: (context, state) {
+    return BlocConsumer<AuthBloc, AuthState>(
+        listenWhen: (previous, current) {
+      return previous.currentDevice?.config.idiomaDefecto !=
+          current.currentDevice?.config.idiomaDefecto;
+    }, listener: (context, state) {
+      KioskLocale.reset(context, state.currentDevice?.config);
+    }, builder: (context, state) {
       return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -250,6 +279,7 @@ class _HomePageState extends State<HomePage> {
                                 SizedBox(
                                   height: ru.height*0.01,
                                 ),
+                                const LanguageSelector(),
                               ],
                             )
                           ],
@@ -258,74 +288,83 @@ class _HomePageState extends State<HomePage> {
                     ),
                     if (showVideo && _controller!=null && _controller?.value.isInitialized==true)
                       Positioned.fill(
-                        child: Listener(
-                          onPointerDown: (val){
-                            // Ignore taps in the top-left config area (200x200)
-                            if (val.localPosition.dx < 200 && val.localPosition.dy < 200) {
-                              return;
-                            }
-                            setState(() {
-                              showVideo=false;
-                              GoRouter.of(context).goNamed(RoutesKeys.makeOrder);
-                              context.read<PageUtilsBloc>().initScreenActive(context.read<AuthBloc>().state);
-                            });
-                          },
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              widgetError(),
-                              Expanded(
-                                child: FittedBox(
-                                  alignment: Alignment.center,
-                                  fit: BoxFit.cover,
-                                  child: SizedBox(
-                                      height: _controller?.value.size.height,
-                                      width: _controller?.value.size.width,
-                                      child:  VideoPlayer(_controller!)
-                                  ),
-                                ),
-                              ),
-                              Container(
-                                color: context.iziColors.white,
-                                padding: const EdgeInsets.all(32),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                                  crossAxisAlignment: CrossAxisAlignment.center,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Expanded(
+                              child: Listener(
+                                onPointerDown: _onAttractTap,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.stretch,
                                   children: [
-                                    SizedBox(
-                                      width: 100,
-                                      height: 100,
-                                      child: state.currentContribuyente?.logo != null
-                                          ? CachedNetworkImage(
-                                        imageUrl:
-                                        "${dotenv.env[EnvKeys.apiUrl]}/contribuyentes/${state.currentContribuyente?.id}/logo",
-                                        fit: BoxFit.fitHeight,
-                                        placeholder: (context, url) =>
-                                         Center(
-                                            child: CircularProgressIndicator(
-                                                strokeWidth: 2,
-                                                color: context.iziColors.dark)),
-                                        errorWidget: (context, url, error) {
-                                          return const SizedBox.shrink();
-                                        },
-                                      )
-                                          : const SizedBox.shrink(),
-                                    ),
-                                    const SizedBox(width: 32,),
+                                    widgetError(),
                                     Expanded(
-                                      child: IziText.titleBig(
-                                          color: context.iziColors.primary,
-                                          text: LocaleKeys.home_body_clickToInit.tr(),
-                                          fontWeight: FontWeight.w400),
+                                      child: FittedBox(
+                                        alignment: Alignment.center,
+                                        fit: BoxFit.cover,
+                                        child: SizedBox(
+                                            height: _controller?.value.size.height,
+                                            width: _controller?.value.size.width,
+                                            child:  VideoPlayer(_controller!)
+                                        ),
+                                      ),
                                     ),
-                                    const SizedBox(width: 16,),
-                                    const KioskHandIcon(width: 70),
-
                                   ],
                                 ),
-                              )
-                            ],
-                          ),
+                              ),
+                            ),
+                            Container(
+                              color: context.iziColors.white,
+                              padding: const EdgeInsets.all(32),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Listener(
+                                    onPointerDown: _onAttractTap,
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                      crossAxisAlignment: CrossAxisAlignment.center,
+                                      children: [
+                                        SizedBox(
+                                          width: 100,
+                                          height: 100,
+                                          child: state.currentContribuyente?.logo != null
+                                              ? CachedNetworkImage(
+                                            imageUrl:
+                                            "${dotenv.env[EnvKeys.apiUrl]}/contribuyentes/${state.currentContribuyente?.id}/logo",
+                                            fit: BoxFit.fitHeight,
+                                            placeholder: (context, url) =>
+                                             Center(
+                                                child: CircularProgressIndicator(
+                                                    strokeWidth: 2,
+                                                    color: context.iziColors.dark)),
+                                            errorWidget: (context, url, error) {
+                                              return const SizedBox.shrink();
+                                            },
+                                          )
+                                              : const SizedBox.shrink(),
+                                        ),
+                                        const SizedBox(width: 32,),
+                                        Expanded(
+                                          child: IziText.titleBig(
+                                              color: context.iziColors.primary,
+                                              text: LocaleKeys.home_body_clickToInit.tr(),
+                                              fontWeight: FontWeight.w400),
+                                        ),
+                                        const SizedBox(width: 16,),
+                                        const KioskHandIcon(width: 70),
+
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  // Queda fuera del Listener: ese callback se dispara
+                                  // aunque el hijo atienda el toque, y lanzaria el pedido.
+                                  const LanguageSelector(),
+                                ],
+                              ),
+                            )
+                          ],
                         ),
                       ),
                     if (showError)
@@ -380,7 +419,9 @@ class _HomePageState extends State<HomePage> {
                       fontWeight: FontWeight.w600,
                       color: context.iziColors.dark,
                       textAlign: TextAlign.center,
-                      text: !state.statusServer?"El servidor del POS no response":"El POS no esta conectado correctamente"
+                      text: !state.statusServer
+                          ? LocaleKeys.home_messages_serverDown.tr()
+                          : LocaleKeys.home_messages_posDisconnected.tr()
                   ),
                 ),
                 InkWell(

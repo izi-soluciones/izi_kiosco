@@ -61,7 +61,8 @@ class _MakeOrderDetailState extends State<MakeOrderDetail> {
                     children: [
                       if(ru.gtXs())
                       IziText.titleSmall(
-                          color: context.iziColors.darkGrey, text: "Mi orden:"),
+                          color: context.iziColors.darkGrey,
+                          text: "${LocaleKeys.makeOrder_subtitles_myOrder.tr()}:"),
                       Expanded(
                         child: _listItems(ru),
                       )

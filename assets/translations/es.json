@@ -68,7 +68,8 @@
       "login": "Ingresar"
     },
     "body": {
-      "noAccount": "¿No tienes una cuenta?"
+      "noAccount": "¿No tienes una cuenta?",
+      "qrInstructions": "Escanea este código con la cámara de tu celular (donde tienes tu sesión web de admin) para autorizar este kiosco."
     },
     "inputs": {
       "tokenCard": {
@@ -96,17 +97,19 @@
         }
       }
     },
-    "links":{
+    "links": {
       "passwordRecovery": "Recuperar contraseña",
       "createAccount": "Crea una cuenta ahora"
     },
     "subtitles": {
-      "enterIzi": "Iniciar Sesión"
+      "enterIzi": "Iniciar Sesión",
+      "qrLogin": "Iniciar sesión con QR"
     },
     "messages": {
       "waitingLogin": "Iniciando Sesión",
       "successLogin": "Sesión iniciada",
-      "errorLogin": "Usuario o contraseña incorrectos"
+      "errorLogin": "Usuario o contraseña incorrectos",
+      "generatingQR": "Generando código QR..."
     }
   },
   "orderList": {
@@ -241,7 +244,7 @@
   "home": {
     "title": "Inicio",
     "drawer": "Inicio",
-    "subtitles":{
+    "subtitles": {
       "iziSlogan": "Es fácil, es iZi",
       "izifySlogan": "Tu negocio en modo fácil"
     },
@@ -252,6 +255,10 @@
       "here": "aquí",
       "clickToInit": "Toca aquí para hacer tu pedido",
       "anIziPlatform": "Una plataforma de"
+    },
+    "messages": {
+      "serverDown": "El servidor del POS no responde",
+      "posDisconnected": "El POS no está conectado correctamente"
     }
   },
   "user_information": {
@@ -266,10 +273,9 @@
       "sign_out": "Cerrar sesión"
     },
     "buttons": {
-      "editData":"Editar Datos"
+      "editData": "Editar Datos"
     }
   },
-
   "payment_type_modal": {
     "title": "Elige un medio de pago",
     "subtitles": {
@@ -300,7 +306,11 @@
       "successPayment": "¡Pago exitoso!",
       "successOrder": "¡Orden creada!",
       "error": "Error",
-      "cantProcessPayment": "No pudimos procesar el pago"
+      "cantProcessPayment": "No pudimos procesar el pago",
+      "chooseCardType": "Elige un tipo de tarjeta",
+      "chooseCardPaymentType": "Elige un tipo de pago con tarjeta",
+      "payWithBreB": "Paga a través de Bre-B",
+      "areYouSureStopTransaction": "¿Está seguro de parar la transacción?"
     },
     "body": {
       "total": "Total",
@@ -308,7 +318,13 @@
       "goToCashRegisters": "Acercate a una de nuestras cajas para completar tu orden",
       "weNotifyWhatsapp": "Te avisaremos por Whatsapp cuando tu orden esté lista.",
       "waitingTime": "Tiempo de espera estimado: 5 minutos.",
-      "canRetirePurchase": "Puedes retirar tu compra"
+      "canRetirePurchase": "Puedes retirar tu compra",
+      "amountToPay": "Monto a pagar",
+      "timeRemaining": "Tiempo restante: ",
+      "waitingConfirmation": "Si ya hiciste el pago, espera unos segundos a que recibamos la confirmación",
+      "brebKey": "Llave: ",
+      "havingTrouble": "¿Estás teniendo algún problema?",
+      "documentFallback": "número"
     },
     "buttons": {
       "qr": "QR",
@@ -320,7 +336,12 @@
       "tryAgain": "Volver a intentar",
       "cancelPurchase": "Cancelar la compra",
       "callHelp": "Llamar al asistente",
-      "makeAnotherPurchase": "Realizar otra compra"
+      "makeAnotherPurchase": "Realizar otra compra",
+      "debit": "Débito",
+      "credit": "Crédito",
+      "chip": "Chip",
+      "contactless": "Sin contacto",
+      "downloadQR": "Descargar QR"
     },
     "inputs": {
       "complement": {
@@ -372,6 +393,10 @@
       "processingOrder": "Procesando orden",
       "processingInvoice": "Procesando factura",
       "processingInvoiceElectronic": "Procesando factura electrónica"
+    },
+    "links": {
+      "addEmail": "+ Agregar correo electrónico",
+      "advancedData": "Datos avanzados"
     }
   },
   "tapOnPhone": {
@@ -471,38 +496,37 @@
       "errorMarkInternal": "No se pudo marcar como consumo interno"
     }
   },
-"makeOrderRetail": {
-  "init": {
-    "scanProducts": "Escanea tus productos",
-    "enterInvoiceData": "Ingresa los datos de factura",
-    "selectPaymentMethod": "Selecciona el método de pago",
-    "retirePurchase": "Retira tu compra",
-    "pressToInit": "Presiona para empezar\na escanear tus productos"
+  "makeOrderRetail": {
+    "init": {
+      "scanProducts": "Escanea tus productos",
+      "enterInvoiceData": "Ingresa los datos de factura",
+      "selectPaymentMethod": "Selecciona el método de pago",
+      "retirePurchase": "Retira tu compra",
+      "pressToInit": "Presiona para empezar\na escanear tus productos"
+    },
+    "needHelp": {
+      "title": "Necesitas Ayuda",
+      "askHelp": "Llamar a un asesor",
+      "viewTutorial": "Ver tutoriales"
+    },
+    "scan": {
+      "productsScanned": "Productos escaneados",
+      "unitPrice": "Precio unitario",
+      "totalPrice": "Precio total",
+      "areYouSureBack": "¿Esta seguro de cancelar la venta?",
+      "areYouSureInitAgain": "¿Esta seguro de borrar los items registrados?",
+      "unitPriceAbr": "P. Unitario",
+      "totalPriceAbr": "P. Total",
+      "total": "Total",
+      "quantity": "Cantidad",
+      "quantityAbr": "Cant",
+      "initAgain": "Empezar de nuevo",
+      "finishPurchase": "Finalizar la compra y pagar",
+      "finish": "Finalizar",
+      "waitingScan": "Acerca los códigos de barras de tus productos al lector para poder escanearlos",
+      "waitingPurchase": "Procesando compra"
+    }
   },
-  "needHelp": {
-    "title": "Necesitas Ayuda",
-    "askHelp": "Llamar a un asesor",
-    "viewTutorial": "Ver tutoriales"
-  },
-
-  "scan": {
-    "productsScanned": "Productos escaneados",
-    "unitPrice": "Precio unitario",
-    "totalPrice": "Precio total",
-    "areYouSureBack": "¿Esta seguro de cancelar la venta?",
-    "areYouSureInitAgain": "¿Esta seguro de borrar los items registrados?",
-    "unitPriceAbr": "P. Unitario",
-    "totalPriceAbr": "P. Total",
-    "total": "Total",
-    "quantity": "Cantidad",
-    "quantityAbr": "Cant",
-    "initAgain": "Empezar de nuevo",
-    "finishPurchase": "Finalizar la compra y pagar",
-    "finish": "Finalizar",
-    "waitingScan": "Acerca los códigos de barras de tus productos al lector para poder escanearlos",
-    "waitingPurchase": "Procesando compra"
-  }
-},
   "helpModal": {
     "title": "¿Necesitas ayuda?",
     "buttons": {
@@ -522,12 +546,12 @@
       "discounts": "Descuentos",
       "details": "Detalles",
       "orderNumber": "Orden #{}",
-      "myOrder":"Mi orden",
-      "myPurchase":"Mi compra",
-      "orderTakeOut":"Orden para llevar",
-      "orderEatHere":"Orden para comer aquí"
+      "myOrder": "Mi orden",
+      "myPurchase": "Mi compra",
+      "orderTakeOut": "Orden para llevar",
+      "orderEatHere": "Orden para comer aquí"
     },
-    "body":{
+    "body": {
       "addDishesOrDrinks": "Agrega platos o bebidas de la lista",
       "addItems": "Agrega productos de la lista",
       "quantity": "Cantidad",
@@ -588,7 +612,7 @@
     }
   },
   "general": {
-    "errors":{
+    "errors": {
       "input": "Valor incorrecto"
     },
     "body": {
@@ -601,10 +625,13 @@
       "yesSure": "Si estoy seguro",
       "cancel": "Cancelar",
       "accept": "Aceptar",
-      "pressToContinue": "Presiona la pantalla para continuar"
+      "pressToContinue": "Presiona la pantalla para continuar",
+      "reload": "Recargar"
+    },
+    "messages": {
+      "error": "Ocurrió un error"
     }
   },
-
   "warningCashRegisters": {
     "title": "No se encuentra una caja abierta para poder realizar el pedido",
     "description": "Informa a un administrador sobre el problema"
@@ -665,6 +692,19 @@
     "messages": {
       "paired": "POS Emparejado correctamente",
       "noTerminals": "No se encontraron terminales"
+    }
+  },
+  "errorPayment": {
+    "labels": {
+      "number": "N°",
+      "response": "Respuesta",
+      "date": "Fecha",
+      "card": "Tarjeta (últimos 4 dígitos)"
+    },
+    "buttons": {
+      "logout": "Cerrar sesión",
+      "posConfig": "Configuración de POS",
+      "closeApp": "Cerrar app"
     }
   }
 }

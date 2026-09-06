@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:ui';
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -56,27 +57,27 @@ class _ErrorPaymentPageState extends State<ErrorPaymentPage> {
                           Expanded(
                             child: IziText.titleSmall(
                               color: context.iziColors.dark,
-                              text: "Nº",
+                              text: LocaleKeys.errorPayment_labels_number.tr(),
                             ),
                           ),
                           Expanded(
                             flex: 2,
                             child: IziText.titleSmall(
                               color: context.iziColors.dark,
-                              text: "Respuesta",
+                              text: LocaleKeys.errorPayment_labels_response.tr(),
                             ),
                           ),
                           Expanded(
                             child: IziText.titleSmall(
                               color: context.iziColors.dark,
-                              text: "Fecha",
+                              text: LocaleKeys.errorPayment_labels_date.tr(),
                             ),
                           ),
                           Expanded(
                             flex: 2,
                             child: IziText.titleSmall(
                               color: context.iziColors.dark,
-                              text: "Tarjeta (U. 4 digitos)",
+                              text: LocaleKeys.errorPayment_labels_card.tr(),
                             ),
                           ),
                         ],
@@ -134,7 +135,7 @@ class _ErrorPaymentPageState extends State<ErrorPaymentPage> {
                   Padding(
                     padding: const EdgeInsets.all(16),
                     child: IziBtn(
-                      buttonText: "Cancelar",
+                      buttonText: LocaleKeys.general_buttons_cancel.tr(),
                       buttonType: ButtonType.primary,
                       buttonSize: ButtonSize.medium,
                       buttonOnPressed: () {
@@ -147,7 +148,7 @@ class _ErrorPaymentPageState extends State<ErrorPaymentPage> {
                   Padding(
                     padding: const EdgeInsets.all(16),
                     child: IziBtn(
-                      buttonText: "Cerrar Sesión",
+                      buttonText: LocaleKeys.errorPayment_buttons_logout.tr(),
                       buttonType: ButtonType.terciary,
                       buttonSize: ButtonSize.medium,
                       buttonOnPressed: () {
@@ -160,7 +161,7 @@ class _ErrorPaymentPageState extends State<ErrorPaymentPage> {
                   Padding(
                     padding: const EdgeInsets.all(16),
                     child: IziBtn(
-                      buttonText: "Configuración de POS",
+                      buttonText: LocaleKeys.errorPayment_buttons_posConfig.tr(),
                       buttonType: ButtonType.terciary,
                       buttonSize: ButtonSize.medium,
                       buttonOnPressed: () {
@@ -172,7 +173,7 @@ class _ErrorPaymentPageState extends State<ErrorPaymentPage> {
                   Padding(
                     padding: const EdgeInsets.all(16),
                     child: IziBtn(
-                      buttonText: "Recargar",
+                      buttonText: LocaleKeys.general_buttons_reload.tr(),
                       buttonType: ButtonType.terciary,
                       buttonSize: ButtonSize.medium,
                       buttonOnPressed: () {
@@ -185,7 +186,7 @@ class _ErrorPaymentPageState extends State<ErrorPaymentPage> {
                   Padding(
                     padding: const EdgeInsets.all(16),
                     child: IziBtn(
-                      buttonText: "Cerrar App",
+                      buttonText: LocaleKeys.errorPayment_buttons_closeApp.tr(),
                       buttonType: ButtonType.terciary,
                       buttonSize: ButtonSize.medium,
                       buttonOnPressed: () {

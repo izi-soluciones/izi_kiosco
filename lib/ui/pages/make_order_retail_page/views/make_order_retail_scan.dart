@@ -403,7 +403,7 @@ class _MakeOrderRetailScanState extends State<MakeOrderRetailScan> {
 
   _emitPurchase(){
 
-    context.read<PageUtilsBloc>().showLoading("Procesando compra");
+    context.read<PageUtilsBloc>().showLoading(LocaleKeys.makeOrderRetail_scan_waitingPurchase.tr());
     context.read<PageUtilsBloc>().closeScreenActive();
     context.read<MakeOrderRetailBloc>().emitOrder(authState).then((value) {
       context.read<PageUtilsBloc>().closeLoading();

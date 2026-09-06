@@ -131,7 +131,8 @@ class _PaymentPageInvoiceFormState extends State<PaymentPageInvoiceForm> {
                   inputHintText: LocaleKeys
                       .payment_inputs_documentNumber_placeholder
                       .tr(args: [
-                    (widget.paymentState.paramsBo?.documentType?.descripcion ?? "número")
+                    (widget.paymentState.paramsBo?.documentType?.descripcion ??
+                            LocaleKeys.payment_body_documentFallback.tr())
                         .split("-")
                         .firstOrNull
                         .toString()
@@ -253,7 +254,7 @@ class _PaymentPageInvoiceFormState extends State<PaymentPageInvoiceForm> {
         Row(
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
-            IziLink(linkText: "${datosAvanzados?"-":"+"} Datos avanzados", linkOnPressed: (){
+            IziLink(linkText: "${datosAvanzados?"-":"+"} ${LocaleKeys.payment_links_advancedData.tr()}", linkOnPressed: (){
               setState(() {
                 datosAvanzados=!datosAvanzados;
               });

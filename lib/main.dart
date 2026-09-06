@@ -10,6 +10,7 @@ import 'package:flutter_web_plugins/url_strategy.dart'
 if (dart.library.html) 'package:flutter_web_plugins/url_strategy.dart' as web_url;
 import 'package:izi_kiosco/app/my_app.dart';
 import 'package:izi_kiosco/app/utils/custom_asset_loader.dart';
+import 'package:izi_kiosco/app/utils/kiosk_locale.dart';
 import 'package:izi_kiosco/app/values/assets_keys.dart';
 import 'package:izi_kiosco/firebase_options.dart';
 
@@ -42,10 +43,15 @@ void main() async {
 
   runApp(
     EasyLocalization(
-      supportedLocales: const [Locale('es')],
+      supportedLocales: KioskLocale.supported,
       path: AssetsKeys.translations,
       assetLoader: CustomAssetLoader(),
-      fallbackLocale: const Locale('es'),
+      fallbackLocale: KioskLocale.es,
+      startLocale: KioskLocale.es,
+      // La fuente de verdad es device.config.idiomaDefecto, que se aplica al
+      // entrar a la bienvenida. Persistir la elección del comensal anterior la
+      // pisaría en el siguiente arranque.
+      saveLocale: false,
       child: MyApp(),
     ),
   );

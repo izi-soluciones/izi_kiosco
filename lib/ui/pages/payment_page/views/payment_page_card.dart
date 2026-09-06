@@ -47,7 +47,7 @@ class _PaymentPageCardState extends State<PaymentPageCard> {
             onAccept: ()async{
               context.read<PaymentBloc>().cancelPaymentCard();
             },
-            title: "Esta seguro de parar la transaccion"
+            title: LocaleKeys.payment_subtitles_areYouSureStopTransaction.tr()
         )
     );
   }
@@ -128,7 +128,7 @@ class _PaymentPageCardState extends State<PaymentPageCard> {
             IziText.titleBig(
                 color: context.iziColors.primary,
                 textAlign: TextAlign.center,
-                text:"Esta teniendo algun problema?",
+                text:LocaleKeys.payment_body_havingTrouble.tr(),
                 fontWeight: FontWeight.w400),
             if(showCancel)
             Padding(
