@@ -216,7 +216,12 @@ class AuthBloc extends Cubit<AuthState> {
   Future<void> enableDevice(Device device) async {
 
     emit(state.copyWith(status: AuthStatus.init));
-    await _authRepository.enableDevice(device.id);
+    try {
+      await _authRepository.enableDevice(device.id);
+    } catch (_) {
+      emit(state.copyWith(status: AuthStatus.errorAuth));
+      return;
+    }
 
     if (state.invoiceSubscription != null) {
       state.invoiceSubscription!.cancel();
