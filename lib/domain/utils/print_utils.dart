@@ -515,6 +515,11 @@ class PrintUtils {
 
   Future _pdfPrint(List<IziPrintItem> values) async {
     log("pdfPrint");
+    var bytes = await buildPdfBytes(values);
+    await Printing.layoutPdf(onLayout: (format)=>bytes,format: PdfPageFormat.roll80,usePrinterSettings: false);
+  }
+
+  Future<Uint8List> buildPdfBytes(List<IziPrintItem> values) async {
     const double xs = 6;
     const double sm = 7;
     const double sml = 9;
@@ -625,7 +630,6 @@ class PrintUtils {
           return pw.Column(children: items,crossAxisAlignment: pw.CrossAxisAlignment.stretch); // Center
         }));
 
-    var bytes = await pdf.save();
-    await Printing.layoutPdf(onLayout: (format)=>bytes,format: PdfPageFormat.roll80,usePrinterSettings: false);
+    return pdf.save();
   }
 }
