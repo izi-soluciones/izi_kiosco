@@ -5,6 +5,7 @@ on:
     branches:
       - alpha
       - 'releases/**'
+      - 'pcbba/**'
 
 jobs:
   build-and-deploy:
@@ -26,6 +27,8 @@ jobs:
         run: |
           if [[ "${GITHUB_REF_NAME}" == "alpha" ]]; then
             echo "FLAVOR=stg" >> $GITHUB_ENV
+          elif [[ "${GITHUB_REF_NAME}" == pcbba/* ]]; then
+            echo "FLAVOR=pcbba" >> $GITHUB_ENV
           elif [[ "${GITHUB_REF_NAME}" == releases/* ]]; then
             echo "FLAVOR=prod" >> $GITHUB_ENV
           fi
@@ -56,9 +59,17 @@ jobs:
         run: |
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > /tmp/deploy_key
           chmod 600 /tmp/deploy_key
+          if [[ "${GITHUB_REF_NAME}" == pcbba/* ]]; then
+            DEST_HOST="172.33.101.2"
+            DEST_PATH="/opt/webServer/izi-kiosco"
+          else
+            DEST_HOST="${{ secrets.DEPLOY_HOST }}"
+            DEST_PATH="${{ secrets.DEPLOY_PATH }}"
+          fi
+          echo "Deploying Kiosco to $DEST_HOST:$DEST_PATH"
           scp -o StrictHostKeyChecking=no -i /tmp/deploy_key \
             -r ./build/web/* \
-            "admin@${{ secrets.DEPLOY_HOST }}:${{ secrets.DEPLOY_PATH }}/"
+            "admin@$DEST_HOST:$DEST_PATH/"
           rm /tmp/deploy_key
 
       # -------------------------------------------------------
