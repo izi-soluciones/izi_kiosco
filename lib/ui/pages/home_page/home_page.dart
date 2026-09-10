@@ -217,7 +217,9 @@ class _HomePageState extends State<HomePage> {
                                             bottom: 30, right: 30, left: 30),
                                         child:SvgPicture.asset(
                                           colorFilter: ColorFilter.mode(context.iziColors.primary, BlendMode.srcIn),
-                                            context.read<AuthBloc>().state.currentDevice?.config.isRetail==true && context.read<AuthBloc>().state.currentDevice?.config.isRetailBarcode==true?AssetsKeys.homeTitleRetailSvg:AssetsKeys.homeTitleSvg,
+                                            AssetsKeys.homeTitleForLocale(
+                                                context.locale.languageCode,
+                                                retail: context.read<AuthBloc>().state.currentDevice?.config.isRetail==true && context.read<AuthBloc>().state.currentDevice?.config.isRetailBarcode==true),
                                           width: ru.width,
                                           fit: BoxFit.contain,
 
