@@ -138,7 +138,7 @@ class _PaymentPageCardState extends State<PaymentPageCard> {
                   _cancelPayment();
                 },
                 child: Text(
-                  'Parar la transaccion',
+                  LocaleKeys.payment_buttons_stopTransaction.tr(),
                   style: TextStyle(
                     fontSize: 18,
                     color: context.iziColors.red,
@@ -150,7 +150,16 @@ class _PaymentPageCardState extends State<PaymentPageCard> {
               ),
               )
           ],
-        ))
+        )),
+        Padding(
+          padding: const EdgeInsets.only(left: 24, right: 24, bottom: 24),
+          child: IziText.body(
+              color: context.iziColors.grey,
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              text: LocaleKeys.payment_body_doNotClose.tr(),
+              fontWeight: FontWeight.w500),
+        )
       ],
     );
   }

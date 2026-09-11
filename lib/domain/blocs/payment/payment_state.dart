@@ -133,8 +133,10 @@ class PaymentState extends Equatable {
   final InputObj documentNumber;
   final InputObj complement;
   final InputObj businessName;
+  final InputObj customerName;
   final InputObj phoneNumber;
   final InputObj email;
+  final bool wantsInvoice;
 
   //VARIABLES
   final num? qrAmount;
@@ -149,6 +151,8 @@ class PaymentState extends Equatable {
   final num tipAmount;
   final num cashAmount;
   final int step;
+  final int? orderNumber;
+  final int? customOrderNumber;
 
   final PaymentType paymentType;
 
@@ -183,12 +187,16 @@ class PaymentState extends Equatable {
     required this.queryBusinessList,
     required this.tipAmount,
     required this.businessName,
+    required this.customerName,
+    this.wantsInvoice = false,
     required this.email,
     required this.complement,
     required this.documentNumber,
     required this.withException,
     required this.phoneNumber,
     required this.qrLoading,
+    this.orderNumber,
+    this.customOrderNumber,
     this.qrAmount,
     this.qrCharge,
     this.qrWait = false,
@@ -214,6 +222,8 @@ class PaymentState extends Equatable {
     currentCurrency: null,
     email: PaymentInputs.emailInput(),
     businessName: PaymentInputs.businessNameInput(),
+    customerName: PaymentInputs.customerNameInput(),
+    wantsInvoice: false,
     complement: PaymentInputs.complementInput(),
     documentNumber: PaymentInputs.documentNumberInput(),
     withException: false,
@@ -245,7 +255,11 @@ class PaymentState extends Equatable {
     InputObj? documentNumber,
     InputObj? complement,
     InputObj? businessName,
+    InputObj? customerName,
+    bool? wantsInvoice,
     InputObj? email,
+    int? orderNumber,
+    int? customOrderNumber,
     String? economicActivity,
     InputObj? phoneNumber,
     Charge? Function()? qrCharge,
@@ -279,6 +293,12 @@ class PaymentState extends Equatable {
       tipAmount: tipAmount ?? this.tipAmount,
       withException: withException ?? this.withException,
       businessName: businessName ?? this.businessName,
+      customerName: customerName ?? this.customerName,
+      wantsInvoice: wantsInvoice ?? this.wantsInvoice,
+      orderNumber: orderNumber == -1 ? null : orderNumber ?? this.orderNumber,
+      customOrderNumber: customOrderNumber == -1
+          ? null
+          : customOrderNumber ?? this.customOrderNumber,
       email: email ?? this.email,
       complement: complement ?? this.complement,
       documentNumber: documentNumber ?? this.documentNumber,
@@ -315,6 +335,10 @@ class PaymentState extends Equatable {
     currentCashRegister,
     withException,
     businessName,
+    customerName,
+    wantsInvoice,
+    orderNumber,
+    customOrderNumber,
     email,
     complement,
     documentNumber,

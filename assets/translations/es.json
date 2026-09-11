@@ -295,7 +295,10 @@
       "paymentMethods": "Métodos de pago",
       "invoiceData": "Datos de facturación",
       "qrPayment": "Pago por QR",
-      "cardPayment": "Pago con tarjeta"
+      "cardPayment": "Pago con tarjeta",
+      "needInvoice": "¿Necesitas factura?",
+      "orderName": "¿A nombre de quién?",
+      "customerData": "Tus datos"
     },
     "subtitles": {
       "selectPaymentMethod": "Selecciona el método con el que deseas pagar",
@@ -324,7 +327,9 @@
       "waitingConfirmation": "Si ya hiciste el pago, espera unos segundos a que recibamos la confirmación",
       "brebKey": "Llave: ",
       "havingTrouble": "¿Estás teniendo algún problema?",
-      "documentFallback": "número"
+      "documentFallback": "número",
+      "doNotClose": "No cierres esta pantalla",
+      "orderNumber": "Orden #{}"
     },
     "buttons": {
       "qr": "QR",
@@ -341,7 +346,11 @@
       "credit": "Crédito",
       "chip": "Chip",
       "contactless": "Sin contacto",
-      "downloadQR": "Descargar QR"
+      "downloadQR": "Descargar QR",
+      "invoiceNo": "No",
+      "invoiceYes": "Sí",
+      "changePaymentMethod": "Cambiar forma de pago",
+      "stopTransaction": "Detener la transacción"
     },
     "inputs": {
       "complement": {
@@ -355,24 +364,27 @@
         }
       },
       "documentNumber": {
-        "label": "Número de documento (opcional)",
+        "label": "Número de documento",
         "placeholder": "Ingresa el {}",
         "errors": {
           "required": "El número es requerido"
         }
       },
       "businessName": {
-        "label": "Ingresa el nombre (opcional)",
-        "placeholder": "Ingresa tu nombre",
+        "label": "Nombre o razón social",
+        "placeholder": "Ingresa el nombre o la razón social",
         "errors": {
-          "required": "El nombre es requerido"
+          "required": "El nombre es requerido",
+          "min": "Escribe al menos 2 letras o números",
+          "max": "Máximo 150 caracteres"
         }
       },
       "email": {
-        "label": "Ingresa el correo electronico",
-        "placeholder": "",
+        "label": "Correo electrónico",
+        "placeholder": "Ingresa tu correo electrónico",
         "errors": {
-          "invalid": "Email inválido"
+          "invalid": "Email inválido",
+          "max": "Máximo 100 caracteres"
         }
       },
       "phoneNumber": {
@@ -382,6 +394,18 @@
         "errors": {
           "required": "El numero es requerido",
           "invalid": "El numero no es valido"
+        },
+        "descriptionOrder": "Te avisamos por Whatsapp cuando tu pedido esté listo."
+      },
+      "customerName": {
+        "label": "Nombre",
+        "placeholder": "Escribe tu nombre",
+        "description": "Con este nombre llamamos tu pedido cuando esté listo.",
+        "errors": {
+          "required": "Necesitamos tu nombre",
+          "min": "Escribe al menos 2 letras",
+          "invalid": "El nombre debe empezar con una letra",
+          "max": "Máximo 30 caracteres"
         }
       }
     },

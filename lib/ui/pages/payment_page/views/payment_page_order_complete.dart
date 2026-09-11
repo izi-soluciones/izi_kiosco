@@ -22,6 +22,22 @@ class PaymentPageOrderComplete extends StatelessWidget {
       children: [
         IziText.titleBig(color: context.iziColors.darkGrey, text: state.paymentType==PaymentType.cashRegister?LocaleKeys.payment_subtitles_successOrder.tr():LocaleKeys.payment_subtitles_successPayment.tr(),fontWeight: FontWeight.w600),
         Lottie.asset(AssetsKeys.okAnimationJson,width: 250,repeat: false,),
+        if(state.orderNumber != null)
+          IziText.titleBig(
+              color: context.iziColors.dark,
+              text: LocaleKeys.payment_body_orderNumber.tr(args: [
+                (state.customOrderNumber ?? state.orderNumber).toString()
+              ]),
+              fontWeight: FontWeight.w600),
+        if(state.customerName.value.trim().isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: IziText.titleMedium(
+                maxLines: 2,
+                color: context.iziColors.darkGrey85,
+                text: state.customerName.value.trim(),
+                fontWeight: FontWeight.w500),
+          ),
         const SizedBox(height: 8,),
         IziText.titleMedium(maxLines: 2,color: context.iziColors.darkGrey, text: state.paymentType==PaymentType.cashRegister?LocaleKeys.payment_body_goToCashRegisters.tr():state.paymentObj?.isComanda == true?LocaleKeys.payment_body_weNotifyWhatsapp.tr():LocaleKeys.payment_body_canRetirePurchase.tr(),fontWeight: FontWeight.w500),
         const SizedBox(height: 24,),

@@ -43,8 +43,13 @@ class _PaymentPageInvoiceFormState extends State<PaymentPageInvoiceForm> {
     ResponsiveUtils ru = ResponsiveUtils(context);
     return BlocListener<PaymentBloc,PaymentState>(listener: (context, state) {
       if(state.status==PaymentStatus.setInputs){ 
-        documentNumberController.text=state.documentNumber.value;
-        complementController.text=state.complement.value;
+        // Reasignar el mismo texto mueve el cursor (en web selecciona todo) y el siguiente dígito borraba el NIT
+        if(documentNumberController.text!=state.documentNumber.value){
+          documentNumberController.text=state.documentNumber.value;
+        }
+        if(complementController.text!=state.complement.value){
+          complementController.text=state.complement.value;
+        }
 
         personTypeController.text=state.paramsCo?.listPersonType.firstWhereOrNull((element) => element.codigo==state.paramsCo?.personType)?.nombre ?? "";
         identificationTypeController.text=state.paramsCo?.listIdentificationType.firstWhereOrNull((element) => element.codigo==state.paramsCo?.identificationType)?.nombre ?? "";
@@ -94,7 +99,7 @@ class _PaymentPageInvoiceFormState extends State<PaymentPageInvoiceForm> {
         inputSize: (ru.gtMd() || (ru.gtSm() && ru.isVertical()))
             ? InputSize.big
             : InputSize.normal,
-                  inputMaxLength: 50,
+                  inputMaxLength: PaymentInputs.documentNumberMaxLength,
                   value: widget.paymentState.documentNumber.value,
                   suffixWidget: widget.paymentState.documentNumber.loading
                       ? Container(
@@ -108,8 +113,14 @@ class _PaymentPageInvoiceFormState extends State<PaymentPageInvoiceForm> {
                           ))
                       : null,
                   onChanged: (value, valueRaw) {
+                      final documentNumber = PaymentInputs.limit(
+                          documentNumberController.text,
+                          PaymentInputs.documentNumberMaxLength);
+                      if (documentNumber != documentNumberController.text) {
+                        documentNumberController.text = documentNumber;
+                      }
                       context.read<PaymentBloc>().changeInputs(
-                          documentNumber: documentNumberController.text);
+                          documentNumber: documentNumber);
                   },
                   onEditingComplete: () {
                       context

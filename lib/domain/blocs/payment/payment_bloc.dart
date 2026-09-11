@@ -58,6 +58,10 @@ class PaymentBloc extends Cubit<PaymentState> {
   final BusinessRepository _businessRepository;
   final SocketRepository _socketRepository;
   PaymentConfig? countryConfig;
+  String? _autocompletedBusinessName;
+  ParamsCo? _defaultParamsCo;
+  bool _paramsFromCustomer = false;
+  String? _matchedNit;
   CancelToken cancelToken = CancelToken();
 
   PaymentBloc(
@@ -143,6 +147,10 @@ class PaymentBloc extends Cubit<PaymentState> {
       emit(state.copyWith(
           status: PaymentStatus.successGet,
           step: 1,
+          orderNumber: -1,
+          customOrderNumber: -1,
+          wantsInvoice: false,
+          customerName: PaymentInputs.customerNameInput(),
           economicActivity: economicActivity,
           currentCurrency: currentCurrency,
           paymentObj: paymentObj,
@@ -186,10 +194,14 @@ class PaymentBloc extends Cubit<PaymentState> {
       bool email = false,
       bool firstDigits = false,
       bool lastDigits = false,
+      bool customerName = false,
       bool phoneNumber = false}) {
     if (phoneNumber) {
       emit(state.copyWith(phoneNumber: _validatePhone()));
       return _validatePhone().inputError == null;
+    }
+    if (customerName) {
+      emit(state.copyWith(customerName: state.customerName.validateError()));
     }
 
     if (documentNumber) {
@@ -213,6 +225,7 @@ class PaymentBloc extends Cubit<PaymentState> {
       emit(state.copyWith(
           status: PaymentStatus.setInputs,
           businessName: state.businessName.changeValue(""),
+          customerName: state.customerName.changeValue(""),
           phoneNumber: state.phoneNumber.changeValue(""),
           documentNumber: state.documentNumber.changeValue(""),
           ));
@@ -232,7 +245,12 @@ class PaymentBloc extends Cubit<PaymentState> {
       String? email,
         String? firstDigits,
         String? lastDigits,
+        String? customerName,
       String? phoneNumber}) {
+    if (customerName != null) {
+      emit(state.copyWith(
+          customerName: state.customerName.changeValue(customerName)));
+    }
     if (phoneNumber != null) {
       emit(state.copyWith(phoneNumber: state.phoneNumber.changeValue(phoneNumber)));
     }
@@ -263,6 +281,32 @@ class PaymentBloc extends Cubit<PaymentState> {
     if(phonePrefix !=null){
       emit(state.copyWith(phonePrefix: phonePrefix));
     }
+  }
+
+  changeWantsInvoice(bool wantsInvoice) {
+    if (wantsInvoice) {
+      emit(state.copyWith(
+          status: PaymentStatus.setInputs,
+          wantsInvoice: true,
+          businessName: state.businessName.value.trim().isEmpty
+              ? state.businessName.changeValue(state.customerName.value.trim())
+              : state.businessName,
+          phoneNumber: state.phoneNumber.copyWith(inputError: () => null)));
+    } else {
+      _autocompletedBusinessName = null;
+      _paramsFromCustomer = false;
+      _matchedNit = null;
+      emit(state.copyWith(
+          status: PaymentStatus.setInputs,
+          wantsInvoice: false,
+          paramsCo: _defaultParamsCo,
+          businessName: PaymentInputs.businessNameInput(),
+          documentNumber: PaymentInputs.documentNumberInput(),
+          complement: PaymentInputs.complementInput(),
+          email: PaymentInputs.emailInput(),
+          phoneNumber: state.phoneNumber.copyWith(inputError: () => null)));
+    }
+    emit(state.copyWith(status: PaymentStatus.successGet));
   }
 
   changeCashAmount(num cash) {
@@ -332,15 +376,26 @@ class PaymentBloc extends Cubit<PaymentState> {
   }
 
   bool _validateInputs() {
+    final requireCustomerName = state.paymentObj?.isComanda == true;
+    final wantsInvoice = state.wantsInvoice;
+
     emit(state.copyWith(
+        customerName: requireCustomerName
+            ? state.customerName.validateError()
+            : state.customerName.copyWith(inputError: () => null),
         email: state.email
             .validateError(valueRequired: state.email.value),
-        documentNumber: state.documentNumber
-            .validateError(valueRequired: state.businessName.value),
-        businessName: state.businessName
-            .validateError(valueRequired: state.documentNumber.value),
+        documentNumber: wantsInvoice
+            ? state.documentNumber.validateError()
+            : state.documentNumber.copyWith(inputError: () => null),
+        businessName: wantsInvoice
+            ? state.businessName.validateError()
+            : state.businessName.copyWith(inputError: () => null),
         phoneNumber: _validatePhone()));
 
+    if (state.customerName.inputError != null) {
+      return false;
+    }
     if (state.documentNumber.inputError != null) {
       return false;
     }
@@ -647,14 +702,13 @@ class PaymentBloc extends Cubit<PaymentState> {
 
   Future<bool> makeCardPayment(AuthState authState,
       {bool atc = false, bool linkser = false, bool izify = false, bool contactless = true, String cardType = "DEBITO"}) async {
-    if ((authState.currentContribuyente?.tieneFacturacion!=true||(_validateInputs() &&
-        (atc || linkser || izify))) &&
-        state.paymentObj?.isComanda == true) {
+    if (!_validateInputs() || !(atc || linkser || izify)) {
+      return false;
+    }
+    if (state.paymentObj?.isComanda == true) {
       return await _makeCardOrderPayment(authState,
           atc: atc, contactless: contactless, linkser: linkser, izify: izify, cardType: cardType);
-    } else if (((authState.currentContribuyente?.tieneFacturacion!=true)||(_validateInputs() &&
-        (atc || linkser || izify))) &&
-        state.paymentObj?.isComanda == false) {
+    } else if (state.paymentObj?.isComanda == false) {
       return await _makeCardRetailPayment(authState,
           atc: atc, contactless: contactless, linkser: linkser, izify: izify, cardType: cardType);
     }
@@ -738,7 +792,7 @@ class PaymentBloc extends Cubit<PaymentState> {
   Timer? timerSuccess;
   Future<bool> generateQR(AuthState authState) async {
     try {
-      if (_validateInputs() || authState.currentContribuyente?.tieneFacturacion!=true) {
+      if (_validateInputs()) {
         emit(state.copyWith(step: 3));
         if (state.paymentObj?.isComanda == true) {
           return await _generateOrderQR(authState);
@@ -867,7 +921,7 @@ class PaymentBloc extends Cubit<PaymentState> {
 
   Future<bool> generateBREB(AuthState authState) async {
     try {
-      if (_validateInputs() || authState.currentContribuyente?.tieneFacturacion!=true) {
+      if (_validateInputs()) {
         if (state.paymentObj?.isComanda == true) {
           return await _generateOrderBREB(authState);
         } else {
@@ -1087,31 +1141,76 @@ class PaymentBloc extends Cubit<PaymentState> {
   }
 
   Future<void> queryBusiness({required AuthState authState}) async {
+    String? queriedNit;
     try{
 
       if (state.documentNumber.value.length < 3) {
+        emit(state.copyWith(
+            documentNumber: state.documentNumber.changeLoading(false)));
+        _undoAutocomplete();
         return;
       }
+      queriedNit = state.documentNumber.value;
       emit(state.copyWith(
           documentNumber: state.documentNumber.changeLoading(true)));
       List<Customer> businessList =
           await _businessRepository.queryBusinessSearch(
-              query: state.documentNumber.value,
+              query: queriedNit,
               pais: authState.taxesStrategy.countryCode);
+      // Una respuesta de un NIT que ya cambió no puede pisar ni deshacer la del NIT actual
+      if (state.documentNumber.value != queriedNit) {
+        return;
+      }
       Customer? find = businessList.firstWhereOrNull(
           (element) => element.nit == state.documentNumber.value);
-        if(find!=null){
-          countryConfig?.setParamsCustomer(find);
-        } 
+      String businessName = state.businessName.value;
+      if (find != null) {
+        countryConfig?.setParamsCustomer(find);
+        // /nit/:nit hoy no devuelve custom: sin datos CO del cliente no hay nada que revertir después
+        _paramsFromCustomer = find.custom?.co != null;
+        // Se respeta lo que escribió el cliente para este NIT; un NIT distinto trae su propia razón social
+        final current = businessName.trim();
+        if (current.isEmpty ||
+            businessName == _autocompletedBusinessName ||
+            current == state.customerName.value.trim() ||
+            (_matchedNit != null && find.nit != _matchedNit)) {
+          businessName = find.razonSocial ?? "";
+          _autocompletedBusinessName = businessName;
+        }
+        _matchedNit = find.nit;
+      }
       emit(state.copyWith(
-          businessName: state.businessName.changeValue(find?.razonSocial ?? ""),
+          businessName: state.businessName.changeValue(businessName),
           documentNumber: state.documentNumber.changeLoading(false),
           ));
+      if (find == null) {
+        _undoAutocomplete();
+      }
     }
     catch(e){
-      emit(state.copyWith(
-          documentNumber: state.documentNumber.changeLoading(false)));
+      if (queriedNit == null || state.documentNumber.value == queriedNit) {
+        emit(state.copyWith(
+            documentNumber: state.documentNumber.changeLoading(false)));
+      }
     }
+  }
+
+  void _undoAutocomplete() {
+    final undoBusinessName = _autocompletedBusinessName != null &&
+        state.businessName.value == _autocompletedBusinessName;
+    final undoParams = _paramsFromCustomer && _defaultParamsCo != null;
+    if (!undoBusinessName && !undoParams) {
+      return;
+    }
+    _autocompletedBusinessName = null;
+    _paramsFromCustomer = false;
+    emit(state.copyWith(
+        status: PaymentStatus.setInputs,
+        businessName: undoBusinessName
+            ? state.businessName.changeValue(state.customerName.value.trim())
+            : state.businessName,
+        paramsCo: undoParams ? _defaultParamsCo : state.paramsCo));
+    emit(state.copyWith(status: PaymentStatus.successGet));
   }
 
   cancelQR(AuthState authState){
@@ -1134,6 +1233,8 @@ class PaymentBloc extends Cubit<PaymentState> {
   _printRolloOrder(AuthState authState,
       {required int orderNumber, int? customOrderNumber}) async {
     log("iZi Kiosco: [DEBUG] _printRolloOrder invoked for orderNumber: $orderNumber");
+    emit(state.copyWith(
+        orderNumber: orderNumber, customOrderNumber: customOrderNumber));
     var tmp = await PrintTemplate.order80(
         orderNumber,
         customOrderNumber,
@@ -1141,7 +1242,8 @@ class PaymentBloc extends Cubit<PaymentState> {
         authState.currentSucursal!,
         state.paymentObj,
         state.currentCurrency,
-              taxesStrategy: authState.taxesStrategy
+              taxesStrategy: authState.taxesStrategy,
+              clienteNombre: state.customerName.value
         );
     var printUtils = PrintUtils();
     log("iZi Kiosco: [DEBUG] _printRolloOrder dispatching ${tmp.length} PrintItems directly to printUtils...");
@@ -1163,6 +1265,8 @@ class PaymentBloc extends Cubit<PaymentState> {
       }
       if(orderNumber!=null){
         log("iZi Kiosco: [DEBUG] Formatting Order template natively...");
+        emit(state.copyWith(
+            orderNumber: orderNumber, customOrderNumber: customOrderNumber));
         tmp = await PrintTemplate.order80(
               orderNumber,
               customOrderNumber,
@@ -1170,7 +1274,8 @@ class PaymentBloc extends Cubit<PaymentState> {
               authState.currentSucursal!,
               state.paymentObj,
               state.currentCurrency,
-              taxesStrategy: authState.taxesStrategy
+              taxesStrategy: authState.taxesStrategy,
+              clienteNombre: state.customerName.value
           );
       }
       if(invoice==null){
@@ -1259,6 +1364,9 @@ class PaymentBloc extends Cubit<PaymentState> {
               : state.complement.value,
         nit: state.documentNumber.value.isEmpty ? "0" : state.documentNumber.value,
         razonSocial: state.businessName.value.isEmpty ? "S/N" : state.businessName.value,
+        clienteNombre: state.customerName.value.trim().isNotEmpty
+            ? state.customerName.value.trim()
+            : null,
         telefonoComprador: state.phoneNumber.value.isNotEmpty?"${state.phonePrefix}${state.phoneNumber.value}":null,
         correoElectronico: state.email.value
         );
@@ -1299,7 +1407,7 @@ class PaymentBloc extends Cubit<PaymentState> {
     ivaResponsability = listIvaResponsability.lastOrNull;
     personType = listPersonType.lastOrNull;
     taxResponsability = listTaxResponsability.lastOrNull;
-    emit(state.copyWith(paramsCo: ParamsCo(
+    _defaultParamsCo = ParamsCo(
       identificationType: identificationType?.codigo,
       ivaResponsability: ivaResponsability?.codigo,
       personType: personType?.codigo,
@@ -1308,7 +1416,8 @@ class PaymentBloc extends Cubit<PaymentState> {
       listPersonType: listPersonType,
       listTaxResponsability: listTaxResponsability,
       taxResponsability: taxResponsability?.codigo
-    )));
+    );
+    emit(state.copyWith(paramsCo: _defaultParamsCo));
   }
 
   void _setParamsOrderPaymentCo(PaymentDtoVentaData paymentDtoVentaData)async{
@@ -1378,7 +1487,10 @@ class PaymentBloc extends Cubit<PaymentState> {
   void _setParamsCustomerCo(Customer customer)async{
     emit(state.copyWith(
       status: PaymentStatus.setInputs,
-      paramsCo: state.paramsCo?.copyWith(
+      paramsCo: (_paramsFromCustomer
+              ? (_defaultParamsCo ?? state.paramsCo)
+              : state.paramsCo)
+          ?.copyWith(
         identificationType: customer.custom?.co?.tipoIdentificacion,
         taxResponsability: customer.custom?.co?.responsabilidadFiscal,
         ivaResponsability: customer.custom?.co?.responsabilidadIva,

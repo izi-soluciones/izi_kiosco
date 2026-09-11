@@ -295,7 +295,10 @@
       "paymentMethods": "Payment methods",
       "invoiceData": "Billing details",
       "qrPayment": "QR payment",
-      "cardPayment": "Card payment"
+      "cardPayment": "Card payment",
+      "needInvoice": "Do you need an invoice?",
+      "orderName": "Who is this order for?",
+      "customerData": "Your details"
     },
     "subtitles": {
       "selectPaymentMethod": "Choose how you want to pay",
@@ -324,7 +327,9 @@
       "waitingConfirmation": "If you already paid, wait a few seconds for us to get the confirmation",
       "brebKey": "Key: ",
       "havingTrouble": "Having trouble?",
-      "documentFallback": "number"
+      "documentFallback": "number",
+      "doNotClose": "Do not close this screen",
+      "orderNumber": "Order #{}"
     },
     "buttons": {
       "qr": "QR",
@@ -341,7 +346,11 @@
       "credit": "Credit",
       "chip": "Chip",
       "contactless": "Contactless",
-      "downloadQR": "Download QR"
+      "downloadQR": "Download QR",
+      "invoiceNo": "No",
+      "invoiceYes": "Yes",
+      "changePaymentMethod": "Change payment method",
+      "stopTransaction": "Stop the transaction"
     },
     "inputs": {
       "complement": {
@@ -355,24 +364,27 @@
         }
       },
       "documentNumber": {
-        "label": "Document number (optional)",
+        "label": "Document number",
         "placeholder": "Enter the {}",
         "errors": {
           "required": "The number is required"
         }
       },
       "businessName": {
-        "label": "Enter the name (optional)",
-        "placeholder": "Enter your name",
+        "label": "Name or business name",
+        "placeholder": "Enter the name or business name",
         "errors": {
-          "required": "The name is required"
+          "required": "The name is required",
+          "min": "Enter at least 2 letters or numbers",
+          "max": "150 characters maximum"
         }
       },
       "email": {
-        "label": "Enter your email",
-        "placeholder": "",
+        "label": "Email",
+        "placeholder": "Enter your email",
         "errors": {
-          "invalid": "Invalid email"
+          "invalid": "Invalid email",
+          "max": "100 characters maximum"
         }
       },
       "phoneNumber": {
@@ -382,6 +394,18 @@
         "errors": {
           "required": "The number is required",
           "invalid": "The number is not valid"
+        },
+        "descriptionOrder": "We'll let you know on WhatsApp when your order is ready."
+      },
+      "customerName": {
+        "label": "Name",
+        "placeholder": "Enter your name",
+        "description": "We use this name to call your order when it's ready.",
+        "errors": {
+          "required": "We need your name",
+          "min": "Enter at least 2 letters",
+          "invalid": "The name must start with a letter",
+          "max": "30 characters maximum"
         }
       }
     },

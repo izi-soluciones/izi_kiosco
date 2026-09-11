@@ -5,6 +5,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:izi_design_system/atoms/izi_link.dart';
 import 'package:izi_design_system/atoms/izi_typography.dart';
 import 'package:izi_design_system/molecules/izi_btn.dart';
 import 'package:izi_design_system/tokens/colors.dart';
@@ -63,9 +64,7 @@ class _PaymentPageQRState extends State<PaymentPageQR> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        IziHeaderKiosk(onPop: () {
-          context.read<PaymentBloc>().cancelQR(authState);
-        },hideLogo: true,),
+        const IziHeaderKiosk(onPop: null,hideLogo: true,),
         Expanded(
           child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -184,6 +183,18 @@ class _PaymentPageQRState extends State<PaymentPageQR> {
                               text:
                                   LocaleKeys.payment_body_waitingConfirmation.tr(),
                               fontWeight: FontWeight.w500),
+                        ),
+                      if (widget.state.qrCharge != null)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 32.0),
+                          child: IziLink(
+                              linkText: LocaleKeys
+                                  .payment_buttons_changePaymentMethod
+                                  .tr(),
+                              linkOnPressed: () {
+                                context.read<PaymentBloc>().cancelQR(authState);
+                              },
+                              linkColor: context.iziColors.grey),
                         ),
                     ],
                   ),
