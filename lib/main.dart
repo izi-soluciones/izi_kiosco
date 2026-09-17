@@ -12,6 +12,7 @@ import 'package:izi_kiosco/app/my_app.dart';
 import 'package:izi_kiosco/app/utils/custom_asset_loader.dart';
 import 'package:izi_kiosco/app/utils/kiosk_locale.dart';
 import 'package:izi_kiosco/app/values/assets_keys.dart';
+import 'package:izi_kiosco/domain/utils/print_utils.dart';
 import 'package:izi_kiosco/firebase_options.dart';
 
 // El flavor se inyecta en build time: --dart-define=FLAVOR=stg
@@ -40,6 +41,8 @@ void main() async {
     FirebaseCrashlytics.instance.recordError(error, stack);
     return true;
   };
+
+  PrintUtils().printTest();
 
   runApp(
     EasyLocalization(

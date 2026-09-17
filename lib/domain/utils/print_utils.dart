@@ -202,14 +202,6 @@ class PrintUtils {
     if (kIsWeb) {
     } else {
       if (Platform.isAndroid) {
-        log("iZi Kiosco: printTest - Attempting _satPrint for SDK verification.");
-        try {
-          await _satPrint([IziPrintText(text: "SAT Printer OK", size: IziPrintSize.md, bold: true, align: IziPrintAlign.center)]);
-          log("iZi Kiosco: printTest - _satPrint dispatched.");
-        } catch (e) {
-          log("iZi Kiosco: printTest - _satPrint failed: $e");
-        }
-
         var resBinding = await SunmiPrinter.bindingPrinter();
         await SunmiPrinter.initPrinter();
         var status = await SunmiPrinter.getPrinterStatus();
