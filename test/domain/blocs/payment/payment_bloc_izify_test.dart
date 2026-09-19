@@ -223,13 +223,16 @@ void main() {
       expect(statuses(), contains(PaymentStatus.cardVerified));
     });
 
-    test('a reference the terminal never received becomes retryable', () async {
+    test('a reference the terminal has no record of stays pending, never "not charged"', () async {
+      // The terminal may have been reinstalled or swapped: absence of a record
+      // is not proof the card was not charged.
       final cp = await storedPending('KOS-NEVER');
       await bloc.verifyCardPayment(auth, cp);
       final record = await stored('KOS-NEVER');
-      expect(record['estado'], 'ERROR');
-      expect(CardPayment.fromJsonStorage(record).canRetry, isTrue);
+      expect(record['estado'], 'PENDING');
       expect(comandas.marked, isEmpty);
+      await flush();
+      expect(statuses(), contains(PaymentStatus.cardPending));
     });
 
     test('a charge still unconfirmed stays pending', () async {

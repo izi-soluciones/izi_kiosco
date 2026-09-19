@@ -970,9 +970,11 @@ class PaymentBloc extends Cubit<PaymentState> {
         _emitCardError(authState,
             message: 'No se cobró: ${result.errorMessage ?? 'rechazada'}. Puede reintentar.');
       case PosPaymentStatus.notFound:
-        await store('ERROR', "Rechazada - no recibido por el datáfono");
-        _emitCardError(authState,
-            message: 'El datáfono no tiene registro de este cobro: no se cobró.');
+        // Not proof that nothing was charged here: the terminal may have been
+        // reinstalled or replaced since. Only the live flow, which knows its
+        // /pay was never acknowledged, may read 404 as "never received".
+        _emitCardPending(authState,
+            message: 'El datáfono no tiene registro de este cobro (¿se reinstaló o cambió de datáfono?). Confirme con EcoPay antes de reintentar.');
       case PosPaymentStatus.pending:
       case PosPaymentStatus.processing:
       case PosPaymentStatus.unknown:
