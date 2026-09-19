@@ -508,9 +508,11 @@ class PaymentBloc extends Cubit<PaymentState> {
   }
 
   /// Deadline for the terminal's verdict after it accepted a charge. It must
-  /// exceed PayPOS's own wait for the broker (90s) so the kiosk always hears
-  /// PENDING from the terminal rather than guessing on its own.
-  static const Duration izifyResultTimeout = Duration(seconds: 120);
+  /// exceed what PayPOS may take before answering PENDING itself: up to 35 s
+  /// spacing it from the previous charge (EcoPay's stray card search) plus
+  /// 90 s waiting for the broker. The kiosk then always hears PENDING from
+  /// the terminal rather than guessing on its own.
+  static const Duration izifyResultTimeout = Duration(seconds: 150);
 
   /// How often the charge outcome is polled while the socket is also open.
   static const Duration izifyPollInterval = Duration(seconds: 2);
