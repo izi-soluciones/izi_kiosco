@@ -12,8 +12,8 @@ import 'package:go_router/go_router.dart';
 import 'package:izi_design_system/atoms/izi_typography.dart';
 import 'package:izi_design_system/tokens/colors.dart';
 import 'package:izi_design_system/tokens/izi_icons.dart';
+import 'package:izi_kiosco/app/utils/attract_video.dart';
 import 'package:izi_kiosco/app/utils/kiosk_locale.dart';
-import 'package:izi_kiosco/app/values/app_constants.dart';
 import 'package:izi_kiosco/app/values/assets_keys.dart';
 import 'package:izi_kiosco/app/values/env_keys.dart';
 import 'package:izi_kiosco/app/values/locale_keys.g.dart';
@@ -28,7 +28,10 @@ import 'package:izi_kiosco/ui/utils/responsive_utils.dart';
 import 'package:video_player/video_player.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  /// Se vuelve de un pedido completado: si el video ya esta listo, se muestra
+  /// sin la espera de `tiempoVideo` del primer arranque.
+  final bool fromCompletedOrder;
+  const HomePage({super.key, this.fromCompletedOrder = false});
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -56,6 +59,8 @@ class _HomePageState extends State<HomePage> {
   }
 
   var showVideo = false;
+  // Mientras carga el video se muestra el spinner en lugar de la pantalla estatica.
+  var _skipAttractScreen = false;
 
   _initVideo({BuildContext? context})async {
     try{
@@ -68,8 +73,18 @@ class _HomePageState extends State<HomePage> {
       if(!mounted){
         return;
       }
-      if(authState.currentDevice?.config.timeVideo!=0){
-        await Future.delayed(Duration(seconds: authState.currentDevice?.config.timeVideo ?? AppConstants.timerVideo));
+      var config = authState.currentDevice?.config;
+      var videoReady = AttractVideo.isVideoReady(
+          config: config,
+          hasDownloadedVideo: authState.video != null,
+          isWeb: kIsWeb);
+      _skipAttractScreen = widget.fromCompletedOrder && videoReady;
+      var delay = AttractVideo.delay(
+          config: config,
+          fromCompletedOrder: widget.fromCompletedOrder,
+          videoReady: videoReady);
+      if(delay > Duration.zero){
+        await Future.delayed(delay);
       }
 
       if(!mounted){
@@ -87,7 +102,7 @@ class _HomePageState extends State<HomePage> {
                 showVideo = true;
               });
             }
-          })..play();
+          }, onError: _onVideoError)..play();
       } else if (authState.video != null) {
         _controller = VideoPlayerController.file(authState.video!)
           ..setLooping(true)
@@ -97,11 +112,20 @@ class _HomePageState extends State<HomePage> {
                 showVideo = true;
               });
             }
-          })..play();
+          }, onError: _onVideoError)..play();
       }
     }
     catch(e){
       log(e.toString());
+    }
+  }
+
+  void _onVideoError(Object e) {
+    log(e.toString());
+    if (mounted && _skipAttractScreen) {
+      setState(() {
+        _skipAttractScreen = false;
+      });
     }
   }
 
@@ -138,7 +162,7 @@ class _HomePageState extends State<HomePage> {
                 child: Stack(
                   children: [
 
-                    state.currentDevice?.config.timeVideo==0 && state.currentDevice?.config.video != null?
+                    (state.currentDevice?.config.timeVideo==0 && state.currentDevice?.config.video != null) || _skipAttractScreen?
                     Positioned.fill(
                       child: GestureDetector(
                         behavior: HitTestBehavior.opaque,
