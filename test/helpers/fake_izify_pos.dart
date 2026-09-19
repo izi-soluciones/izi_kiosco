@@ -14,6 +14,10 @@ class FakeIzifyPos {
   late final HttpServer _server;
   final List<WebSocket> _sockets = [];
 
+  /// The mDNS name PayPOS 1.26+ reports on /health.
+  String name = 'izify-POS-48151';
+  String appVersion = '1.26-ecopay';
+
   String? pairedKioskId;
   String? token;
   String? pin;
@@ -43,12 +47,14 @@ class FakeIzifyPos {
   int payRequests = 0;
   int pairRequests = 0;
 
-  int get port => _server.port;
+  // Kept after close(), so a test can still name the address it had.
+  late final int port;
   String get hostPort => '127.0.0.1:$port';
 
-  static Future<FakeIzifyPos> start() async {
+  static Future<FakeIzifyPos> start({int port = 0}) async {
     final pos = FakeIzifyPos();
-    pos._server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+    pos._server = await HttpServer.bind(InternetAddress.loopbackIPv4, port);
+    pos.port = pos._server.port;
     pos._server.listen(pos._handle);
     return pos;
   }
@@ -122,7 +128,11 @@ class FakeIzifyPos {
                 : const <String>[],
             'busy': accepted.isNotEmpty,
             'canOpenScreens': true,
-            'appVersion': '1.25-ecopay',
+            'appVersion': appVersion,
+            'name': name,
+            'pairedKioskHash': pairedKioskId == null
+                ? null
+                : sha256.convert(utf8.encode(pairedKioskId!)).toString().substring(0, 16),
           });
         case '/pair':
           pairRequests++;

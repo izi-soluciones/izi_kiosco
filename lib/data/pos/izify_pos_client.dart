@@ -63,6 +63,14 @@ class IzifyPosHealth {
   final bool? hasPaper;
   final int? batteryLevel;
   final String? appVersion;
+
+  /// The terminal's mDNS instance name (`izify-POS-<pin>`), stable across
+  /// reboots and address changes. PayPOS 1.26+.
+  final String? name;
+
+  /// [IzifyPosClient.kioskHash] of the kiosk this terminal is paired with,
+  /// null when unpaired. PayPOS 1.26+.
+  final String? pairedKioskHash;
   final Map<String, dynamic> raw;
 
   const IzifyPosHealth({
@@ -77,6 +85,8 @@ class IzifyPosHealth {
     this.hasPaper,
     this.batteryLevel,
     this.appVersion,
+    this.name,
+    this.pairedKioskHash,
     this.raw = const {},
   });
 
@@ -94,8 +104,16 @@ class IzifyPosHealth {
         hasPaper: json['hasPaper'] as bool?,
         batteryLevel: (json['batteryLevel'] as num?)?.toInt(),
         appVersion: json['appVersion']?.toString(),
+        name: json['name']?.toString(),
+        pairedKioskHash: json['pairedKioskHash']?.toString(),
         raw: json,
       );
+
+  /// True when the answer comes from PayPOS and not from some other HTTP
+  /// server that happens to listen on the same port.
+  bool get isIzifyPos =>
+      raw['status'] == 'OK' &&
+      (raw.containsKey('isOnline') || raw.containsKey('paired') || name != null);
 
   /// Why a charge cannot start on this terminal, in Spanish, or null.
   /// Older terminals that do not report readiness are given the benefit of
@@ -174,6 +192,11 @@ class IzifyPosClient {
     return 'KOS-$millis-$suffix';
   }
 
+  /// How a terminal names the kiosk it is paired with on `/health`: the first
+  /// 16 hex chars of SHA-256([kioskId]).
+  static String kioskHash(String kioskId) =>
+      sha256.convert(utf8.encode(kioskId)).toString().substring(0, 16);
+
   /// HMAC-SHA256 of `amount|currency|reference`, keyed with the pairing token.
   static String sign(
           {required String token,
@@ -184,10 +207,10 @@ class IzifyPosClient {
           .convert(utf8.encode('$amount|$currency|$reference'))
           .toString();
 
-  Future<IzifyPosHealth> health(IzifyPosAddress address) async {
+  Future<IzifyPosHealth> health(IzifyPosAddress address, {Duration timeout = healthTimeout}) async {
     final http.Response res;
     try {
-      res = await _http.get(address.http('/health')).timeout(healthTimeout);
+      res = await _http.get(address.http('/health')).timeout(timeout);
     } catch (e) {
       throw IzifyPosException(_unreachable(address), code: 'UNREACHABLE');
     }
@@ -381,6 +404,20 @@ class IzifyPosClient {
       return PosPaymentResult(
           status: PosPaymentStatus.unreachable, reference: reference);
     }
+  }
+
+  /// Whether [token] still opens the terminal at [address]: `false` when it
+  /// answers 401 (it was unpaired, reinstalled or paired with another kiosk),
+  /// null when it could not be asked. Probes a reference that never exists,
+  /// so it works with every PayPOS version and never touches a charge.
+  Future<bool?> tokenAccepted(IzifyPosAddress address, String token) async {
+    final probe = await paymentStatus(address,
+        token: token, reference: 'KOS-PROBE-${DateTime.now().millisecondsSinceEpoch}');
+    return switch (probe.status) {
+      PosPaymentStatus.unauthorized => false,
+      PosPaymentStatus.notFound => true,
+      _ => null,
+    };
   }
 
   static bool _neverConnected(Object e) {

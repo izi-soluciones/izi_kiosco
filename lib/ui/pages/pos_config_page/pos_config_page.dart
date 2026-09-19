@@ -192,7 +192,7 @@ class _PosConfigPageState extends State<PosConfigPage> {
                             ],
                             const SizedBox(height: 8),
                             TextButton.icon(
-                              onPressed: () => context.read<PosConfigBloc>().checkHealth(),
+                              onPressed: () => context.read<PosConfigBloc>().reconnect(manual: true),
                               icon: Icon(Icons.refresh, color: context.iziColors.primary),
                               label: IziText.body(
                                 color: context.iziColors.primary,
@@ -427,7 +427,17 @@ class _PosConfigPageState extends State<PosConfigPage> {
                         subtitle: IziText.body(
                           color: context.iziColors.darkGrey,
                           fontWeight: FontWeight.normal,
-                          text: "${device.ip}:${device.port}",
+                          maxLines: 2,
+                          text: [
+                            "${device.ip}:${device.port}",
+                            if (device.version != null) "PayPOS ${device.version}",
+                            switch (device.pairing) {
+                              PosPairing.free => LocaleKeys.posConfig_discovered_free.tr(),
+                              PosPairing.thisKiosk => LocaleKeys.posConfig_discovered_thisKiosk.tr(),
+                              PosPairing.otherKiosk => LocaleKeys.posConfig_discovered_otherKiosk.tr(),
+                              PosPairing.unknown => null,
+                            },
+                          ].whereType<String>().join(' · '),
                         ),
                         trailing: IziBtn(
                           buttonSize: ButtonSize.small,

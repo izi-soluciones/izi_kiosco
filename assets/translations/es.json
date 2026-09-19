@@ -304,7 +304,7 @@
       "selectPaymentMethod": "Selecciona el método con el que deseas pagar",
       "beforePaymentNeedData": "Antes de proceder al pago necesitamos los siguientes datos",
       "scanQRtoPay": "Escanea el código QR para pagar",
-      "enterYourCard": "Ingresa o acerca tu tarjeta al tarjetero",
+      "enterYourCard": "Ingresa o acerca tu tarjeta al datáfono. Si la insertaste, retírala cuando el datáfono lo indique.",
       "verifyPayment": "Verificación del pago",
       "successPayment": "¡Pago exitoso!",
       "successOrder": "¡Orden creada!",
@@ -750,6 +750,11 @@
     "labels": {
       "battery": "Batería",
       "noPaper": "Sin papel"
+    },
+    "discovered": {
+      "free": "Disponible",
+      "thisKiosk": "Emparejado con este kiosko",
+      "otherKiosk": "Emparejado con otro kiosko"
     }
   },
   "errorPayment": {

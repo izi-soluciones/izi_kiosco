@@ -48,6 +48,11 @@
         </receiver>
     </application>
     <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- mDNS discovery of the Izify POS: without it the nsd plugin cannot hold
+         a multicast lock and Wi-Fi drops the terminal's mDNS answers. -->
+    <uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE"/>
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
     <uses-permission android:name="android.permission.DISABLE_KEYGUARD"/>

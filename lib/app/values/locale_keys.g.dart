@@ -588,6 +588,10 @@ abstract class  LocaleKeys {
   static const posConfig_labels_battery = 'posConfig.labels.battery';
   static const posConfig_labels_noPaper = 'posConfig.labels.noPaper';
   static const posConfig_labels = 'posConfig.labels';
+  static const posConfig_discovered_free = 'posConfig.discovered.free';
+  static const posConfig_discovered_thisKiosk = 'posConfig.discovered.thisKiosk';
+  static const posConfig_discovered_otherKiosk = 'posConfig.discovered.otherKiosk';
+  static const posConfig_discovered = 'posConfig.discovered';
   static const posConfig = 'posConfig';
   static const errorPayment_labels_number = 'errorPayment.labels.number';
   static const errorPayment_labels_response = 'errorPayment.labels.response';

@@ -72,8 +72,24 @@ class IzifyPosSession {
     );
     await TokenUtils.savePosToken(token);
     await TokenUtils.savePosIp(address.hostPort);
+    await rememberName(client, address);
     return IzifyPosSession(address, token);
   }
+
+  /// Stores the name the terminal at [address] advertises, so it can be
+  /// found again by mDNS if its IP changes. Best effort.
+  static Future<void> rememberName(IzifyPosClient client, IzifyPosAddress address,
+      {IzifyPosHealth? health}) async {
+    try {
+      final name = (health ?? await client.health(address)).name;
+      if (name != null && name.isNotEmpty) await TokenUtils.savePosName(name);
+    } catch (_) {}
+  }
+
+  /// Keeps the current pairing but talks to the terminal at [address] from
+  /// now on: the same terminal, found at a new IP.
+  static Future<void> moveTo(IzifyPosAddress address) =>
+      TokenUtils.savePosIp(address.hostPort);
 
   /// How the terminal knows this kiosk. It must stay stable: the terminal
   /// accepts re-pairing only from the kiosk it is already paired with.
@@ -87,5 +103,7 @@ class IzifyPosSession {
   static Future<void> forget() async {
     await TokenUtils.deletePosIp();
     await TokenUtils.deletePosToken();
+    await TokenUtils.deletePosName();
+    await TokenUtils.deletePosBackendIp();
   }
 }

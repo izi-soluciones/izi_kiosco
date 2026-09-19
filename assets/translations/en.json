@@ -304,7 +304,7 @@
       "selectPaymentMethod": "Choose how you want to pay",
       "beforePaymentNeedData": "Before paying we need the following details",
       "scanQRtoPay": "Scan the QR code to pay",
-      "enterYourCard": "Insert or tap your card on the reader",
+      "enterYourCard": "Insert or tap your card on the card terminal. If you inserted it, remove it when the terminal asks.",
       "verifyPayment": "Payment verification",
       "successPayment": "Payment successful!",
       "successOrder": "Order created!",
@@ -726,6 +726,11 @@
     "labels": {
       "battery": "Battery",
       "noPaper": "Out of paper"
+    },
+    "discovered": {
+      "free": "Available",
+      "thisKiosk": "Paired with this kiosk",
+      "otherKiosk": "Paired with another kiosk"
     }
   },
   "errorPayment": {
