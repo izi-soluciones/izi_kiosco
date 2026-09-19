@@ -748,12 +748,16 @@ class PaymentBloc extends Cubit<PaymentState> {
     String uuid,
     int? internalId, {
     int attempts = 10,
+    Map<String, dynamic>? transaccion,
   }) async {
     Object? lastError;
     for (var i = 0; i < attempts; i++) {
       try {
-        await _comandaRepository.markPaymentATC(uuid, internalId);
+        await _comandaRepository.markPaymentATC(uuid, internalId, transaccion: transaccion);
         return (true, null);
+      } on PaymentConflict catch (e) {
+        // iZi holds a different payment for this order: retrying cannot help.
+        return (false, e);
       } catch (e) {
         lastError = e;
         await Future.delayed(Duration(seconds: 1 * (i + 1)));
@@ -782,6 +786,40 @@ class PaymentBloc extends Cubit<PaymentState> {
         key != null && await LocalStorageCardErrors.updateByReference(key, json);
     if (!updated) await LocalStorageCardErrors.saveCardErrors(json);
     cp.storedAs = cp.reference;
+  }
+
+  /// Keeps an approved, registered sale in the transactions list too, so the
+  /// list shows every card sale that went through this kiosk, not only the
+  /// ones that had a problem.
+  Future<void> _recordRegisteredSale(CardPayment cp) async {
+    try {
+      cp.status = 'SUCCESS';
+      cp.response = 'Aprobada - pedido registrado';
+      await _storeCardRecord(cp);
+    } catch (e) {
+      log(e.toString());
+    }
+  }
+
+  /// Copies the terminal's proof of the charge onto [cp].
+  Future<void> _takeProof(CardPayment cp, PosPaymentResult result) async {
+    if (result.transactionId != null) cp.transactionId = result.transactionId;
+    if (result.cardMasked != null) cp.cardNumber = result.cardMasked;
+    cp.authCode = result.authCode ?? cp.authCode;
+    cp.cardBrand = result.cardBrand ?? cp.cardBrand;
+    cp.acquirerTerminalId = result.acquirerTerminalId ?? cp.acquirerTerminalId;
+    cp.traceNumber = result.traceNumber ?? cp.traceNumber;
+    cp.terminalName ??= await TokenUtils.getPosName();
+  }
+
+  /// Stores a declined / unconfirmed attempt with its charge in iZi, so every
+  /// card attempt is visible there. Best effort, never blocks the sale.
+  void _reportAttempt(CardPayment cp, String estado) {
+    final uuid = cp.markUuid;
+    if (uuid == null) return;
+    unawaited(_comandaRepository
+        .reportTerminalResult(uuid, cp.markInternalId, cp.terminalData(estado))
+        .catchError((_) {}));
   }
 
   /// Emits a card error. [message] is shown to the customer when given (e.g.
@@ -831,9 +869,7 @@ class PaymentBloc extends Cubit<PaymentState> {
       reference: cardPayment.reference!,
       payAcknowledged: cardPayment.payAcknowledged,
     );
-    if (result.transactionId != null) {
-      cardPayment.transactionId = result.transactionId;
-    }
+    await _takeProof(cardPayment, result);
 
     switch (result.status) {
       case PosPaymentStatus.success:
@@ -845,6 +881,7 @@ class PaymentBloc extends Cubit<PaymentState> {
         cardPayment.status = 'ERROR';
         await _saveCardError(cardPayment, "Rechazada - no recibido por el datáfono",
             "Izify /pay never reached the terminal");
+        _reportAttempt(cardPayment, 'RECHAZADA');
         _emitCardError(authState,
             message: "El datáfono no recibió el cobro. No se realizó ningún cargo.");
         return false;
@@ -855,6 +892,8 @@ class PaymentBloc extends Cubit<PaymentState> {
         await _saveCardError(cardPayment,
             "Rechazada - ${result.errorMessage ?? ''}".trim(),
             "Izify terminal rejected payment");
+        _reportAttempt(cardPayment,
+            result.status == PosPaymentStatus.cancelled ? 'CANCELADA' : 'RECHAZADA');
         _emitCardError(authState, message: result.errorMessage);
         return false;
       case PosPaymentStatus.pending:
@@ -863,6 +902,7 @@ class PaymentBloc extends Cubit<PaymentState> {
             cardPayment,
             "Pendiente - ${result.errorMessage ?? 'sin confirmar'}",
             "Izify payment PENDING (unconfirmed - verify before retry)");
+        _reportAttempt(cardPayment, 'PENDIENTE');
         _emitCardPending(authState, message: result.errorMessage);
         return false;
       case PosPaymentStatus.unknown:
@@ -874,6 +914,7 @@ class PaymentBloc extends Cubit<PaymentState> {
         cardPayment.status = 'UNKNOWN';
         await _saveCardError(cardPayment, "Sin confirmar (timeout)",
             "Izify no confirmed result within timeout");
+        _reportAttempt(cardPayment, 'PENDIENTE');
         _emitCardPending(authState);
         return false;
     }
@@ -955,7 +996,7 @@ class PaymentBloc extends Cubit<PaymentState> {
     if (cardPayment.markUuid != null) {
       final (marked, lastError) = await _retryMarkPayment(
           cardPayment.markUuid!, cardPayment.markInternalId,
-          attempts: 3);
+          attempts: 3, transaccion: cardPayment.terminalData('APROBADA'));
       response = marked
           ? "Aprobada - pedido registrado"
           : "Aprobada - Error sync server: ${lastError ?? 'desconocido'}";
@@ -982,7 +1023,7 @@ class PaymentBloc extends Cubit<PaymentState> {
     }
     final result = await _izifyPosClient.paymentStatus(session.address,
         token: session.token, reference: reference);
-    if (result.transactionId != null) cp.transactionId = result.transactionId;
+    await _takeProof(cp, result);
 
     Future<void> store(String status, String response) async {
       cp.status = status;
@@ -1101,8 +1142,12 @@ class PaymentBloc extends Cubit<PaymentState> {
       final (marked, lastError) = await _retryMarkPayment(
         state.paymentObj?.uuid ?? "",
         charge.intentoPago,
+        transaccion: izify ? cardPayment.terminalData('APROBADA') : null,
       );
-      if (marked) return true;
+      if (marked) {
+        await _recordRegisteredSale(cardPayment);
+        return true;
+      }
 
       await _saveCardError(
         cardPayment,
@@ -1175,8 +1220,12 @@ class PaymentBloc extends Cubit<PaymentState> {
 
       emit(state.copyWith(status: PaymentStatus.processingOrder));
 
-      final (marked, lastError) = await _retryMarkPayment(charge.uuid, null);
-      if (marked) return true;
+      final (marked, lastError) = await _retryMarkPayment(charge.uuid, null,
+          transaccion: izify ? cardPayment.terminalData('APROBADA') : null);
+      if (marked) {
+        await _recordRegisteredSale(cardPayment);
+        return true;
+      }
 
       await _saveCardError(
         cardPayment,

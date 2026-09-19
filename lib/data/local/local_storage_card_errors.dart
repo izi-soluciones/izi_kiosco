@@ -4,10 +4,15 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class LocalStorageCardErrors{
   LocalStorageCardErrors._();
+
+  /// How many card transactions the kiosk keeps (about a week of sales).
+  static const int maxRecords = 500;
   static Future<void> saveCardErrors(String error)async{
     SharedPreferences prefs=await SharedPreferences.getInstance();
     var errors = prefs.getStringList("cardErrors") ?? [];
     errors.add(error);
+    // Every card sale is kept now, not only failures: keep the latest ones.
+    if (errors.length > maxRecords) errors = errors.sublist(errors.length - maxRecords);
     await prefs.setStringList("cardErrors", errors);
   }
   static Future<List<String>> getErrors()async{

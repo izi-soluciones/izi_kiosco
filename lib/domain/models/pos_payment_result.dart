@@ -36,11 +36,32 @@ class PosPaymentResult {
   final String? errorMessage;
   final String? reference;
 
+  /// Proof of the charge as the terminal reports it (PayPOS 1.26+). The card
+  /// number never carries more than its last 4 digits.
+  final String? authCode;
+  final String? cardMasked;
+  final String? cardBrand;
+  final String? cardType;
+  final double? amount;
+  final String? currency;
+  final String? timestamp;
+  final String? acquirerTerminalId;
+  final String? traceNumber;
+
   const PosPaymentResult({
     required this.status,
     this.transactionId,
     this.errorMessage,
     this.reference,
+    this.authCode,
+    this.cardMasked,
+    this.cardBrand,
+    this.cardType,
+    this.amount,
+    this.currency,
+    this.timestamp,
+    this.acquirerTerminalId,
+    this.traceNumber,
   });
 
   static PosPaymentStatus statusFromString(String? raw) {
@@ -66,6 +87,15 @@ class PosPaymentResult {
       transactionId: json['transactionId']?.toString(),
       errorMessage: json['errorMessage']?.toString(),
       reference: json['reference']?.toString(),
+      authCode: json['authCode']?.toString(),
+      cardMasked: json['cardMasked']?.toString(),
+      cardBrand: json['cardBrand']?.toString(),
+      cardType: json['cardType']?.toString(),
+      amount: (json['amount'] as num?)?.toDouble(),
+      currency: json['currency']?.toString(),
+      timestamp: json['timestamp']?.toString(),
+      acquirerTerminalId: json['acquirerTerminalId']?.toString(),
+      traceNumber: json['traceNumber']?.toString(),
     );
   }
 

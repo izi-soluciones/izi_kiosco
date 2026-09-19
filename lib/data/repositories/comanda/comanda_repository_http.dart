@@ -749,7 +749,7 @@ class ComandaRepositoryHttp extends ComandaRepository {
     return result.isTerminal ? result : null;
   }
   @override
-  Future<void> markPaymentATC(String chargeUuid, int? internalId) async {
+  Future<void> markPaymentATC(String chargeUuid, int? internalId, {Map<String, dynamic>? transaccion}) async {
     try {
       String? token = await TokenUtils.getTokenCard();
       if(token==null){
@@ -760,7 +760,10 @@ class ComandaRepositoryHttp extends ComandaRepository {
           uri: path,
           body: {
             "token": token,
-            if (internalId != null) "internalId": internalId
+            if (internalId != null) "internalId": internalId,
+            // Older backends ignore it; newer ones store it and answer a
+            // resend of the same transaction with 200 instead of 404.
+            if (transaccion != null) "transaccion": transaccion,
           },
           options: Options(responseType: ResponseType.json));
       if (response.statusCode != 200) {
@@ -770,12 +773,37 @@ class ComandaRepositoryHttp extends ComandaRepository {
         throw response.data;
       }
     } on DioException catch (e) {
+      if (e.response?.statusCode == 409) {
+        throw const PaymentConflict(
+            'iZi ya tiene registrado otro pago con tarjeta para este pedido: posible doble cobro. Revise con EcoPay antes de hacer nada más.');
+      }
       if (e.response?.data is String) {
         throw e.response?.data;
       }
       throw e.error ?? "Network Error";
+    } on PaymentConflict {
+      rethrow;
     } catch (error) {
       throw error.toString();
+    }
+  }
+
+  @override
+  Future<void> reportTerminalResult(String chargeUuid, int? internalId, Map<String, dynamic> transaccion) async {
+    final token = await TokenUtils.getTokenCard();
+    if (token == null) return;
+    try {
+      await _dioClient.post(
+          uri: "/solicitudes-cobro/$chargeUuid/resultado-pos",
+          body: {
+            "token": token,
+            if (internalId != null) "internalId": internalId,
+            "transaccion": transaccion,
+          },
+          options: Options(responseType: ResponseType.json));
+    } catch (_) {
+      // Bookkeeping only: an older backend (404) or a paid charge (409)
+      // changes nothing for the sale.
     }
   }
 

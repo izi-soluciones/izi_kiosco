@@ -19,10 +19,18 @@ import '../../../helpers/fake_izify_pos.dart';
 /// confirmed (`/solicitudes-cobro/{uuid}/notificacion-pos`).
 class _MarkingComandaRepository implements ComandaRepository {
   final List<(String, int?)> marked = [];
+  final List<Map<String, dynamic>?> proofs = [];
+  final List<Map<String, dynamic>> attempts = [];
 
   @override
-  Future<void> markPaymentATC(String chargeUuid, int? internalId) async {
+  Future<void> markPaymentATC(String chargeUuid, int? internalId, {Map<String, dynamic>? transaccion}) async {
     marked.add((chargeUuid, internalId));
+    proofs.add(transaccion);
+  }
+
+  @override
+  Future<void> reportTerminalResult(String chargeUuid, int? internalId, Map<String, dynamic> transaccion) async {
+    attempts.add(transaccion);
   }
 
   @override
@@ -140,6 +148,36 @@ void main() {
         for (final e in await LocalStorageCardErrors.getErrors())
           CardPayment.fromJsonStorage(jsonDecode(e)),
       ];
+
+  test('an approved charge sends its proof of payment to iZi and stays in the list', () async {
+    final ok = await bloc.retryCardPayment(auth, original());
+
+    expect(ok, isTrue);
+    final proof = comandas.proofs.single!;
+    expect(proof['estado'], 'APROBADA');
+    expect(proof['transactionId'], startsWith('TRX-1-'));
+    expect(proof['codigoAutorizacion'], '654321');
+    expect(proof['numeroTarjeta'], '****4242');
+    expect(proof['marca'], 'VISA');
+    expect(proof['terminal'], '11000999');
+    expect(proof['recibo'], '000123');
+    expect(proof['referenciaKiosko'], startsWith('KOS-'));
+    final row = (await rows()).single;
+    expect(row.status, 'SUCCESS');
+    expect(row.authCode, '654321');
+    expect(row.traceNumber, '000123');
+  });
+
+  test('a declined attempt is stored with its charge in iZi, never marked paid', () async {
+    pos.outcome = 'ERROR';
+
+    expect(await bloc.retryCardPayment(auth, original()), isFalse);
+    await flush();
+
+    expect(comandas.marked, isEmpty);
+    expect(comandas.attempts.single['estado'], 'RECHAZADA');
+    expect(comandas.attempts.single['mensaje'], contains('FONDOS INSUFICIENTES'));
+  });
 
   test('a successful retry replaces the declined row instead of adding one', () async {
     final declined = original();

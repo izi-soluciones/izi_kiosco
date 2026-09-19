@@ -218,4 +218,10 @@ void main() {
     const refused = SocketException('Connection refused', osError: OSError('Connection refused', 61));
     expect(refused.osError!.errorCode, 61);
   });
+
+  test('EcoPay reporting itself offline makes the terminal not ready; silence does not', () {
+    expect(IzifyPosHealth.fromJson(const {'status': 'OK', 'paired': true, 'ready': true, 'ecopayConnected': false}).notReadyReason,
+        contains('EcoPay'));
+    expect(IzifyPosHealth.fromJson(const {'status': 'OK', 'paired': true, 'ready': true}).notReadyReason, isNull);
+  });
 }

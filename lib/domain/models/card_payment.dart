@@ -49,6 +49,16 @@ class CardPayment{
   /// original stayed "Rechazado" (and retryable) after a successful retry.
   String? storedAs;
 
+  /// Proof of the charge from the terminal, stored in the list and sent to
+  /// iZi with the payment notice.
+  String? authCode;
+  String? cardBrand;
+  String? acquirerTerminalId;
+  String? traceNumber;
+
+  /// Name of the terminal that ran the charge (izify-POS-#####).
+  String? terminalName;
+
   CardPayment({
     required this.response,
     required this.cardNumber,
@@ -62,6 +72,11 @@ class CardPayment{
     this.markUuid,
     this.markInternalId,
     this.payAcknowledged = true,
+    this.authCode,
+    this.cardBrand,
+    this.acquirerTerminalId,
+    this.traceNumber,
+    this.terminalName,
 });
 
   factory CardPayment.fromJson(Map json)=>CardPayment(
@@ -86,7 +101,12 @@ class CardPayment{
       transactionId: json["transactionId"],
       status: json["estado"],
       markUuid: json["cobroUuid"],
-      markInternalId: json["intentoPago"] is int ? json["intentoPago"] : null);
+      markInternalId: json["intentoPago"] is int ? json["intentoPago"] : null,
+      authCode: json["autorizacion"],
+      cardBrand: json["marca"],
+      acquirerTerminalId: json["terminal"],
+      traceNumber: json["recibo"],
+      terminalName: json["datafono"]);
 
   Map toJson()=>{
     "respuesta": response,
@@ -100,7 +120,31 @@ class CardPayment{
     if (status != null) "estado": status,
     if (markUuid != null) "cobroUuid": markUuid,
     if (markInternalId != null) "intentoPago": markInternalId,
+    if (authCode != null) "autorizacion": authCode,
+    if (cardBrand != null) "marca": cardBrand,
+    if (acquirerTerminalId != null) "terminal": acquirerTerminalId,
+    if (traceNumber != null) "recibo": traceNumber,
+    if (terminalName != null) "datafono": terminalName,
   };
+
+  /// What iZi stores for this charge (`custom.datosTerminal`). [estado] is
+  /// APROBADA, RECHAZADA, PENDIENTE or CANCELADA.
+  Map<String, dynamic> terminalData(String estado) => {
+        "proveedor": "EcoPay",
+        if (reference != null) "referenciaKiosko": reference,
+        if (transactionId != null) "transactionId": transactionId,
+        if (authCode != null) "codigoAutorizacion": authCode,
+        if (cardNumber != null && cardNumber!.contains(RegExp(r'\d'))) "numeroTarjeta": cardNumber,
+        if (cardBrand != null) "marca": cardBrand,
+        if (acquirerTerminalId != null) "terminal": acquirerTerminalId,
+        if (terminalName != null) "terminalPos": terminalName,
+        if (traceNumber != null) "recibo": traceNumber,
+        if (amount != null && double.tryParse(amount!) != null) "monto": double.parse(amount!),
+        if (currency != null) "moneda": currency,
+        "estado": estado,
+        "mensaje": response,
+        "fechaTerminal": "$date $hour",
+      };
 
   /// Classifies the transaction outcome. Prefers the explicit [status] field
   /// (new records) and falls back to parsing the free-text [response] for

@@ -77,6 +77,13 @@ class FakeIzifyPos {
       'transactionId': 'TRX-1-${reference.hashCode.abs()}',
       'errorMessage': message,
       'reference': reference,
+      // Proof of payment as PayPOS 1.26 reports it.
+      if (status == 'SUCCESS') 'authCode': '654321',
+      'cardMasked': '****4242',
+      'cardBrand': 'VISA',
+      'acquirerTerminalId': '11000999',
+      'traceNumber': '000123',
+      'currency': 'COP',
     };
     results[reference] = result;
     accepted.remove(reference);

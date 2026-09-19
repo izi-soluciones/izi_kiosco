@@ -247,7 +247,14 @@ class _ErrorPaymentPageState extends State<ErrorPaymentPage> {
                                   flex: 2,
                                   child: IziText.titleSmall(
                                     color: context.iziColors.dark,
-                                    text: e.value.response,
+                                    maxLines: 4,
+                                    text: [
+                                      e.value.response,
+                                      if (e.value.amount != null) "${e.value.currency ?? ''} ${e.value.amount}".trim(),
+                                      if (e.value.authCode != null) "Aut. ${e.value.authCode}",
+                                      if (e.value.traceNumber != null) "Recibo ${e.value.traceNumber}",
+                                      if (e.value.reference != null) e.value.reference!,
+                                    ].join(" · "),
                                   ),
                                 ),
                                 Expanded(

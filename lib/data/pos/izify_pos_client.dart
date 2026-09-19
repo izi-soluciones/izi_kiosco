@@ -79,6 +79,10 @@ class IzifyPosHealth {
   /// Which payment app the terminal drives: `ECOPAY`, `MOCK` or `AKUA`.
   /// PayPOS 1.26+; older ones are EcoPay when they report [ecopayInstalled].
   final String? terminalType;
+
+  /// EcoPay's own report of its broker connection (PayPOS 1.26+); null when
+  /// EcoPay has been silent (not initialized, or its service is not running).
+  final bool? ecopayConnected;
   final Map<String, dynamic> raw;
 
   const IzifyPosHealth({
@@ -97,6 +101,7 @@ class IzifyPosHealth {
     this.pairedKioskHash,
     this.unpairedByUser,
     this.terminalType,
+    this.ecopayConnected,
     this.raw = const {},
   });
 
@@ -118,6 +123,7 @@ class IzifyPosHealth {
         pairedKioskHash: json['pairedKioskHash']?.toString(),
         unpairedByUser: json['unpairedByUser'] as bool?,
         terminalType: json['terminalType']?.toString().toUpperCase(),
+        ecopayConnected: json['ecopayConnected'] as bool?,
         raw: json,
       );
 
@@ -142,6 +148,9 @@ class IzifyPosHealth {
       return 'Faltan datos de EcoPay en el datáfono (${missingConfig.join(', ')}).';
     }
     if (isOnline == false) return 'El datáfono no tiene conexión a internet.';
+    if (ecopayConnected == false) {
+      return 'La app EcoPay del datáfono no está conectada a su servidor.';
+    }
     if (ready == false) return 'El datáfono no está listo para cobrar.';
     return null;
   }

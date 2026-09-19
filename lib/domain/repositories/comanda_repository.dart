@@ -70,7 +70,14 @@ abstract class ComandaRepository {
 
   Future<Invoice> getInvoice(String invoiceUuid);
   Future<void> createPaidCharge(PaidChargeDto paidChargeDto);
-  Future<void> markPaymentATC(String chargeUuid, int? internalId);
+  /// Tells iZi the charge [chargeUuid] was paid by card. [transaccion] is the
+  /// terminal's proof of payment (see CardPayment.terminalData). Throws
+  /// [PaymentConflict] when iZi already holds a different payment for it.
+  Future<void> markPaymentATC(String chargeUuid, int? internalId, {Map<String, dynamic>? transaccion});
+
+  /// Stores a declined, unconfirmed or cancelled card attempt with its charge
+  /// in iZi. Never marks anything paid. Best effort.
+  Future<void> reportTerminalResult(String chargeUuid, int? internalId, Map<String, dynamic> transaccion);
 
   Future<List<Item>> getSaleItems(
       {String? catalog, List<String>? items, required bool sortByPriority});
@@ -81,4 +88,14 @@ abstract class ComandaRepository {
   Future<void> confirmDemoPaymentOrder({required int id});
   Future<void> cancelBrebKey({required int contribuyenteId, required String handle});
   Future<void> cancelPaymentAttempt({required String uuid});
+}
+
+/// iZi already recorded a different card payment for this charge: a possible
+/// double charge. Retrying cannot fix it; it needs a person.
+class PaymentConflict implements Exception {
+  final String message;
+  const PaymentConflict(this.message);
+
+  @override
+  String toString() => message;
 }
