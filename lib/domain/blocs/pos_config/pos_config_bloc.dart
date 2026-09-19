@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -5,6 +6,7 @@ import 'package:nsd/nsd.dart' as nsd;
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:async';
+import 'package:izi_kiosco/app/values/locale_keys.g.dart';
 import 'package:izi_kiosco/data/utils/token_utils.dart';
 import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
 
@@ -146,12 +148,28 @@ class PosConfigBloc extends Cubit<PosConfigState> {
 
     final deviceConfig = authBloc.state.currentDevice?.config;
     final kioskId = authBloc.state.currentDevice?.nombre ?? 'KIOSK-001';
-    
+
     final finalMqttClientId = mqttClientId?.isNotEmpty == true ? mqttClientId : deviceConfig?.mqttClientId;
     final finalMqttUserName = mqttUserName?.isNotEmpty == true ? mqttUserName : deviceConfig?.mqttUserName;
     final finalMqttPassword = mqttPassword?.isNotEmpty == true ? mqttPassword : deviceConfig?.mqttPassword;
     final finalCommerceId = commerceId?.isNotEmpty == true ? commerceId : deviceConfig?.commerceId;
     final finalCajaId = cajaId?.isNotEmpty == true ? cajaId : deviceConfig?.cajaId;
+
+    // The shared admin PIN is the backend device config's pin. It is sent
+    // automatically on every pairing (discovered or manual) - never typed by
+    // the user - and the POS stores it (trust-on-first-pair) as its own
+    // config-entry PIN. The POS rejects a blank pin with HTTP 400, so abort
+    // early with a clear error when the device has no backend PIN.
+    final finalPin = deviceConfig?.pin;
+    if (finalPin == null || finalPin.isEmpty) {
+      emit(
+        state.copyWith(
+          status: PosConfigStatus.error,
+          errorMessage: LocaleKeys.posConfig_messages_missingPin.tr(),
+        ),
+      );
+      return;
+    }
 
     try {
       final res = await http
@@ -160,6 +178,7 @@ class PosConfigBloc extends Cubit<PosConfigState> {
             headers: {'Content-Type': 'application/json'},
             body: jsonEncode({
               "kioskId": kioskId,
+              "pin": finalPin,
               if (finalMqttClientId != null) "mqttClientId": finalMqttClientId,
               if (finalMqttUserName != null) "mqttUserName": finalMqttUserName,
               if (finalMqttPassword != null) "mqttPassword": finalMqttPassword,
@@ -236,7 +255,8 @@ class PosConfigBloc extends Cubit<PosConfigState> {
 
   Future<void> unpair() async {
     if (state.pairedDevice != null) {
-      final token = await TokenUtils.getTokenCard();
+      String? token = await TokenUtils.getPosToken();
+      token ??= authBloc.state.currentDevice?.config.token;
       try {
         await http
             .post(

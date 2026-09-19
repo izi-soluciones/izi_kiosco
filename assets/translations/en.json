@@ -416,7 +416,8 @@
       "errorBreB": "Something went wrong while starting the Bre-B payment",
       "processingOrder": "Processing order",
       "processingInvoice": "Processing invoice",
-      "processingInvoiceElectronic": "Processing electronic invoice"
+      "processingInvoiceElectronic": "Processing electronic invoice",
+      "pendingCard": "Payment not confirmed — verify before retrying"
     },
     "links": {
       "addEmail": "+ Add email",
@@ -715,7 +716,8 @@
     },
     "messages": {
       "paired": "POS paired",
-      "noTerminals": "No terminals found"
+      "noTerminals": "No terminals found",
+      "missingPin": "This device has no PIN configured. Set it in the backend before pairing."
     }
   },
   "errorPayment": {
@@ -729,6 +731,26 @@
       "logout": "Sign out",
       "posConfig": "POS settings",
       "closeApp": "Close app"
+    }
+  },
+  "errorPayments": {
+    "columns": {
+      "status": "Status",
+      "action": "Action"
+    },
+    "status": {
+      "success": "Approved",
+      "declined": "Declined",
+      "pending": "Unconfirmed",
+      "unknown": "Unknown"
+    },
+    "retry": {
+      "button": "Retry",
+      "confirmTitle": "Retry payment",
+      "confirmBody": "Do you want to retry charging this transaction?",
+      "confirmWarning": "The previous payment was not confirmed. Make sure it was not charged before retrying.",
+      "confirm": "Retry",
+      "cancel": "Cancel"
     }
   }
 }

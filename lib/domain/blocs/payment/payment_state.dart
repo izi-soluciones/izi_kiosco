@@ -19,6 +19,7 @@ enum PaymentStatus {
   cardProcessing,
   cashRegisterProcessing,
   cardError,
+  cardPending,
   qrError,
   brebError,
   brebLoading,
