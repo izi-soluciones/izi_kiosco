@@ -768,7 +768,18 @@ class PaymentBloc extends Cubit<PaymentState> {
   ) async {
     cp.response = response;
     CrashReport.report(reportMsg, cp.toJson().toString());
-    await LocalStorageCardErrors.saveCardErrors(jsonEncode(cp.toJson()));
+    await _storeCardRecord(cp);
+  }
+
+  /// Writes [cp] over the row it belongs to ([CardPayment.storedAs], else its
+  /// own reference), or appends it as a new row.
+  Future<void> _storeCardRecord(CardPayment cp) async {
+    final json = jsonEncode(cp.toJson());
+    final key = cp.storedAs ?? cp.reference;
+    final updated =
+        key != null && await LocalStorageCardErrors.updateByReference(key, json);
+    if (!updated) await LocalStorageCardErrors.saveCardErrors(json);
+    cp.storedAs = cp.reference;
   }
 
   /// Emits a card error. [message] is shown to the customer when given (e.g.
@@ -915,6 +926,8 @@ class PaymentBloc extends Cubit<PaymentState> {
       );
       cardPayment.markUuid = original.markUuid;
       cardPayment.markInternalId = original.markInternalId;
+      // The outcome of this attempt replaces the row being retried.
+      cardPayment.storedAs = original.reference;
       final approved = await _awaitIzifyResult(authState, cardPayment);
       if (approved) {
         await _settleConfirmedCharge(cardPayment);
@@ -948,11 +961,7 @@ class PaymentBloc extends Cubit<PaymentState> {
       response = "Aprobada - registre el pedido manualmente";
     }
     cardPayment.response = response;
-    final json = jsonEncode(cardPayment.toJson());
-    final updated = cardPayment.reference != null &&
-        await LocalStorageCardErrors.updateByReference(
-            cardPayment.reference!, json);
-    if (!updated) await LocalStorageCardErrors.saveCardErrors(json);
+    await _storeCardRecord(cardPayment);
   }
 
   /// Asks the terminal what became of a pending/unknown charge and updates

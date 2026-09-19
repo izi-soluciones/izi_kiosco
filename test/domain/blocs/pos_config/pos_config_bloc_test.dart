@@ -22,7 +22,7 @@ class _Auth extends AuthBloc {
 
 const _kioskId = 'KIOSKO-TEST';
 
-Device _device({String? ipEcopay, String? pin = '4826'}) => Device.fromJson({
+Device _device({String? ipEcopay, String? pin = '4826', bool ecopay = true}) => Device.fromJson({
       'id': 7,
       'sucursal': 1,
       'nombre': _kioskId,
@@ -30,13 +30,14 @@ Device _device({String? ipEcopay, String? pin = '4826'}) => Device.fromJson({
       'config': {
         if (ipEcopay != null) 'ipEcopay': ipEcopay,
         if (pin != null) 'pin': pin,
-        'ecopayConfig': {
-          'mqttClientId': 'CAJA1000999',
-          'mqttUserName': '1000999',
-          'mqttPassword': 'PWD999',
-          'commerceId': '22000999',
-          'cajaId': '1',
-        },
+        if (ecopay)
+          'ecopayConfig': {
+            'mqttClientId': 'CAJA1000999',
+            'mqttUserName': '1000999',
+            'mqttPassword': 'PWD999',
+            'commerceId': '22000999',
+            'cajaId': '1',
+          },
       },
     });
 
@@ -383,5 +384,35 @@ void main() {
     expect(second.pairedKioskId, _kioskId);
     expect(first.pairedKioskId, isNull, reason: 'the old terminal must not keep naming this kiosk');
     expect(await TokenUtils.getPosName(), 'izify-POS-22222');
+  });
+
+  test('an EcoPay terminal is not paired without the CAJA credentials, and says which are missing', () async {
+    SharedPreferences.setMockInitialValues({});
+    final pos = await terminal();
+    auth.load(_device(ipEcopay: pos.hostPort, ecopay: false));
+
+    final bloc = start();
+    final state = await settled(bloc, (s) => s.status == PosConfigStatus.error);
+
+    expect(state.errorMessage, contains('EcoPay'));
+    expect(state.errorMessage, contains('mqttPassword'));
+    expect(pos.pairRequests, 0);
+
+    // Typed by the technician in "Parámetros Avanzados EcoPay": pairs.
+    await bloc.pairManually(pos.hostPort,
+        mqttClientId: 'CAJA1000999', mqttUserName: '1000999', mqttPassword: 'PWD999', commerceId: '22000999');
+    expect(bloc.state.status, PosConfigStatus.paired);
+    expect(pos.ecopay['mqttPassword'], 'PWD999');
+  });
+
+  test('the technician list shows the terminal type', () async {
+    SharedPreferences.setMockInitialValues({});
+    final pos = await terminal();
+    advertise(pos);
+    final bloc = start();
+    await bloc.beginDiscovery();
+    final state = await settled(bloc, (s) => s.discoveredDevices.isNotEmpty);
+    await bloc.endDiscovery();
+    expect(state.discoveredDevices.single.terminalType, 'ECOPAY');
   });
 }

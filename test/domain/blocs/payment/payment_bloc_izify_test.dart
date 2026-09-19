@@ -136,6 +136,39 @@ void main() {
     expect(await TokenUtils.getPosToken(), pos.token);
   });
 
+  Future<List<CardPayment>> rows() async => [
+        for (final e in await LocalStorageCardErrors.getErrors())
+          CardPayment.fromJsonStorage(jsonDecode(e)),
+      ];
+
+  test('a successful retry replaces the declined row instead of adding one', () async {
+    final declined = original();
+    await LocalStorageCardErrors.saveCardErrors(jsonEncode(declined.toJson()));
+
+    expect(await bloc.retryCardPayment(auth, declined), isTrue);
+
+    final list = await rows();
+    expect(list, hasLength(1));
+    expect(list.single.status, 'SUCCESS');
+    expect(list.single.canRetry, isFalse, reason: 'a paid sale must never offer Reintentar again');
+    expect(list.single.reference, isNot('KOS-OLD'));
+  });
+
+  test('a declined retry keeps one row, with the latest attempt', () async {
+    final declined = original();
+    await LocalStorageCardErrors.saveCardErrors(jsonEncode(declined.toJson()));
+    pos.outcome = 'ERROR';
+
+    expect(await bloc.retryCardPayment(auth, declined), isFalse);
+    await flush();
+
+    final list = await rows();
+    expect(list, hasLength(1));
+    expect(list.single.status, 'ERROR');
+    expect(list.single.response, contains('FONDOS INSUFICIENTES'));
+    expect(list.single.reference, pos.charges.single['reference']);
+  });
+
   test('a terminal unpaired on purpose is not re-paired to charge', () async {
     await bloc.retryCardPayment(auth, original());
     // "Desvincular dispositivo" on the terminal: it is being handed over.

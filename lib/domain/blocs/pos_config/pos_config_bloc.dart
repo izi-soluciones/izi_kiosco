@@ -147,6 +147,7 @@ class PosConfigBloc extends Cubit<PosConfigState> {
                         ? PosPairing.otherKiosk
                         : PosPairing.unknown,
             version: pos.health.appVersion,
+            terminalType: pos.health.terminalType ?? (pos.health.isEcoPay ? 'ECOPAY' : null),
           ),
       ]));
     });
@@ -494,14 +495,18 @@ class PosDevice extends Equatable {
   final PosPairing pairing;
   final String? version;
 
+  /// ECOPAY, MOCK or AKUA, as the terminal reports it.
+  final String? terminalType;
+
   const PosDevice({
     required this.name,
     required this.ip,
     required this.port,
     this.pairing = PosPairing.unknown,
     this.version,
+    this.terminalType,
   });
 
   @override
-  List<Object?> get props => [name, ip, port, pairing, version];
+  List<Object?> get props => [name, ip, port, pairing, version, terminalType];
 }

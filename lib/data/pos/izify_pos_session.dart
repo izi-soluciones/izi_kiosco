@@ -93,11 +93,30 @@ class IzifyPosSession {
           'Este dispositivo no tiene un PIN configurado. Configúrelo en el backend antes de emparejar.',
           code: 'MISSING_PIN');
     }
+    final ecopay = ecoPayFields(device?.config, overrides: overrides);
+    // An EcoPay terminal needs the CAJA credentials: say which are missing
+    // before pairing, instead of pairing a terminal that cannot charge.
+    // (PayPOS 1.26+ refuses such a pairing too.)
+    IzifyPosHealth? health;
+    try {
+      health = await client.health(address);
+    } catch (_) {
+      // Unreachable: /pair reports it with the right message.
+    }
+    if (health != null && health.isEcoPay) {
+      final missing = IzifyPosClient.ecoPayRequiredFields
+          .where((f) => (ecopay[f] ?? '').trim().isEmpty)
+          .toList();
+      if (missing.isNotEmpty) {
+        throw IzifyPosException(IzifyPosClient.missingEcoPayMessage(missing),
+            code: 'MISSING_ECOPAY_CONFIG');
+      }
+    }
     final token = await client.pair(
       address,
       kioskId: kioskIdOf(device),
       pin: pin.trim(),
-      ecopay: ecoPayFields(device?.config, overrides: overrides),
+      ecopay: ecopay,
     );
     final session = IzifyPosSession(address, token);
     if (stillWanted != null && !stillWanted()) return session;

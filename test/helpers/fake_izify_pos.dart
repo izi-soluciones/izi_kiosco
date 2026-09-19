@@ -134,6 +134,7 @@ class FakeIzifyPos {
             'appVersion': appVersion,
             'name': name,
             'unpairedByUser': pairedKioskId == null && unpairedByUser,
+            'terminalType': 'ECOPAY',
             'pairedKioskHash': pairedKioskId == null
                 ? null
                 : sha256.convert(utf8.encode(pairedKioskId!)).toString().substring(0, 16),
@@ -145,6 +146,12 @@ class FakeIzifyPos {
           }
           if (pairedKioskId != null && pairedKioskId != body['kioskId']) {
             return _json(req, 409, {'success': false, 'token': null, 'message': 'Device is already paired to another Kiosk'});
+          }
+          final missing = ['mqttClientId', 'mqttUserName', 'mqttPassword', 'commerceId']
+              .where((f) => (body[f]?.toString() ?? '').trim().isEmpty)
+              .toList();
+          if (missing.isNotEmpty) {
+            return _json(req, 400, {'success': false, 'token': null, 'code': 'MISSING_ECOPAY_CONFIG', 'missing': missing, 'terminalType': 'ECOPAY', 'message': 'Faltan credenciales de EcoPay'});
           }
           pairedKioskId = body['kioskId'];
           unpairedByUser = false;

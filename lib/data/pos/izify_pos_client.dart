@@ -75,6 +75,10 @@ class IzifyPosHealth {
   /// True when the terminal was unpaired on purpose; a kiosk must not pair
   /// with it again by itself. PayPOS 1.26+.
   final bool? unpairedByUser;
+
+  /// Which payment app the terminal drives: `ECOPAY`, `MOCK` or `AKUA`.
+  /// PayPOS 1.26+; older ones are EcoPay when they report [ecopayInstalled].
+  final String? terminalType;
   final Map<String, dynamic> raw;
 
   const IzifyPosHealth({
@@ -92,6 +96,7 @@ class IzifyPosHealth {
     this.name,
     this.pairedKioskHash,
     this.unpairedByUser,
+    this.terminalType,
     this.raw = const {},
   });
 
@@ -112,8 +117,12 @@ class IzifyPosHealth {
         name: json['name']?.toString(),
         pairedKioskHash: json['pairedKioskHash']?.toString(),
         unpairedByUser: json['unpairedByUser'] as bool?,
+        terminalType: json['terminalType']?.toString().toUpperCase(),
         raw: json,
       );
+
+  /// Whether pairing needs the EcoPay CAJA credentials.
+  bool get isEcoPay => terminalType != null ? terminalType == 'ECOPAY' : ecopayInstalled != null;
 
   /// True when the answer comes from PayPOS and not from some other HTTP
   /// server that happens to listen on the same port.
@@ -198,6 +207,16 @@ class IzifyPosClient {
     return 'KOS-$millis-$suffix';
   }
 
+  /// The fields an EcoPay pairing needs, as `/pair` names them.
+  static const ecoPayRequiredFields = ['mqttClientId', 'mqttUserName', 'mqttPassword', 'commerceId'];
+
+  /// What to tell the technician when an EcoPay terminal is paired without
+  /// its CAJA credentials.
+  static String missingEcoPayMessage(List<String> missing) =>
+      'Este datáfono es EcoPay y faltan sus credenciales de caja'
+      '${missing.isEmpty ? '' : ' (${missing.join(', ')})'}. '
+      'Cárguelas en el backend (ecopayConfig del dispositivo) o en "Parámetros Avanzados EcoPay" y vuelva a emparejar.';
+
   /// How a terminal names the kiosk it is paired with on `/health`: the first
   /// 16 hex chars of SHA-256([kioskId]).
   static String kioskHash(String kioskId) =>
@@ -265,6 +284,12 @@ class IzifyPosClient {
             'El datáfono ya está emparejado con otro kiosko. Desvincúlelo desde su panel de control (esquina superior izquierda) y vuelva a intentar.',
             code: 'PAIRED_ELSEWHERE',
             statusCode: 409);
+      case 400 when data is Map && data['code'] == 'MISSING_ECOPAY_CONFIG':
+        throw IzifyPosException(
+            IzifyPosClient.missingEcoPayMessage(
+                (data['missing'] as List?)?.map((e) => e.toString()).toList() ?? const []),
+            code: 'MISSING_ECOPAY_CONFIG',
+            statusCode: 400);
       case 400:
         throw IzifyPosException(
             'El datáfono rechazó el emparejamiento: ${_message(data) ?? 'solicitud inválida'}. Verifique el PIN del dispositivo y la versión de PayPOS.',

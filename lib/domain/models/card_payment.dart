@@ -43,6 +43,11 @@ class CardPayment{
   /// Transient: whether the POS acknowledged the `/pay` request (HTTP 202).
   /// When it did not, an unknown reference means the charge never arrived.
   bool payAcknowledged;
+  /// Transient: reference of the stored row this attempt updates. A retry
+  /// from the transactions screen replaces the row it retries, so the list
+  /// keeps one row per sale showing its latest state; without it the
+  /// original stayed "Rechazado" (and retryable) after a successful retry.
+  String? storedAs;
 
   CardPayment({
     required this.response,

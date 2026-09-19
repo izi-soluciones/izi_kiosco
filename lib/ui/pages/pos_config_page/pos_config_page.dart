@@ -430,6 +430,8 @@ class _PosConfigPageState extends State<PosConfigPage> {
                           maxLines: 2,
                           text: [
                             "${device.ip}:${device.port}",
+                            if (device.terminalType == 'ECOPAY') "EcoPay"
+                            else if (device.terminalType != null) device.terminalType!,
                             if (device.version != null) "PayPOS ${device.version}",
                             switch (device.pairing) {
                               PosPairing.free => LocaleKeys.posConfig_discovered_free.tr(),

@@ -105,10 +105,20 @@ void main() {
       expect(err.message, contains('Desvincúlelo'));
     });
 
-    test('blank EcoPay values are not sent', () async {
-      await client.pair(address, kioskId: 'K', pin: '1', ecopay: const {'mqttClientId': '  ', 'cajaId': '1'});
-      expect(pos.ecopay.containsKey('mqttClientId'), isFalse);
-      expect(pos.ecopay['cajaId'], '1');
+    test('blank EcoPay values are not sent, and an EcoPay terminal says which are missing', () async {
+      final err = await client
+          .pair(address, kioskId: 'K', pin: '1', ecopay: const {
+            'mqttClientId': '  ',
+            'mqttUserName': '1000999',
+            'mqttPassword': 'PWD999',
+            'commerceId': '22000999',
+            'cajaId': '1',
+          })
+          .then<Object?>((_) => null, onError: (e) => e) as IzifyPosException;
+      expect(err.code, 'MISSING_ECOPAY_CONFIG');
+      expect(err.message, contains('mqttClientId'));
+      expect(err.charged, isFalse);
+      expect(pos.pairedKioskId, isNull);
     });
   });
 
