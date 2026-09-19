@@ -19,6 +19,10 @@ enum PaymentStatus {
   cardProcessing,
   cashRegisterProcessing,
   cardError,
+  cardPending,
+  /// A charge confirmed after the sale flow ended (verified or retried from
+  /// the transactions screen). `errorDescription` carries the outcome text.
+  cardVerified,
   qrError,
   brebError,
   brebLoading,

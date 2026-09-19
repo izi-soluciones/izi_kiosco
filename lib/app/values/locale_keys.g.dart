@@ -336,6 +336,7 @@ abstract class  LocaleKeys {
   static const payment_messages_processingOrder = 'payment.messages.processingOrder';
   static const payment_messages_processingInvoice = 'payment.messages.processingInvoice';
   static const payment_messages_processingInvoiceElectronic = 'payment.messages.processingInvoiceElectronic';
+  static const payment_messages_pendingCard = 'payment.messages.pendingCard';
   static const payment_messages = 'payment.messages';
   static const payment_links_addEmail = 'payment.links.addEmail';
   static const payment_links_advancedData = 'payment.links.advancedData';
@@ -575,10 +576,22 @@ abstract class  LocaleKeys {
   static const posConfig_buttons_search = 'posConfig.buttons.search';
   static const posConfig_buttons_searching = 'posConfig.buttons.searching';
   static const posConfig_buttons_pair = 'posConfig.buttons.pair';
+  static const posConfig_buttons_checkNow = 'posConfig.buttons.checkNow';
   static const posConfig_buttons = 'posConfig.buttons';
   static const posConfig_messages_paired = 'posConfig.messages.paired';
   static const posConfig_messages_noTerminals = 'posConfig.messages.noTerminals';
+  static const posConfig_messages_missingPin = 'posConfig.messages.missingPin';
+  static const posConfig_messages_ready = 'posConfig.messages.ready';
+  static const posConfig_messages_checking = 'posConfig.messages.checking';
+  static const posConfig_messages_overlayMissing = 'posConfig.messages.overlayMissing';
   static const posConfig_messages = 'posConfig.messages';
+  static const posConfig_labels_battery = 'posConfig.labels.battery';
+  static const posConfig_labels_noPaper = 'posConfig.labels.noPaper';
+  static const posConfig_labels = 'posConfig.labels';
+  static const posConfig_discovered_free = 'posConfig.discovered.free';
+  static const posConfig_discovered_thisKiosk = 'posConfig.discovered.thisKiosk';
+  static const posConfig_discovered_otherKiosk = 'posConfig.discovered.otherKiosk';
+  static const posConfig_discovered = 'posConfig.discovered';
   static const posConfig = 'posConfig';
   static const errorPayment_labels_number = 'errorPayment.labels.number';
   static const errorPayment_labels_response = 'errorPayment.labels.response';
@@ -590,5 +603,24 @@ abstract class  LocaleKeys {
   static const errorPayment_buttons_closeApp = 'errorPayment.buttons.closeApp';
   static const errorPayment_buttons = 'errorPayment.buttons';
   static const errorPayment = 'errorPayment';
+  static const errorPayments_columns_status = 'errorPayments.columns.status';
+  static const errorPayments_columns_action = 'errorPayments.columns.action';
+  static const errorPayments_columns = 'errorPayments.columns';
+  static const errorPayments_status_success = 'errorPayments.status.success';
+  static const errorPayments_status_declined = 'errorPayments.status.declined';
+  static const errorPayments_status_pending = 'errorPayments.status.pending';
+  static const errorPayments_status_unknown = 'errorPayments.status.unknown';
+  static const errorPayments_status = 'errorPayments.status';
+  static const errorPayments_retry_button = 'errorPayments.retry.button';
+  static const errorPayments_retry_confirmTitle = 'errorPayments.retry.confirmTitle';
+  static const errorPayments_retry_confirmBody = 'errorPayments.retry.confirmBody';
+  static const errorPayments_retry_confirmWarning = 'errorPayments.retry.confirmWarning';
+  static const errorPayments_retry_confirm = 'errorPayments.retry.confirm';
+  static const errorPayments_retry_cancel = 'errorPayments.retry.cancel';
+  static const errorPayments_retry = 'errorPayments.retry';
+  static const errorPayments_verify_button = 'errorPayments.verify.button';
+  static const errorPayments_verify_success = 'errorPayments.verify.success';
+  static const errorPayments_verify = 'errorPayments.verify';
+  static const errorPayments = 'errorPayments';
 
 }
