@@ -309,4 +309,79 @@ void main() {
     expect(pairingOf(taken), PosPairing.otherKiosk);
     expect(state.discoveredDevices.first.version, '1.26-ecopay');
   });
+
+  test('a terminal unpaired on purpose is not taken back automatically', () async {
+    final pos = await pairedTerminal();
+    pos
+      ..pairedKioskId = null
+      ..token = null
+      ..unpairedByUser = true; // "Desvincular dispositivo" on the terminal.
+    auth.load(_device(ipEcopay: pos.hostPort));
+
+    final state = await settled(start(), (s) => s.notReadyReason != null);
+
+    expect(state.notReadyReason, contains('desvinculado'));
+    expect(pos.pairRequests, 0);
+  });
+
+  test('another terminal answering at the stored address is not paired; ours is found by name', () async {
+    final old = await pairedTerminal();
+    final oldPort = old.port;
+    final ours = await move(old);
+    advertise(ours);
+    // A free terminal took our terminal's old address.
+    final intruder = await FakeIzifyPos.start(port: oldPort)..name = 'izify-POS-99999';
+    servers.add(intruder);
+    auth.load(_device(ipEcopay: '127.0.0.1:$oldPort'));
+
+    final state = await settled(start(), (s) => healthy(s) && s.pairedDevice!.port == ours.port);
+
+    expect(intruder.pairRequests, 0);
+    expect(ours.pairRequests, 0);
+    expect(state.health!.name, ours.name);
+  });
+
+  test('an unpair while the kiosk is searching for its terminal is not undone', () async {
+    final old = await pairedTerminal();
+    final pos = await move(old);
+    advertise(pos);
+    browser.delay = const Duration(milliseconds: 800);
+    auth.load(_device(ipEcopay: old.hostPort));
+
+    final bloc = start();
+    await settled(bloc, (s) => s.notReadyReason?.contains('Buscándolo') ?? false);
+    await bloc.unpair();
+    await Future<void>.delayed(const Duration(seconds: 2));
+
+    expect(bloc.state.pairedDevice, isNull);
+    expect(await TokenUtils.getPosIp(), isNull);
+    expect(await TokenUtils.getPosToken(), isNull);
+    expect(pos.pairRequests, 0);
+  });
+
+  test('a kiosk renamed in the backend keeps its terminal while the token works', () async {
+    final pos = await pairedTerminal();
+    pos.pairedKioskId = 'OLD NAME'; // Paired under the device's former name.
+    auth.load(_device(ipEcopay: pos.hostPort));
+
+    final state = await settled(start(), healthy);
+
+    expect(state.notReadyReason, isNull);
+    expect(pos.pairRequests, 0);
+  });
+
+  test('pairing with another terminal releases the previous one', () async {
+    final first = await pairedTerminal();
+    auth.load(_device(ipEcopay: first.hostPort));
+    final bloc = start();
+    await settled(bloc, healthy);
+
+    final second = await terminal(name: 'izify-POS-22222');
+    await bloc.pairDevice(PosDevice(name: second.name, ip: '127.0.0.1', port: second.port));
+    await Future<void>.delayed(const Duration(milliseconds: 300));
+
+    expect(second.pairedKioskId, _kioskId);
+    expect(first.pairedKioskId, isNull, reason: 'the old terminal must not keep naming this kiosk');
+    expect(await TokenUtils.getPosName(), 'izify-POS-22222');
+  });
 }

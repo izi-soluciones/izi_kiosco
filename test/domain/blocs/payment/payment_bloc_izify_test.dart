@@ -136,6 +136,33 @@ void main() {
     expect(await TokenUtils.getPosToken(), pos.token);
   });
 
+  test('a terminal unpaired on purpose is not re-paired to charge', () async {
+    await bloc.retryCardPayment(auth, original());
+    // "Desvincular dispositivo" on the terminal: it is being handed over.
+    pos
+      ..pairedKioskId = null
+      ..token = null
+      ..unpairedByUser = true;
+    final pairs = pos.pairRequests;
+
+    final ok = await bloc.retryCardPayment(auth, original(reference: 'KOS-OLD-2'));
+
+    expect(ok, isFalse);
+    expect(pos.pairRequests, pairs);
+    expect(pos.charges, hasLength(1));
+  });
+
+  test('another terminal answering at the stored address is never charged', () async {
+    await bloc.retryCardPayment(auth, original());
+    // The router gave this kiosk's terminal address to a different terminal.
+    await TokenUtils.savePosName('izify-POS-00001');
+
+    final ok = await bloc.retryCardPayment(auth, original(reference: 'KOS-OLD-3'));
+
+    expect(ok, isFalse);
+    expect(pos.charges, hasLength(1));
+  });
+
   test('a stale token (401) is re-paired and the same charge goes through once', () async {
     await bloc.retryCardPayment(auth, original());
     // The terminal was paired again by the same kiosk elsewhere: our token died

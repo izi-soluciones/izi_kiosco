@@ -20,6 +20,9 @@ class FakeIzifyPos {
 
   String? pairedKioskId;
   String? token;
+
+  /// Set by /unpair (and by the terminal's own "Desvincular"), cleared by /pair.
+  bool unpairedByUser = false;
   String? pin;
   Map<String, dynamic> ecopay = {};
 
@@ -130,6 +133,7 @@ class FakeIzifyPos {
             'canOpenScreens': true,
             'appVersion': appVersion,
             'name': name,
+            'unpairedByUser': pairedKioskId == null && unpairedByUser,
             'pairedKioskHash': pairedKioskId == null
                 ? null
                 : sha256.convert(utf8.encode(pairedKioskId!)).toString().substring(0, 16),
@@ -143,6 +147,7 @@ class FakeIzifyPos {
             return _json(req, 409, {'success': false, 'token': null, 'message': 'Device is already paired to another Kiosk'});
           }
           pairedKioskId = body['kioskId'];
+          unpairedByUser = false;
           pin = body['pin'];
           ecopay = Map.of(body)..remove('kioskId')..remove('pin');
           token = 'tok-${DateTime.now().microsecondsSinceEpoch}';
@@ -151,6 +156,7 @@ class FakeIzifyPos {
           if (!_authorized(req)) return _json(req, 401, 'Invalid or missing Bearer token');
           pairedKioskId = null;
           token = null;
+          unpairedByUser = true;
           return _json(req, 200, 'Unpaired successfully');
         case '/pay':
           payRequests++;

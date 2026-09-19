@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart' show kIsWeb, visibleForTesting;
+import 'package:http/io_client.dart';
 import 'package:izi_kiosco/data/pos/izify_pos_client.dart';
 import 'package:nsd/nsd.dart' as nsd;
 
@@ -53,6 +54,11 @@ class IzifyPosDiscovery {
   static const int sweepConcurrency = 32;
 
   final IzifyPosClient _client;
+
+  /// Used for the subnet sweep only: its connection timeout really abandons
+  /// the connect, so a sweep never leaves hundreds of sockets waiting on
+  /// addresses where nothing answers.
+  final IzifyPosClient _sweepClient;
   final MdnsBrowser? _browser;
   final SubnetHosts _subnetHosts;
   final Duration _probeTimeout;
@@ -65,6 +71,8 @@ class IzifyPosDiscovery {
     Duration probeTimeout = sweepProbeTimeout,
     int sweepPort = IzifyPosAddress.defaultPort,
   })  : _client = client ?? IzifyPosClient(),
+        _sweepClient = client ??
+            IzifyPosClient(httpClient: IOClient(HttpClient()..connectionTimeout = probeTimeout)),
         _browser = browser ?? (kIsWeb ? null : NsdMdnsBrowser()),
         _subnetHosts = subnetHosts ?? localSubnetHosts,
         _probeTimeout = probeTimeout,
@@ -82,10 +90,12 @@ class IzifyPosDiscovery {
     final timers = <Timer>[];
     var closed = false;
 
-    Future<void> confirm(IzifyPosAddress address, {String? advertisedName, Duration? timeout}) async {
+    Future<void> confirm(IzifyPosAddress address, {String? advertisedName, bool swept = false}) async {
       if (closed || found.containsKey(address) || !probing.add(address)) return;
       try {
-        final health = await _client.health(address, timeout: timeout ?? IzifyPosClient.healthTimeout);
+        final health = swept
+            ? await _sweepClient.health(address, timeout: _probeTimeout * 2)
+            : await _client.health(address);
         if (closed || !health.isIzifyPos) return;
         // One terminal reached two ways (loopback and LAN, or mDNS and the
         // sweep) is listed once, at the address other devices can use.
@@ -123,7 +133,7 @@ class IzifyPosDiscovery {
       final hosts = await _subnetHosts();
       for (var i = 0; i < hosts.length && !closed; i += sweepConcurrency) {
         final batch = hosts.skip(i).take(sweepConcurrency);
-        await Future.wait(batch.map((h) => confirm(IzifyPosAddress(h, _sweepPort), timeout: _probeTimeout)));
+        await Future.wait(batch.map((h) => confirm(IzifyPosAddress(h, _sweepPort), swept: true)));
       }
     }
 
@@ -171,6 +181,8 @@ class IzifyPosDiscovery {
       final interfaces = await NetworkInterface.list(type: InternetAddressType.IPv4);
       final hosts = <String>[];
       for (final interface in interfaces) {
+        // Wi-Fi and Ethernet only: never sweep a mobile-data or VPN network.
+        if (_notLan.hasMatch(interface.name)) continue;
         for (final address in interface.addresses) {
           hosts.addAll(subnetOf(address.address));
         }
@@ -180,6 +192,9 @@ class IzifyPosDiscovery {
       return const [];
     }
   }
+
+  static final RegExp _notLan =
+      RegExp(r'^(rmnet|ccmni|pdp|v4-|tun|ppp|dummy|p2p|lo|clat|ipsec|utun)', caseSensitive: false);
 
   /// The other hosts of [ip]'s /24, nearest first; empty unless [ip] is a
   /// private (RFC 1918) address, so a kiosk on a public network never sweeps.

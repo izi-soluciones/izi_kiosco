@@ -14,10 +14,13 @@ class FakeBrowser implements MdnsBrowser {
   final Map<String, List<BrowsedService>> byType = {};
   final List<String> browsed = [];
 
+  /// How long mDNS takes to answer.
+  Duration delay = Duration.zero;
+
   @override
   Stream<List<BrowsedService>> browse(String type) {
     browsed.add(type);
-    return Stream.value(byType[type] ?? const []);
+    return Stream.fromFuture(Future.delayed(delay, () => byType[type] ?? const []));
   }
 }
 

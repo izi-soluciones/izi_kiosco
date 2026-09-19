@@ -535,9 +535,20 @@ class PaymentBloc extends Cubit<PaymentState> {
     }
 
     var health = await _izifyPosClient.health(session.address);
+    if (!await IzifyPosSession.isOurTerminal(health)) {
+      // The router gave this kiosk's terminal address to another terminal.
+      throw IzifyPosException(
+          'En ${session.address.host} responde otro datáfono (${health.name}). Verifique el datáfono en "Configuración de POS".',
+          code: 'WRONG_TERMINAL');
+    }
     if (health.paired == false) {
-      // The terminal was unpaired (or reinstalled) since this kiosk paired:
-      // its token is dead. Pair again from the backend configuration.
+      if (health.unpairedByUser == true) {
+        throw const IzifyPosException(
+            'El datáfono fue desvinculado. Emparéjelo de nuevo desde "Configuración de POS".',
+            code: 'UNPAIRED');
+      }
+      // The terminal lost its pairing (reinstalled, data cleared) since this
+      // kiosk paired: its token is dead. Pair again from the backend config.
       session =
           await IzifyPosSession.pair(_izifyPosClient, device, session.address);
       health = await _izifyPosClient.health(session.address);
@@ -582,28 +593,39 @@ class PaymentBloc extends Cubit<PaymentState> {
           quotas: quotas,
         );
 
+    // The verdict is read from this same terminal and token, whatever the
+    // stored session becomes meanwhile (a re-pair elsewhere, a move).
+    _chargeSessions[reference] = session;
     try {
       await send(session);
     } on IzifyPosException catch (e) {
       if (e.isUnauthorized) {
         // 401 is decided before anything is charged, so the same reference
         // can be sent again once paired.
-        session = await IzifyPosSession.pair(
-            _izifyPosClient, authState.currentDevice, session.address);
         try {
+          session = await IzifyPosSession.pair(
+              _izifyPosClient, authState.currentDevice, session.address);
+          _chargeSessions[reference] = session;
           await send(session);
         } on IzifyPosException catch (e2) {
-          if (!e2.outcomeUnknown) rethrow;
+          if (!e2.outcomeUnknown) {
+            _chargeSessions.remove(reference);
+            rethrow;
+          }
           cardPayment.payAcknowledged = false;
         }
       } else if (e.outcomeUnknown) {
         cardPayment.payAcknowledged = false;
       } else {
+        _chargeSessions.remove(reference);
         rethrow;
       }
     }
     return cardPayment;
   }
+
+  /// Session each charge in flight was sent with, by reference.
+  final Map<String, IzifyPosSession> _chargeSessions = {};
 
   /// Waits for the verdict on [reference]: listens on `/payment-updates` and
   /// polls `/payment-status/{reference}` in parallel, whichever answers first.
@@ -780,7 +802,8 @@ class PaymentBloc extends Cubit<PaymentState> {
   /// PENDING / no answer emits the distinct pending state (no auto-retry).
   Future<bool> _awaitIzifyResult(
       AuthState authState, CardPayment cardPayment) async {
-    final session = await IzifyPosSession.current(authState.currentDevice);
+    final session = _chargeSessions.remove(cardPayment.reference) ??
+        await IzifyPosSession.current(authState.currentDevice);
     if (session == null) {
       // The charge may already be running, but there is nothing to ask.
       cardPayment.status = 'UNKNOWN';

@@ -50,14 +50,43 @@ class IzifyPosSession {
     };
   }
 
+  static Future<IzifyPosSession>? _pairing;
+  static IzifyPosAddress? _pairingAddress;
+
   /// Pairs [address] with this kiosk using the backend configuration and
   /// stores the result. Throws [IzifyPosException] with a Spanish message.
+  ///
+  /// Concurrent pairings of the same terminal (the configuration screen and a
+  /// sale both noticing it forgot the kiosk) share one request: each pairing
+  /// rotates the token, so two in a row would leave one caller holding a dead
+  /// one. When [stillWanted] says no after the terminal answered, nothing is
+  /// stored (the kiosk was unpaired or paired elsewhere meanwhile).
   static Future<IzifyPosSession> pair(
     IzifyPosClient client,
     Device? device,
     IzifyPosAddress address, {
     Map<String, String?> overrides = const {},
-  }) async {
+    bool Function()? stillWanted,
+  }) {
+    final inFlight = _pairing;
+    final automatic = overrides.values.every((v) => v == null || v.trim().isEmpty);
+    if (inFlight != null && _pairingAddress == address && automatic) return inFlight;
+    final attempt = _pair(client, device, address, overrides, stillWanted);
+    _pairing = attempt;
+    _pairingAddress = address;
+    attempt.then((_) {}, onError: (_) {}).whenComplete(() {
+      if (identical(_pairing, attempt)) _pairing = null;
+    });
+    return attempt;
+  }
+
+  static Future<IzifyPosSession> _pair(
+    IzifyPosClient client,
+    Device? device,
+    IzifyPosAddress address,
+    Map<String, String?> overrides,
+    bool Function()? stillWanted,
+  ) async {
     final pin = device?.config.pin;
     if (pin == null || pin.trim().isEmpty) {
       throw const IzifyPosException(
@@ -70,10 +99,20 @@ class IzifyPosSession {
       pin: pin.trim(),
       ecopay: ecoPayFields(device?.config, overrides: overrides),
     );
+    final session = IzifyPosSession(address, token);
+    if (stillWanted != null && !stillWanted()) return session;
     await TokenUtils.savePosToken(token);
     await TokenUtils.savePosIp(address.hostPort);
     await rememberName(client, address);
-    return IzifyPosSession(address, token);
+    return session;
+  }
+
+  /// Whether [health] comes from the terminal this kiosk paired with, by the
+  /// name stored at pairing. Unknown (nothing stored, or an older PayPOS that
+  /// reports no name) counts as ours.
+  static Future<bool> isOurTerminal(IzifyPosHealth health) async {
+    final stored = await TokenUtils.getPosName();
+    return stored == null || health.name == null || health.name == stored;
   }
 
   /// Stores the name the terminal at [address] advertises, so it can be

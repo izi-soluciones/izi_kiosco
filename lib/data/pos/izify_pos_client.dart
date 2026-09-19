@@ -71,6 +71,10 @@ class IzifyPosHealth {
   /// [IzifyPosClient.kioskHash] of the kiosk this terminal is paired with,
   /// null when unpaired. PayPOS 1.26+.
   final String? pairedKioskHash;
+
+  /// True when the terminal was unpaired on purpose; a kiosk must not pair
+  /// with it again by itself. PayPOS 1.26+.
+  final bool? unpairedByUser;
   final Map<String, dynamic> raw;
 
   const IzifyPosHealth({
@@ -87,6 +91,7 @@ class IzifyPosHealth {
     this.appVersion,
     this.name,
     this.pairedKioskHash,
+    this.unpairedByUser,
     this.raw = const {},
   });
 
@@ -106,6 +111,7 @@ class IzifyPosHealth {
         appVersion: json['appVersion']?.toString(),
         name: json['name']?.toString(),
         pairedKioskHash: json['pairedKioskHash']?.toString(),
+        unpairedByUser: json['unpairedByUser'] as bool?,
         raw: json,
       );
 
