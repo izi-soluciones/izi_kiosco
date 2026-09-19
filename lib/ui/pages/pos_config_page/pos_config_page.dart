@@ -151,15 +151,55 @@ class _PosConfigPageState extends State<PosConfigPage> {
                                 ),
                               ],
                             ),
-                            if (state.healthData != null) ...[
-                              const SizedBox(height: 8),
+                            const SizedBox(height: 8),
+                            IziText.body(
+                              color: state.notReadyReason == null && state.isHealthy == true
+                                  ? Colors.green.shade700
+                                  : context.iziColors.red,
+                              fontWeight: FontWeight.w600,
+                              maxLines: 4,
+                              text: state.notReadyReason ??
+                                  (state.isHealthy == true
+                                      ? LocaleKeys.posConfig_messages_ready.tr()
+                                      : LocaleKeys.posConfig_messages_checking.tr()),
+                            ),
+                            if (state.health != null) ...[
+                              const SizedBox(height: 4),
                               IziText.body(
                                 color: context.iziColors.darkGrey,
                                 fontWeight: FontWeight.normal,
-                                maxLines: 5,
-                                text: state.healthData!.entries.map((e) => '${e.key}: ${e.value}').join(' | '),
+                                maxLines: 3,
+                                text: [
+                                  if (state.health!.appVersion != null)
+                                    'PayPOS ${state.health!.appVersion}',
+                                  if (state.health!.ecopayVersion != null)
+                                    'EcoPay ${state.health!.ecopayVersion}',
+                                  if (state.health!.batteryLevel != null)
+                                    '${LocaleKeys.posConfig_labels_battery.tr()} ${state.health!.batteryLevel}%',
+                                  if (state.health!.hasPaper == false)
+                                    LocaleKeys.posConfig_labels_noPaper.tr(),
+                                ].join(' · '),
                               ),
-                            ]
+                              if (state.health!.canOpenScreens == false) ...[
+                                const SizedBox(height: 4),
+                                IziText.body(
+                                  color: Colors.orange.shade800,
+                                  fontWeight: FontWeight.normal,
+                                  maxLines: 4,
+                                  text: LocaleKeys.posConfig_messages_overlayMissing.tr(),
+                                ),
+                              ],
+                            ],
+                            const SizedBox(height: 8),
+                            TextButton.icon(
+                              onPressed: () => context.read<PosConfigBloc>().checkHealth(),
+                              icon: Icon(Icons.refresh, color: context.iziColors.primary),
+                              label: IziText.body(
+                                color: context.iziColors.primary,
+                                fontWeight: FontWeight.w600,
+                                text: LocaleKeys.posConfig_buttons_checkNow.tr(),
+                              ),
+                            ),
                           ],
                         ),
                         trailing: SizedBox(
@@ -197,7 +237,8 @@ class _PosConfigPageState extends State<PosConfigPage> {
                             filled: true,
                             fillColor: context.iziColors.white,
                           ),
-                          keyboardType: TextInputType.number,
+                          // ip or ip:port
+                          keyboardType: TextInputType.url,
                           onSubmitted: (_) {
                             if (state.status != PosConfigStatus.pairing) {
                               FocusScope.of(context).unfocus();

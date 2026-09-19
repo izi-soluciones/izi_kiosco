@@ -712,12 +712,20 @@
       "connect": "Connect",
       "search": "Search",
       "searching": "Searching...",
-      "pair": "Pair"
+      "pair": "Pair",
+      "checkNow": "Check now"
     },
     "messages": {
       "paired": "POS paired",
       "noTerminals": "No terminals found",
-      "missingPin": "This device has no PIN configured. Set it in the backend before pairing."
+      "missingPin": "This device has no PIN configured. Set it in the backend before pairing.",
+      "ready": "Ready to charge",
+      "checking": "Checking the terminal...",
+      "overlayMissing": "The terminal lacks the \"Display over other apps\" permission: charges work, but the customer may not see the payment screen. Enable it for PayPOS in the terminal settings."
+    },
+    "labels": {
+      "battery": "Battery",
+      "noPaper": "Out of paper"
     }
   },
   "errorPayment": {
@@ -751,6 +759,10 @@
       "confirmWarning": "The previous payment was not confirmed. Make sure it was not charged before retrying.",
       "confirm": "Retry",
       "cancel": "Cancel"
+    },
+    "verify": {
+      "button": "Verify",
+      "success": "Charge confirmed"
     }
   }
 }

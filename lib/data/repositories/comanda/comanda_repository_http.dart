@@ -1,7 +1,4 @@
 import 'dart:convert';
-import 'dart:developer';
-import 'package:crypto/crypto.dart';
-import 'package:http/http.dart' as http;
 
 import 'package:dio/dio.dart';
 //import 'package:firebase_app_check/firebase_app_check.dart';
@@ -9,6 +6,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:izi_kiosco/app/values/app_constants.dart';
 import 'package:izi_kiosco/app/values/env_keys.dart';
 import 'package:izi_kiosco/data/core/dio_client.dart';
+import 'package:izi_kiosco/data/pos/izify_pos_client.dart';
 import 'package:izi_kiosco/data/utils/token_utils.dart';
 import 'package:izi_kiosco/domain/dto/filters_comanda.dart';
 import 'package:izi_kiosco/domain/dto/invoice_dto.dart';
@@ -33,8 +31,11 @@ import 'package:izi_kiosco/domain/dto/internal_movement_dto.dart';
 
 class ComandaRepositoryHttp extends ComandaRepository {
   final DioClient _dioClient;
+  final IzifyPosClient _izifyPosClient;
 
-  ComandaRepositoryHttp({DioClient? dioClient}) : _dioClient = dioClient ?? DioClient();
+  ComandaRepositoryHttp({DioClient? dioClient, IzifyPosClient? izifyPosClient})
+      : _dioClient = dioClient ?? DioClient(),
+        _izifyPosClient = izifyPosClient ?? IzifyPosClient();
 
   @override
   Future<List<Comanda>> getComandas(
@@ -712,136 +713,40 @@ class ComandaRepositoryHttp extends ComandaRepository {
   }
   @override
   Future<CardPayment> callCardPaymentIzify({required String amount, required String ipPort, required String token, required String currency, required String cardType, required int quotas}) async {
-    // The POS now rejects non-positive/malformed amounts with 400. Validate
-    // before sending so we surface a clear validation error to the operator
-    // instead of relying on the server round-trip.
-    final parsedAmount = double.tryParse(amount);
-    if (parsedAmount == null || parsedAmount <= 0) {
-      throw "El monto debe ser un número positivo";
-    }
+    // Kept for callers outside the payment flow; the flow itself talks to the
+    // terminal through IzifyPosClient (health check, re-pairing, typed errors).
+    final address = IzifyPosAddress.tryParse(ipPort);
+    if (address == null) throw "Dirección del datáfono inválida: $ipPort";
+    final reference = IzifyPosClient.newReference();
     try {
-      final String reference = "KOS-${DateTime.now().millisecondsSinceEpoch.toString().substring(5)}";
-
-      // Signature is HMAC-SHA256 keyed with the shared secret (the same value
-      // used as the Bearer token). Message = "amount|currency|reference"
-      // (currency defaults to USD and reference to "" on the POS side, but the
-      // kiosk always sends both here). Output = lowercase hex.
-      final message = "$amount|$currency|$reference";
-      final signature = Hmac(sha256, utf8.encode(token))
-          .convert(utf8.encode(message))
-          .toString();
-
-      final res = await http.post(
-        Uri.parse('http://$ipPort/pay'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token'
-        },
-        body: jsonEncode({
-          "amount": amount,
-          "currency": currency,
-          "reference": reference,
-          "signature": signature,
-          "cardType": cardType,
-          "quotas": quotas,
-          "sendTicket": 0
-        })
-      );
-
-      // /pay acknowledges with 202 Accepted. A 400 means the amount was
-      // rejected as invalid; surface the POS message rather than assuming 202.
-      if (res.statusCode == 400) {
-        String message = "Monto inválido";
-        try {
-          if (res.body.isNotEmpty) {
-            final data = jsonDecode(res.body);
-            if (data is Map && data["message"] != null) {
-              message = data["message"].toString();
-            } else {
-              message = res.body;
-            }
-          }
-        } catch (_) {
-          message = res.body.isNotEmpty ? res.body : message;
-        }
-        throw message;
-      }
-
-      if (res.statusCode >= 200 && res.statusCode < 300) {
-        try {
-          log(res.body);
-          if (res.body.isEmpty) {
-            return CardPayment(
-              response: "Aprobada",
-              cardNumber: "****",
-              date: DateTime.now().toIso8601String().split('T').first,
-              hour: DateTime.now().toIso8601String().split('T').last.substring(0, 5),
-              reference: reference,
-              amount: amount,
-              currency: currency
-            );
-          }
-          final data = jsonDecode(res.body);
-          log(data.toString());
-          if (data is Map && data["success"] != null && data["success"] == false) {
-             throw data["message"] ?? "Transacción rechazada por el POS";
-          }
-          return CardPayment(
-               response: "Aprobada",
-               cardNumber: data is Map ? (data["cardNumber"] ?? "****") : "****",
-               date: DateTime.now().toIso8601String().split('T').first,
-               hour: DateTime.now().toIso8601String().split('T').last.substring(0, 5),
-               reference: reference,
-               amount: amount,
-               currency: currency
-          );
-        } catch (e) {
-          log(e.toString());
-          if (e is FormatException) {
-            return CardPayment(
-               response: "Aprobada",
-               cardNumber: "****",
-               date: DateTime.now().toIso8601String().split('T').first,
-               hour: DateTime.now().toIso8601String().split('T').last.substring(0, 5),
-               reference: reference,
-               amount: amount,
-               currency: currency
-            );
-          }
-          rethrow;
-        }
-      }
-      throw "Error procesando el pago en el POS: ${res.statusCode}";
-    } catch (error) {
-      throw error.toString();
+      await _izifyPosClient.pay(address,
+          token: token,
+          amount: amount,
+          currency: currency,
+          reference: reference,
+          cardType: cardType,
+          quotas: quotas);
+    } on IzifyPosException catch (e) {
+      throw e.message;
     }
+    final now = DateTime.now().toIso8601String();
+    return CardPayment(
+        response: "Enviado",
+        cardNumber: "****",
+        date: now.split('T').first,
+        hour: now.split('T').last.substring(0, 5),
+        reference: reference,
+        amount: amount,
+        currency: currency);
   }
 
   @override
   Future<PosPaymentResult?> pollIzifyPaymentStatus({required String ipPort, required String token, required String reference}) async {
     if (reference.isEmpty) return null;
-    try {
-      final res = await http.get(
-        Uri.parse('http://$ipPort/payment-status/${Uri.encodeComponent(reference)}'),
-        headers: {'Authorization': 'Bearer $token'},
-      ).timeout(const Duration(seconds: 5));
-
-      // 404 = no result yet (payment may still be in progress) -> keep polling.
-      if (res.statusCode == 404) return null;
-      // 401 bad/missing token, 400 blank reference -> stop; treat as no result
-      // for this attempt (caller falls back to overall timeout).
-      if (res.statusCode == 401 || res.statusCode == 400) return null;
-      if (res.statusCode >= 200 && res.statusCode < 300 && res.body.isNotEmpty) {
-        final data = jsonDecode(res.body);
-        if (data is Map) {
-          return PosPaymentResult.fromJson(data);
-        }
-      }
-      return null;
-    } catch (e) {
-      log('pollIzifyPaymentStatus failed: $e');
-      return null;
-    }
+    final address = IzifyPosAddress.tryParse(ipPort);
+    if (address == null) return null;
+    final result = await _izifyPosClient.paymentStatus(address, token: token, reference: reference);
+    return result.isTerminal ? result : null;
   }
   @override
   Future<void> markPaymentATC(String chargeUuid, int? internalId) async {

@@ -699,6 +699,10 @@
       "confirmWarning": "El pago anterior no fue confirmado. Verifique que no se haya cobrado antes de reintentar.",
       "confirm": "Reintentar",
       "cancel": "Cancelar"
+    },
+    "verify": {
+      "button": "Verificar",
+      "success": "Cobro confirmado"
     }
   },
   "passwordModal": {
@@ -732,12 +736,20 @@
       "connect": "Conectar",
       "search": "Buscar",
       "searching": "Buscando...",
-      "pair": "Vincular"
+      "pair": "Vincular",
+      "checkNow": "Verificar ahora"
     },
     "messages": {
       "paired": "POS Emparejado correctamente",
       "noTerminals": "No se encontraron terminales",
-      "missingPin": "Este dispositivo no tiene un PIN configurado. Configúrelo en el backend antes de emparejar."
+      "missingPin": "Este dispositivo no tiene un PIN configurado. Configúrelo en el backend antes de emparejar.",
+      "ready": "Listo para cobrar",
+      "checking": "Verificando el datáfono...",
+      "overlayMissing": "El datáfono no tiene el permiso \"Mostrar sobre otras apps\": los cobros funcionan, pero el cliente podría no ver la pantalla de pago. Actívelo en Ajustes del datáfono para PayPOS."
+    },
+    "labels": {
+      "battery": "Batería",
+      "noPaper": "Sin papel"
     }
   },
   "errorPayment": {

@@ -34,6 +34,15 @@ class CardPayment{
   /// Explicit status persisted at save time (SUCCESS/ERROR/CANCELLED/PENDING/
   /// UNKNOWN). Older records won't have this and fall back to text parsing.
   String? status;
+  /// Backend charge to notify (`/solicitudes-cobro/{uuid}/notificacion-pos`)
+  /// once the card is confirmed as charged, and its payment-attempt id for
+  /// retail sales. Stored so a payment confirmed later — by verifying a
+  /// pending one from the transactions screen — still reaches the backend.
+  String? markUuid;
+  int? markInternalId;
+  /// Transient: whether the POS acknowledged the `/pay` request (HTTP 202).
+  /// When it did not, an unknown reference means the charge never arrived.
+  bool payAcknowledged;
 
   CardPayment({
     required this.response,
@@ -45,6 +54,9 @@ class CardPayment{
     this.currency,
     this.transactionId,
     this.status,
+    this.markUuid,
+    this.markInternalId,
+    this.payAcknowledged = true,
 });
 
   factory CardPayment.fromJson(Map json)=>CardPayment(
@@ -67,7 +79,9 @@ class CardPayment{
       amount: json["monto"],
       currency: json["moneda"],
       transactionId: json["transactionId"],
-      status: json["estado"]);
+      status: json["estado"],
+      markUuid: json["cobroUuid"],
+      markInternalId: json["intentoPago"] is int ? json["intentoPago"] : null);
 
   Map toJson()=>{
     "respuesta": response,
@@ -79,6 +93,8 @@ class CardPayment{
     if (currency != null) "moneda": currency,
     if (transactionId != null) "transactionId": transactionId,
     if (status != null) "estado": status,
+    if (markUuid != null) "cobroUuid": markUuid,
+    if (markInternalId != null) "intentoPago": markInternalId,
   };
 
   /// Classifies the transaction outcome. Prefers the explicit [status] field

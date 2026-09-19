@@ -10,6 +10,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:izi_kiosco/app/values/app_constants.dart';
 import 'package:izi_kiosco/data/local/local_storage_card_errors.dart';
+import 'package:izi_kiosco/data/pos/izify_pos_client.dart';
+import 'package:izi_kiosco/data/pos/izify_pos_session.dart';
 import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
 import 'package:izi_kiosco/domain/dto/payment_attempt_dto.dart';
 import 'package:izi_kiosco/domain/dto/payment_dto.dart';
@@ -72,11 +74,15 @@ class PaymentBloc extends Cubit<PaymentState> {
   String? _matchedNit;
   CancelToken cancelToken = CancelToken();
 
+  final IzifyPosClient _izifyPosClient;
+
   PaymentBloc(
     this._comandaRepository,
     this._businessRepository,
-    this._socketRepository,
-  ) : super(PaymentState.init());
+    this._socketRepository, {
+    IzifyPosClient? izifyPosClient,
+  })  : _izifyPosClient = izifyPosClient ?? IzifyPosClient(),
+        super(PaymentState.init());
 
   initOrder({
     required PaymentObj paymentObj,
@@ -501,71 +507,128 @@ class PaymentBloc extends Cubit<PaymentState> {
     return super.close();
   }
 
-  Future<bool> _verifyIzifySocket(String token) async {
-    try {
-      final posIpRaw = state.izifyPosIp;
-      if (posIpRaw == null) return false;
-      final posIp = posIpRaw.split(':')[0];
+  /// Deadline for the terminal's verdict after it accepted a charge. It must
+  /// exceed PayPOS's own wait for the broker (90s) so the kiosk always hears
+  /// PENDING from the terminal rather than guessing on its own.
+  static const Duration izifyResultTimeout = Duration(seconds: 120);
 
-      // The POS now authenticates the WebSocket via a token query parameter.
-      final channel = WebSocketChannel.connect(
-        Uri.parse(
-          'ws://$posIp:8081/payment-updates?token=${Uri.encodeQueryComponent(token)}',
-        ),
-      );
-      await channel.ready.timeout(const Duration(seconds: 4));
-      await channel.sink.close();
-      return true;
-    } catch (e) {
-      log('WebSocket verification failed: $e');
-      return false;
+  /// How often the charge outcome is polled while the socket is also open.
+  static const Duration izifyPollInterval = Duration(seconds: 2);
+
+  /// Consecutive "unknown reference" answers after which a charge whose
+  /// `/pay` was never acknowledged is taken as never received.
+  static const int izifyNotFoundLimit = 3;
+
+  /// Checks the terminal can charge, re-pairing when it no longer knows this
+  /// kiosk. Throws [IzifyPosException] (nothing charged) otherwise.
+  Future<IzifyPosSession> _readyIzifySession(AuthState authState) async {
+    final device = authState.currentDevice;
+    var session = await IzifyPosSession.current(device);
+    if (session == null) {
+      final address = await IzifyPosSession.configuredAddress(device);
+      if (address == null) {
+        throw const IzifyPosException(
+            'Este kiosko no tiene un datáfono configurado.',
+            code: 'NOT_PAIRED');
+      }
+      session = await IzifyPosSession.pair(_izifyPosClient, device, address);
     }
+
+    var health = await _izifyPosClient.health(session.address);
+    if (health.paired == false) {
+      // The terminal was unpaired (or reinstalled) since this kiosk paired:
+      // its token is dead. Pair again from the backend configuration.
+      session =
+          await IzifyPosSession.pair(_izifyPosClient, device, session.address);
+      health = await _izifyPosClient.health(session.address);
+    }
+    final reason = health.notReadyReason;
+    if (reason != null) {
+      throw IzifyPosException(reason, code: 'NOT_READY');
+    }
+    return session;
   }
 
-  /// Waits for the final Izify POS payment result. Listens on the
-  /// `/payment-updates` WebSocket (best-effort) and, in parallel, polls
-  /// `GET /payment-status/{reference}` as a fallback in case the socket was
-  /// reconnecting when the event was emitted. Whichever channel first yields a
-  /// terminal result wins. The result includes the new PENDING outcome, which
-  /// the caller must NOT auto-retry.
-  Future<PosPaymentResult> _waitForIzifyPaymentStatus(
+  /// Sends the charge to the terminal. Returns the record to track it by; its
+  /// [CardPayment.payAcknowledged] is false when the terminal's answer was
+  /// lost, in which case only the status lookup can tell what happened.
+  Future<CardPayment> _startIzifyCharge(
     AuthState authState, {
-    required String token,
-    String? reference,
+    required String amount,
+    required String currency,
+    required String cardType,
+    required int quotas,
   }) async {
-    final posIpRaw = state.izifyPosIp;
-    if (posIpRaw == null) {
-      return const PosPaymentResult(status: PosPaymentStatus.unknown);
-    }
-    final posIp = posIpRaw.split(':')[0];
+    var session = await _readyIzifySession(authState);
+    final reference = IzifyPosClient.newReference();
+    final now = DateTime.now().toIso8601String();
+    final cardPayment = CardPayment(
+      response: "Enviado",
+      cardNumber: "****",
+      date: now.split('T').first,
+      hour: now.split('T').last.substring(0, 5),
+      reference: reference,
+      amount: amount,
+      currency: currency,
+    );
 
-    const overallTimeout = Duration(seconds: 60);
+    Future<void> send(IzifyPosSession s) => _izifyPosClient.pay(
+          s.address,
+          token: s.token,
+          amount: amount,
+          currency: currency,
+          reference: reference,
+          cardType: cardType,
+          quotas: quotas,
+        );
+
+    try {
+      await send(session);
+    } on IzifyPosException catch (e) {
+      if (e.isUnauthorized) {
+        // 401 is decided before anything is charged, so the same reference
+        // can be sent again once paired.
+        session = await IzifyPosSession.pair(
+            _izifyPosClient, authState.currentDevice, session.address);
+        try {
+          await send(session);
+        } on IzifyPosException catch (e2) {
+          if (!e2.outcomeUnknown) rethrow;
+          cardPayment.payAcknowledged = false;
+        }
+      } else if (e.outcomeUnknown) {
+        cardPayment.payAcknowledged = false;
+      } else {
+        rethrow;
+      }
+    }
+    return cardPayment;
+  }
+
+  /// Waits for the verdict on [reference]: listens on `/payment-updates` and
+  /// polls `/payment-status/{reference}` in parallel, whichever answers first.
+  Future<PosPaymentResult> _waitForIzifyPaymentStatus(
+    IzifyPosSession session, {
+    required String reference,
+    required bool payAcknowledged,
+  }) async {
     final completer = Completer<PosPaymentResult>();
+    void finish(PosPaymentResult result) {
+      if (!completer.isCompleted) completer.complete(result);
+    }
 
     WebSocketChannel? channel;
     StreamSubscription? wsSub;
-    Timer? pollTimer;
-    Timer? timeoutTimer;
-
-    void finish(PosPaymentResult result) {
-      if (completer.isCompleted) return;
-      completer.complete(result);
-    }
-
-    // WebSocket listener (token now required as a query param).
     try {
       channel = WebSocketChannel.connect(
-        Uri.parse(
-          'ws://$posIp:8081/payment-updates?token=${Uri.encodeQueryComponent(token)}',
-        ),
-      );
+          session.address.paymentUpdates(session.token));
       wsSub = channel.stream.listen(
         (message) {
           try {
             final data = jsonDecode(message.toString());
             if (data is Map) {
               final result = PosPaymentResult.fromJson(data);
-              if (result.isTerminal) {
+              if (result.reference == reference && result.isTerminal) {
                 finish(result);
               }
             }
@@ -578,54 +641,48 @@ class PaymentBloc extends Cubit<PaymentState> {
       log('Izify WS connect failed: $e');
     }
 
-    // Polling fallback: only if we have a reference to poll for.
-    if (reference != null && reference.isNotEmpty) {
-      final creds = await _getIzifyIpAndToken(authState);
-      final ipPort = creds?['ipPort'] ?? '$posIp:8081';
-      pollTimer = Timer.periodic(const Duration(seconds: 2), (_) async {
-        if (completer.isCompleted) return;
-        final result = await _comandaRepository.pollIzifyPaymentStatus(
-          ipPort: ipPort,
-          token: token,
+    var seenByTerminal = payAcknowledged;
+    var notFound = 0;
+    var polling = false;
+    final pollTimer = Timer.periodic(izifyPollInterval, (_) async {
+      if (completer.isCompleted || polling) return;
+      polling = true;
+      try {
+        final result = await _izifyPosClient.paymentStatus(
+          session.address,
+          token: session.token,
           reference: reference,
         );
-        if (result != null && result.isTerminal) {
+        if (result.isTerminal) {
           finish(result);
+        } else if (result.status == PosPaymentStatus.processing) {
+          seenByTerminal = true;
+        } else if (result.status == PosPaymentStatus.notFound) {
+          // Only meaningful when the terminal never acknowledged the charge:
+          // then "unknown reference" means it never arrived.
+          if (!seenByTerminal && ++notFound >= izifyNotFoundLimit) {
+            finish(result);
+          }
         }
-      });
-    }
-
-    timeoutTimer = Timer(overallTimeout, () {
-      finish(const PosPaymentResult(status: PosPaymentStatus.unknown));
+      } finally {
+        polling = false;
+      }
+    });
+    final timeoutTimer = Timer(izifyResultTimeout, () {
+      finish(PosPaymentResult(
+          status: PosPaymentStatus.unknown, reference: reference));
     });
 
     try {
       return await completer.future;
     } finally {
-      pollTimer?.cancel();
+      pollTimer.cancel();
       timeoutTimer.cancel();
       await wsSub?.cancel();
       try {
         await channel?.sink.close();
       } catch (_) {}
     }
-  }
-
-  Future<Map<String, String>?> _getIzifyIpAndToken(AuthState authState) async {
-    final ipPort = await TokenUtils.getPosIp();
-    final posToken = await TokenUtils.getPosToken();
-    if (ipPort != null && posToken != null) {
-      return {'ipPort': ipPort, 'token': posToken};
-    }
-
-    final ipEcopay = authState.currentDevice?.config.ipEcopay;
-    final tokenEcopay = authState.currentDevice?.config.token;
-    if (ipEcopay != null && tokenEcopay != null) {
-      final ipWithPort = ipEcopay.contains(':') ? ipEcopay : '$ipEcopay:8081';
-      return {'ipPort': ipWithPort, 'token': tokenEcopay};
-    }
-
-    return null;
   }
 
   Future<CardPayment> _callCardProvider(
@@ -637,21 +694,9 @@ class PaymentBloc extends Cubit<PaymentState> {
     required int quotas,
   }) async {
     if (izify) {
-      final creds = await _getIzifyIpAndToken(authState);
-      if (creds == null) {
-        throw Exception("No se encontraron credenciales del POS");
-      }
-      // The POS now authenticates the WebSocket, so the token is required to
-      // verify the socket is alive.
-      final isSocketAlive = await _verifyIzifySocket(creds['token']!);
-      if (!isSocketAlive) {
-        throw Exception("Terminal POS sin conexión al socket");
-      }
-      const currencyIso = "COP";
-      return _comandaRepository.callCardPaymentIzify(
-        ipPort: creds['ipPort']!,
-        token: creds['token']!,
-        currency: currencyIso,
+      return _startIzifyCharge(
+        authState,
+        currency: "COP",
         cardType: cardType,
         quotas: quotas,
         amount: (state.paymentObj?.amount ?? 0).toStringAsFixed(2),
@@ -677,10 +722,11 @@ class PaymentBloc extends Cubit<PaymentState> {
 
   Future<(bool, Object?)> _retryMarkPayment(
     String uuid,
-    int? internalId,
-  ) async {
+    int? internalId, {
+    int attempts = 10,
+  }) async {
     Object? lastError;
-    for (var i = 0; i < 10; i++) {
+    for (var i = 0; i < attempts; i++) {
       try {
         await _comandaRepository.markPaymentATC(uuid, internalId);
         return (true, null);
@@ -703,12 +749,15 @@ class PaymentBloc extends Cubit<PaymentState> {
     await LocalStorageCardErrors.saveCardErrors(jsonEncode(cp.toJson()));
   }
 
-  void _emitCardError(AuthState authState) {
-    if (authState.currentContribuyente?.habilitadoFacturacion == true) {
-      emit(state.copyWith(status: PaymentStatus.cardError, step: 2));
-    } else {
-      emit(state.copyWith(status: PaymentStatus.cardError, step: 1));
-    }
+  /// Emits a card error. [message] is shown to the customer when given (e.g.
+  /// the acquirer's decline reason or why the terminal refused the charge).
+  void _emitCardError(AuthState authState, {String? message}) {
+    final step =
+        authState.currentContribuyente?.habilitadoFacturacion == true ? 2 : 1;
+    emit(state.copyWith(
+        status: PaymentStatus.cardError,
+        step: step,
+        errorDescription: message ?? ""));
     emit(state.copyWith(status: PaymentStatus.successGet));
   }
 
@@ -716,31 +765,24 @@ class PaymentBloc extends Cubit<PaymentState> {
   /// charged. It must NOT be auto-retried; surface it to the operator to
   /// verify/reconcile before any retry.
   void _emitCardPending(AuthState authState, {String? message}) {
-    if (authState.currentContribuyente?.habilitadoFacturacion == true) {
-      emit(state.copyWith(
-          status: PaymentStatus.cardPending,
-          step: 2,
-          errorDescription: message));
-    } else {
-      emit(state.copyWith(
-          status: PaymentStatus.cardPending,
-          step: 1,
-          errorDescription: message));
-    }
+    final step =
+        authState.currentContribuyente?.habilitadoFacturacion == true ? 2 : 1;
+    emit(state.copyWith(
+        status: PaymentStatus.cardPending,
+        step: step,
+        errorDescription: message ?? ""));
     emit(state.copyWith(status: PaymentStatus.successGet));
   }
 
-  /// Waits for the Izify POS result (WebSocket + polling fallback) and maps it
-  /// to whether the kiosk should proceed to mark the payment as paid.
-  /// Returns `true` only on a confirmed SUCCESS. On ERROR/CANCELLED emits a
-  /// card error; on PENDING emits the distinct pending state (no auto-retry).
+  /// Waits for the Izify POS verdict and maps it to whether the kiosk should
+  /// go on to mark the order as paid. Returns `true` only on a confirmed
+  /// SUCCESS. On a decline emits a card error with the terminal's message; on
+  /// PENDING / no answer emits the distinct pending state (no auto-retry).
   Future<bool> _awaitIzifyResult(
       AuthState authState, CardPayment cardPayment) async {
-    final creds = await _getIzifyIpAndToken(authState);
-    final token = creds?['token'];
-    if (token == null) {
-      // The /pay request already fired, so we cannot know whether the card was
-      // charged. Mark as UNKNOWN so a retry warns the operator first.
+    final session = await IzifyPosSession.current(authState.currentDevice);
+    if (session == null) {
+      // The charge may already be running, but there is nothing to ask.
       cardPayment.status = 'UNKNOWN';
       await _saveCardError(cardPayment, "Sin confirmar - sin credenciales",
           "Izify sin credenciales para verificar el pago");
@@ -749,20 +791,36 @@ class PaymentBloc extends Cubit<PaymentState> {
     }
 
     final result = await _waitForIzifyPaymentStatus(
-      authState,
-      token: token,
-      reference: cardPayment.reference,
+      session,
+      reference: cardPayment.reference!,
+      payAcknowledged: cardPayment.payAcknowledged,
     );
-
-    // Persist the transactionId if the POS reported one so the transactions
-    // screen can display it.
     if (result.transactionId != null) {
       cardPayment.transactionId = result.transactionId;
     }
 
     switch (result.status) {
       case PosPaymentStatus.success:
+        cardPayment.status = 'SUCCESS';
         return true;
+      case PosPaymentStatus.notFound:
+        // Never acknowledged and the terminal has no record of it: the
+        // request never arrived, so nothing was charged.
+        cardPayment.status = 'ERROR';
+        await _saveCardError(cardPayment, "Rechazada - no recibido por el datáfono",
+            "Izify /pay never reached the terminal");
+        _emitCardError(authState,
+            message: "El datáfono no recibió el cobro. No se realizó ningún cargo.");
+        return false;
+      case PosPaymentStatus.error:
+      case PosPaymentStatus.cancelled:
+        cardPayment.status =
+            result.status == PosPaymentStatus.cancelled ? 'CANCELLED' : 'ERROR';
+        await _saveCardError(cardPayment,
+            "Rechazada - ${result.errorMessage ?? ''}".trim(),
+            "Izify terminal rejected payment");
+        _emitCardError(authState, message: result.errorMessage);
+        return false;
       case PosPaymentStatus.pending:
         cardPayment.status = 'PENDING';
         await _saveCardError(
@@ -771,25 +829,16 @@ class PaymentBloc extends Cubit<PaymentState> {
             "Izify payment PENDING (unconfirmed - verify before retry)");
         _emitCardPending(authState, message: result.errorMessage);
         return false;
-      case PosPaymentStatus.error:
-      case PosPaymentStatus.cancelled:
       case PosPaymentStatus.unknown:
-        // UNKNOWN here means no terminal result arrived within the timeout.
-        // Treat it like PENDING (do not auto-retry) to stay safe against a
-        // possible silent charge.
-        if (result.status == PosPaymentStatus.unknown) {
-          cardPayment.status = 'UNKNOWN';
-          await _saveCardError(cardPayment, "Sin confirmar (timeout)",
-              "Izify no confirmed result within timeout");
-          _emitCardPending(authState);
-          return false;
-        }
-        cardPayment.status =
-            result.status == PosPaymentStatus.cancelled ? 'CANCELLED' : 'ERROR';
-        await _saveCardError(cardPayment,
-            "Rechazada - ${result.errorMessage ?? ''}".trim(),
-            "Izify terminal rejected payment");
-        _emitCardError(authState);
+      case PosPaymentStatus.processing:
+      case PosPaymentStatus.unauthorized:
+      case PosPaymentStatus.unreachable:
+        // No verdict within the deadline. Treat it like PENDING (do not
+        // auto-retry): the card may have been charged.
+        cardPayment.status = 'UNKNOWN';
+        await _saveCardError(cardPayment, "Sin confirmar (timeout)",
+            "Izify no confirmed result within timeout");
+        _emitCardPending(authState);
         return false;
     }
   }
@@ -802,14 +851,10 @@ class PaymentBloc extends Cubit<PaymentState> {
   }
 
   /// Retries a previously-failed POS card transaction from the transactions
-  /// screen. Re-initiates a payment through the SAME path as the normal card
-  /// flow: `/pay` (HMAC-signed) + WebSocket/`pollIzifyPaymentStatus` result
-  /// handling via [_awaitIzifyResult].
-  ///
-  /// A NEW `reference` is generated for the retry (inside
-  /// `callCardPaymentIzify`, which mints a fresh one on every call) so the new
-  /// attempt is tracked independently of the original. A retry that comes back
-  /// PENDING is again surfaced as `cardPending` and never auto-retried.
+  /// screen through the same path as a sale: health check, signed `/pay` with
+  /// a NEW reference, and the socket/polling verdict via [_awaitIzifyResult].
+  /// A confirmed retry is notified to the backend when the original order is
+  /// known. A retry that comes back PENDING is surfaced, never auto-retried.
   ///
   /// Callers MUST NOT invoke this for a confirmed-success transaction, and must
   /// warn the operator first when the original was pending/unknown (the card
@@ -838,31 +883,107 @@ class PaymentBloc extends Cubit<PaymentState> {
 
     emit(state.copyWith(status: PaymentStatus.cardProcessing));
     try {
-      final creds = await _getIzifyIpAndToken(authState);
-      if (creds == null) {
-        throw Exception("No se encontraron credenciales del POS");
-      }
-      final isSocketAlive = await _verifyIzifySocket(creds['token']!);
-      if (!isSocketAlive) {
-        throw Exception("Terminal POS sin conexión al socket");
-      }
-
-      // Fires /pay with a brand-new reference and HMAC signature.
-      final cardPayment = await _comandaRepository.callCardPaymentIzify(
-        ipPort: creds['ipPort']!,
-        token: creds['token']!,
+      final cardPayment = await _startIzifyCharge(
+        authState,
+        amount: amount!,
         currency: currency,
         cardType: cardType,
         quotas: quotas,
-        amount: amount!,
       );
-
-      // Same result flow as a normal payment (PENDING -> cardPending, etc.).
-      return await _awaitIzifyResult(authState, cardPayment);
+      cardPayment.markUuid = original.markUuid;
+      cardPayment.markInternalId = original.markInternalId;
+      final approved = await _awaitIzifyResult(authState, cardPayment);
+      if (approved) {
+        await _settleConfirmedCharge(cardPayment);
+        emit(state.copyWith(
+            status: PaymentStatus.cardVerified,
+            errorDescription: cardPayment.response));
+        emit(state.copyWith(status: PaymentStatus.successGet));
+      }
+      return approved;
     } catch (e) {
       log(e.toString());
-      _emitCardError(authState);
+      _emitCardError(authState,
+          message: e is IzifyPosException ? e.message : null);
       return false;
+    }
+  }
+
+  /// Records a charge confirmed after the sale flow ended (a verified pending
+  /// payment or a retry) and notifies the backend order when it is known.
+  Future<void> _settleConfirmedCharge(CardPayment cardPayment) async {
+    cardPayment.status = 'SUCCESS';
+    var response = "Aprobada";
+    if (cardPayment.markUuid != null) {
+      final (marked, lastError) = await _retryMarkPayment(
+          cardPayment.markUuid!, cardPayment.markInternalId,
+          attempts: 3);
+      response = marked
+          ? "Aprobada - pedido registrado"
+          : "Aprobada - Error sync server: ${lastError ?? 'desconocido'}";
+    } else {
+      response = "Aprobada - registre el pedido manualmente";
+    }
+    cardPayment.response = response;
+    final json = jsonEncode(cardPayment.toJson());
+    final updated = cardPayment.reference != null &&
+        await LocalStorageCardErrors.updateByReference(
+            cardPayment.reference!, json);
+    if (!updated) await LocalStorageCardErrors.saveCardErrors(json);
+  }
+
+  /// Asks the terminal what became of a pending/unknown charge and updates
+  /// the stored record. A charge confirmed now is notified to the backend so
+  /// the order is registered; a declined or never-received one becomes safe
+  /// to retry.
+  Future<void> verifyCardPayment(AuthState authState, CardPayment cp) async {
+    final reference = cp.reference;
+    if (reference == null) return;
+    emit(state.copyWith(status: PaymentStatus.cardProcessing));
+    final session = await IzifyPosSession.current(authState.currentDevice);
+    if (session == null) {
+      _emitCardError(authState,
+          message: 'Este kiosko no tiene un datáfono configurado.');
+      return;
+    }
+    final result = await _izifyPosClient.paymentStatus(session.address,
+        token: session.token, reference: reference);
+    if (result.transactionId != null) cp.transactionId = result.transactionId;
+
+    Future<void> store(String status, String response) async {
+      cp.status = status;
+      cp.response = response;
+      await LocalStorageCardErrors.updateByReference(
+          reference, jsonEncode(cp.toJson()));
+    }
+
+    switch (result.status) {
+      case PosPaymentStatus.success:
+        await _settleConfirmedCharge(cp);
+        emit(state.copyWith(
+            status: PaymentStatus.cardVerified, errorDescription: cp.response));
+        emit(state.copyWith(status: PaymentStatus.successGet));
+      case PosPaymentStatus.error:
+      case PosPaymentStatus.cancelled:
+        await store('ERROR',
+            "Rechazada - ${result.errorMessage ?? 'verificada'}".trim());
+        _emitCardError(authState,
+            message: 'No se cobró: ${result.errorMessage ?? 'rechazada'}. Puede reintentar.');
+      case PosPaymentStatus.notFound:
+        await store('ERROR', "Rechazada - no recibido por el datáfono");
+        _emitCardError(authState,
+            message: 'El datáfono no tiene registro de este cobro: no se cobró.');
+      case PosPaymentStatus.pending:
+      case PosPaymentStatus.processing:
+      case PosPaymentStatus.unknown:
+        _emitCardPending(authState,
+            message: 'El datáfono aún no tiene confirmación de este cobro.');
+      case PosPaymentStatus.unauthorized:
+        _emitCardError(authState,
+            message: 'El datáfono no reconoce a este kiosko. Empareje de nuevo y vuelva a verificar.');
+      case PosPaymentStatus.unreachable:
+        _emitCardError(authState,
+            message: 'No se pudo conectar con el datáfono para verificar.');
     }
   }
 
@@ -927,6 +1048,8 @@ class PaymentBloc extends Cubit<PaymentState> {
         cardType: cardType,
         quotas: quotas,
       );
+      cardPayment.markUuid = state.paymentObj?.uuid;
+      cardPayment.markInternalId = charge.intentoPago;
 
       if (izify) {
         final approved = await _awaitIzifyResult(authState, cardPayment);
@@ -954,11 +1077,12 @@ class PaymentBloc extends Cubit<PaymentState> {
       return false;
     } catch (e) {
       log(e.toString());
-      if (authState.currentContribuyente?.tieneFacturacion == true) {
-        emit(state.copyWith(status: PaymentStatus.cardError, step: 2));
-      } else {
-        emit(state.copyWith(status: PaymentStatus.cardError, step: 1));
-      }
+      // An IzifyPosException here was raised before the terminal accepted
+      // anything, so its message ("no se cobró" + why) is safe to show.
+      emit(state.copyWith(
+          status: PaymentStatus.cardError,
+          step: authState.currentContribuyente?.tieneFacturacion == true ? 2 : 1,
+          errorDescription: e is IzifyPosException ? e.message : ""));
       emit(state.copyWith(status: PaymentStatus.successGet));
       return false;
     }
@@ -1002,6 +1126,7 @@ class PaymentBloc extends Cubit<PaymentState> {
         cardType: cardType,
         quotas: quotas,
       );
+      cardPayment.markUuid = charge.uuid;
 
       if (izify) {
         final approved = await _awaitIzifyResult(authState, cardPayment);
@@ -1026,11 +1151,12 @@ class PaymentBloc extends Cubit<PaymentState> {
       return false;
     } catch (e) {
       log(e.toString());
-      if (authState.currentContribuyente?.tieneFacturacion == true) {
-        emit(state.copyWith(status: PaymentStatus.cardError, step: 2));
-      } else {
-        emit(state.copyWith(status: PaymentStatus.cardError, step: 1));
-      }
+      // An IzifyPosException here was raised before the terminal accepted
+      // anything, so its message ("no se cobró" + why) is safe to show.
+      emit(state.copyWith(
+          status: PaymentStatus.cardError,
+          step: authState.currentContribuyente?.tieneFacturacion == true ? 2 : 1,
+          errorDescription: e is IzifyPosException ? e.message : ""));
       emit(state.copyWith(status: PaymentStatus.successGet));
       return false;
     }

@@ -14,6 +14,20 @@ enum PosPaymentStatus {
 
   /// No recognizable status could be parsed from the payload.
   unknown,
+
+  /// The terminal accepted the charge and it is still running.
+  processing,
+
+  /// The terminal has no record of the reference (HTTP 404): it never
+  /// received the `/pay` request, so nothing was charged under it.
+  notFound,
+
+  /// The terminal rejected the token (HTTP 401) — it was unpaired or paired
+  /// again. The lookup could not be made.
+  unauthorized,
+
+  /// The terminal could not be reached for the lookup.
+  unreachable,
 }
 
 class PosPaymentResult {
@@ -39,6 +53,8 @@ class PosPaymentResult {
         return PosPaymentStatus.cancelled;
       case 'PENDING':
         return PosPaymentStatus.pending;
+      case 'PROCESSING':
+        return PosPaymentStatus.processing;
       default:
         return PosPaymentStatus.unknown;
     }
@@ -54,8 +70,9 @@ class PosPaymentResult {
   }
 
   /// A terminal result stops WebSocket listening / polling. SUCCESS, ERROR,
-  /// CANCELLED and PENDING are all terminal (PENDING is terminal-ish: the
-  /// POS will not emit a further update, the operator must reconcile).
+  /// CANCELLED and PENDING are all terminal. PENDING is terminal-ish: the
+  /// terminal may still settle it later (it keeps chasing the answer in the
+  /// background), which the operator can check from the transactions screen.
   bool get isTerminal =>
       status == PosPaymentStatus.success ||
       status == PosPaymentStatus.error ||

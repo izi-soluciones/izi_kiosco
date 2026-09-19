@@ -56,9 +56,14 @@ class PaymentPage extends StatelessWidget {
         if(state.status== PaymentStatus.cardError){
           context.read<PageUtilsBloc>().closeLoading();
           context.read<PageUtilsBloc>().initScreenActiveInvoiced(context.read<AuthBloc>().state);
+          // The terminal's own reason (declined by the bank, terminal not
+          // ready, ...) tells the customer what to do next; the generic text is
+          // only a fallback.
           context.read<PageUtilsBloc>().showSnackBar(
               snackBar: SnackBarInfo(
-                  text: LocaleKeys.payment_messages_errorCard.tr(),
+                  text: state.errorDescription != null && state.errorDescription!.isNotEmpty
+                      ? "${LocaleKeys.payment_messages_errorCard.tr()}: ${state.errorDescription}"
+                      : LocaleKeys.payment_messages_errorCard.tr(),
                   snackBarType: SnackBarType.error));
         }
         if(state.status== PaymentStatus.cardPending){

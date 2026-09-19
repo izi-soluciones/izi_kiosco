@@ -129,23 +129,50 @@ class _ErrorPaymentPageState extends State<ErrorPaymentPage> {
     await _loadList();
   }
 
+  /// Asks the terminal what happened to a pending charge. A confirmed charge
+  /// is registered with the backend; a declined one becomes retryable.
+  Future<void> _onVerify(CardPayment cp) async {
+    if (_retrying) return;
+    setState(() {
+      _retrying = true;
+    });
+    await context
+        .read<PaymentBloc>()
+        .verifyCardPayment(context.read<AuthBloc>().state, cp);
+    if (!mounted) return;
+    setState(() {
+      _retrying = false;
+    });
+    await _loadList();
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocListener<PaymentBloc, PaymentState>(
       listenWhen: (prev, curr) => prev.status != curr.status,
       listener: (context, state) {
+        final detail = state.errorDescription?.isNotEmpty == true
+            ? state.errorDescription!
+            : null;
         if (state.status == PaymentStatus.cardPending) {
           context.read<PageUtilsBloc>().showSnackBar(
                 snackBar: SnackBarInfo(
-                  text: LocaleKeys.payment_messages_pendingCard.tr(),
+                  text: detail ?? LocaleKeys.payment_messages_pendingCard.tr(),
                   snackBarType: SnackBarType.warning,
                 ),
               );
         } else if (state.status == PaymentStatus.cardError) {
           context.read<PageUtilsBloc>().showSnackBar(
                 snackBar: SnackBarInfo(
-                  text: LocaleKeys.payment_messages_errorCard.tr(),
+                  text: detail ?? LocaleKeys.payment_messages_errorCard.tr(),
                   snackBarType: SnackBarType.error,
+                ),
+              );
+        } else if (state.status == PaymentStatus.cardVerified) {
+          context.read<PageUtilsBloc>().showSnackBar(
+                snackBar: SnackBarInfo(
+                  text: detail ?? LocaleKeys.errorPayments_verify_success.tr(),
+                  snackBarType: SnackBarType.success,
                 ),
               );
         }
@@ -248,20 +275,35 @@ class _ErrorPaymentPageState extends State<ErrorPaymentPage> {
                                   ),
                                 ),
                                 Expanded(
-                                  child: (e.value.canRetry &&
-                                          (e.value.amount != null))
+                                  child: (e.value.retryNeedsWarning &&
+                                          e.value.reference != null)
+                                      // Unknown outcome: ask the terminal
+                                      // before anyone considers charging again.
                                       ? IziBtn(
                                           buttonText: LocaleKeys
-                                              .errorPayments_retry_button
+                                              .errorPayments_verify_button
                                               .tr(),
                                           buttonType: ButtonType.primary,
                                           buttonSize: ButtonSize.small,
                                           loading: _retrying,
                                           buttonOnPressed: _retrying
                                               ? null
-                                              : () => _onRetry(e.value),
+                                              : () => _onVerify(e.value),
                                         )
-                                      : const SizedBox.shrink(),
+                                      : (e.value.canRetry &&
+                                              (e.value.amount != null))
+                                          ? IziBtn(
+                                              buttonText: LocaleKeys
+                                                  .errorPayments_retry_button
+                                                  .tr(),
+                                              buttonType: ButtonType.primary,
+                                              buttonSize: ButtonSize.small,
+                                              loading: _retrying,
+                                              buttonOnPressed: _retrying
+                                                  ? null
+                                                  : () => _onRetry(e.value),
+                                            )
+                                          : const SizedBox.shrink(),
                                 ),
                               ],
                             ),
