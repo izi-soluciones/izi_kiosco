@@ -591,6 +591,8 @@ class PaymentBloc extends Cubit<PaymentState> {
       reference: reference,
       amount: amount,
       currency: currency,
+      cardType: cardType,
+      quotas: quotas,
     );
 
     Future<void> send(IzifyPosSession s) => _izifyPosClient.pay(
@@ -821,6 +823,9 @@ class PaymentBloc extends Cubit<PaymentState> {
     if (result.cardMasked != null) cp.cardNumber = result.cardMasked;
     cp.authCode = result.authCode ?? cp.authCode;
     cp.cardBrand = result.cardBrand ?? cp.cardBrand;
+    // What the terminal actually charged, which is what iZi should record and
+    // what a retry should repeat; falls back to what we asked for.
+    cp.cardType = result.cardType ?? cp.cardType;
     cp.acquirerTerminalId = result.acquirerTerminalId ?? cp.acquirerTerminalId;
     cp.traceNumber = result.traceNumber ?? cp.traceNumber;
     cp.terminalName ??= await TokenUtils.getPosName();
@@ -972,11 +977,16 @@ class PaymentBloc extends Cubit<PaymentState> {
   /// Callers MUST NOT invoke this for a confirmed-success transaction, and must
   /// warn the operator first when the original was pending/unknown (the card
   /// may already have been charged).
+  /// Retries a declined or unconfirmed card charge.
+  ///
+  /// [cardType] and [quotas] default to the terms of the attempt being
+  /// retried: re-charging a 12-instalment credit sale as a single debit
+  /// payment would charge the customer something they never agreed to.
   Future<bool> retryCardPayment(
     AuthState authState,
     CardPayment original, {
-    String cardType = "DEBITO",
-    int quotas = 0,
+    String? cardType,
+    int? quotas,
   }) async {
     // Guard: never retry a confirmed success (would risk double-charging).
     if (!original.canRetry) {
@@ -994,6 +1004,9 @@ class PaymentBloc extends Cubit<PaymentState> {
       return false;
     }
 
+    final retryCardType = cardType ?? original.cardType ?? "DEBITO";
+    final retryQuotas = quotas ?? original.quotas ?? 0;
+
     emit(state.copyWith(status: PaymentStatus.cardProcessing));
     var approved = false;
     CardPayment? settled;
@@ -1002,8 +1015,8 @@ class PaymentBloc extends Cubit<PaymentState> {
         authState,
         amount: amount!,
         currency: currency,
-        cardType: cardType,
-        quotas: quotas,
+        cardType: retryCardType,
+        quotas: retryQuotas,
       );
       cardPayment.markUuid = original.markUuid;
       cardPayment.markInternalId = original.markInternalId;

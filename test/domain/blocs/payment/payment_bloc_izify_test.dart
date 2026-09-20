@@ -224,6 +224,23 @@ void main() {
     expect(pos.charges, hasLength(1));
   });
 
+  test('a retry repeats the terms of the attempt it retries', () async {
+    // A 12-instalment credit sale that was declined. Retrying it as a single
+    // debit charge would charge the customer something they never agreed to.
+    pos.outcome = 'ERROR';
+    await bloc.retryCardPayment(auth, original(), cardType: 'CREDITO', quotas: 12);
+    final declined = (await rows()).single;
+    expect(declined.cardType, 'CREDITO');
+    expect(declined.quotas, 12);
+
+    pos.outcome = 'SUCCESS';
+    // The transactions screen retries without naming the terms.
+    expect(await bloc.retryCardPayment(auth, declined), isTrue);
+
+    expect(pos.charges.last['cardType'], 'CREDITO');
+    expect(pos.charges.last['quotas'], 12);
+  });
+
   test('a terminal unpaired on purpose is not re-paired even after this kiosk forgot it', () async {
     await bloc.retryCardPayment(auth, original());
     // "Desvincular" on both sides: the terminal was handed to another lane and

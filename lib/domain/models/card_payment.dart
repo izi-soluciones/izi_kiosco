@@ -59,6 +59,13 @@ class CardPayment{
   /// Name of the terminal that ran the charge (izify-POS-#####).
   String? terminalName;
 
+  /// How the card was charged: DEBITO or CREDITO, and the instalments asked
+  /// for. Kept so a retry repeats the same terms: retrying a 12-instalment
+  /// credit sale as a single debit charge would charge the customer
+  /// differently from what they agreed to.
+  String? cardType;
+  int? quotas;
+
   CardPayment({
     required this.response,
     required this.cardNumber,
@@ -77,6 +84,8 @@ class CardPayment{
     this.acquirerTerminalId,
     this.traceNumber,
     this.terminalName,
+    this.cardType,
+    this.quotas,
 });
 
   factory CardPayment.fromJson(Map json)=>CardPayment(
@@ -106,7 +115,9 @@ class CardPayment{
       cardBrand: json["marca"],
       acquirerTerminalId: json["terminal"],
       traceNumber: json["recibo"],
-      terminalName: json["datafono"]);
+      terminalName: json["datafono"],
+      cardType: json["tipoTarjeta"],
+      quotas: json["cuotas"] is int ? json["cuotas"] : null);
 
   Map toJson()=>{
     "respuesta": response,
@@ -125,6 +136,8 @@ class CardPayment{
     if (acquirerTerminalId != null) "terminal": acquirerTerminalId,
     if (traceNumber != null) "recibo": traceNumber,
     if (terminalName != null) "datafono": terminalName,
+    if (cardType != null) "tipoTarjeta": cardType,
+    if (quotas != null) "cuotas": quotas,
   };
 
   /// What iZi stores for this charge (`custom.datosTerminal`). [estado] is
@@ -136,6 +149,7 @@ class CardPayment{
         if (authCode != null) "codigoAutorizacion": authCode,
         if (cardNumber != null && cardNumber!.contains(RegExp(r'\d'))) "numeroTarjeta": cardNumber,
         if (cardBrand != null) "marca": cardBrand,
+        if (cardType != null) "tipoTarjeta": cardType,
         if (acquirerTerminalId != null) "terminal": acquirerTerminalId,
         if (terminalName != null) "terminalPos": terminalName,
         if (traceNumber != null) "recibo": traceNumber,
