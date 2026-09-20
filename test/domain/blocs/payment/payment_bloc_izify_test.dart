@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:izi_kiosco/data/local/local_storage_card_errors.dart';
 import 'package:izi_kiosco/data/pos/izify_pos_client.dart';
+import 'package:izi_kiosco/data/pos/izify_pos_session.dart';
 import 'package:izi_kiosco/data/utils/token_utils.dart';
 import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/payment/payment_bloc.dart';
@@ -217,6 +218,25 @@ void main() {
     final pairs = pos.pairRequests;
 
     final ok = await bloc.retryCardPayment(auth, original(reference: 'KOS-OLD-2'));
+
+    expect(ok, isFalse);
+    expect(pos.pairRequests, pairs);
+    expect(pos.charges, hasLength(1));
+  });
+
+  test('a terminal unpaired on purpose is not re-paired even after this kiosk forgot it', () async {
+    await bloc.retryCardPayment(auth, original());
+    // "Desvincular" on both sides: the terminal was handed to another lane and
+    // this kiosk no longer holds a session, so the charge would otherwise take
+    // the "pair from scratch" path.
+    pos
+      ..pairedKioskId = null
+      ..token = null
+      ..unpairedByUser = true;
+    await IzifyPosSession.forget();
+    final pairs = pos.pairRequests;
+
+    final ok = await bloc.retryCardPayment(auth, original(reference: 'KOS-OLD-9'));
 
     expect(ok, isFalse);
     expect(pos.pairRequests, pairs);

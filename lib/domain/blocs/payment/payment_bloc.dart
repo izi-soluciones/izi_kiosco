@@ -533,6 +533,14 @@ class PaymentBloc extends Cubit<PaymentState> {
             'Este kiosko no tiene un datáfono configurado.',
             code: 'NOT_PAIRED');
       }
+      // A terminal unpaired on purpose was moved somewhere else: pairing with
+      // it again here would charge another lane's customers.
+      final atAddress = await _izifyPosClient.health(address);
+      if (atAddress.paired == false && atAddress.unpairedByUser == true) {
+        throw const IzifyPosException(
+            'El datáfono fue desvinculado. Emparéjelo de nuevo desde "Configuración de POS".',
+            code: 'UNPAIRED');
+      }
       session = await IzifyPosSession.pair(_izifyPosClient, device, address);
     }
 
@@ -773,8 +781,14 @@ class PaymentBloc extends Cubit<PaymentState> {
     String reportMsg,
   ) async {
     cp.response = response;
-    CrashReport.report(reportMsg, cp.toJson().toString());
-    await _storeCardRecord(cp);
+    CrashReport.report(reportMsg, cp.reference ?? '(sin referencia)');
+    try {
+      await _storeCardRecord(cp);
+    } catch (e) {
+      // Losing the local row must not turn a charge that may have gone through
+      // into "no se cobró": the caller still emits the pending outcome.
+      log('No se pudo guardar el registro local del cobro: $e');
+    }
   }
 
   /// Writes [cp] over the row it belongs to ([CardPayment.storedAs], else its
@@ -920,11 +934,33 @@ class PaymentBloc extends Cubit<PaymentState> {
     }
   }
 
-  void _emitMarkFailedFallback() {
-    emit(state.copyWith(step: 6, status: PaymentStatus.paymentProcessed));
+  /// Ends the sale when the order could not be registered in iZi.
+  ///
+  /// [charged] says the card was charged anyway: the customer must never be
+  /// shown the payment-failed screen then, because they paid and would pay
+  /// again somewhere else.
+  void _emitMarkFailedFallback({bool charged = false, CardPayment? cardPayment}) {
+    emit(state.copyWith(
+      step: charged ? 9 : 6,
+      status: PaymentStatus.paymentProcessed,
+      chargeProof: charged ? _chargeProof(cardPayment) : null,
+    ));
     timerSuccess = Timer(const Duration(seconds: 30), () async {
       emit(state.copyWith(status: PaymentStatus.successInvoice));
     });
+  }
+
+  /// What staff need to find a charge the terminal made: its authorization and
+  /// receipt numbers, never a card number.
+  String? _chargeProof(CardPayment? cp) {
+    if (cp == null) return null;
+    final parts = <String>[
+      if (cp.authCode != null) 'Aut. ${cp.authCode}',
+      if (cp.acquirerTerminalId != null) 'TID ${cp.acquirerTerminalId}',
+      if (cp.traceNumber != null) 'Recibo ${cp.traceNumber}',
+      if (cp.reference != null) 'Ref. ${cp.reference}',
+    ];
+    return parts.isEmpty ? null : parts.join('   ');
   }
 
   /// Retries a previously-failed POS card transaction from the transactions
@@ -959,6 +995,8 @@ class PaymentBloc extends Cubit<PaymentState> {
     }
 
     emit(state.copyWith(status: PaymentStatus.cardProcessing));
+    var approved = false;
+    CardPayment? settled;
     try {
       final cardPayment = await _startIzifyCharge(
         authState,
@@ -971,21 +1009,28 @@ class PaymentBloc extends Cubit<PaymentState> {
       cardPayment.markInternalId = original.markInternalId;
       // The outcome of this attempt replaces the row being retried.
       cardPayment.storedAs = original.reference;
-      final approved = await _awaitIzifyResult(authState, cardPayment);
-      if (approved) {
-        await _settleConfirmedCharge(cardPayment);
-        emit(state.copyWith(
-            status: PaymentStatus.cardVerified,
-            errorDescription: cardPayment.response));
-        emit(state.copyWith(status: PaymentStatus.successGet));
-      }
-      return approved;
+      approved = await _awaitIzifyResult(authState, cardPayment);
+      settled = cardPayment;
     } catch (e) {
       log(e.toString());
       _emitCardError(authState,
           message: e is IzifyPosException ? e.message : null);
       return false;
     }
+
+    if (!approved) return false;
+    // Past this point the card was charged. Nothing here may report an error:
+    // the row must be settled and the operator must not be invited to retry.
+    try {
+      await _settleConfirmedCharge(settled);
+    } catch (e) {
+      log('No se pudo guardar el cobro aprobado: $e');
+    }
+    emit(state.copyWith(
+        status: PaymentStatus.cardVerified,
+        errorDescription: settled.response));
+    emit(state.copyWith(status: PaymentStatus.successGet));
+    return true;
   }
 
   /// Records a charge confirmed after the sale flow ended (a verified pending
@@ -1074,7 +1119,7 @@ class PaymentBloc extends Cubit<PaymentState> {
     int quotas = 0,
   }) async {
     try {
-      emit(state.copyWith(step: 4));
+      emit(state.copyWith(step: 4, status: PaymentStatus.cardProcessing));
 
       PaymentAttemptDto newPayment = PaymentAttemptDto(
         uuid: state.paymentObj?.uuid ?? "",
@@ -1154,7 +1199,8 @@ class PaymentBloc extends Cubit<PaymentState> {
         "Aprobada - Error sync server: ${lastError ?? 'desconocido'}",
         "Error complete payment POS",
       );
-      _emitMarkFailedFallback();
+      // The card was charged; only the order could not be registered.
+      _emitMarkFailedFallback(charged: izify, cardPayment: izify ? cardPayment : null);
       return false;
     } catch (e) {
       log(e.toString());
@@ -1179,7 +1225,7 @@ class PaymentBloc extends Cubit<PaymentState> {
     int quotas = 0,
   }) async {
     try {
-      emit(state.copyWith(step: 4));
+      emit(state.copyWith(step: 4, status: PaymentStatus.cardProcessing));
 
       PaymentDto newPayment = _buildPaymentDto(AppConstants.idPaymentMethodPOS);
 
@@ -1232,7 +1278,8 @@ class PaymentBloc extends Cubit<PaymentState> {
         "Aprobada - Error sync server: ${lastError ?? 'desconocido'}",
         "Error complete payment POS",
       );
-      _emitMarkFailedFallback();
+      // The card was charged; only the order could not be registered.
+      _emitMarkFailedFallback(charged: izify, cardPayment: izify ? cardPayment : null);
       return false;
     } catch (e) {
       log(e.toString());

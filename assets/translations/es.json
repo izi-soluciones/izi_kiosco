@@ -313,7 +313,9 @@
       "chooseCardType": "Elige un tipo de tarjeta",
       "chooseCardPaymentType": "Elige un tipo de pago con tarjeta",
       "payWithBreB": "Paga a través de Bre-B",
-      "areYouSureStopTransaction": "¿Está seguro de parar la transacción?"
+      "areYouSureStopTransaction": "¿Está seguro de parar la transacción?",
+      "chargedNotRegistered": "Tu pago se realizó correctamente",
+      "chargedNotRegisteredDetail": "No pudimos registrar el pedido. Acércate a caja y muestra este comprobante: no vuelvas a pagar."
     },
     "body": {
       "total": "Total",
@@ -329,7 +331,8 @@
       "havingTrouble": "¿Estás teniendo algún problema?",
       "documentFallback": "número",
       "doNotClose": "No cierres esta pantalla",
-      "orderNumber": "Orden #{}"
+      "orderNumber": "Orden #{}",
+      "chargeInProgress": "El cobro ya está en el datáfono. Espera la respuesta; si no puedes continuar, cancélalo en el datáfono o pide ayuda."
     },
     "buttons": {
       "qr": "QR",

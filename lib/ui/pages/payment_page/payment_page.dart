@@ -12,6 +12,7 @@ import 'package:izi_kiosco/ui/modals/warning_config_modal.dart';
 import 'package:izi_kiosco/ui/pages/payment_page/views/payment_page_card.dart';
 import 'package:izi_kiosco/ui/pages/payment_page/views/payment_page_invoice.dart';
 import 'package:izi_kiosco/ui/pages/payment_page/views/payment_page_order_complete.dart';
+import 'package:izi_kiosco/ui/pages/payment_page/views/payment_page_charged_not_registered.dart';
 import 'package:izi_kiosco/ui/pages/payment_page/views/payment_page_order_error.dart';
 import 'package:izi_kiosco/ui/pages/payment_page/views/payment_page_qr.dart';
 import 'package:izi_kiosco/ui/pages/payment_page/views/payment_page_breb.dart';
@@ -151,7 +152,9 @@ class PaymentPage extends StatelessWidget {
             //7
             PaymentPageBREB(state: state),
             //8
-            PaymentPageDemo(state: state)
+            PaymentPageDemo(state: state),
+            //9
+            PaymentPageChargedNotRegistered(state: state)
           ],
         );
       },

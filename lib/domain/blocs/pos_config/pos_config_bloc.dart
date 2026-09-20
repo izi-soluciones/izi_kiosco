@@ -316,7 +316,12 @@ class PosConfigBloc extends Cubit<PosConfigState> {
   /// to [reconnect] when the terminal is not ours anymore or stopped answering.
   Future<void> checkHealth() async {
     final device = state.pairedDevice;
-    if (device == null || _reconnecting) return;
+    // While a pairing is running, `pairedDevice` is still the old terminal and
+    // the epoch has already moved: a check now could re-pair with, and save,
+    // the terminal the technician is switching away from.
+    if (device == null || _reconnecting || state.status == PosConfigStatus.pairing) {
+      return;
+    }
     final epoch = _epoch;
     bool stale() => isClosed || epoch != _epoch;
     final address = IzifyPosAddress(device.ip, device.port);

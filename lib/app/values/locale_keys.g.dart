@@ -246,6 +246,8 @@ abstract class  LocaleKeys {
   static const payment_subtitles_successOrder = 'payment.subtitles.successOrder';
   static const payment_subtitles_error = 'payment.subtitles.error';
   static const payment_subtitles_cantProcessPayment = 'payment.subtitles.cantProcessPayment';
+  static const payment_subtitles_chargedNotRegistered = 'payment.subtitles.chargedNotRegistered';
+  static const payment_subtitles_chargedNotRegisteredDetail = 'payment.subtitles.chargedNotRegisteredDetail';
   static const payment_subtitles_chooseCardType = 'payment.subtitles.chooseCardType';
   static const payment_subtitles_chooseCardPaymentType = 'payment.subtitles.chooseCardPaymentType';
   static const payment_subtitles_payWithBreB = 'payment.subtitles.payWithBreB';
@@ -262,6 +264,7 @@ abstract class  LocaleKeys {
   static const payment_body_waitingConfirmation = 'payment.body.waitingConfirmation';
   static const payment_body_brebKey = 'payment.body.brebKey';
   static const payment_body_havingTrouble = 'payment.body.havingTrouble';
+  static const payment_body_chargeInProgress = 'payment.body.chargeInProgress';
   static const payment_body_documentFallback = 'payment.body.documentFallback';
   static const payment_body_doNotClose = 'payment.body.doNotClose';
   static const payment_body_orderNumber = 'payment.body.orderNumber';

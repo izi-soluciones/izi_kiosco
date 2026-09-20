@@ -313,7 +313,9 @@
       "chooseCardType": "Choose a card type",
       "chooseCardPaymentType": "Choose a card payment type",
       "payWithBreB": "Pay with Bre-B",
-      "areYouSureStopTransaction": "Are you sure you want to stop the transaction?"
+      "areYouSureStopTransaction": "Are you sure you want to stop the transaction?",
+      "chargedNotRegistered": "Your payment went through",
+      "chargedNotRegisteredDetail": "We could not register the order. Please go to the counter and show this receipt: do not pay again."
     },
     "body": {
       "total": "Total",
@@ -329,7 +331,8 @@
       "havingTrouble": "Having trouble?",
       "documentFallback": "number",
       "doNotClose": "Do not close this screen",
-      "orderNumber": "Order #{}"
+      "orderNumber": "Order #{}",
+      "chargeInProgress": "The charge is already on the card reader. Wait for its answer; if you cannot continue, cancel it there or ask for help."
     },
     "buttons": {
       "qr": "QR",
