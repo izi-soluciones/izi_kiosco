@@ -478,7 +478,7 @@ class IzifyPosClient {
   }
 
   static String _unreachable(IzifyPosAddress address) =>
-      'No se pudo conectar con el datáfono en ${address.hostPort}. Verifique que esté encendido, con PayPOS abierto y en la misma red que el kiosko.';
+      'No se pudo conectar con el datáfono en ${address.hostPort}. Verifique que esté encendido y en la misma red que el kiosko.';
 
   static dynamic _decode(String body) {
     if (body.isEmpty) return null;

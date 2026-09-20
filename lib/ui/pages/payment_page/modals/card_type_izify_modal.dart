@@ -84,7 +84,7 @@ class _CardTypeIzifyModalState extends State<CardTypeIzifyModal> {
         ] else ...[
           const SizedBox(height: 24,),
           IziText.titleSmall(
-              color: context.iziColors.dark, text: "Número de cuotas"),
+              color: context.iziColors.dark, text: LocaleKeys.payment_body_instalments.tr()),
           const SizedBox(height: 8,),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -122,7 +122,7 @@ class _CardTypeIzifyModalState extends State<CardTypeIzifyModal> {
             children: [
               Expanded(
                 child: IziBtn(
-                  buttonText: "Volver",
+                  buttonText: LocaleKeys.payment_buttons_back.tr(),
                   buttonType: ButtonType.terciary,
                   buttonSize: ButtonSize.large,
                   buttonOnPressed: () {
@@ -136,7 +136,7 @@ class _CardTypeIzifyModalState extends State<CardTypeIzifyModal> {
               const SizedBox(width: 16,),
               Expanded(
                 child: IziBtn(
-                  buttonText: "Continuar",
+                  buttonText: LocaleKeys.payment_buttons_continueAction.tr(),
                   buttonType: ButtonType.primary,
                   buttonSize: ButtonSize.large,
                   buttonOnPressed: () {

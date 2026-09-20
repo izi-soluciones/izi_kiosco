@@ -712,35 +712,6 @@ class ComandaRepositoryHttp extends ComandaRepository {
     }
   }
   @override
-  Future<CardPayment> callCardPaymentIzify({required String amount, required String ipPort, required String token, required String currency, required String cardType, required int quotas}) async {
-    // Kept for callers outside the payment flow; the flow itself talks to the
-    // terminal through IzifyPosClient (health check, re-pairing, typed errors).
-    final address = IzifyPosAddress.tryParse(ipPort);
-    if (address == null) throw "Dirección del datáfono inválida: $ipPort";
-    final reference = IzifyPosClient.newReference();
-    try {
-      await _izifyPosClient.pay(address,
-          token: token,
-          amount: amount,
-          currency: currency,
-          reference: reference,
-          cardType: cardType,
-          quotas: quotas);
-    } on IzifyPosException catch (e) {
-      throw e.message;
-    }
-    final now = DateTime.now().toIso8601String();
-    return CardPayment(
-        response: "Enviado",
-        cardNumber: "****",
-        date: now.split('T').first,
-        hour: now.split('T').last.substring(0, 5),
-        reference: reference,
-        amount: amount,
-        currency: currency);
-  }
-
-  @override
   Future<PosPaymentResult?> pollIzifyPaymentStatus({required String ipPort, required String token, required String reference}) async {
     if (reference.isEmpty) return null;
     final address = IzifyPosAddress.tryParse(ipPort);

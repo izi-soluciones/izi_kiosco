@@ -332,7 +332,8 @@
       "documentFallback": "número",
       "doNotClose": "No cierres esta pantalla",
       "orderNumber": "Orden #{}",
-      "chargeInProgress": "El cobro ya está en el datáfono. Espera la respuesta; si no puedes continuar, cancélalo en el datáfono o pide ayuda."
+      "chargeInProgress": "El cobro ya está en el datáfono. Espera la respuesta; si no puedes continuar, cancélalo en el datáfono o pide ayuda.",
+      "instalments": "Número de cuotas"
     },
     "buttons": {
       "qr": "QR",
@@ -353,7 +354,9 @@
       "invoiceNo": "No",
       "invoiceYes": "Sí",
       "changePaymentMethod": "Cambiar forma de pago",
-      "stopTransaction": "Detener la transacción"
+      "stopTransaction": "Detener la transacción",
+      "back": "Volver",
+      "continueAction": "Continuar"
     },
     "inputs": {
       "complement": {

@@ -332,7 +332,8 @@
       "documentFallback": "number",
       "doNotClose": "Do not close this screen",
       "orderNumber": "Order #{}",
-      "chargeInProgress": "The charge is already on the card reader. Wait for its answer; if you cannot continue, cancel it there or ask for help."
+      "chargeInProgress": "The charge is already on the card reader. Wait for its answer; if you cannot continue, cancel it there or ask for help.",
+      "instalments": "Number of instalments"
     },
     "buttons": {
       "qr": "QR",
@@ -353,7 +354,9 @@
       "invoiceNo": "No",
       "invoiceYes": "Yes",
       "changePaymentMethod": "Change payment method",
-      "stopTransaction": "Stop the transaction"
+      "stopTransaction": "Stop the transaction",
+      "back": "Back",
+      "continueAction": "Continue"
     },
     "inputs": {
       "complement": {

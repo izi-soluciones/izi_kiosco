@@ -950,6 +950,9 @@ class PaymentBloc extends Cubit<PaymentState> {
       status: PaymentStatus.paymentProcessed,
       chargeProof: charged ? _chargeProof(cardPayment) : null,
     ));
+    // A charged customer has just been told to show this screen at the counter,
+    // so it stays until they leave it; only the plain failure returns home.
+    if (charged) return;
     timerSuccess = Timer(const Duration(seconds: 30), () async {
       emit(state.copyWith(status: PaymentStatus.successInvoice));
     });
@@ -1222,7 +1225,11 @@ class PaymentBloc extends Cubit<PaymentState> {
       emit(state.copyWith(
           status: PaymentStatus.cardError,
           step: authState.currentContribuyente?.tieneFacturacion == true ? 2 : 1,
-          errorDescription: e is IzifyPosException ? e.message : ""));
+          // An IzifyPosException here is an operational fault (unpaired, wrong
+          // terminal, not ready). Nothing was charged, and its wording is for
+          // staff, not for the customer standing at the kiosk: the detail goes
+          // to the transactions list and the log.
+          errorDescription: ""));
       emit(state.copyWith(status: PaymentStatus.successGet));
       return false;
     }
@@ -1301,7 +1308,11 @@ class PaymentBloc extends Cubit<PaymentState> {
       emit(state.copyWith(
           status: PaymentStatus.cardError,
           step: authState.currentContribuyente?.tieneFacturacion == true ? 2 : 1,
-          errorDescription: e is IzifyPosException ? e.message : ""));
+          // An IzifyPosException here is an operational fault (unpaired, wrong
+          // terminal, not ready). Nothing was charged, and its wording is for
+          // staff, not for the customer standing at the kiosk: the detail goes
+          // to the transactions list and the log.
+          errorDescription: ""));
       emit(state.copyWith(status: PaymentStatus.successGet));
       return false;
     }

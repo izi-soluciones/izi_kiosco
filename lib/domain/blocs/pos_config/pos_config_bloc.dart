@@ -112,8 +112,13 @@ class PosConfigBloc extends Cubit<PosConfigState> {
         IzifyPosAddress.tryParse(await TokenUtils.getPosBackendIp()) == backend) {
       return;
     }
-    if (!_backendAttempts.add(backend)) return; // Once per launch and value.
-    await pairDevice(_deviceFor(backend));
+    if (_backendAttempts.contains(backend)) return; // Once per launch and value.
+    if (await TokenUtils.getPosUnpairedByUser()) return;
+    final paired = await pairDevice(_deviceFor(backend));
+    // Only a pairing that worked counts as attempted. A kiosk that boots
+    // before the terminal — normal after a power cut — would otherwise stay
+    // unpaired until someone restarted the app.
+    if (paired) _backendAttempts.add(backend);
   }
 
   PosDevice _deviceFor(IzifyPosAddress address) =>
@@ -183,11 +188,12 @@ class PosConfigBloc extends Cubit<PosConfigState> {
     );
   }
 
-  Future<void> pairDevice(PosDevice device, {String? mqttClientId, String? mqttUserName, String? mqttPassword, String? commerceId, String? cajaId}) async {
+  /// Pairs this kiosk with [device]. Returns whether the pairing succeeded.
+  Future<bool> pairDevice(PosDevice device, {String? mqttClientId, String? mqttUserName, String? mqttPassword, String? commerceId, String? cajaId}) async {
     // Anything still running for the previous terminal must not act after this.
     final epoch = ++_epoch;
     await _stopDiscovery();
-    if (isClosed) return;
+    if (isClosed) return false;
     final previous = state.pairedDevice;
     final previousToken = await TokenUtils.getPosToken();
     emit(state.copyWith(status: PosConfigStatus.pairing));
@@ -207,6 +213,7 @@ class PosConfigBloc extends Cubit<PosConfigState> {
       );
       await _acknowledgeBackend();
       _autoPairDisabled = false;
+      await TokenUtils.savePosUnpairedByUser(false);
       _repairPending = false;
       // Release the terminal this kiosk used before, so a later search can
       // never mistake it for this kiosk's (it would still name this kiosk).
@@ -215,7 +222,7 @@ class PosConfigBloc extends Cubit<PosConfigState> {
         unawaited(_client.unpair(old, previousToken).catchError((_) {}));
       }
       final paired = _deviceFor(session.address);
-      if (isClosed || epoch != _epoch) return;
+      if (isClosed || epoch != _epoch) return true;
       emit(state.copyWith(
         status: PosConfigStatus.paired,
         pairedDevice: paired,
@@ -223,16 +230,19 @@ class PosConfigBloc extends Cubit<PosConfigState> {
       ));
       _startHealthPolling();
       unawaited(checkHealth());
+      return true;
     } on IzifyPosException catch (e) {
       if (!isClosed && epoch == _epoch) {
         emit(state.copyWith(status: PosConfigStatus.error, errorMessage: e.message));
       }
+      return false;
     } catch (e) {
       if (!isClosed && epoch == _epoch) {
         emit(state.copyWith(
             status: PosConfigStatus.error,
             errorMessage: 'No se pudo emparejar el datáfono: $e'));
       }
+      return false;
     }
   }
 
@@ -455,8 +465,10 @@ class PosConfigBloc extends Cubit<PosConfigState> {
     _healthTimer?.cancel();
     _healthTimer = null;
     _repairPending = false;
-    // A deliberate unpair must not be undone by the automatic pairing.
+    // A deliberate unpair must not be undone by the automatic pairing, this
+    // launch or the next one.
     _autoPairDisabled = true;
+    await TokenUtils.savePosUnpairedByUser(true);
     final device = state.pairedDevice;
     if (device != null) {
       String? token = await TokenUtils.getPosToken();

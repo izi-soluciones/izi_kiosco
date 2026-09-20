@@ -94,6 +94,19 @@ class TokenUtils{
     SharedPreferences prefs=await SharedPreferences.getInstance();
     await prefs.setString("posBackendIp", ip);
   }
+  /// Whether a technician unpaired this kiosk on purpose. Persisted, so the
+  /// automatic pairing does not take the terminal back on the next launch —
+  /// the terminal remembers the same thing on its side.
+  static Future<void> savePosUnpairedByUser(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool("posUnpairedByUser", value);
+  }
+
+  static Future<bool> getPosUnpairedByUser() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool("posUnpairedByUser") ?? false;
+  }
+
   static Future<String?> getPosBackendIp()async{
     SharedPreferences prefs=await SharedPreferences.getInstance();
     return prefs.getString("posBackendIp");

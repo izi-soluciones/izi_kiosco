@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer';
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -41,7 +42,13 @@ class _ErrorPaymentPageState extends State<ErrorPaymentPage> {
     final value = await LocalStorageCardErrors.getErrors();
     final loaded = <CardPayment>[];
     for (var e in value) {
-      loaded.add(CardPayment.fromJsonStorage(jsonDecode(e)));
+      try {
+        loaded.add(CardPayment.fromJsonStorage(jsonDecode(e)));
+      } catch (error) {
+        // One unreadable row (truncated, or written by an older version) must
+        // not hide every card sale from the operator.
+        log('Registro de cobro ilegible, se omite: $error');
+      }
     }
     if (!mounted) return;
     setState(() {

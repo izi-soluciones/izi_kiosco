@@ -265,6 +265,9 @@ abstract class  LocaleKeys {
   static const payment_body_brebKey = 'payment.body.brebKey';
   static const payment_body_havingTrouble = 'payment.body.havingTrouble';
   static const payment_body_chargeInProgress = 'payment.body.chargeInProgress';
+  static const payment_body_instalments = 'payment.body.instalments';
+  static const payment_buttons_back = 'payment.buttons.back';
+  static const payment_buttons_continueAction = 'payment.buttons.continueAction';
   static const payment_body_documentFallback = 'payment.body.documentFallback';
   static const payment_body_doNotClose = 'payment.body.doNotClose';
   static const payment_body_orderNumber = 'payment.body.orderNumber';
