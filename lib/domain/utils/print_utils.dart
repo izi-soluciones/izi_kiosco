@@ -242,6 +242,7 @@ class PrintUtils {
   }
 
   print(List<IziPrintItem> values, Device? device) async {
+    if (device?.config.noPrintRollo == true) return;
     if (kIsWeb) {
       await _pdfPrint(values);
     } else {

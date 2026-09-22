@@ -35,7 +35,13 @@ class _MakeOrderPageState extends State<MakeOrderPage> {
   @override
   void initState() {
     pageController= PageController(initialPage: widget.isRetail?1:0);
+    FocusManager.instance.addListener(_recoverFocusKeyboard);
     super.initState();
+  }
+  @override
+  void dispose() {
+    FocusManager.instance.removeListener(_recoverFocusKeyboard);
+    super.dispose();
   }
   @override
   Widget build(BuildContext context) {
@@ -154,5 +160,14 @@ class _MakeOrderPageState extends State<MakeOrderPage> {
     }
     focusNodeKeyboard.requestFocus();
     barCode = "";
+  }
+
+  // IziBtn hace unfocus() al tocarse y el foco sube al scope de la ruta, por encima
+  // del KeyboardListener. Si nadie más lo tomó, vuelve al lector.
+  _recoverFocusKeyboard() {
+    final scope = focusNodeKeyboard.enclosingScope;
+    if (scope != null && FocusManager.instance.primaryFocus == scope) {
+      focusNodeKeyboard.requestFocus();
+    }
   }
 }

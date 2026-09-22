@@ -425,6 +425,7 @@ class _MakeOrderRetailScanState extends State<MakeOrderRetailScan> {
             extra: paymentObj, pathParameters: {"id": value.id.toString()});
       } else {
         context.read<PageUtilsBloc>().initScreenActive(authState);
+        focusNodeKeyboard.requestFocus();
       }
     });
   }
