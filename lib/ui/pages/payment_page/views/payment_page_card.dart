@@ -39,6 +39,9 @@ class _PaymentPageCardState extends State<PaymentPageCard> {
     super.initState();
   }
 
+  /// True while the charge runs on an izify POS terminal, which has no cancel.
+  bool get _izifyCharge => widget.state.izifyPosIp != null;
+
   _cancelPayment(){
     CustomAlerts.defaultAlert(
         context: context,
@@ -130,7 +133,20 @@ class _PaymentPageCardState extends State<PaymentPageCard> {
                 textAlign: TextAlign.center,
                 text:LocaleKeys.payment_body_havingTrouble.tr(),
                 fontWeight: FontWeight.w400),
-            if(showCancel)
+            // On the izify path the charge is already running on the reader
+            // and cannot be recalled from here, so offering to stop it would
+            // be a button that does nothing.
+            if(showCancel && _izifyCharge)
+            Padding(
+              padding: const EdgeInsets.only(top: 16.0),
+              child: IziText.body(
+                  color: context.iziColors.darkGrey,
+                  textAlign: TextAlign.center,
+                  maxLines: 3,
+                  text: LocaleKeys.payment_body_chargeInProgress.tr(),
+                  fontWeight: FontWeight.w400),
+            ),
+            if(showCancel && !_izifyCharge)
             Padding(
               padding: const EdgeInsets.only(top: 16.0),
               child: InkWell(

@@ -4,6 +4,7 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
 import 'package:izi_kiosco/domain/repositories/business_repository.dart';
+import 'package:izi_kiosco/data/pos/izify_pos_client.dart';
 import 'package:izi_kiosco/data/utils/token_utils.dart';
 import 'package:izi_kiosco/domain/utils/crash_report.dart';
 part 'home_state.dart';
@@ -15,12 +16,32 @@ class HomeBloc extends Cubit<HomeState>{
   Stream? futureVerifyPos;
   StreamSubscription? _subscription;
 
-  HomeBloc(this._businessRepository):super(HomeState.init());
+  final IzifyPosClient _izifyPosClient;
+
+  HomeBloc(this._businessRepository, {IzifyPosClient? izifyPosClient})
+      : _izifyPosClient = izifyPosClient ?? IzifyPosClient(),
+        super(HomeState.init());
+
+  @override
+  Future<void> close() {
+    _subscription?.cancel();
+    _izifyPosClient.close();
+    return super.close();
+  }
 
   verifyServerPos(AuthState authState)async{
-    final savedIzifyPosIp = await TokenUtils.getPosIp();
-    if (savedIzifyPosIp != null && savedIzifyPosIp.isNotEmpty) {
-      emit(state.copyWith(statusServer: true, statusServerPos: true));
+    final izifyAddress = IzifyPosAddress.tryParse(await TokenUtils.getPosIp()) ??
+        IzifyPosAddress.tryParse(authState.currentDevice?.config.ipEcopay);
+    if (izifyAddress != null) {
+      // EcoPay terminal: this used to report OK without asking it. Ask, so
+      // the home screen warns before a customer reaches the card payment.
+      await _verifyIzify(izifyAddress);
+      _subscription?.cancel();
+      _subscription = Stream.periodic(const Duration(seconds: 30))
+          .asyncMap((_) => _verifyIzify(izifyAddress))
+          .listen((_) {
+        if (isClosed) _subscription?.cancel();
+      });
       return;
     }
 
@@ -42,6 +63,26 @@ class HomeBloc extends Cubit<HomeState>{
     }
 
   }
+  Future<void> _verifyIzify(IzifyPosAddress address) async {
+    bool ready;
+    try {
+      final health = await _izifyPosClient.health(address);
+      ready = health.notReadyReason == null;
+    } catch (_) {
+      ready = false;
+    }
+    if (isClosed) {
+      _subscription?.cancel();
+      return;
+    }
+    // Report the change, not the state: this runs every 30 s, so a terminal
+    // left switched off used to file thousands of identical reports a day.
+    if (!ready && state.statusServerPos != false) {
+      CrashReport.report("Error connection POS", "Izify POS not ready at $address");
+    }
+    emit(state.copyWith(statusServer: true, statusServerPos: ready));
+  }
+
   _verify()async{
     try {
       final isConnected = await _businessRepository.verifyConnectionPos();

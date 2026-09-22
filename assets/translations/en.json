@@ -304,7 +304,7 @@
       "selectPaymentMethod": "Choose how you want to pay",
       "beforePaymentNeedData": "Before paying we need the following details",
       "scanQRtoPay": "Scan the QR code to pay",
-      "enterYourCard": "Insert or tap your card on the reader",
+      "enterYourCard": "Tap your card or phone on the card terminal and hold it until it beeps, or insert your card. If you inserted it, remove it when the terminal asks.",
       "verifyPayment": "Payment verification",
       "successPayment": "Payment successful!",
       "successOrder": "Order created!",
@@ -313,7 +313,9 @@
       "chooseCardType": "Choose a card type",
       "chooseCardPaymentType": "Choose a card payment type",
       "payWithBreB": "Pay with Bre-B",
-      "areYouSureStopTransaction": "Are you sure you want to stop the transaction?"
+      "areYouSureStopTransaction": "Are you sure you want to stop the transaction?",
+      "chargedNotRegistered": "Your payment went through",
+      "chargedNotRegisteredDetail": "We could not register the order. Please go to the counter and show this receipt: do not pay again."
     },
     "body": {
       "total": "Total",
@@ -329,7 +331,9 @@
       "havingTrouble": "Having trouble?",
       "documentFallback": "number",
       "doNotClose": "Do not close this screen",
-      "orderNumber": "Order #{}"
+      "orderNumber": "Order #{}",
+      "chargeInProgress": "The charge is already on the card reader. Wait for its answer; if you cannot continue, cancel it there or ask for help.",
+      "instalments": "Number of instalments"
     },
     "buttons": {
       "qr": "QR",
@@ -350,7 +354,9 @@
       "invoiceNo": "No",
       "invoiceYes": "Yes",
       "changePaymentMethod": "Change payment method",
-      "stopTransaction": "Stop the transaction"
+      "stopTransaction": "Stop the transaction",
+      "back": "Back",
+      "continueAction": "Continue"
     },
     "inputs": {
       "complement": {
@@ -416,7 +422,8 @@
       "errorBreB": "Something went wrong while starting the Bre-B payment",
       "processingOrder": "Processing order",
       "processingInvoice": "Processing invoice",
-      "processingInvoiceElectronic": "Processing electronic invoice"
+      "processingInvoiceElectronic": "Processing electronic invoice",
+      "pendingCard": "Payment not confirmed — verify before retrying"
     },
     "links": {
       "addEmail": "+ Add email",
@@ -711,11 +718,24 @@
       "connect": "Connect",
       "search": "Search",
       "searching": "Searching...",
-      "pair": "Pair"
+      "pair": "Pair",
+      "checkNow": "Check now"
     },
     "messages": {
       "paired": "POS paired",
-      "noTerminals": "No terminals found"
+      "noTerminals": "No terminals found",
+      "ready": "Ready to charge",
+      "checking": "Checking the terminal...",
+      "overlayMissing": "The terminal lacks the \"Display over other apps\" permission: charges work, but the customer may not see the payment screen. Enable it for PayPOS in the terminal settings."
+    },
+    "labels": {
+      "battery": "Battery",
+      "noPaper": "Out of paper"
+    },
+    "discovered": {
+      "free": "Available",
+      "thisKiosk": "Paired with this kiosk",
+      "otherKiosk": "Paired with another kiosk"
     }
   },
   "errorPayment": {
@@ -728,7 +748,33 @@
     "buttons": {
       "logout": "Sign out",
       "posConfig": "POS settings",
-      "closeApp": "Close app"
+      "closeApp": "Close app",
+      "printTest": "Test print",
+      "printing": "Printing..."
+    }
+  },
+  "errorPayments": {
+    "columns": {
+      "status": "Status",
+      "action": "Action"
+    },
+    "status": {
+      "success": "Approved",
+      "declined": "Declined",
+      "pending": "Unconfirmed",
+      "unknown": "Unknown"
+    },
+    "retry": {
+      "button": "Retry",
+      "confirmTitle": "Retry payment",
+      "confirmBody": "Do you want to retry charging this transaction?",
+      "confirmWarning": "The previous payment was not confirmed. Make sure it was not charged before retrying.",
+      "confirm": "Retry",
+      "cancel": "Cancel"
+    },
+    "verify": {
+      "button": "Verify",
+      "success": "Charge confirmed"
     }
   }
 }

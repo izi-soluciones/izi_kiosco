@@ -1,6 +1,4 @@
 import 'dart:convert';
-import 'package:crypto/crypto.dart';
-import 'package:http/http.dart' as http;
 
 import 'package:dio/dio.dart';
 //import 'package:firebase_app_check/firebase_app_check.dart';
@@ -8,6 +6,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:izi_kiosco/app/values/app_constants.dart';
 import 'package:izi_kiosco/app/values/env_keys.dart';
 import 'package:izi_kiosco/data/core/dio_client.dart';
+import 'package:izi_kiosco/data/pos/izify_pos_client.dart';
 import 'package:izi_kiosco/data/utils/token_utils.dart';
 import 'package:izi_kiosco/domain/dto/filters_comanda.dart';
 import 'package:izi_kiosco/domain/dto/invoice_dto.dart';
@@ -23,6 +22,7 @@ import 'package:izi_kiosco/domain/models/comanda.dart';
 import 'package:izi_kiosco/domain/models/invoice.dart';
 import 'package:izi_kiosco/domain/models/item.dart';
 import 'package:izi_kiosco/domain/models/payment.dart';
+import 'package:izi_kiosco/domain/models/pos_payment_result.dart';
 import 'package:izi_kiosco/domain/models/consumption_point.dart';
 import 'package:izi_kiosco/domain/models/room.dart';
 import 'package:izi_kiosco/domain/models/sale_link.dart';
@@ -30,7 +30,12 @@ import 'package:izi_kiosco/domain/repositories/comanda_repository.dart';
 import 'package:izi_kiosco/domain/dto/internal_movement_dto.dart';
 
 class ComandaRepositoryHttp extends ComandaRepository {
-  final DioClient _dioClient = DioClient();
+  final DioClient _dioClient;
+  final IzifyPosClient _izifyPosClient;
+
+  ComandaRepositoryHttp({DioClient? dioClient, IzifyPosClient? izifyPosClient})
+      : _dioClient = dioClient ?? DioClient(),
+        _izifyPosClient = izifyPosClient ?? IzifyPosClient();
 
   @override
   Future<List<Comanda>> getComandas(
@@ -707,71 +712,15 @@ class ComandaRepositoryHttp extends ComandaRepository {
     }
   }
   @override
-  Future<CardPayment> callCardPaymentIzify({required String amount, required String ipPort, required String token, required String currency, required String cardType}) async {
-    try {
-      final String reference = "KOS-${DateTime.now().millisecondsSinceEpoch.toString().substring(5)}";
-      
-      final payloadStr = "$amount|$currency|$reference";
-      final dataToHash = "$payloadStr|$token";
-      final bytes = utf8.encode(dataToHash);
-      final signature = sha256.convert(bytes).toString();
-
-      final res = await http.post(
-        Uri.parse('http://$ipPort/pay'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token'
-        },
-        body: jsonEncode({
-          "amount": amount,
-          "currency": currency,
-          "reference": reference,
-          "signature": signature,
-          "cardType": cardType,
-          "quotas": 0,
-          "sendTicket": 0
-        })
-      );
-
-      if (res.statusCode >= 200 && res.statusCode < 300) {
-        try {
-          if (res.body.isEmpty) {
-            return CardPayment(
-              response: "Aprobada", 
-              cardNumber: "****",
-              date: DateTime.now().toIso8601String().split('T').first,
-              hour: DateTime.now().toIso8601String().split('T').last.substring(0, 5)
-            );
-          }
-          final data = jsonDecode(res.body);
-          if (data is Map && data["success"] != null && data["success"] == false) {
-             throw data["message"] ?? "Transacción rechazada por el POS";
-          }
-          return CardPayment(
-               response: "Aprobada", 
-               cardNumber: data is Map ? (data["cardNumber"] ?? "****") : "****",
-               date: DateTime.now().toIso8601String().split('T').first,
-               hour: DateTime.now().toIso8601String().split('T').last.substring(0, 5)
-          );
-        } catch (e) {
-          if (e is FormatException) {
-            return CardPayment(
-               response: "Aprobada", 
-               cardNumber: "****",
-               date: DateTime.now().toIso8601String().split('T').first,
-               hour: DateTime.now().toIso8601String().split('T').last.substring(0, 5)
-            );
-          }
-          rethrow;
-        }
-      }
-      throw "Error procesando el pago en el POS: ${res.statusCode}";
-    } catch (error) {
-      throw error.toString();
-    }
+  Future<PosPaymentResult?> pollIzifyPaymentStatus({required String ipPort, required String token, required String reference}) async {
+    if (reference.isEmpty) return null;
+    final address = IzifyPosAddress.tryParse(ipPort);
+    if (address == null) return null;
+    final result = await _izifyPosClient.paymentStatus(address, token: token, reference: reference);
+    return result.isTerminal ? result : null;
   }
   @override
-  Future<void> markPaymentATC(String chargeUuid, int? internalId) async {
+  Future<void> markPaymentATC(String chargeUuid, int? internalId, {Map<String, dynamic>? transaccion}) async {
     try {
       String? token = await TokenUtils.getTokenCard();
       if(token==null){
@@ -782,7 +731,10 @@ class ComandaRepositoryHttp extends ComandaRepository {
           uri: path,
           body: {
             "token": token,
-            if (internalId != null) "internalId": internalId
+            if (internalId != null) "internalId": internalId,
+            // Older backends ignore it; newer ones store it and answer a
+            // resend of the same transaction with 200 instead of 404.
+            if (transaccion != null) "transaccion": transaccion,
           },
           options: Options(responseType: ResponseType.json));
       if (response.statusCode != 200) {
@@ -792,12 +744,37 @@ class ComandaRepositoryHttp extends ComandaRepository {
         throw response.data;
       }
     } on DioException catch (e) {
+      if (e.response?.statusCode == 409) {
+        throw const PaymentConflict(
+            'iZi ya tiene registrado otro pago con tarjeta para este pedido: posible doble cobro. Revise con EcoPay antes de hacer nada más.');
+      }
       if (e.response?.data is String) {
         throw e.response?.data;
       }
       throw e.error ?? "Network Error";
+    } on PaymentConflict {
+      rethrow;
     } catch (error) {
       throw error.toString();
+    }
+  }
+
+  @override
+  Future<void> reportTerminalResult(String chargeUuid, int? internalId, Map<String, dynamic> transaccion) async {
+    final token = await TokenUtils.getTokenCard();
+    if (token == null) return;
+    try {
+      await _dioClient.post(
+          uri: "/solicitudes-cobro/$chargeUuid/resultado-pos",
+          body: {
+            "token": token,
+            if (internalId != null) "internalId": internalId,
+            "transaccion": transaccion,
+          },
+          options: Options(responseType: ResponseType.json));
+    } catch (_) {
+      // Bookkeeping only: an older backend (404) or a paid charge (409)
+      // changes nothing for the sale.
     }
   }
 

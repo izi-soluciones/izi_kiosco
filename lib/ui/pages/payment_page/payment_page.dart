@@ -12,6 +12,7 @@ import 'package:izi_kiosco/ui/modals/warning_config_modal.dart';
 import 'package:izi_kiosco/ui/pages/payment_page/views/payment_page_card.dart';
 import 'package:izi_kiosco/ui/pages/payment_page/views/payment_page_invoice.dart';
 import 'package:izi_kiosco/ui/pages/payment_page/views/payment_page_order_complete.dart';
+import 'package:izi_kiosco/ui/pages/payment_page/views/payment_page_charged_not_registered.dart';
 import 'package:izi_kiosco/ui/pages/payment_page/views/payment_page_order_error.dart';
 import 'package:izi_kiosco/ui/pages/payment_page/views/payment_page_qr.dart';
 import 'package:izi_kiosco/ui/pages/payment_page/views/payment_page_breb.dart';
@@ -56,10 +57,27 @@ class PaymentPage extends StatelessWidget {
         if(state.status== PaymentStatus.cardError){
           context.read<PageUtilsBloc>().closeLoading();
           context.read<PageUtilsBloc>().initScreenActiveInvoiced(context.read<AuthBloc>().state);
+          // The terminal's own reason (declined by the bank, terminal not
+          // ready, ...) tells the customer what to do next; the generic text is
+          // only a fallback.
           context.read<PageUtilsBloc>().showSnackBar(
               snackBar: SnackBarInfo(
-                  text: LocaleKeys.payment_messages_errorCard.tr(),
+                  text: state.errorDescription != null && state.errorDescription!.isNotEmpty
+                      ? "${LocaleKeys.payment_messages_errorCard.tr()}: ${state.errorDescription}"
+                      : LocaleKeys.payment_messages_errorCard.tr(),
                   snackBarType: SnackBarType.error));
+        }
+        if(state.status== PaymentStatus.cardPending){
+          // PENDING: outcome unknown, the card may or may not have been charged.
+          // Do NOT auto-retry; surface it to the operator to verify/reconcile.
+          context.read<PageUtilsBloc>().closeLoading();
+          context.read<PageUtilsBloc>().initScreenActiveInvoiced(context.read<AuthBloc>().state);
+          context.read<PageUtilsBloc>().showSnackBar(
+              snackBar: SnackBarInfo(
+                  text: state.errorDescription != null && state.errorDescription!.isNotEmpty
+                      ? "${LocaleKeys.payment_messages_pendingCard.tr()} (${state.errorDescription})"
+                      : LocaleKeys.payment_messages_pendingCard.tr(),
+                  snackBarType: SnackBarType.warning));
         }
         if (state.status == PaymentStatus.brebError) {
           context.read<PageUtilsBloc>().closeLoading();
@@ -134,7 +152,9 @@ class PaymentPage extends StatelessWidget {
             //7
             PaymentPageBREB(state: state),
             //8
-            PaymentPageDemo(state: state)
+            PaymentPageDemo(state: state),
+            //9
+            PaymentPageChargedNotRegistered(state: state)
           ],
         );
       },

@@ -258,6 +258,7 @@ class _MakeOrderConfirmState extends State<MakeOrderConfirm> {
                 Expanded(
                     flex: 8,
                     child: MakeOrderAmountBtn(
+                      key: const Key('confirm_and_pay_btn'),
                       noAmount: ru.width<500,
                       medium: ru.isXs(),
                         onPressed: _getTotal(state) > 0

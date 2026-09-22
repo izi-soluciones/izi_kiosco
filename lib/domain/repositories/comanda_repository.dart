@@ -7,6 +7,7 @@ import 'package:izi_kiosco/domain/dto/paid_charge_dto.dart';
 import 'package:izi_kiosco/domain/dto/payment_attempt_dto.dart';
 import 'package:izi_kiosco/domain/dto/payment_dto.dart';
 import 'package:izi_kiosco/domain/models/card_payment.dart';
+import 'package:izi_kiosco/domain/models/pos_payment_result.dart';
 import 'package:izi_kiosco/domain/models/category_order.dart';
 import 'package:izi_kiosco/domain/models/charge.dart';
 import 'package:izi_kiosco/domain/models/comanda.dart';
@@ -54,14 +55,27 @@ abstract class ComandaRepository {
       {required int amount, required String ip});
   Future<CardPayment> callCardPaymentATC(
       {required String amount, required String ip, required CancelToken cancelToken,required bool contactless});
-  Future<CardPayment> callCardPaymentIzify(
-      {required String amount, required String ipPort, required String token, required String currency, required String cardType});
+
+  /// Polling fallback for the `/payment-updates` WebSocket. Calls
+  /// `GET /payment-status/{reference}` on the Izify POS. Returns the parsed
+  /// result when available, or `null` when there is no result yet (404) or the
+  /// request could not be completed, so the caller can keep polling until its
+  /// own overall timeout.
+  Future<PosPaymentResult?> pollIzifyPaymentStatus(
+      {required String ipPort, required String token, required String reference});
 
   Future<Comanda> markAsCreated(String orderUuid);
 
   Future<Invoice> getInvoice(String invoiceUuid);
   Future<void> createPaidCharge(PaidChargeDto paidChargeDto);
-  Future<void> markPaymentATC(String chargeUuid, int? internalId);
+  /// Tells iZi the charge [chargeUuid] was paid by card. [transaccion] is the
+  /// terminal's proof of payment (see CardPayment.terminalData). Throws
+  /// [PaymentConflict] when iZi already holds a different payment for it.
+  Future<void> markPaymentATC(String chargeUuid, int? internalId, {Map<String, dynamic>? transaccion});
+
+  /// Stores a declined, unconfirmed or cancelled card attempt with its charge
+  /// in iZi. Never marks anything paid. Best effort.
+  Future<void> reportTerminalResult(String chargeUuid, int? internalId, Map<String, dynamic> transaccion);
 
   Future<List<Item>> getSaleItems(
       {String? catalog, List<String>? items, required bool sortByPriority});
@@ -72,4 +86,14 @@ abstract class ComandaRepository {
   Future<void> confirmDemoPaymentOrder({required int id});
   Future<void> cancelBrebKey({required int contribuyenteId, required String handle});
   Future<void> cancelPaymentAttempt({required String uuid});
+}
+
+/// iZi already recorded a different card payment for this charge: a possible
+/// double charge. Retrying cannot fix it; it needs a person.
+class PaymentConflict implements Exception {
+  final String message;
+  const PaymentConflict(this.message);
+
+  @override
+  String toString() => message;
 }

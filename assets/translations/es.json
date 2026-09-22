@@ -304,7 +304,7 @@
       "selectPaymentMethod": "Selecciona el método con el que deseas pagar",
       "beforePaymentNeedData": "Antes de proceder al pago necesitamos los siguientes datos",
       "scanQRtoPay": "Escanea el código QR para pagar",
-      "enterYourCard": "Ingresa o acerca tu tarjeta al tarjetero",
+      "enterYourCard": "Acerca tu tarjeta o teléfono al datáfono y mantenlo hasta que suene, o inserta la tarjeta. Si la insertaste, retírala cuando el datáfono lo indique.",
       "verifyPayment": "Verificación del pago",
       "successPayment": "¡Pago exitoso!",
       "successOrder": "¡Orden creada!",
@@ -313,7 +313,9 @@
       "chooseCardType": "Elige un tipo de tarjeta",
       "chooseCardPaymentType": "Elige un tipo de pago con tarjeta",
       "payWithBreB": "Paga a través de Bre-B",
-      "areYouSureStopTransaction": "¿Está seguro de parar la transacción?"
+      "areYouSureStopTransaction": "¿Está seguro de parar la transacción?",
+      "chargedNotRegistered": "Tu pago se realizó correctamente",
+      "chargedNotRegisteredDetail": "No pudimos registrar el pedido. Acércate a caja y muestra este comprobante: no vuelvas a pagar."
     },
     "body": {
       "total": "Total",
@@ -329,7 +331,9 @@
       "havingTrouble": "¿Estás teniendo algún problema?",
       "documentFallback": "número",
       "doNotClose": "No cierres esta pantalla",
-      "orderNumber": "Orden #{}"
+      "orderNumber": "Orden #{}",
+      "chargeInProgress": "El cobro ya está en el datáfono. Espera la respuesta; si no puedes continuar, cancélalo en el datáfono o pide ayuda.",
+      "instalments": "Número de cuotas"
     },
     "buttons": {
       "qr": "QR",
@@ -350,7 +354,9 @@
       "invoiceNo": "No",
       "invoiceYes": "Sí",
       "changePaymentMethod": "Cambiar forma de pago",
-      "stopTransaction": "Detener la transacción"
+      "stopTransaction": "Detener la transacción",
+      "back": "Volver",
+      "continueAction": "Continuar"
     },
     "inputs": {
       "complement": {
@@ -413,6 +419,7 @@
       "errorGet": "Ocurrió un error al obtener los datos",
       "errorQR": "Ocurrió un problema al generar el QR",
       "errorCard": "Ocurrió un problema al generar el cobro por POS",
+      "pendingCard": "Pago sin confirmar — verifique antes de reintentar",
       "errorBreB": "Ocurrió un problema al generar el cobro por Bre-B",
       "processingOrder": "Procesando orden",
       "processingInvoice": "Procesando factura",
@@ -680,6 +687,30 @@
     "title": "Cobro de demostración",
     "body": "Estás realizando un cobro de prueba. Presiona confirmar para simular el pago exitoso."
   },
+  "errorPayments": {
+    "columns": {
+      "status": "Estado",
+      "action": "Acción"
+    },
+    "status": {
+      "success": "Aprobado",
+      "declined": "Rechazado",
+      "pending": "Sin confirmar",
+      "unknown": "Desconocido"
+    },
+    "retry": {
+      "button": "Reintentar",
+      "confirmTitle": "Reintentar pago",
+      "confirmBody": "¿Desea reintentar el cobro de esta transacción?",
+      "confirmWarning": "El pago anterior no fue confirmado. Verifique que no se haya cobrado antes de reintentar.",
+      "confirm": "Reintentar",
+      "cancel": "Cancelar"
+    },
+    "verify": {
+      "button": "Verificar",
+      "success": "Cobro confirmado"
+    }
+  },
   "passwordModal": {
     "errors": {
       "wrongPin": "El pin no es correcto"
@@ -711,11 +742,24 @@
       "connect": "Conectar",
       "search": "Buscar",
       "searching": "Buscando...",
-      "pair": "Vincular"
+      "pair": "Vincular",
+      "checkNow": "Verificar ahora"
     },
     "messages": {
       "paired": "POS Emparejado correctamente",
-      "noTerminals": "No se encontraron terminales"
+      "noTerminals": "No se encontraron terminales",
+      "ready": "Listo para cobrar",
+      "checking": "Verificando el datáfono...",
+      "overlayMissing": "El datáfono no tiene el permiso \"Mostrar sobre otras apps\": los cobros funcionan, pero el cliente podría no ver la pantalla de pago. Actívelo en Ajustes del datáfono para PayPOS."
+    },
+    "labels": {
+      "battery": "Batería",
+      "noPaper": "Sin papel"
+    },
+    "discovered": {
+      "free": "Disponible",
+      "thisKiosk": "Emparejado con este kiosko",
+      "otherKiosk": "Emparejado con otro kiosko"
     }
   },
   "errorPayment": {
@@ -728,7 +772,9 @@
     "buttons": {
       "logout": "Cerrar sesión",
       "posConfig": "Configuración de POS",
-      "closeApp": "Cerrar app"
+      "closeApp": "Cerrar app",
+      "printTest": "Imprimir prueba",
+      "printing": "Imprimiendo..."
     }
   }
 }

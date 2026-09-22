@@ -19,6 +19,10 @@ enum PaymentStatus {
   cardProcessing,
   cashRegisterProcessing,
   cardError,
+  cardPending,
+  /// A charge confirmed after the sale flow ended (verified or retried from
+  /// the transactions screen). `errorDescription` carries the outcome text.
+  cardVerified,
   qrError,
   brebError,
   brebLoading,
@@ -169,6 +173,10 @@ class PaymentState extends Equatable {
   final PaymentCountryTaxes? countryTaxes;
   final String? izifyPosIp;
 
+  /// What identifies a charge the terminal made, shown to a customer whose card
+  /// was charged but whose order could not be registered, so staff can find it.
+  final String? chargeProof;
+
   const PaymentState({
     this.errorDescription,
     required this.paymentObj,
@@ -204,6 +212,7 @@ class PaymentState extends Equatable {
     this.brebLoading = false,
     this.countryTaxes,
     this.izifyPosIp,
+    this.chargeProof,
     required this.phonePrefix,
     this.qrPaymentKey,
   });
@@ -233,6 +242,7 @@ class PaymentState extends Equatable {
     brebCharge: null,
     brebLoading: false,
     izifyPosIp: null,
+    chargeProof: null,
     casaMatriz: null,
   );
 
@@ -275,6 +285,7 @@ class PaymentState extends Equatable {
     ParamsCo? paramsCo,
     PaymentCountryTaxes? countryTaxes,
     String? izifyPosIp,
+    String? chargeProof,
     PaymentObj? paymentObj,
   }) {
     return PaymentState(
@@ -319,6 +330,7 @@ class PaymentState extends Equatable {
       paymentObj: paymentObj ?? this.paymentObj,
       countryTaxes: countryTaxes ?? this.countryTaxes,
       izifyPosIp: izifyPosIp ?? this.izifyPosIp,
+      chargeProof: chargeProof ?? this.chargeProof,
     );
   }
 
@@ -353,5 +365,6 @@ class PaymentState extends Equatable {
     qrPaymentKey,
     qrLoading,
     izifyPosIp,
+    chargeProof,
   ];
 }

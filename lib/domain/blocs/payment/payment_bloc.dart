@@ -10,10 +10,13 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:izi_kiosco/app/values/app_constants.dart';
 import 'package:izi_kiosco/data/local/local_storage_card_errors.dart';
+import 'package:izi_kiosco/data/pos/izify_pos_client.dart';
+import 'package:izi_kiosco/data/pos/izify_pos_session.dart';
 import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
 import 'package:izi_kiosco/domain/dto/payment_attempt_dto.dart';
 import 'package:izi_kiosco/domain/dto/payment_dto.dart';
 import 'package:izi_kiosco/domain/models/card_payment.dart';
+import 'package:izi_kiosco/domain/models/pos_payment_result.dart';
 import 'package:izi_kiosco/domain/models/cash_register.dart';
 import 'package:izi_kiosco/domain/models/charge.dart';
 import 'package:izi_kiosco/domain/models/comanda.dart';
@@ -45,13 +48,20 @@ import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 part 'payment_state.dart';
 part 'payment_inputs.dart';
-class PaymentConfig{
+
+class PaymentConfig {
   Future Function(Contribuyente, Sucursal) setParams;
   Function(PaymentDtoVentaData) setParamsOrderPayment;
   Function(PaymentAttemptDto) setParamsPayment;
   Function(Customer customer) setParamsCustomer;
-  PaymentConfig({required this.setParams, required this.setParamsOrderPayment, required this.setParamsPayment, required this.setParamsCustomer});
+  PaymentConfig({
+    required this.setParams,
+    required this.setParamsOrderPayment,
+    required this.setParamsPayment,
+    required this.setParamsCustomer,
+  });
 }
+
 class PaymentBloc extends Cubit<PaymentState> {
   final ComandaRepository _comandaRepository;
   StreamSubscription? qrStream;
@@ -64,20 +74,30 @@ class PaymentBloc extends Cubit<PaymentState> {
   String? _matchedNit;
   CancelToken cancelToken = CancelToken();
 
+  final IzifyPosClient _izifyPosClient;
+
   PaymentBloc(
-      this._comandaRepository, this._businessRepository, this._socketRepository)
-      : super(PaymentState.init());
+    this._comandaRepository,
+    this._businessRepository,
+    this._socketRepository, {
+    IzifyPosClient? izifyPosClient,
+  })  : _izifyPosClient = izifyPosClient ?? IzifyPosClient(),
+        super(PaymentState.init());
 
-  initOrder(
-      {required PaymentObj paymentObj, required AuthState authState}) async {
+  initOrder({
+    required PaymentObj paymentObj,
+    required AuthState authState,
+  }) async {
     try {
+      PaymentCountryTaxes? countryTaxes = _setCountryConfig(
+        authState.currentContribuyente!,
+      );
 
-      PaymentCountryTaxes? countryTaxes =  _setCountryConfig(authState.currentContribuyente!);
-
-      List<CashRegister> cashRegisters =
-          await _businessRepository.getCashRegisters(
-              contribuyenteId: authState.currentContribuyente?.id ?? 0,
-              sucursalId: authState.currentSucursal?.id ?? 0);
+      List<CashRegister> cashRegisters = await _businessRepository
+          .getCashRegisters(
+            contribuyenteId: authState.currentContribuyente?.id ?? 0,
+            sucursalId: authState.currentSucursal?.id ?? 0,
+          );
 
       cashRegisters.removeWhere((element) => !element.abierta);
 
@@ -86,8 +106,9 @@ class PaymentBloc extends Cubit<PaymentState> {
         emit(state.copyWith(status: PaymentStatus.waitingGet));
         return;
       }
-      int indexCashRegister = cashRegisters
-          .indexWhere((element) => element.id == authState.currentDevice?.caja);
+      int indexCashRegister = cashRegisters.indexWhere(
+        (element) => element.id == authState.currentDevice?.caja,
+      );
       CashRegister? currentCashRegister;
       if (indexCashRegister != -1) {
         currentCashRegister = cashRegisters.elementAtOrNull(indexCashRegister);
@@ -98,53 +119,70 @@ class PaymentBloc extends Cubit<PaymentState> {
         // return;
       }
 
-      
-      int indexCurrency = authState.currencies.indexWhere((element) =>
-          element.id ==
-          authState.currentContribuyente?.config["monedaInventario"]);
+      int indexCurrency = authState.currencies.indexWhere(
+        (element) =>
+            element.id ==
+            authState.currentContribuyente?.config["monedaInventario"],
+      );
       Currency? currentCurrency;
       if (indexCurrency != -1) {
         currentCurrency = authState.currencies.elementAtOrNull(indexCurrency);
       }
       String? economicActivity;
-      if(authState.currentDevice?.config.isRetail==true){
+      if (authState.currentDevice?.config.isRetail == true) {
         economicActivity = authState.currentDevice?.config.actividadEconomica;
-      }
-      else{
+      } else {
         if (authState.currentContribuyente?.config?["aERestaurante"] != null) {
           if (authState.currentContribuyente?.config?["aERestaurante"] is num) {
-            economicActivity = authState.currentContribuyente?.config?["aERestaurante"]
+            economicActivity = authState
+                .currentContribuyente
+                ?.config?["aERestaurante"]
                 ?.toString();
           } else if (authState.currentContribuyente?.config?["aERestaurante"]
-          is String) {
-            economicActivity = authState.currentContribuyente?.config?["aERestaurante"];
+              is String) {
+            economicActivity =
+                authState.currentContribuyente?.config?["aERestaurante"];
           } else if (authState.currentContribuyente?.config?["aERestaurante"]
-          is Map &&
-              authState.currentContribuyente?.config?["aERestaurante"]
-              ?["codigoCaeb"] !=
+                  is Map &&
+              authState
+                      .currentContribuyente
+                      ?.config?["aERestaurante"]?["codigoCaeb"] !=
                   null) {
-            economicActivity = authState.currentContribuyente?.config?["aERestaurante"]?["codigoCaeb"];
+            economicActivity = authState
+                .currentContribuyente
+                ?.config?["aERestaurante"]?["codigoCaeb"];
           }
         }
       }
-      
 
-      if(authState.currentContribuyente?.tieneFacturacion==true){
-        PaymentStatus? statusVerification = authState.taxesStrategy.verifyParameters(authState.currentContribuyente, authState.currentSucursal, authState.currentDevice, economicActivity);
-        if(statusVerification!=null){
+      if (authState.currentContribuyente?.tieneFacturacion == true) {
+        PaymentStatus? statusVerification = authState.taxesStrategy
+            .verifyParameters(
+              authState.currentContribuyente,
+              authState.currentSucursal,
+              authState.currentDevice,
+              economicActivity,
+            );
+        if (statusVerification != null) {
           return emit(state.copyWith(status: statusVerification));
         }
       }
 
-      await countryConfig?.setParams(authState.currentContribuyente!,authState.currentSucursal!);
+      await countryConfig?.setParams(
+        authState.currentContribuyente!,
+        authState.currentSucursal!,
+      );
       String? savedIzifyPosIp = await TokenUtils.getPosIp();
       if (savedIzifyPosIp == null) {
         final ecopayIp = authState.currentDevice?.config.ipEcopay;
         if (ecopayIp != null) {
-          savedIzifyPosIp = ecopayIp.contains(':') ? ecopayIp : '$ecopayIp:8081';
+          savedIzifyPosIp = ecopayIp.contains(':')
+              ? ecopayIp
+              : '$ecopayIp:8081';
         }
       }
-      emit(state.copyWith(
+      emit(
+        state.copyWith(
           status: PaymentStatus.successGet,
           step: 1,
           orderNumber: -1,
@@ -155,47 +193,53 @@ class PaymentBloc extends Cubit<PaymentState> {
           currentCurrency: currentCurrency,
           paymentObj: paymentObj,
           izifyPosIp: savedIzifyPosIp,
-          countryTaxes:countryTaxes,
+          countryTaxes: countryTaxes,
           cashRegisters: cashRegisters,
-          currentCashRegister: currentCashRegister));
+          currentCashRegister: currentCashRegister,
+        ),
+      );
     } catch (error) {
       log(error.toString());
-      emit(state.copyWith(
-          status: PaymentStatus.errorGet, errorDescription: error.toString()));
+      emit(
+        state.copyWith(
+          status: PaymentStatus.errorGet,
+          errorDescription: error.toString(),
+        ),
+      );
       emit(state.copyWith(status: PaymentStatus.waitingGet));
     }
   }
 
-  InputObj _validatePhone(){
-      if (state.phoneNumber.value.isEmpty) return state.phoneNumber.copyWith(inputError: ()=>InputError.required);
+  InputObj _validatePhone() {
+    if (state.phoneNumber.value.isEmpty)
+      return state.phoneNumber.copyWith(inputError: () => InputError.required);
 
-      try {
-        final fullNumber = "${state.phonePrefix}${state.phoneNumber.value}";
+    try {
+      final fullNumber = "${state.phonePrefix}${state.phoneNumber.value}";
 
-        final phone = PhoneNumber.parse(
-          fullNumber,
-        );
+      final phone = PhoneNumber.parse(fullNumber);
 
-        if (!phone.isValid()) {
-          return state.phoneNumber.copyWith(inputError: ()=>InputError.invalid);
-        }
-
-        return state.phoneNumber.copyWith(inputError: ()=>null);
-      } catch (_) {
-        return state.phoneNumber.copyWith(inputError: ()=>InputError.invalid);
+      if (!phone.isValid()) {
+        return state.phoneNumber.copyWith(inputError: () => InputError.invalid);
       }
+
+      return state.phoneNumber.copyWith(inputError: () => null);
+    } catch (_) {
+      return state.phoneNumber.copyWith(inputError: () => InputError.invalid);
     }
-  
-  validateInput(
-      {bool documentNumber = false,
-      bool businessName = false,
-      bool invoiceNumber = false,
-      bool authorization = false,
-      bool email = false,
-      bool firstDigits = false,
-      bool lastDigits = false,
-      bool customerName = false,
-      bool phoneNumber = false}) {
+  }
+
+  validateInput({
+    bool documentNumber = false,
+    bool businessName = false,
+    bool invoiceNumber = false,
+    bool authorization = false,
+    bool email = false,
+    bool firstDigits = false,
+    bool lastDigits = false,
+    bool customerName = false,
+    bool phoneNumber = false,
+  }) {
     if (phoneNumber) {
       emit(state.copyWith(phoneNumber: _validatePhone()));
       return _validatePhone().inputError == null;
@@ -205,19 +249,29 @@ class PaymentBloc extends Cubit<PaymentState> {
     }
 
     if (documentNumber) {
-      emit(state.copyWith(
-          documentNumber: state.documentNumber
-              .validateError(valueRequired: state.businessName.value)));
+      emit(
+        state.copyWith(
+          documentNumber: state.documentNumber.validateError(
+            valueRequired: state.businessName.value,
+          ),
+        ),
+      );
     }
     if (businessName) {
-      emit(state.copyWith(
-          businessName: state.businessName
-              .validateError(valueRequired: state.documentNumber.value)));
+      emit(
+        state.copyWith(
+          businessName: state.businessName.validateError(
+            valueRequired: state.documentNumber.value,
+          ),
+        ),
+      );
     }
     if (email) {
-      emit(state.copyWith(
-          email: state.email
-              .validateError(valueRequired: state.email.value)));
+      emit(
+        state.copyWith(
+          email: state.email.validateError(valueRequired: state.email.value),
+        ),
+      );
     }
   }
 
@@ -252,7 +306,9 @@ class PaymentBloc extends Cubit<PaymentState> {
           customerName: state.customerName.changeValue(customerName)));
     }
     if (phoneNumber != null) {
-      emit(state.copyWith(phoneNumber: state.phoneNumber.changeValue(phoneNumber)));
+      emit(
+        state.copyWith(phoneNumber: state.phoneNumber.changeValue(phoneNumber)),
+      );
     }
     if (isManual != null) {
       emit(state.copyWith(isManual: isManual));
@@ -263,22 +319,28 @@ class PaymentBloc extends Cubit<PaymentState> {
     }
 
     if (documentNumber != null) {
-      emit(state.copyWith(
-          documentNumber: state.documentNumber.changeValue(documentNumber)));
+      emit(
+        state.copyWith(
+          documentNumber: state.documentNumber.changeValue(documentNumber),
+        ),
+      );
     }
     if (complement != null) {
       emit(
-          state.copyWith(complement: state.complement.changeValue(complement)));
+        state.copyWith(complement: state.complement.changeValue(complement)),
+      );
     }
     if (businessName != null) {
-      emit(state.copyWith(
-          businessName: state.businessName.changeValue(businessName)));
+      emit(
+        state.copyWith(
+          businessName: state.businessName.changeValue(businessName),
+        ),
+      );
     }
     if (email != null) {
-      emit(state.copyWith(
-          email: state.email.changeValue(email)));
+      emit(state.copyWith(email: state.email.changeValue(email)));
     }
-    if(phonePrefix !=null){
+    if (phonePrefix != null) {
       emit(state.copyWith(phonePrefix: phonePrefix));
     }
   }
@@ -321,48 +383,58 @@ class PaymentBloc extends Cubit<PaymentState> {
     _socketRepository.closeQrListening();
     qrStream?.cancel();
     qrStream = null;
-    emit(state.copyWith(
+    emit(
+      state.copyWith(
         step: 0,
         paymentType: PaymentType.others,
         cashAmount: 0,
         qrCharge: () => null,
         qrAmount: 0,
-        qrPaymentKey: -1));
+        qrPaymentKey: -1,
+      ),
+    );
   }
 
   selectPayment(PaymentType paymentType, AuthState authState) async {
     try {
       if (paymentType == PaymentType.cashRegister) {
         emit(state.copyWith(status: PaymentStatus.processingOrder));
-        Comanda comanda =
-            await _comandaRepository.markAsCreated(state.paymentObj?.uuid ?? "");
+        Comanda comanda = await _comandaRepository.markAsCreated(
+          state.paymentObj?.uuid ?? "",
+        );
         if (comanda.numero is int) {
-          _printRolloOrder(authState,
-              orderNumber: (comanda.numero as int),
-              customOrderNumber:
-                  comanda.custom is Map && comanda.custom["numeroCustom"] is int
-                      ? comanda.custom["numeroCustom"]
-                      : null);
+          _printRolloOrder(
+            authState,
+            orderNumber: (comanda.numero as int),
+            customOrderNumber:
+                comanda.custom is Map && comanda.custom["numeroCustom"] is int
+                ? comanda.custom["numeroCustom"]
+                : null,
+          );
         }
-        emit(state.copyWith(
+        emit(
+          state.copyWith(
             step: 5,
             status: PaymentStatus.paymentProcessed,
-            paymentType: paymentType));
-        timerSuccess = Timer(
-          const Duration(seconds: 10),
-          () async {
-            emit(state.copyWith(status: PaymentStatus.successInvoice));
-          },
+            paymentType: paymentType,
+          ),
         );
+        timerSuccess = Timer(const Duration(seconds: 10), () async {
+          emit(state.copyWith(status: PaymentStatus.successInvoice));
+        });
         return;
       }
-      if(authState.currentContribuyente?.tieneFacturacion==true || authState.currentDevice?.config.isRetail!=true){
-        emit(state.copyWith(
+      if (authState.currentContribuyente?.tieneFacturacion == true ||
+          authState.currentDevice?.config.isRetail != true) {
+        emit(
+          state.copyWith(
             paymentType: paymentType,
             step: 2,
             qrWait: false,
             qrLoading: false,
-            qrCharge: () => null));
+            qrCharge: () => null,
+          ),
+        );
       }
     } catch (e) {
       log(e.toString());
@@ -417,10 +489,13 @@ class PaymentBloc extends Cubit<PaymentState> {
     if (state.status != PaymentStatus.successInvoice &&
         state.status != PaymentStatus.successPayment &&
         state.status != PaymentStatus.paymentProcessed &&
-        state.paymentObj != null && (state.paymentObj?.uuid ?? "").isNotEmpty) {
+        state.paymentObj != null &&
+        (state.paymentObj?.uuid ?? "").isNotEmpty) {
       // Intentamos cancelar genéricamente cualquier cobro que haya quedado pendiente
       try {
-        await _comandaRepository.cancelPaymentAttempt(uuid: state.paymentObj!.uuid!);
+        await _comandaRepository.cancelPaymentAttempt(
+          uuid: state.paymentObj!.uuid!,
+        );
       } catch (e) {
         log("Error al cancelar el intento de pago: $e");
       }
@@ -432,285 +507,849 @@ class PaymentBloc extends Cubit<PaymentState> {
     return super.close();
   }
 
-  Future<bool> _verifyIzifySocket() async {
-    try {
-      final posIpRaw = state.izifyPosIp;
-      if (posIpRaw == null) return false;
-      final posIp = posIpRaw.split(':')[0];
-      
-      final channel = WebSocketChannel.connect(Uri.parse('ws://$posIp:8081/payment-updates'));
-      await channel.ready.timeout(const Duration(seconds: 4));
-      await channel.sink.close();
-      return true;
-    } catch (e) {
-      log('WebSocket verification failed: $e');
-      return false;
-    }
-  }
+  /// Deadline for the terminal's verdict after it accepted a charge. It must
+  /// exceed what PayPOS may take before answering PENDING itself: up to 35 s
+  /// spacing it from the previous charge (EcoPay's stray card search) plus
+  /// 90 s waiting for the broker. The kiosk then always hears PENDING from
+  /// the terminal rather than guessing on its own.
+  static const Duration izifyResultTimeout = Duration(seconds: 150);
 
-  Future<bool> _waitForIzifyPaymentStatus() async {
-    final posIpRaw = state.izifyPosIp;
-    if (posIpRaw == null) return false;
-    final posIp = posIpRaw.split(':')[0];
-    
-    try {
-      final channel = WebSocketChannel.connect(Uri.parse('ws://$posIp:8081/payment-updates'));
-      
-      final result = await channel.stream.firstWhere((message) {
-        try {
-          final data = jsonDecode(message.toString());
-          return data['status'] == 'SUCCESS' || data['status'] == 'ERROR';
-        } catch (_) {
-          return false;
-        }
-      }).timeout(const Duration(seconds: 90));
+  /// How often the charge outcome is polled while the socket is also open.
+  static const Duration izifyPollInterval = Duration(seconds: 2);
 
-      await channel.sink.close();
-      
-      final data = jsonDecode(result.toString());
-      return data['status'] == 'SUCCESS';
-    } catch (e) {
-      log('Izify WS wait failed: $e');
-      return false;
-    }
-  }
+  /// Consecutive "unknown reference" answers after which a charge whose
+  /// `/pay` was never acknowledged is taken as never received.
+  static const int izifyNotFoundLimit = 3;
 
-  Future<Map<String, String>?> _getIzifyIpAndToken(AuthState authState) async {
-    final ipPort = await TokenUtils.getPosIp();
-    final posToken = await TokenUtils.getPosToken();
-    if (ipPort != null && posToken != null) {
-      return {'ipPort': ipPort, 'token': posToken};
-    }
-    
-    final ipEcopay = authState.currentDevice?.config.ipEcopay;
-    final tokenEcopay = authState.currentDevice?.config.token;
-    if (ipEcopay != null && tokenEcopay != null) {
-      final ipWithPort = ipEcopay.contains(':') ? ipEcopay : '$ipEcopay:8081';
-      return {'ipPort': ipWithPort, 'token': tokenEcopay};
-    }
-    
-    return null;
-  }
-
-  Future<bool> _makeCardRetailPayment(AuthState authState,
-      {bool atc = false, bool linkser = false, bool izify = false, bool contactless = true, String cardType = "DEBITO"}) async {
-    try {
-      emit(state.copyWith(step: 4));
-
-      PaymentAttemptDto newPayment = PaymentAttemptDto(
-          uuid: state.paymentObj?.uuid ?? "",
-          metodoPago: AppConstants.idPaymentMethodPOS,
-          nit: state.documentNumber.value.isEmpty
-              ? "0"
-              : state.documentNumber.value,
-          complemento: AppConstants.ciList
-                      .contains(state.complement.value.toLowerCase()) ||
-                  state.documentNumber.value.isEmpty
-              ? null
-              : state.complement.value,
-          razonSocial: state.businessName.value.isEmpty
-              ? "S/N"
-              : state.businessName.value,
-          telefonoComprador: state.phoneNumber.value.isNotEmpty?"${state.phonePrefix}${state.phoneNumber.value}":null,
-          correoElectronico: state.email.value.isNotEmpty?state.email.value:null
-          );
-
-      countryConfig?.setParamsPayment(newPayment);    
-
-      Charge charge =
-          await _comandaRepository.generatePaymentAttempt(newPayment);
-      await _listenPaymentRetail(authState, charge);
-      if (authState.currentDevice?.config.demo == true) {
-        emit(state.copyWith(step: 8, status: PaymentStatus.demoPayment, qrCharge: () => charge));
-        return true;
+  /// Checks the terminal can charge, re-pairing when it no longer knows this
+  /// kiosk. Throws [IzifyPosException] (nothing charged) otherwise.
+  Future<IzifyPosSession> _readyIzifySession(AuthState authState) async {
+    final device = authState.currentDevice;
+    var session = await IzifyPosSession.current(device);
+    if (session == null) {
+      final address = await IzifyPosSession.configuredAddress(device);
+      if (address == null) {
+        throw const IzifyPosException(
+            'Este kiosko no tiene un datáfono configurado.',
+            code: 'NOT_PAIRED');
       }
-      CardPayment cardPayment;
-      if (izify) {
-        final isSocketAlive = await _verifyIzifySocket();
-        if (!isSocketAlive) {
-          throw Exception("Terminal POS sin conexión al socket");
-        }
-        final creds = await _getIzifyIpAndToken(authState);
-        if (creds == null) {
-          throw Exception("No se encontraron credenciales del POS");
-        }
-        final currencyIso = state.countryTaxes == PaymentCountryTaxes.colombia ? "COP" : "BOB";
-        cardPayment = await _comandaRepository.callCardPaymentIzify(
-            ipPort: creds['ipPort']!,
-            token: creds['token']!,
-            currency: currencyIso,
-            cardType: cardType,
-            amount: (state.paymentObj?.amount ?? 0).toStringAsFixed(2));
-      } else if (linkser) {
-        cardPayment = await _comandaRepository.callCardPayment(
-            amount: _getIntFromDecimal(
-                _roundToNDecimals(state.paymentObj?.amount ?? 0, 2)),
-            ip: authState.currentDevice!.config.ipLinkser!);
-      } else {
+      // A terminal unpaired on purpose was moved somewhere else: pairing with
+      // it again here would charge another lane's customers.
+      final atAddress = await _izifyPosClient.health(address);
+      if (atAddress.paired == false && atAddress.unpairedByUser == true) {
+        throw const IzifyPosException(
+            'El datáfono fue desvinculado. Emparéjelo de nuevo desde "Configuración de POS".',
+            code: 'UNPAIRED');
+      }
+      session = await IzifyPosSession.pair(_izifyPosClient, device, address);
+    }
+
+    var health = await _izifyPosClient.health(session.address);
+    if (!await IzifyPosSession.isOurTerminal(health)) {
+      // The router gave this kiosk's terminal address to another terminal.
+      throw IzifyPosException(
+          'En ${session.address.host} responde otro datáfono (${health.name}). Verifique el datáfono en "Configuración de POS".',
+          code: 'WRONG_TERMINAL');
+    }
+    if (health.paired == false) {
+      if (health.unpairedByUser == true) {
+        throw const IzifyPosException(
+            'El datáfono fue desvinculado. Emparéjelo de nuevo desde "Configuración de POS".',
+            code: 'UNPAIRED');
+      }
+      // The terminal lost its pairing (reinstalled, data cleared) since this
+      // kiosk paired: its token is dead. Pair again from the backend config.
+      session =
+          await IzifyPosSession.pair(_izifyPosClient, device, session.address);
+      health = await _izifyPosClient.health(session.address);
+    }
+    final reason = health.notReadyReason;
+    if (reason != null) {
+      throw IzifyPosException(reason, code: 'NOT_READY');
+    }
+    return session;
+  }
+
+  /// Sends the charge to the terminal. Returns the record to track it by; its
+  /// [CardPayment.payAcknowledged] is false when the terminal's answer was
+  /// lost, in which case only the status lookup can tell what happened.
+  Future<CardPayment> _startIzifyCharge(
+    AuthState authState, {
+    required String amount,
+    required String currency,
+    required String cardType,
+    required int quotas,
+  }) async {
+    var session = await _readyIzifySession(authState);
+    final reference = IzifyPosClient.newReference();
+    final now = DateTime.now().toIso8601String();
+    final cardPayment = CardPayment(
+      response: "Enviado",
+      cardNumber: "****",
+      date: now.split('T').first,
+      hour: now.split('T').last.substring(0, 5),
+      reference: reference,
+      amount: amount,
+      currency: currency,
+      cardType: cardType,
+      quotas: quotas,
+    );
+
+    Future<void> send(IzifyPosSession s) => _izifyPosClient.pay(
+          s.address,
+          token: s.token,
+          amount: amount,
+          currency: currency,
+          reference: reference,
+          cardType: cardType,
+          quotas: quotas,
+        );
+
+    // The verdict is read from this same terminal and token, whatever the
+    // stored session becomes meanwhile (a re-pair elsewhere, a move).
+    _chargeSessions[reference] = session;
+    try {
+      await send(session);
+    } on IzifyPosException catch (e) {
+      if (e.isUnauthorized) {
+        // 401 is decided before anything is charged, so the same reference
+        // can be sent again once paired.
         try {
-          cardPayment = await _comandaRepository.callCardPaymentATC(
-              amount: (state.paymentObj?.amount ?? 0).moneyFormat(digitsTaxes: authState.taxesStrategy.decimals),
-              ip: authState.currentDevice!.config.ipAtc!,
-              cancelToken: cancelToken,
-              contactless: contactless);
-        } catch (e) {
+          session = await IzifyPosSession.pair(
+              _izifyPosClient, authState.currentDevice, session.address);
+          _chargeSessions[reference] = session;
+          await send(session);
+        } on IzifyPosException catch (e2) {
+          if (!e2.outcomeUnknown) {
+            _chargeSessions.remove(reference);
             rethrow;
+          }
+          cardPayment.payAcknowledged = false;
         }
+      } else if (e.outcomeUnknown) {
+        cardPayment.payAcknowledged = false;
+      } else {
+        _chargeSessions.remove(reference);
+        rethrow;
       }
-      var success = false;
-      bool isTerminalApproved = true;
-      if (izify) {
-        isTerminalApproved = await _waitForIzifyPaymentStatus();
-      }
-      emit(state.copyWith(status: PaymentStatus.processingOrder));
-      
-      if (isTerminalApproved) {
-        for (var i = 0; i < 10; i++) {
+    }
+    return cardPayment;
+  }
+
+  /// Session each charge in flight was sent with, by reference.
+  final Map<String, IzifyPosSession> _chargeSessions = {};
+
+  /// Waits for the verdict on [reference]: listens on `/payment-updates` and
+  /// polls `/payment-status/{reference}` in parallel, whichever answers first.
+  Future<PosPaymentResult> _waitForIzifyPaymentStatus(
+    IzifyPosSession session, {
+    required String reference,
+    required bool payAcknowledged,
+  }) async {
+    final completer = Completer<PosPaymentResult>();
+    void finish(PosPaymentResult result) {
+      if (!completer.isCompleted) completer.complete(result);
+    }
+
+    WebSocketChannel? channel;
+    StreamSubscription? wsSub;
+    try {
+      channel = WebSocketChannel.connect(
+          session.address.paymentUpdates(session.token));
+      wsSub = channel.stream.listen(
+        (message) {
           try {
-            await _comandaRepository.markPaymentATC(
-                state.paymentObj?.uuid ?? "", charge.intentoPago);
-            success = true;
-            break;
-          } catch (e) {
-            await Future.delayed(Duration(seconds: 1 * (i + 1)));
-            log(e.toString());
+            final data = jsonDecode(message.toString());
+            if (data is Map) {
+              final result = PosPaymentResult.fromJson(data);
+              if (result.reference == reference && result.isTerminal) {
+                finish(result);
+              }
+            }
+          } catch (_) {}
+        },
+        onError: (e) => log('Izify WS error: $e'),
+        cancelOnError: false,
+      );
+    } catch (e) {
+      log('Izify WS connect failed: $e');
+    }
+
+    var seenByTerminal = payAcknowledged;
+    var notFound = 0;
+    var polling = false;
+    final pollTimer = Timer.periodic(izifyPollInterval, (_) async {
+      if (completer.isCompleted || polling) return;
+      polling = true;
+      try {
+        final result = await _izifyPosClient.paymentStatus(
+          session.address,
+          token: session.token,
+          reference: reference,
+        );
+        if (result.isTerminal) {
+          finish(result);
+        } else if (result.status == PosPaymentStatus.processing) {
+          seenByTerminal = true;
+        } else if (result.status == PosPaymentStatus.notFound) {
+          // Only meaningful when the terminal never acknowledged the charge:
+          // then "unknown reference" means it never arrived.
+          if (!seenByTerminal && ++notFound >= izifyNotFoundLimit) {
+            finish(result);
           }
         }
+      } finally {
+        polling = false;
       }
-      if (!success) {
-        CrashReport.report("Error complete payment POS", cardPayment.toJson().toString());
-        await LocalStorageCardErrors.saveCardErrors(
-            jsonEncode(cardPayment.toJson()));
-        emit(state.copyWith(step: 6, status: PaymentStatus.paymentProcessed));
-        timerSuccess = Timer(
-          const Duration(seconds: 30),
-          () async {
-            emit(state.copyWith(status: PaymentStatus.successInvoice));
-          },
-        );
-        return false;
-      } else {
-        return true;
+    });
+    final timeoutTimer = Timer(izifyResultTimeout, () {
+      finish(PosPaymentResult(
+          status: PosPaymentStatus.unknown, reference: reference));
+    });
+
+    try {
+      return await completer.future;
+    } finally {
+      pollTimer.cancel();
+      timeoutTimer.cancel();
+      await wsSub?.cancel();
+      try {
+        await channel?.sink.close();
+      } catch (_) {}
+    }
+  }
+
+  Future<CardPayment> _callCardProvider(
+    AuthState authState, {
+    required bool izify,
+    required bool linkser,
+    required bool contactless,
+    required String cardType,
+    required int quotas,
+  }) async {
+    if (izify) {
+      return _startIzifyCharge(
+        authState,
+        currency: "COP",
+        cardType: cardType,
+        quotas: quotas,
+        amount: (state.paymentObj?.amount ?? 0).toStringAsFixed(2),
+      );
+    }
+    if (linkser) {
+      return _comandaRepository.callCardPayment(
+        amount: _getIntFromDecimal(
+          _roundToNDecimals(state.paymentObj?.amount ?? 0, 2),
+        ),
+        ip: authState.currentDevice!.config.ipLinkser!,
+      );
+    }
+    return _comandaRepository.callCardPaymentATC(
+      amount: (state.paymentObj?.amount ?? 0).moneyFormat(
+        digitsTaxes: authState.taxesStrategy.decimals,
+      ),
+      ip: authState.currentDevice!.config.ipAtc!,
+      cancelToken: cancelToken,
+      contactless: contactless,
+    );
+  }
+
+  Future<(bool, Object?)> _retryMarkPayment(
+    String uuid,
+    int? internalId, {
+    int attempts = 10,
+    Map<String, dynamic>? transaccion,
+  }) async {
+    Object? lastError;
+    for (var i = 0; i < attempts; i++) {
+      try {
+        await _comandaRepository.markPaymentATC(uuid, internalId, transaccion: transaccion);
+        return (true, null);
+      } on PaymentConflict catch (e) {
+        // iZi holds a different payment for this order: retrying cannot help.
+        return (false, e);
+      } catch (e) {
+        lastError = e;
+        await Future.delayed(Duration(seconds: 1 * (i + 1)));
+        log(e.toString());
       }
+    }
+    return (false, lastError);
+  }
+
+  Future<void> _saveCardError(
+    CardPayment cp,
+    String response,
+    String reportMsg,
+  ) async {
+    cp.response = response;
+    CrashReport.report(reportMsg, cp.reference ?? '(sin referencia)');
+    try {
+      await _storeCardRecord(cp);
+    } catch (e) {
+      // Losing the local row must not turn a charge that may have gone through
+      // into "no se cobró": the caller still emits the pending outcome.
+      log('No se pudo guardar el registro local del cobro: $e');
+    }
+  }
+
+  /// Writes [cp] over the row it belongs to ([CardPayment.storedAs], else its
+  /// own reference), or appends it as a new row.
+  Future<void> _storeCardRecord(CardPayment cp) async {
+    final json = jsonEncode(cp.toJson());
+    final key = cp.storedAs ?? cp.reference;
+    final updated =
+        key != null && await LocalStorageCardErrors.updateByReference(key, json);
+    if (!updated) await LocalStorageCardErrors.saveCardErrors(json);
+    cp.storedAs = cp.reference;
+  }
+
+  /// Keeps an approved, registered sale in the transactions list too, so the
+  /// list shows every card sale that went through this kiosk, not only the
+  /// ones that had a problem.
+  Future<void> _recordRegisteredSale(CardPayment cp) async {
+    try {
+      cp.status = 'SUCCESS';
+      cp.response = 'Aprobada - pedido registrado';
+      await _storeCardRecord(cp);
     } catch (e) {
       log(e.toString());
-      if(authState.currentContribuyente?.tieneFacturacion==true){
-        emit(state.copyWith(status: PaymentStatus.cardError,step: 2));
+    }
+  }
+
+  /// Copies the terminal's proof of the charge onto [cp].
+  Future<void> _takeProof(CardPayment cp, PosPaymentResult result) async {
+    if (result.transactionId != null) cp.transactionId = result.transactionId;
+    if (result.cardMasked != null) cp.cardNumber = result.cardMasked;
+    cp.authCode = result.authCode ?? cp.authCode;
+    cp.cardBrand = result.cardBrand ?? cp.cardBrand;
+    // What the terminal actually charged, which is what iZi should record and
+    // what a retry should repeat; falls back to what we asked for.
+    cp.cardType = result.cardType ?? cp.cardType;
+    cp.acquirerTerminalId = result.acquirerTerminalId ?? cp.acquirerTerminalId;
+    cp.traceNumber = result.traceNumber ?? cp.traceNumber;
+    cp.terminalName ??= await TokenUtils.getPosName();
+  }
+
+  /// Stores a declined / unconfirmed attempt with its charge in iZi, so every
+  /// card attempt is visible there. Best effort, never blocks the sale.
+  void _reportAttempt(CardPayment cp, String estado) {
+    final uuid = cp.markUuid;
+    if (uuid == null) return;
+    unawaited(_comandaRepository
+        .reportTerminalResult(uuid, cp.markInternalId, cp.terminalData(estado))
+        .catchError((_) {}));
+  }
+
+  /// Emits a card error. [message] is shown to the customer when given (e.g.
+  /// the acquirer's decline reason or why the terminal refused the charge).
+  void _emitCardError(AuthState authState, {String? message}) {
+    final step =
+        authState.currentContribuyente?.habilitadoFacturacion == true ? 2 : 1;
+    emit(state.copyWith(
+        status: PaymentStatus.cardError,
+        step: step,
+        errorDescription: message ?? ""));
+    emit(state.copyWith(status: PaymentStatus.successGet));
+  }
+
+  /// PENDING means the outcome is UNKNOWN - the card may or may not have been
+  /// charged. It must NOT be auto-retried; surface it to the operator to
+  /// verify/reconcile before any retry.
+  void _emitCardPending(AuthState authState, {String? message}) {
+    final step =
+        authState.currentContribuyente?.habilitadoFacturacion == true ? 2 : 1;
+    emit(state.copyWith(
+        status: PaymentStatus.cardPending,
+        step: step,
+        errorDescription: message ?? ""));
+    emit(state.copyWith(status: PaymentStatus.successGet));
+  }
+
+  /// Waits for the Izify POS verdict and maps it to whether the kiosk should
+  /// go on to mark the order as paid. Returns `true` only on a confirmed
+  /// SUCCESS. On a decline emits a card error with the terminal's message; on
+  /// PENDING / no answer emits the distinct pending state (no auto-retry).
+  Future<bool> _awaitIzifyResult(
+      AuthState authState, CardPayment cardPayment) async {
+    final session = _chargeSessions.remove(cardPayment.reference) ??
+        await IzifyPosSession.current(authState.currentDevice);
+    if (session == null) {
+      // The charge may already be running, but there is nothing to ask.
+      cardPayment.status = 'UNKNOWN';
+      await _saveCardError(cardPayment, "Sin confirmar - sin credenciales",
+          "Izify sin credenciales para verificar el pago");
+      _emitCardPending(authState);
+      return false;
+    }
+
+    final result = await _waitForIzifyPaymentStatus(
+      session,
+      reference: cardPayment.reference!,
+      payAcknowledged: cardPayment.payAcknowledged,
+    );
+    await _takeProof(cardPayment, result);
+
+    switch (result.status) {
+      case PosPaymentStatus.success:
+        cardPayment.status = 'SUCCESS';
+        return true;
+      case PosPaymentStatus.notFound:
+        // Never acknowledged and the terminal has no record of it: the
+        // request never arrived, so nothing was charged.
+        cardPayment.status = 'ERROR';
+        await _saveCardError(cardPayment, "Rechazada - no recibido por el datáfono",
+            "Izify /pay never reached the terminal");
+        _reportAttempt(cardPayment, 'RECHAZADA');
+        _emitCardError(authState,
+            message: "El datáfono no recibió el cobro. No se realizó ningún cargo.");
+        return false;
+      case PosPaymentStatus.error:
+      case PosPaymentStatus.cancelled:
+        cardPayment.status =
+            result.status == PosPaymentStatus.cancelled ? 'CANCELLED' : 'ERROR';
+        await _saveCardError(cardPayment,
+            "Rechazada - ${result.errorMessage ?? ''}".trim(),
+            "Izify terminal rejected payment");
+        _reportAttempt(cardPayment,
+            result.status == PosPaymentStatus.cancelled ? 'CANCELADA' : 'RECHAZADA');
+        _emitCardError(authState, message: result.errorMessage);
+        return false;
+      case PosPaymentStatus.pending:
+        cardPayment.status = 'PENDING';
+        await _saveCardError(
+            cardPayment,
+            "Pendiente - ${result.errorMessage ?? 'sin confirmar'}",
+            "Izify payment PENDING (unconfirmed - verify before retry)");
+        _reportAttempt(cardPayment, 'PENDIENTE');
+        _emitCardPending(authState, message: result.errorMessage);
+        return false;
+      case PosPaymentStatus.unknown:
+      case PosPaymentStatus.processing:
+      case PosPaymentStatus.unauthorized:
+      case PosPaymentStatus.unreachable:
+        // No verdict within the deadline. Treat it like PENDING (do not
+        // auto-retry): the card may have been charged.
+        cardPayment.status = 'UNKNOWN';
+        await _saveCardError(cardPayment, "Sin confirmar (timeout)",
+            "Izify no confirmed result within timeout");
+        _reportAttempt(cardPayment, 'PENDIENTE');
+        _emitCardPending(authState);
+        return false;
+    }
+  }
+
+  /// Ends the sale when the order could not be registered in iZi.
+  ///
+  /// [charged] says the card was charged anyway: the customer must never be
+  /// shown the payment-failed screen then, because they paid and would pay
+  /// again somewhere else.
+  void _emitMarkFailedFallback({bool charged = false, CardPayment? cardPayment}) {
+    emit(state.copyWith(
+      step: charged ? 9 : 6,
+      status: PaymentStatus.paymentProcessed,
+      chargeProof: charged ? _chargeProof(cardPayment) : null,
+    ));
+    // A charged customer has just been told to show this screen at the counter,
+    // so it stays until they leave it; only the plain failure returns home.
+    if (charged) return;
+    timerSuccess = Timer(const Duration(seconds: 30), () async {
+      emit(state.copyWith(status: PaymentStatus.successInvoice));
+    });
+  }
+
+  /// What staff need to find a charge the terminal made: its authorization and
+  /// receipt numbers, never a card number.
+  String? _chargeProof(CardPayment? cp) {
+    if (cp == null) return null;
+    final parts = <String>[
+      if (cp.authCode != null) 'Aut. ${cp.authCode}',
+      if (cp.acquirerTerminalId != null) 'TID ${cp.acquirerTerminalId}',
+      if (cp.traceNumber != null) 'Recibo ${cp.traceNumber}',
+      if (cp.reference != null) 'Ref. ${cp.reference}',
+    ];
+    return parts.isEmpty ? null : parts.join('   ');
+  }
+
+  /// Retries a previously-failed POS card transaction from the transactions
+  /// screen through the same path as a sale: health check, signed `/pay` with
+  /// a NEW reference, and the socket/polling verdict via [_awaitIzifyResult].
+  /// A confirmed retry is notified to the backend when the original order is
+  /// known. A retry that comes back PENDING is surfaced, never auto-retried.
+  ///
+  /// Callers MUST NOT invoke this for a confirmed-success transaction, and must
+  /// warn the operator first when the original was pending/unknown (the card
+  /// may already have been charged).
+  /// Retries a declined or unconfirmed card charge.
+  ///
+  /// [cardType] and [quotas] default to the terms of the attempt being
+  /// retried: re-charging a 12-instalment credit sale as a single debit
+  /// payment would charge the customer something they never agreed to.
+  Future<bool> retryCardPayment(
+    AuthState authState,
+    CardPayment original, {
+    String? cardType,
+    int? quotas,
+  }) async {
+    // Guard: never retry a confirmed success (would risk double-charging).
+    if (!original.canRetry) {
+      return false;
+    }
+
+    final amount = original.amount;
+    final currency = original.currency ?? "COP";
+    final parsedAmount = double.tryParse(amount ?? "");
+    if (parsedAmount == null || parsedAmount <= 0) {
+      emit(state.copyWith(
+          status: PaymentStatus.cardError,
+          errorDescription: "Monto inválido para reintentar"));
+      emit(state.copyWith(status: PaymentStatus.successGet));
+      return false;
+    }
+
+    final retryCardType = cardType ?? original.cardType ?? "DEBITO";
+    final retryQuotas = quotas ?? original.quotas ?? 0;
+
+    emit(state.copyWith(status: PaymentStatus.cardProcessing));
+    var approved = false;
+    CardPayment? settled;
+    try {
+      final cardPayment = await _startIzifyCharge(
+        authState,
+        amount: amount!,
+        currency: currency,
+        cardType: retryCardType,
+        quotas: retryQuotas,
+      );
+      cardPayment.markUuid = original.markUuid;
+      cardPayment.markInternalId = original.markInternalId;
+      // The outcome of this attempt replaces the row being retried.
+      cardPayment.storedAs = original.reference;
+      approved = await _awaitIzifyResult(authState, cardPayment);
+      settled = cardPayment;
+    } catch (e) {
+      log(e.toString());
+      _emitCardError(authState,
+          message: e is IzifyPosException ? e.message : null);
+      return false;
+    }
+
+    if (!approved) return false;
+    // Past this point the card was charged. Nothing here may report an error:
+    // the row must be settled and the operator must not be invited to retry.
+    try {
+      await _settleConfirmedCharge(settled);
+    } catch (e) {
+      log('No se pudo guardar el cobro aprobado: $e');
+    }
+    emit(state.copyWith(
+        status: PaymentStatus.cardVerified,
+        errorDescription: settled.response));
+    emit(state.copyWith(status: PaymentStatus.successGet));
+    return true;
+  }
+
+  /// Records a charge confirmed after the sale flow ended (a verified pending
+  /// payment or a retry) and notifies the backend order when it is known.
+  Future<void> _settleConfirmedCharge(CardPayment cardPayment) async {
+    cardPayment.status = 'SUCCESS';
+    var response = "Aprobada";
+    if (cardPayment.markUuid != null) {
+      final (marked, lastError) = await _retryMarkPayment(
+          cardPayment.markUuid!, cardPayment.markInternalId,
+          attempts: 3, transaccion: cardPayment.terminalData('APROBADA'));
+      response = marked
+          ? "Aprobada - pedido registrado"
+          : "Aprobada - Error sync server: ${lastError ?? 'desconocido'}";
+    } else {
+      response = "Aprobada - registre el pedido manualmente";
+    }
+    cardPayment.response = response;
+    await _storeCardRecord(cardPayment);
+  }
+
+  /// Asks the terminal what became of a pending/unknown charge and updates
+  /// the stored record. A charge confirmed now is notified to the backend so
+  /// the order is registered; a declined or never-received one becomes safe
+  /// to retry.
+  Future<void> verifyCardPayment(AuthState authState, CardPayment cp) async {
+    final reference = cp.reference;
+    if (reference == null) return;
+    emit(state.copyWith(status: PaymentStatus.cardProcessing));
+    final session = await IzifyPosSession.current(authState.currentDevice);
+    if (session == null) {
+      _emitCardError(authState,
+          message: 'Este kiosko no tiene un datáfono configurado.');
+      return;
+    }
+    final result = await _izifyPosClient.paymentStatus(session.address,
+        token: session.token, reference: reference);
+    await _takeProof(cp, result);
+
+    Future<void> store(String status, String response) async {
+      cp.status = status;
+      cp.response = response;
+      await LocalStorageCardErrors.updateByReference(
+          reference, jsonEncode(cp.toJson()));
+    }
+
+    switch (result.status) {
+      case PosPaymentStatus.success:
+        await _settleConfirmedCharge(cp);
+        emit(state.copyWith(
+            status: PaymentStatus.cardVerified, errorDescription: cp.response));
+        emit(state.copyWith(status: PaymentStatus.successGet));
+      case PosPaymentStatus.error:
+      case PosPaymentStatus.cancelled:
+        await store('ERROR',
+            "Rechazada - ${result.errorMessage ?? 'verificada'}".trim());
+        _emitCardError(authState,
+            message: 'No se cobró: ${result.errorMessage ?? 'rechazada'}. Puede reintentar.');
+      case PosPaymentStatus.notFound:
+        // Not proof that nothing was charged here: the terminal may have been
+        // reinstalled or replaced since. Only the live flow, which knows its
+        // /pay was never acknowledged, may read 404 as "never received".
+        _emitCardPending(authState,
+            message: 'El datáfono no tiene registro de este cobro (¿se reinstaló o cambió de datáfono?). Confirme con EcoPay antes de reintentar.');
+      case PosPaymentStatus.pending:
+      case PosPaymentStatus.processing:
+      case PosPaymentStatus.unknown:
+        _emitCardPending(authState,
+            message: 'El datáfono aún no tiene confirmación de este cobro.');
+      case PosPaymentStatus.unauthorized:
+        _emitCardError(authState,
+            message: 'El datáfono no reconoce a este kiosko. Empareje de nuevo y vuelva a verificar.');
+      case PosPaymentStatus.unreachable:
+        _emitCardError(authState,
+            message: 'No se pudo conectar con el datáfono para verificar.');
+    }
+  }
+
+  Future<bool> _makeCardRetailPayment(
+    AuthState authState, {
+    bool atc = false,
+    bool linkser = false,
+    bool izify = false,
+    bool contactless = true,
+    String cardType = "DEBITO",
+    int quotas = 0,
+  }) async {
+    try {
+      emit(state.copyWith(step: 4, status: PaymentStatus.cardProcessing));
+
+      PaymentAttemptDto newPayment = PaymentAttemptDto(
+        uuid: state.paymentObj?.uuid ?? "",
+        metodoPago: AppConstants.idPaymentMethodPOS,
+        nit: state.documentNumber.value.isEmpty
+            ? "0"
+            : state.documentNumber.value,
+        complemento:
+            AppConstants.ciList.contains(
+                  state.complement.value.toLowerCase(),
+                ) ||
+                state.documentNumber.value.isEmpty
+            ? null
+            : state.complement.value,
+        razonSocial: state.businessName.value.isEmpty
+            ? "S/N"
+            : state.businessName.value,
+        telefonoComprador: state.phoneNumber.value.isNotEmpty
+            ? "${state.phonePrefix}${state.phoneNumber.value}"
+            : null,
+        correoElectronico: state.email.value.isNotEmpty
+            ? state.email.value
+            : null,
+      );
+
+      countryConfig?.setParamsPayment(newPayment);
+
+      Charge charge = await _comandaRepository.generatePaymentAttempt(
+        newPayment,
+      );
+      await _listenPaymentRetail(authState, charge);
+      if (authState.currentDevice?.config.demo == true) {
+        emit(
+          state.copyWith(
+            step: 8,
+            status: PaymentStatus.demoPayment,
+            qrCharge: () => charge,
+          ),
+        );
+        return true;
       }
-      else{
-        emit(state.copyWith(status: PaymentStatus.cardError,step: 1));
+
+      final cardPayment = await _callCardProvider(
+        authState,
+        izify: izify,
+        linkser: linkser,
+        contactless: contactless,
+        cardType: cardType,
+        quotas: quotas,
+      );
+      cardPayment.markUuid = state.paymentObj?.uuid;
+      cardPayment.markInternalId = charge.intentoPago;
+
+      if (izify) {
+        final approved = await _awaitIzifyResult(authState, cardPayment);
+        if (!approved) {
+          // Error / cancelled / pending states are already emitted inside
+          // _awaitIzifyResult (PENDING is surfaced distinctly, not retried).
+          return false;
+        }
       }
+
+      emit(state.copyWith(status: PaymentStatus.processingOrder));
+
+      final (marked, lastError) = await _retryMarkPayment(
+        state.paymentObj?.uuid ?? "",
+        charge.intentoPago,
+        transaccion: izify ? cardPayment.terminalData('APROBADA') : null,
+      );
+      if (marked) {
+        await _recordRegisteredSale(cardPayment);
+        return true;
+      }
+
+      await _saveCardError(
+        cardPayment,
+        "Aprobada - Error sync server: ${lastError ?? 'desconocido'}",
+        "Error complete payment POS",
+      );
+      // The card was charged; only the order could not be registered.
+      _emitMarkFailedFallback(charged: izify, cardPayment: izify ? cardPayment : null);
+      return false;
+    } catch (e) {
+      log(e.toString());
+      // An IzifyPosException here was raised before the terminal accepted
+      // anything, so its message ("no se cobró" + why) is safe to show.
+      emit(state.copyWith(
+          status: PaymentStatus.cardError,
+          step: authState.currentContribuyente?.tieneFacturacion == true ? 2 : 1,
+          // An IzifyPosException here is an operational fault (unpaired, wrong
+          // terminal, not ready). Nothing was charged, and its wording is for
+          // staff, not for the customer standing at the kiosk: the detail goes
+          // to the transactions list and the log.
+          errorDescription: ""));
       emit(state.copyWith(status: PaymentStatus.successGet));
       return false;
     }
   }
 
-  Future<bool> _makeCardOrderPayment(AuthState authState,
-      {bool atc = false, bool linkser = false, bool izify = false, bool contactless = true, String cardType = "DEBITO"}) async {
+  Future<bool> _makeCardOrderPayment(
+    AuthState authState, {
+    bool atc = false,
+    bool linkser = false,
+    bool izify = false,
+    bool contactless = true,
+    String cardType = "DEBITO",
+    int quotas = 0,
+  }) async {
     try {
-      emit(state.copyWith(step: 4));
+      emit(state.copyWith(step: 4, status: PaymentStatus.cardProcessing));
 
       PaymentDto newPayment = _buildPaymentDto(AppConstants.idPaymentMethodPOS);
 
       Charge charge = await _comandaRepository.generatePayment(
-          contribuyenteId: authState.currentContribuyente?.id ?? 0,
-          payment: newPayment);
+        contribuyenteId: authState.currentContribuyente?.id ?? 0,
+        payment: newPayment,
+      );
       await _saveAndListenPaymentOrder(authState, charge);
       if (authState.currentDevice?.config.demo == true) {
-        emit(state.copyWith(step: 8, status: PaymentStatus.demoPayment, qrCharge: () => charge));
-        return true;
-      }
-      CardPayment cardPayment;
-      if (izify) {
-        final isSocketAlive = await _verifyIzifySocket();
-        if (!isSocketAlive) {
-          throw Exception("Terminal POS sin conexión al socket");
-        }
-        final creds = await _getIzifyIpAndToken(authState);
-        if (creds == null) {
-          throw Exception("No se encontraron credenciales del POS");
-        }
-        final currencyIso = state.countryTaxes == PaymentCountryTaxes.colombia ? "COP" : "BOB";
-        cardPayment = await _comandaRepository.callCardPaymentIzify(
-            ipPort: creds['ipPort']!,
-            token: creds['token']!,
-            currency: currencyIso,
-            cardType: cardType,
-            amount: (state.paymentObj?.amount ?? 0).toStringAsFixed(2));
-      } else if (linkser) {
-        cardPayment = await _comandaRepository.callCardPayment(
-            amount: _getIntFromDecimal(
-                _roundToNDecimals(state.paymentObj?.amount ?? 0, 2)),
-            ip: authState.currentDevice!.config.ipLinkser!);
-      } else {
-        try {
-          cardPayment = await _comandaRepository.callCardPaymentATC(
-              amount: (state.paymentObj?.amount ?? 0).moneyFormat(digitsTaxes: authState.taxesStrategy.decimals),
-              cancelToken: cancelToken,
-              ip: authState.currentDevice!.config.ipAtc!,
-              contactless: contactless);
-        } catch (e) {
-            rethrow;
-        }
-      }
-      var success = false;
-      bool isTerminalApproved = true;
-      if (izify) {
-        isTerminalApproved = await _waitForIzifyPaymentStatus();
-      }
-      emit(state.copyWith(status: PaymentStatus.processingOrder));
-      
-      if (isTerminalApproved) {
-        for (var i = 0; i < 10; i++) {
-          try {
-            await _comandaRepository.markPaymentATC( charge.uuid, null);
-            success = true;
-            break;
-          } catch (e) {
-            await Future.delayed(Duration(seconds: 1 * (i + 1)));
-            log(e.toString());
-          }
-        }
-      }
-      if (!success) {
-        CrashReport.report("Error complete payment POS", cardPayment.toJson().toString());
-        await LocalStorageCardErrors.saveCardErrors(
-            jsonEncode(cardPayment.toJson()));
-        emit(state.copyWith(step: 6, status: PaymentStatus.paymentProcessed));
-        timerSuccess = Timer(
-          const Duration(seconds: 30),
-          () async {
-            emit(state.copyWith(status: PaymentStatus.successInvoice));
-          },
+        emit(
+          state.copyWith(
+            step: 8,
+            status: PaymentStatus.demoPayment,
+            qrCharge: () => charge,
+          ),
         );
-        return false;
-      } else {
         return true;
       }
+
+      final cardPayment = await _callCardProvider(
+        authState,
+        izify: izify,
+        linkser: linkser,
+        contactless: contactless,
+        cardType: cardType,
+        quotas: quotas,
+      );
+      cardPayment.markUuid = charge.uuid;
+
+      if (izify) {
+        final approved = await _awaitIzifyResult(authState, cardPayment);
+        if (!approved) {
+          // Error / cancelled / pending states are already emitted inside
+          // _awaitIzifyResult (PENDING is surfaced distinctly, not retried).
+          return false;
+        }
+      }
+
+      emit(state.copyWith(status: PaymentStatus.processingOrder));
+
+      final (marked, lastError) = await _retryMarkPayment(charge.uuid, null,
+          transaccion: izify ? cardPayment.terminalData('APROBADA') : null);
+      if (marked) {
+        await _recordRegisteredSale(cardPayment);
+        return true;
+      }
+
+      await _saveCardError(
+        cardPayment,
+        "Aprobada - Error sync server: ${lastError ?? 'desconocido'}",
+        "Error complete payment POS",
+      );
+      // The card was charged; only the order could not be registered.
+      _emitMarkFailedFallback(charged: izify, cardPayment: izify ? cardPayment : null);
+      return false;
     } catch (e) {
       log(e.toString());
-      if(authState.currentContribuyente?.tieneFacturacion==true){
-        emit(state.copyWith(status: PaymentStatus.cardError,step: 2));
-      }
-      else{
-        emit(state.copyWith(status: PaymentStatus.cardError,step: 1));
-      }
+      // An IzifyPosException here was raised before the terminal accepted
+      // anything, so its message ("no se cobró" + why) is safe to show.
+      emit(state.copyWith(
+          status: PaymentStatus.cardError,
+          step: authState.currentContribuyente?.tieneFacturacion == true ? 2 : 1,
+          // An IzifyPosException here is an operational fault (unpaired, wrong
+          // terminal, not ready). Nothing was charged, and its wording is for
+          // staff, not for the customer standing at the kiosk: the detail goes
+          // to the transactions list and the log.
+          errorDescription: ""));
       emit(state.copyWith(status: PaymentStatus.successGet));
       return false;
     }
   }
 
-  Future<bool> makeCardPayment(AuthState authState,
-      {bool atc = false, bool linkser = false, bool izify = false, bool contactless = true, String cardType = "DEBITO"}) async {
+  Future<bool> makeCardPayment(
+    AuthState authState, {
+    bool atc = false,
+    bool linkser = false,
+    bool izify = false,
+    bool contactless = true,
+    String cardType = "DEBITO",
+    int quotas = 0,
+  }) async {
     if (!_validateInputs() || !(atc || linkser || izify)) {
       return false;
     }
     if (state.paymentObj?.isComanda == true) {
-      return await _makeCardOrderPayment(authState,
-          atc: atc, contactless: contactless, linkser: linkser, izify: izify, cardType: cardType);
+      return await _makeCardOrderPayment(
+        authState,
+        atc: atc,
+        contactless: contactless,
+        linkser: linkser,
+        izify: izify,
+        cardType: cardType,
+        quotas: quotas,
+      );
     } else if (state.paymentObj?.isComanda == false) {
-      return await _makeCardRetailPayment(authState,
-          atc: atc, contactless: contactless, linkser: linkser, izify: izify, cardType: cardType);
+      return await _makeCardRetailPayment(
+        authState,
+        atc: atc,
+        contactless: contactless,
+        linkser: linkser,
+        izify: izify,
+        cardType: cardType,
+        quotas: quotas,
+      );
     }
     return false;
   }
@@ -718,46 +1357,66 @@ class PaymentBloc extends Cubit<PaymentState> {
   Future<bool> _generateRetailQR(AuthState authState) async {
     if (authState.currentDevice?.config.demo == true) {
       PaymentAttemptDto newPayment = PaymentAttemptDto(
-          uuid: state.paymentObj?.uuid ?? "",
-          metodoPago: AppConstants.idPaymentMethodQR,
-          nit: state.documentNumber.value.isEmpty
-              ? "0"
-              : state.documentNumber.value,
-          complemento: AppConstants.ciList
-                      .contains(state.complement.value.toLowerCase()) ||
-                  state.documentNumber.value.isEmpty
-              ? null
-              : state.complement.value,
-          razonSocial: state.businessName.value.isEmpty
-              ? "S/N"
-              : state.businessName.value,
-          telefonoComprador: state.phoneNumber.value.isNotEmpty?"${state.phonePrefix}${state.phoneNumber.value}":null,
-          correoElectronico: state.email.value.isNotEmpty?state.email.value:null);
-      countryConfig?.setParamsPayment(newPayment);
-
-      Charge charge =
-          await _comandaRepository.generatePaymentAttempt(newPayment);
-      await _listenPaymentRetail(authState, charge);
-      emit(state.copyWith(step: 8, status: PaymentStatus.demoPayment, qrCharge: () => charge));
-      return true;
-    }
-
-    emit(state.copyWith(qrLoading: true));
-    PaymentAttemptDto newPayment = PaymentAttemptDto(
         uuid: state.paymentObj?.uuid ?? "",
         metodoPago: AppConstants.idPaymentMethodQR,
         nit: state.documentNumber.value.isEmpty
             ? "0"
             : state.documentNumber.value,
-        complemento: AppConstants.ciList
-                    .contains(state.complement.value.toLowerCase()) ||
+        complemento:
+            AppConstants.ciList.contains(
+                  state.complement.value.toLowerCase(),
+                ) ||
                 state.documentNumber.value.isEmpty
             ? null
             : state.complement.value,
-        razonSocial:
-            state.businessName.value.isEmpty ? "S/N" : state.businessName.value,
-        telefonoComprador: state.phoneNumber.value.isNotEmpty?"${state.phonePrefix}${state.phoneNumber.value}":null,
-          correoElectronico: state.email.value.isNotEmpty?state.email.value:null);
+        razonSocial: state.businessName.value.isEmpty
+            ? "S/N"
+            : state.businessName.value,
+        telefonoComprador: state.phoneNumber.value.isNotEmpty
+            ? "${state.phonePrefix}${state.phoneNumber.value}"
+            : null,
+        correoElectronico: state.email.value.isNotEmpty
+            ? state.email.value
+            : null,
+      );
+      countryConfig?.setParamsPayment(newPayment);
+
+      Charge charge = await _comandaRepository.generatePaymentAttempt(
+        newPayment,
+      );
+      await _listenPaymentRetail(authState, charge);
+      emit(
+        state.copyWith(
+          step: 8,
+          status: PaymentStatus.demoPayment,
+          qrCharge: () => charge,
+        ),
+      );
+      return true;
+    }
+
+    emit(state.copyWith(qrLoading: true));
+    PaymentAttemptDto newPayment = PaymentAttemptDto(
+      uuid: state.paymentObj?.uuid ?? "",
+      metodoPago: AppConstants.idPaymentMethodQR,
+      nit: state.documentNumber.value.isEmpty
+          ? "0"
+          : state.documentNumber.value,
+      complemento:
+          AppConstants.ciList.contains(state.complement.value.toLowerCase()) ||
+              state.documentNumber.value.isEmpty
+          ? null
+          : state.complement.value,
+      razonSocial: state.businessName.value.isEmpty
+          ? "S/N"
+          : state.businessName.value,
+      telefonoComprador: state.phoneNumber.value.isNotEmpty
+          ? "${state.phonePrefix}${state.phoneNumber.value}"
+          : null,
+      correoElectronico: state.email.value.isNotEmpty
+          ? state.email.value
+          : null,
+    );
     countryConfig?.setParamsPayment(newPayment);
 
     Charge charge = await _comandaRepository.generatePaymentAttempt(newPayment);
@@ -768,22 +1427,30 @@ class PaymentBloc extends Cubit<PaymentState> {
 
   Future<bool> _generateOrderQR(AuthState authState) async {
     if (authState.currentDevice?.config.demo == true) {
-
       PaymentDto newPayment = _buildPaymentDto(AppConstants.idPaymentMethodQR);
       Charge charge = await _comandaRepository.generatePayment(
-          contribuyenteId: authState.currentContribuyente?.id ?? 0,
-          payment: newPayment);
+        contribuyenteId: authState.currentContribuyente?.id ?? 0,
+        payment: newPayment,
+      );
       await _saveAndListenPaymentOrder(authState, charge);
-       emit(state.copyWith(step: 8, status: PaymentStatus.demoPayment, qrCharge: () => charge));
-       return true;
+      emit(
+        state.copyWith(
+          step: 8,
+          status: PaymentStatus.demoPayment,
+          qrCharge: () => charge,
+        ),
+      );
+      return true;
     }
 
     emit(state.copyWith(qrLoading: true));
-    
+
     PaymentDto qr = _buildPaymentDto(AppConstants.idPaymentMethodQR);
 
     Charge charge = await _comandaRepository.generatePayment(
-        contribuyenteId: authState.currentContribuyente?.id ?? 0, payment: qr);
+      contribuyenteId: authState.currentContribuyente?.id ?? 0,
+      payment: qr,
+    );
     await _saveAndListenPaymentOrder(authState, charge);
     emit(state.copyWith(qrCharge: () => charge, qrLoading: false));
     return true;
@@ -803,14 +1470,16 @@ class PaymentBloc extends Cubit<PaymentState> {
       return false;
     } catch (e) {
       log(e.toString());
-      emit(state.copyWith(
+      emit(
+        state.copyWith(
           qrLoading: false,
           qrCharge: () => null,
-          status: PaymentStatus.qrError));
-      if(authState.currentContribuyente?.tieneFacturacion==true){
+          status: PaymentStatus.qrError,
+        ),
+      );
+      if (authState.currentContribuyente?.tieneFacturacion == true) {
         emit(state.copyWith(step: 2, status: PaymentStatus.successGet));
-      }
-      else{
+      } else {
         emit(state.copyWith(step: 1, status: PaymentStatus.successGet));
       }
       return false;
@@ -818,105 +1487,135 @@ class PaymentBloc extends Cubit<PaymentState> {
   }
 
   Future<bool> _generateRetailBREB(AuthState authState) async {
-    emit(state.copyWith(
+    emit(
+      state.copyWith(
         status: PaymentStatus.brebLoading,
         brebLoading: true,
         brebCharge: null,
         step: 7,
         paymentType: PaymentType.breb,
-      ));
+      ),
+    );
     if (authState.currentDevice?.config.demo == true) {
       PaymentAttemptDto newPayment = PaymentAttemptDto(
-          uuid: state.paymentObj?.uuid ?? "",
-          metodoPago: AppConstants.idPaymentMethodBreB,
-          nit: state.documentNumber.value.isEmpty
-              ? "0"
-              : state.documentNumber.value,
-          complemento: AppConstants.ciList
-                      .contains(state.complement.value.toLowerCase()) ||
-                  state.documentNumber.value.isEmpty
-              ? null
-              : state.complement.value,
-          razonSocial: state.businessName.value.isEmpty
-              ? "S/N"
-              : state.businessName.value,
-           telefonoComprador: state.phoneNumber.value,
-          correoElectronico: state.email.value.isNotEmpty?state.email.value:null);
-      countryConfig?.setParamsPayment(newPayment);
-
-      Charge charge =
-          await _comandaRepository.generatePaymentAttempt(newPayment);
-      await _listenPaymentRetail(authState, charge);
-      emit(state.copyWith(step: 8, status: PaymentStatus.demoPayment, qrCharge: () => charge));
-      return true;
-    }
-
-
-    PaymentAttemptDto newPayment = PaymentAttemptDto(
         uuid: state.paymentObj?.uuid ?? "",
         metodoPago: AppConstants.idPaymentMethodBreB,
         nit: state.documentNumber.value.isEmpty
             ? "0"
             : state.documentNumber.value,
-        complemento: AppConstants.ciList
-                    .contains(state.complement.value.toLowerCase()) ||
+        complemento:
+            AppConstants.ciList.contains(
+                  state.complement.value.toLowerCase(),
+                ) ||
                 state.documentNumber.value.isEmpty
             ? null
             : state.complement.value,
-        razonSocial:
-            state.businessName.value.isEmpty ? "S/N" : state.businessName.value,
+        razonSocial: state.businessName.value.isEmpty
+            ? "S/N"
+            : state.businessName.value,
         telefonoComprador: state.phoneNumber.value,
-          correoElectronico: state.email.value.isNotEmpty?state.email.value:null);
+        correoElectronico: state.email.value.isNotEmpty
+            ? state.email.value
+            : null,
+      );
+      countryConfig?.setParamsPayment(newPayment);
+
+      Charge charge = await _comandaRepository.generatePaymentAttempt(
+        newPayment,
+      );
+      await _listenPaymentRetail(authState, charge);
+      emit(
+        state.copyWith(
+          step: 8,
+          status: PaymentStatus.demoPayment,
+          qrCharge: () => charge,
+        ),
+      );
+      return true;
+    }
+
+    PaymentAttemptDto newPayment = PaymentAttemptDto(
+      uuid: state.paymentObj?.uuid ?? "",
+      metodoPago: AppConstants.idPaymentMethodBreB,
+      nit: state.documentNumber.value.isEmpty
+          ? "0"
+          : state.documentNumber.value,
+      complemento:
+          AppConstants.ciList.contains(state.complement.value.toLowerCase()) ||
+              state.documentNumber.value.isEmpty
+          ? null
+          : state.complement.value,
+      razonSocial: state.businessName.value.isEmpty
+          ? "S/N"
+          : state.businessName.value,
+      telefonoComprador: state.phoneNumber.value,
+      correoElectronico: state.email.value.isNotEmpty
+          ? state.email.value
+          : null,
+    );
     countryConfig?.setParamsPayment(newPayment);
 
     Charge charge = await _comandaRepository.generatePaymentAttempt(newPayment);
     await _listenPaymentRetail(authState, charge);
-    
-    emit(state.copyWith(
+
+    emit(
+      state.copyWith(
         brebCharge: charge,
         brebLoading: false,
         status: PaymentStatus.successGet,
-      ));
+      ),
+    );
     return true;
   }
 
   Future<bool> _generateOrderBREB(AuthState authState) async {
-      emit(state.copyWith(
+    emit(
+      state.copyWith(
         status: PaymentStatus.brebLoading,
         brebLoading: true,
         brebCharge: null,
         step: 7,
         paymentType: PaymentType.breb,
-      ));
+      ),
+    );
 
-      if (authState.currentDevice?.config.demo == true) {
-        PaymentDto newPayment = _buildPaymentDto(AppConstants.idPaymentMethodBreB);
-        Charge charge = await _comandaRepository.generatePayment(
-          contribuyenteId: authState.currentContribuyente?.id ?? 0,
-          payment: newPayment,
-        );
-        await _saveAndListenPaymentOrder(authState, charge);
-         emit(state.copyWith(step: 8, status: PaymentStatus.demoPayment, qrCharge:() => charge));
-         return true;
-      }
-
-      PaymentDto newPayment =
-          _buildPaymentDto(AppConstants.idPaymentMethodBreB);
-
+    if (authState.currentDevice?.config.demo == true) {
+      PaymentDto newPayment = _buildPaymentDto(
+        AppConstants.idPaymentMethodBreB,
+      );
       Charge charge = await _comandaRepository.generatePayment(
         contribuyenteId: authState.currentContribuyente?.id ?? 0,
         payment: newPayment,
       );
-
       await _saveAndListenPaymentOrder(authState, charge);
+      emit(
+        state.copyWith(
+          step: 8,
+          status: PaymentStatus.demoPayment,
+          qrCharge: () => charge,
+        ),
+      );
+      return true;
+    }
 
-      emit(state.copyWith(
+    PaymentDto newPayment = _buildPaymentDto(AppConstants.idPaymentMethodBreB);
+
+    Charge charge = await _comandaRepository.generatePayment(
+      contribuyenteId: authState.currentContribuyente?.id ?? 0,
+      payment: newPayment,
+    );
+
+    await _saveAndListenPaymentOrder(authState, charge);
+
+    emit(
+      state.copyWith(
         brebCharge: charge,
         brebLoading: false,
         status: PaymentStatus.successGet,
-      ));
+      ),
+    );
 
-      return true;
+    return true;
   }
 
   Future<bool> generateBREB(AuthState authState) async {
@@ -931,21 +1630,21 @@ class PaymentBloc extends Cubit<PaymentState> {
       return false;
     } catch (e) {
       log(e.toString());
-      emit(state.copyWith(
-        brebLoading: false,
-        status: PaymentStatus.brebError,
-        errorDescription: e.toString(),
-      ));
-      if(authState.currentContribuyente?.tieneFacturacion==true){
+      emit(
+        state.copyWith(
+          brebLoading: false,
+          status: PaymentStatus.brebError,
+          errorDescription: e.toString(),
+        ),
+      );
+      if (authState.currentContribuyente?.tieneFacturacion == true) {
         emit(state.copyWith(step: 2, status: PaymentStatus.successGet));
-      }
-      else{
+      } else {
         emit(state.copyWith(step: 1, status: PaymentStatus.successGet));
       }
       return false;
     }
   }
-
 
   _listenPaymentRetail(AuthState authState, Charge charge) async {
     if (isClosed) {
@@ -957,58 +1656,54 @@ class PaymentBloc extends Cubit<PaymentState> {
     }
     Timer? timer;
 
-    Timer(
-      const Duration(seconds: 15),
-      () async {
-        if (!isClosed) {
-          emit(state.copyWith(qrWait: true));
-        }
-      },
-    );
+    Timer(const Duration(seconds: 15), () async {
+      if (!isClosed) {
+        emit(state.copyWith(qrWait: true));
+      }
+    });
 
-    qrStream = _socketRepository.listenPayment(charge: charge).listen(
-      (event) async {
-        if (event is Map && event["statusVenta"] == "success") {
-            if (event["uuidFactura"] is String && authState.currentDevice?.config.noPrintRollo!=true) {
-              await _printRollo(authState, idInvoice: event["uuidFactura"]);
-            }
-          if (timer != null) {
-            timer!.cancel();
-          }
-          if (qrStream != null) {
-            _socketRepository.closeQrListening();
-            qrStream?.cancel();
-          }
-          emit(state.copyWith(step: 5, status: PaymentStatus.paymentProcessed));
-          timerSuccess = Timer(
-            const Duration(seconds: 10),
-            () async {
-              emit(state.copyWith(status: PaymentStatus.successInvoice));
-            },
-          );
-        } else {
-          timer = Timer(
-            const Duration(seconds: 60),
-            () async {
-              emit(state.copyWith(step: 5, status: PaymentStatus.paymentProcessed));
-              timerSuccess = Timer(
-                const Duration(seconds: 10),
-                () async {
-                  emit(state.copyWith(status: PaymentStatus.successInvoice));
-                },
-              );
-            },
-          );
-          emit(state.copyWith(status: PaymentStatus.processingInvoice,qrCharge: ()=>null,qrLoading: false));
+    qrStream = _socketRepository.listenPayment(charge: charge).listen((
+      event,
+    ) async {
+      if (event is Map && event["statusVenta"] == "success") {
+        if (event["uuidFactura"] is String &&
+            authState.currentDevice?.config.noPrintRollo != true) {
+          await _printRollo(authState, idInvoice: event["uuidFactura"]);
         }
-      },
-    );
+        if (timer != null) {
+          timer!.cancel();
+        }
+        if (qrStream != null) {
+          _socketRepository.closeQrListening();
+          qrStream?.cancel();
+        }
+        emit(state.copyWith(step: 5, status: PaymentStatus.paymentProcessed));
+        timerSuccess = Timer(const Duration(seconds: 10), () async {
+          emit(state.copyWith(status: PaymentStatus.successInvoice));
+        });
+      } else {
+        timer = Timer(const Duration(seconds: 60), () async {
+          emit(state.copyWith(step: 5, status: PaymentStatus.paymentProcessed));
+          timerSuccess = Timer(const Duration(seconds: 10), () async {
+            emit(state.copyWith(status: PaymentStatus.successInvoice));
+          });
+        });
+        emit(
+          state.copyWith(
+            status: PaymentStatus.processingInvoice,
+            qrCharge: () => null,
+            qrLoading: false,
+          ),
+        );
+      }
+    });
   }
+
   Timer? timerManual;
   Timer? timerQR;
 
-  bool isProcessing =false;
-  bool activeProcessTimer =false;
+  bool isProcessing = false;
+  bool activeProcessTimer = false;
   _saveAndListenPaymentOrder(AuthState authState, Charge charge) async {
     if (isClosed) {
       return false;
@@ -1018,126 +1713,128 @@ class PaymentBloc extends Cubit<PaymentState> {
       qrStream?.cancel();
     }
 
-
-    Timer? timeoutTimer = Timer(
-        const Duration(minutes: 5),
-            () {
-          if (!isProcessing && !isClosed) {
-            isProcessing = true;
-            _socketRepository.closeQrListening();
-            qrStream?.cancel();
-            timerManual?.cancel();
-            timerQR?.cancel();
-            emit(state.copyWith(step: 6, status: PaymentStatus.paymentProcessed));
-            timerSuccess = Timer(
-                const Duration(seconds: 10),
-                    () => emit(state.copyWith(status: PaymentStatus.successInvoice))
-            );
-          }
-        }
-    );
-    timerQR = Timer(
-      const Duration(seconds: 15),
-          () async {
-        if (!isClosed) {
-          emit(state.copyWith(qrWait: true));
-        }
-      },
-    );
+    Timer? timeoutTimer = Timer(const Duration(minutes: 5), () {
+      if (!isProcessing && !isClosed) {
+        isProcessing = true;
+        _socketRepository.closeQrListening();
+        qrStream?.cancel();
+        timerManual?.cancel();
+        timerQR?.cancel();
+        emit(state.copyWith(step: 6, status: PaymentStatus.paymentProcessed));
+        timerSuccess = Timer(
+          const Duration(seconds: 10),
+          () => emit(state.copyWith(status: PaymentStatus.successInvoice)),
+        );
+      }
+    });
+    timerQR = Timer(const Duration(seconds: 15), () async {
+      if (!isClosed) {
+        emit(state.copyWith(qrWait: true));
+      }
+    });
 
     timerManual?.cancel();
-    timerManual = Timer(
-        const Duration(seconds: 10),
-            () async{
-
-          if(!isClosed && state.paymentObj?.uuid!=null && !activeProcessTimer){
-            activeProcessTimer=true;
-            for(var i=0;i<60;i++){
-              if(isProcessing || isClosed){
-                break;
-              }
-              try{
-                var comanda = await _comandaRepository.getComanda(orderUuid: state.paymentObj!.uuid!);
-                if(comanda.factura!=null && !isProcessing){
-                  isProcessing=true;
-                  if (qrStream != null) {
-                    _socketRepository.closeQrListening();
-                    qrStream?.cancel();
-                  }
-                  timerQR?.cancel();
-                  timeoutTimer.cancel();
-                  num? numero = comanda.numero;
-                  if (comanda.custom is Map && (comanda.custom["numeroCustom"] != null)) {
-                    numero = comanda.custom["numeroCustom"];
-                  }
-                  if(comanda.custom is Map && comanda.custom["facturaUuid"] is String){
-                    await _printRollo(authState,
-                        idInvoice: comanda.custom["facturaUuid"],
-                        orderNumber: comanda.numero?.toInt() ?? 0,
-                        customOrderNumber: numero?.toInt());
-                  } else {
-                    await _printRolloOrder(authState,
-                        orderNumber: comanda.numero?.toInt() ?? 0,
-                        customOrderNumber: numero?.toInt());
-                  }
-                  emit(state.copyWith(step: 5, status: PaymentStatus.paymentProcessed));
-                  timerSuccess = Timer(
-                    const Duration(seconds: 10),
-                        () async {
-                      emit(state.copyWith(status: PaymentStatus.successInvoice));
-                    },
-                  );
-                }
-              }
-              catch(e){
-                log("error obteniendo comanda");
-              }
-              await Future.delayed(const Duration(seconds: 3));
-            }
+    timerManual = Timer(const Duration(seconds: 10), () async {
+      if (!isClosed && state.paymentObj?.uuid != null && !activeProcessTimer) {
+        activeProcessTimer = true;
+        for (var i = 0; i < 60; i++) {
+          if (isProcessing || isClosed) {
+            break;
           }
-        }
-    );
-    qrStream = _socketRepository.listenPayment(charge: charge).listen(
-      (event) async {
-          if (event is Map && event["statusVenta"] == "success") {
-            if(!isProcessing){
-              isProcessing=true;
-              timerManual?.cancel();
-              timerQR?.cancel();
-              timeoutTimer.cancel();
-              try {
-                if (event["uuidFactura"] is String && event["numeroOrden"] is int) {
-                  await _printRollo(authState,
-                      idInvoice: event["uuidFactura"],
-                      orderNumber: event["numeroOrden"],
-                      customOrderNumber: event["numeroCustom"] is int
-                          ? event["numeroCustom"]
-                          : null);
-                } else if (event["numeroOrden"] is int) {
-                  await _printRolloOrder(authState,
-                      orderNumber: event["numeroOrden"],
-                      customOrderNumber: event["numeroCustom"] is int
-                          ? event["numeroCustom"]
-                          : null);
-                }
-              } catch (_) {}
+          try {
+            var comanda = await _comandaRepository.getComanda(
+              orderUuid: state.paymentObj!.uuid!,
+            );
+            if (comanda.factura != null && !isProcessing) {
+              isProcessing = true;
               if (qrStream != null) {
                 _socketRepository.closeQrListening();
                 qrStream?.cancel();
               }
-              emit(state.copyWith(step: 5, status: PaymentStatus.paymentProcessed));
-              timerSuccess = Timer(
-                const Duration(seconds: 10),
-                    () async {
-                  emit(state.copyWith(status: PaymentStatus.successInvoice));
-                },
+              timerQR?.cancel();
+              timeoutTimer.cancel();
+              num? numero = comanda.numero;
+              if (comanda.custom is Map &&
+                  (comanda.custom["numeroCustom"] != null)) {
+                numero = comanda.custom["numeroCustom"];
+              }
+              if (comanda.custom is Map &&
+                  comanda.custom["facturaUuid"] is String) {
+                await _printRollo(
+                  authState,
+                  idInvoice: comanda.custom["facturaUuid"],
+                  orderNumber: comanda.numero?.toInt() ?? 0,
+                  customOrderNumber: numero?.toInt(),
+                );
+              } else {
+                await _printRolloOrder(
+                  authState,
+                  orderNumber: comanda.numero?.toInt() ?? 0,
+                  customOrderNumber: numero?.toInt(),
+                );
+              }
+              emit(
+                state.copyWith(step: 5, status: PaymentStatus.paymentProcessed),
+              );
+              timerSuccess = Timer(const Duration(seconds: 10), () async {
+                emit(state.copyWith(status: PaymentStatus.successInvoice));
+              });
+            }
+          } catch (e) {
+            log("error obteniendo comanda");
+          }
+          await Future.delayed(const Duration(seconds: 3));
+        }
+      }
+    });
+    qrStream = _socketRepository.listenPayment(charge: charge).listen((
+      event,
+    ) async {
+      if (event is Map && event["statusVenta"] == "success") {
+        if (!isProcessing) {
+          isProcessing = true;
+          timerManual?.cancel();
+          timerQR?.cancel();
+          timeoutTimer.cancel();
+          try {
+            if (event["uuidFactura"] is String && event["numeroOrden"] is int) {
+              await _printRollo(
+                authState,
+                idInvoice: event["uuidFactura"],
+                orderNumber: event["numeroOrden"],
+                customOrderNumber: event["numeroCustom"] is int
+                    ? event["numeroCustom"]
+                    : null,
+              );
+            } else if (event["numeroOrden"] is int) {
+              await _printRolloOrder(
+                authState,
+                orderNumber: event["numeroOrden"],
+                customOrderNumber: event["numeroCustom"] is int
+                    ? event["numeroCustom"]
+                    : null,
               );
             }
-        } else {
-            emit(state.copyWith(status: PaymentStatus.processingOrder,qrCharge: ()=>null, qrLoading: false));
+          } catch (_) {}
+          if (qrStream != null) {
+            _socketRepository.closeQrListening();
+            qrStream?.cancel();
+          }
+          emit(state.copyWith(step: 5, status: PaymentStatus.paymentProcessed));
+          timerSuccess = Timer(const Duration(seconds: 10), () async {
+            emit(state.copyWith(status: PaymentStatus.successInvoice));
+          });
         }
-      },
-    );
+      } else {
+        emit(
+          state.copyWith(
+            status: PaymentStatus.processingOrder,
+            qrCharge: () => null,
+            qrLoading: false,
+          ),
+        );
+      }
+    });
   }
 
   Future<void> queryBusiness({required AuthState authState}) async {
@@ -1223,11 +1920,13 @@ class PaymentBloc extends Cubit<PaymentState> {
   }
 
   cancelBREB(AuthState authState) {
-    emit(state.copyWith(
-      step: authState.currentContribuyente?.tieneFacturacion == true ? 2 : 1,
-      brebLoading: false,
-      brebCharge: null,
-    ));
+    emit(
+      state.copyWith(
+        step: authState.currentContribuyente?.tieneFacturacion == true ? 2 : 1,
+        brebLoading: false,
+        brebCharge: null,
+      ),
+    );
   }
 
   _printRolloOrder(AuthState authState,
@@ -1246,24 +1945,38 @@ class PaymentBloc extends Cubit<PaymentState> {
               clienteNombre: state.customerName.value
         );
     var printUtils = PrintUtils();
-    log("iZi Kiosco: [DEBUG] _printRolloOrder dispatching ${tmp.length} PrintItems directly to printUtils...");
+    log(
+      "iZi Kiosco: [DEBUG] _printRolloOrder dispatching ${tmp.length} PrintItems directly to printUtils...",
+    );
     await printUtils.print(tmp, authState.currentDevice);
   }
 
-  _printRollo(AuthState authState, {String? idInvoice, Invoice? invoice, int? orderNumber, int? customOrderNumber}) async {
-    try{
-      log("iZi Kiosco: [DEBUG] _printRollo invoked. idInvoice=$idInvoice, orderNumber=$orderNumber");
+  _printRollo(
+    AuthState authState, {
+    String? idInvoice,
+    Invoice? invoice,
+    int? orderNumber,
+    int? customOrderNumber,
+  }) async {
+    try {
+      log(
+        "iZi Kiosco: [DEBUG] _printRollo invoked. idInvoice=$idInvoice, orderNumber=$orderNumber",
+      );
       List<IziPrintItem> tmp = [];
 
       if (idInvoice == null && invoice == null && orderNumber == null) {
-        log("iZi Kiosco: [DEBUG] Aborting _printRollo, all tracking variables are null.");
+        log(
+          "iZi Kiosco: [DEBUG] Aborting _printRollo, all tracking variables are null.",
+        );
         return;
       }
       if (idInvoice != null) {
         invoice = await _comandaRepository.getInvoice(idInvoice);
-        log("iZi Kiosco: [DEBUG] Resolved explicit Invoice object from comanda repository? ${invoice != null}");
+        log(
+          "iZi Kiosco: [DEBUG] Resolved explicit Invoice object from comanda repository? ${invoice != null}",
+        );
       }
-      if(orderNumber!=null){
+      if (orderNumber != null) {
         log("iZi Kiosco: [DEBUG] Formatting Order template natively...");
         emit(state.copyWith(
             orderNumber: orderNumber, customOrderNumber: customOrderNumber));
@@ -1278,8 +1991,10 @@ class PaymentBloc extends Cubit<PaymentState> {
               clienteNombre: state.customerName.value
           );
       }
-      if(invoice==null){
-        log("iZi Kiosco: [DEBUG] WARNING: invoice remained perfectly null, pushing purely order bytes (${tmp.length} items)...");
+      if (invoice == null) {
+        log(
+          "iZi Kiosco: [DEBUG] WARNING: invoice remained perfectly null, pushing purely order bytes (${tmp.length} items)...",
+        );
         var printUtils = PrintUtils();
         await printUtils.print(tmp, authState.currentDevice);
         return;
@@ -1293,15 +2008,19 @@ class PaymentBloc extends Cubit<PaymentState> {
         if (backendTicket.isEmpty) backendTicket = null;
       }
 
-      final backendCompacto = backendTicket != null && backendFormat == 'compacto';
+      final backendCompacto =
+          backendTicket != null && backendFormat == 'compacto';
       final useCompact = backendTicket != null
           ? backendCompacto
           : authState.currentDevice?.config.facturaCompacto == true;
 
-      if(useCompact){
-        log("iZi Kiosco: [DEBUG] Compact mode (backend=${backendTicket != null}): replacing tmp");
+      if (useCompact) {
+        log(
+          "iZi Kiosco: [DEBUG] Compact mode (backend=${backendTicket != null}): replacing tmp",
+        );
         if (backendTicket != null) {
-          tmp = backendTicket;
+          tmp = PrintTemplate.ensureInvoiceQr(
+              backendTicket, invoice, authState.currentContribuyente!);
         } else {
           tmp = await PrintTemplate.printInvoiceCompact(
             authState.currentContribuyente!,
@@ -1309,41 +2028,52 @@ class PaymentBloc extends Cubit<PaymentState> {
             invoice,
             orderNumber: orderNumber,
             customOrderNumber: customOrderNumber,
-                taxesStrategy: authState.taxesStrategy
+            taxesStrategy: authState.taxesStrategy,
           );
         }
-      }
-      else{
-        log("iZi Kiosco: [DEBUG] Full mode: appending invoice payload after order");
+      } else {
+        log(
+          "iZi Kiosco: [DEBUG] Full mode: appending invoice payload after order",
+        );
         tmp.add(IziPrintLineWrap(lines: 2));
         if (orderNumber != null) {
           tmp.add(IziPrintCut());
         }
         if (backendTicket != null) {
-          tmp.addAll(backendTicket);
-        } else if(authState.currentSucursal?.config is Map &&
-          (authState.currentSucursal?.config as Map)["tipoFacturaVentas"] == "compacto"
-        ){
-          tmp.addAll(await PrintTemplate.printInvoiceCompact(
-            authState.currentContribuyente!,
-            authState.currentSucursal!,
-            invoice,
-              taxesStrategy: authState.taxesStrategy
-          ));
-        }
-        else{
-        tmp.addAll(await PrintTemplate.printInvoice(
-            authState.currentContribuyente!, authState.currentSucursal!,invoice,
-              taxesStrategy: authState.taxesStrategy));
+          tmp.addAll(PrintTemplate.ensureInvoiceQr(
+              backendTicket, invoice, authState.currentContribuyente!));
+        } else if (authState.currentSucursal?.config is Map &&
+            (authState.currentSucursal?.config as Map)["tipoFacturaVentas"] ==
+                "compacto") {
+          tmp.addAll(
+            await PrintTemplate.printInvoiceCompact(
+              authState.currentContribuyente!,
+              authState.currentSucursal!,
+              invoice,
+              taxesStrategy: authState.taxesStrategy,
+            ),
+          );
+        } else {
+          tmp.addAll(
+            await PrintTemplate.printInvoice(
+              authState.currentContribuyente!,
+              authState.currentSucursal!,
+              invoice,
+              taxesStrategy: authState.taxesStrategy,
+            ),
+          );
         }
       }
 
       var printUtils = PrintUtils();
-      log("iZi Kiosco: [DEBUG] Submitting FULL hybrid batch configuration to print core: ${tmp.length} items");
+      log(
+        "iZi Kiosco: [DEBUG] Submitting FULL hybrid batch configuration to print core: ${tmp.length} items",
+      );
       await printUtils.print(tmp, authState.currentDevice);
-    }
-    catch(e, stacktrace){
-      log("iZi Kiosco: [DEBUG ERROR] _printRollo failure -> ${e.toString()} \nStacktrace: $stacktrace");
+    } catch (e, stacktrace) {
+      log(
+        "iZi Kiosco: [DEBUG ERROR] _printRollo failure -> ${e.toString()} \nStacktrace: $stacktrace",
+      );
     }
   }
 
@@ -1378,9 +2108,10 @@ class PaymentBloc extends Cubit<PaymentState> {
       return newPayment;
   }
 
-
-  Future<void> _setParamsCo(Contribuyente contribuyente, Sucursal sucursal)async{
-
+  Future<void> _setParamsCo(
+    Contribuyente contribuyente,
+    Sucursal sucursal,
+  ) async {
     List<IdentificationType>? listIdentificationType;
     List<IvaResponsability>? listIvaResponsability;
     List<PersonType>? listPersonType;
@@ -1398,10 +2129,10 @@ class PaymentBloc extends Cubit<PaymentState> {
       _businessRepository.getTaxResponsability(),
     ]);
 
-  listIdentificationType   = results[0] as List<IdentificationType>;
-  listIvaResponsability    = results[1] as List<IvaResponsability>;
-  listPersonType           = results[2] as List<PersonType>;
-  listTaxResponsability    = results[3] as List<TaxResponsability>;
+    listIdentificationType = results[0] as List<IdentificationType>;
+    listIvaResponsability = results[1] as List<IvaResponsability>;
+    listPersonType = results[2] as List<PersonType>;
+    listTaxResponsability = results[3] as List<TaxResponsability>;
 
     identificationType = listIdentificationType.firstOrNull;
     ivaResponsability = listIvaResponsability.lastOrNull;
@@ -1420,13 +2151,13 @@ class PaymentBloc extends Cubit<PaymentState> {
     emit(state.copyWith(paramsCo: _defaultParamsCo));
   }
 
-  void _setParamsOrderPaymentCo(PaymentDtoVentaData paymentDtoVentaData)async{
+  void _setParamsOrderPaymentCo(PaymentDtoVentaData paymentDtoVentaData) async {
     var identificationType = state.paramsCo?.identificationType;
     var ivaResponsability = state.paramsCo?.ivaResponsability;
     var personType = state.paramsCo?.personType;
     var taxResponsability = state.paramsCo?.taxResponsability;
 
-    if(state.documentNumber.value.isEmpty){
+    if (state.documentNumber.value.isEmpty) {
       paymentDtoVentaData.nit = AppConstants.defaultNitCo;
       paymentDtoVentaData.razonSocial = AppConstants.defaultRazonSocialCo;
       identificationType = AppConstants.tipoIdentificacionCo;
@@ -1435,34 +2166,36 @@ class PaymentBloc extends Cubit<PaymentState> {
       taxResponsability = AppConstants.responsabilidadFiscalCo;
     }
 
-    if(identificationType ==null || ivaResponsability ==null || personType == null  || taxResponsability == null){
+    if (identificationType == null ||
+        ivaResponsability == null ||
+        personType == null ||
+        taxResponsability == null) {
       throw "Parametros incorrectos";
     }
 
-    paymentDtoVentaData.co= PaymentDtoVentaDataCo(
-      identificationType:  identificationType,
-      ivaResponsability:  ivaResponsability,
-      personType:  personType,
-      taxResponsability:  taxResponsability,
-
+    paymentDtoVentaData.co = PaymentDtoVentaDataCo(
+      identificationType: identificationType,
+      ivaResponsability: ivaResponsability,
+      personType: personType,
+      taxResponsability: taxResponsability,
     );
   }
 
-  void _setParamsOrderPaymentBo(PaymentDtoVentaData paymentDtoVentaData)async{
-      var documentType = state.paramsBo?.documentType;
-      if (state.documentNumber.value.isEmpty) {
-        documentType = state.paramsBo?.documentTypes.first;
-      }
-      paymentDtoVentaData.tipoDocumento = documentType;
+  void _setParamsOrderPaymentBo(PaymentDtoVentaData paymentDtoVentaData) async {
+    var documentType = state.paramsBo?.documentType;
+    if (state.documentNumber.value.isEmpty) {
+      documentType = state.paramsBo?.documentTypes.first;
+    }
+    paymentDtoVentaData.tipoDocumento = documentType;
   }
 
-  void _setPaymentCo(PaymentAttemptDto paymentAttemptDto)async{
+  void _setPaymentCo(PaymentAttemptDto paymentAttemptDto) async {
     var identificationType = state.paramsCo?.identificationType;
     var ivaResponsability = state.paramsCo?.ivaResponsability;
     var personType = state.paramsCo?.personType;
     var taxResponsability = state.paramsCo?.taxResponsability;
 
-    if(state.documentNumber.value.isEmpty){
+    if (state.documentNumber.value.isEmpty) {
       paymentAttemptDto.nit = AppConstants.defaultNitCo;
       paymentAttemptDto.razonSocial = AppConstants.defaultRazonSocialCo;
       identificationType = AppConstants.tipoIdentificacionCo;
@@ -1471,16 +2204,18 @@ class PaymentBloc extends Cubit<PaymentState> {
       taxResponsability = AppConstants.responsabilidadFiscalCo;
     }
 
-    if(identificationType ==null || ivaResponsability ==null || personType == null  || taxResponsability == null){
+    if (identificationType == null ||
+        ivaResponsability == null ||
+        personType == null ||
+        taxResponsability == null) {
       throw "Parametros incorrectos";
     }
 
-    paymentAttemptDto.co= PaymentDtoVentaDataCo(
-      identificationType:  identificationType,
-      ivaResponsability:  ivaResponsability,
-      personType:  personType,
-      taxResponsability:  taxResponsability,
-
+    paymentAttemptDto.co = PaymentDtoVentaDataCo(
+      identificationType: identificationType,
+      ivaResponsability: ivaResponsability,
+      personType: personType,
+      taxResponsability: taxResponsability,
     );
   }
 
@@ -1501,112 +2236,138 @@ class PaymentBloc extends Cubit<PaymentState> {
       status: PaymentStatus.successGet));
   }
 
-
-
-
-  Future _setParamsBo(Contribuyente contribuyente, Sucursal sucursal)async{
+  Future _setParamsBo(Contribuyente contribuyente, Sucursal sucursal) async {
     List<DocumentType>? documentTypes;
     DocumentType? documentType;
     documentTypes = await _businessRepository.getDocumentTypes();
     documentType = documentTypes.lastOrNull;
-    emit(state.copyWith(paramsBo: ParamsBo(documentType: documentType, documentTypes: documentTypes ?? [])));
-  }
-  void _setPaymentBo(PaymentAttemptDto paymentAttemptDto)async{
-
-      var documentType = state.paramsBo?.documentType;
-      if (state.documentNumber.value.isEmpty) {
-        documentType = state.paramsBo?.documentTypes.first;
-      }
-      paymentAttemptDto.tipoDocumento=documentType?.toJson();
-  }
-
-  void _setParamsCustomerBo(Customer customer)async{
+    emit(
+      state.copyWith(
+        paramsBo: ParamsBo(
+          documentType: documentType,
+          documentTypes: documentTypes ?? [],
+        ),
+      ),
+    );
   }
 
+  void _setPaymentBo(PaymentAttemptDto paymentAttemptDto) async {
+    var documentType = state.paramsBo?.documentType;
+    if (state.documentNumber.value.isEmpty) {
+      documentType = state.paramsBo?.documentTypes.first;
+    }
+    paymentAttemptDto.tipoDocumento = documentType?.toJson();
+  }
 
-  PaymentCountryTaxes? _setCountryConfig(Contribuyente contribuyente){
+  void _setParamsCustomerBo(Customer customer) async {}
 
-    if(contribuyente.tieneFacturacion==true){
-      if(contribuyente.usaSiat==true || (contribuyente.config is Map && contribuyente.config["paisId"] == "BO")){
+  PaymentCountryTaxes? _setCountryConfig(Contribuyente contribuyente) {
+    if (contribuyente.tieneFacturacion == true) {
+      if (contribuyente.usaSiat == true ||
+          (contribuyente.config is Map &&
+              contribuyente.config["paisId"] == "BO")) {
         countryConfig = PaymentConfig(
           setParams: _setParamsBo,
           setParamsCustomer: _setParamsCustomerBo,
           setParamsOrderPayment: _setParamsOrderPaymentBo,
-          setParamsPayment: _setPaymentBo
-          );
+          setParamsPayment: _setPaymentBo,
+        );
         return PaymentCountryTaxes.bolivia;
-      }
-      else if(contribuyente.config is Map && contribuyente.config["paisId"] == "CO"){
+      } else if (contribuyente.config is Map &&
+          contribuyente.config["paisId"] == "CO") {
         countryConfig = PaymentConfig(
           setParams: _setParamsCo,
           setParamsCustomer: _setParamsCustomerCo,
           setParamsOrderPayment: _setParamsOrderPaymentCo,
-          setParamsPayment: _setPaymentCo
-          );
+          setParamsPayment: _setPaymentCo,
+        );
         return PaymentCountryTaxes.colombia;
       }
     }
     return null;
   }
 
-  changeInputsBo({
-      int? documentType}) {
+  changeInputsBo({int? documentType}) {
     if (documentType != null) {
-      emit(state.copyWith(
+      emit(
+        state.copyWith(
           paramsBo: state.paramsBo?.copyWith(
             documentType: state.paramsBo?.documentTypes.firstWhere(
-              (element) => element.codigoClasificador == documentType)
-          )));
+              (element) => element.codigoClasificador == documentType,
+            ),
+          ),
+        ),
+      );
     }
   }
 
   changeInputsCo({
-      String? personType,
-      String? taxResponsability,
-      String? identificationType,
-      String? ivaResponsability}) {
+    String? personType,
+    String? taxResponsability,
+    String? identificationType,
+    String? ivaResponsability,
+  }) {
     if (personType != null) {
-      emit(state.copyWith(
-          paramsCo: state.paramsCo?.copyWith(
-            personType: personType)));
+      emit(
+        state.copyWith(
+          paramsCo: state.paramsCo?.copyWith(personType: personType),
+        ),
+      );
     }
     if (taxResponsability != null) {
-      emit(state.copyWith(
+      emit(
+        state.copyWith(
           paramsCo: state.paramsCo?.copyWith(
-            taxResponsability: taxResponsability)));
+            taxResponsability: taxResponsability,
+          ),
+        ),
+      );
     }
     if (identificationType != null) {
-      if(identificationType==AppConstants.idNitCo){
-        emit(state.copyWith(
-          status: PaymentStatus.setInputs,
+      if (identificationType == AppConstants.idNitCo) {
+        emit(
+          state.copyWith(
+            status: PaymentStatus.setInputs,
             paramsCo: state.paramsCo?.copyWith(
-              
               identificationType: identificationType,
-              ivaResponsability: AppConstants.defaultDataNit["ivaResponsability"],
+              ivaResponsability:
+                  AppConstants.defaultDataNit["ivaResponsability"],
               personType: AppConstants.defaultDataNit["personType"],
-              taxResponsability: AppConstants.defaultDataNit["taxResponsability"]
-              )));
+              taxResponsability:
+                  AppConstants.defaultDataNit["taxResponsability"],
+            ),
+          ),
+        );
         emit(state.copyWith(status: PaymentStatus.successGet));
-      }
-      else{
-        emit(state.copyWith(
-          status: PaymentStatus.setInputs,
+      } else {
+        emit(
+          state.copyWith(
+            status: PaymentStatus.setInputs,
             paramsCo: state.paramsCo?.copyWith(
               identificationType: identificationType,
-              ivaResponsability: AppConstants.defaultDataOther["ivaResponsability"],
+              ivaResponsability:
+                  AppConstants.defaultDataOther["ivaResponsability"],
               personType: AppConstants.defaultDataOther["personType"],
-              taxResponsability: AppConstants.defaultDataOther["taxResponsability"]
-              )));
-    emit(state.copyWith(status: PaymentStatus.successGet));
+              taxResponsability:
+                  AppConstants.defaultDataOther["taxResponsability"],
+            ),
+          ),
+        );
+        emit(state.copyWith(status: PaymentStatus.successGet));
       }
     }
     if (ivaResponsability != null) {
-      emit(state.copyWith(
+      emit(
+        state.copyWith(
           paramsCo: state.paramsCo?.copyWith(
-            ivaResponsability: ivaResponsability)));
+            ivaResponsability: ivaResponsability,
+          ),
+        ),
+      );
     }
   }
-  cancelPaymentCard(){
+
+  cancelPaymentCard() {
     cancelToken.cancel();
     cancelToken = CancelToken();
   }
@@ -1630,7 +2391,9 @@ class PaymentBloc extends Cubit<PaymentState> {
 
         if (kIsWeb) {
           final base64data = base64Encode(bytes);
-          final a = html.AnchorElement(href: 'data:image/png;base64,$base64data');
+          final a = html.AnchorElement(
+            href: 'data:image/png;base64,$base64data',
+          );
           a.setAttribute('download', fileName);
           a.click();
         } else {
@@ -1639,29 +2402,34 @@ class PaymentBloc extends Cubit<PaymentState> {
             final directory = await getApplicationDocumentsDirectory();
             final file = File('${directory.path}/$fileName');
             await file.writeAsBytes(bytes);
-          } else {
-          }
+          } else {}
         }
-      } else {
-      }
+      } else {}
     } catch (e) {
       log(e.toString());
     }
   }
+
   Future<void> confirmDemoPayment() async {
-     try {
-       if (state.paymentObj?.isComanda == true) {
-         await _comandaRepository.confirmDemoPaymentOrder(
-             id: state.qrCharge?.id ?? 0);
-       } else {
-         await _comandaRepository.confirmDemoPaymentRetail(
-             id: state.qrCharge?.id ?? 0);
-       }
-     } catch (e) {
-       log(e.toString());
-       emit(state.copyWith(
-           status: PaymentStatus.errorGet, errorDescription: e.toString()));
-       emit(state.copyWith(status: PaymentStatus.waitingGet));
-     }
+    try {
+      if (state.paymentObj?.isComanda == true) {
+        await _comandaRepository.confirmDemoPaymentOrder(
+          id: state.qrCharge?.id ?? 0,
+        );
+      } else {
+        await _comandaRepository.confirmDemoPaymentRetail(
+          id: state.qrCharge?.id ?? 0,
+        );
+      }
+    } catch (e) {
+      log(e.toString());
+      emit(
+        state.copyWith(
+          status: PaymentStatus.errorGet,
+          errorDescription: e.toString(),
+        ),
+      );
+      emit(state.copyWith(status: PaymentStatus.waitingGet));
+    }
   }
 }
