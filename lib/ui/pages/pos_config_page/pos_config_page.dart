@@ -87,6 +87,10 @@ class _PosConfigPageState extends State<PosConfigPage> {
             ),
           ),
         body: BlocConsumer<PosConfigBloc, PosConfigState>(
+          // Only on a change of status. The health check rebuilds this state
+          // every 30 s with a fresh health object, which used to re-show an old
+          // pairing error for as long as the screen stayed open.
+          listenWhen: (before, after) => before.status != after.status,
           listener: (context, state) {
             if (!context.mounted) return;
             if (state.status == PosConfigStatus.error &&
@@ -410,7 +414,11 @@ class _PosConfigPageState extends State<PosConfigPage> {
                       ),
                     ),
                   ...state.discoveredDevices.map((device) {
-                    final isPaired = state.pairedDevice?.ip == device.ip;
+                    // Two terminals can share an address only by port, so the
+                    // paired one is recognised by both.
+                    final paired = state.pairedDevice;
+                    final isPaired =
+                        paired?.ip == device.ip && paired?.port == device.port;
                     if (isPaired) return const SizedBox.shrink();
 
                     return Card(

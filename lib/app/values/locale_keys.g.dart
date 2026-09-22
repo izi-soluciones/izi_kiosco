@@ -266,6 +266,8 @@ abstract class  LocaleKeys {
   static const payment_body_havingTrouble = 'payment.body.havingTrouble';
   static const payment_body_chargeInProgress = 'payment.body.chargeInProgress';
   static const payment_body_instalments = 'payment.body.instalments';
+  static const errorPayment_buttons_printTest = 'errorPayment.buttons.printTest';
+  static const errorPayment_buttons_printing = 'errorPayment.buttons.printing';
   static const payment_buttons_back = 'payment.buttons.back';
   static const payment_buttons_continueAction = 'payment.buttons.continueAction';
   static const payment_body_documentFallback = 'payment.body.documentFallback';
@@ -586,7 +588,6 @@ abstract class  LocaleKeys {
   static const posConfig_buttons = 'posConfig.buttons';
   static const posConfig_messages_paired = 'posConfig.messages.paired';
   static const posConfig_messages_noTerminals = 'posConfig.messages.noTerminals';
-  static const posConfig_messages_missingPin = 'posConfig.messages.missingPin';
   static const posConfig_messages_ready = 'posConfig.messages.ready';
   static const posConfig_messages_checking = 'posConfig.messages.checking';
   static const posConfig_messages_overlayMissing = 'posConfig.messages.overlayMissing';

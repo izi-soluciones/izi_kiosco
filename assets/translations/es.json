@@ -748,7 +748,6 @@
     "messages": {
       "paired": "POS Emparejado correctamente",
       "noTerminals": "No se encontraron terminales",
-      "missingPin": "Este dispositivo no tiene un PIN configurado. Configúrelo en el backend antes de emparejar.",
       "ready": "Listo para cobrar",
       "checking": "Verificando el datáfono...",
       "overlayMissing": "El datáfono no tiene el permiso \"Mostrar sobre otras apps\": los cobros funcionan, pero el cliente podría no ver la pantalla de pago. Actívelo en Ajustes del datáfono para PayPOS."
@@ -773,7 +772,9 @@
     "buttons": {
       "logout": "Cerrar sesión",
       "posConfig": "Configuración de POS",
-      "closeApp": "Cerrar app"
+      "closeApp": "Cerrar app",
+      "printTest": "Imprimir prueba",
+      "printing": "Imprimiendo..."
     }
   }
 }

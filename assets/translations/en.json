@@ -724,7 +724,6 @@
     "messages": {
       "paired": "POS paired",
       "noTerminals": "No terminals found",
-      "missingPin": "This device has no PIN configured. Set it in the backend before pairing.",
       "ready": "Ready to charge",
       "checking": "Checking the terminal...",
       "overlayMissing": "The terminal lacks the \"Display over other apps\" permission: charges work, but the customer may not see the payment screen. Enable it for PayPOS in the terminal settings."
@@ -749,7 +748,9 @@
     "buttons": {
       "logout": "Sign out",
       "posConfig": "POS settings",
-      "closeApp": "Close app"
+      "closeApp": "Close app",
+      "printTest": "Test print",
+      "printing": "Printing..."
     }
   },
   "errorPayments": {

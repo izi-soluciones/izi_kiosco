@@ -387,8 +387,8 @@ class _ErrorPaymentPageState extends State<ErrorPaymentPage> {
                       padding: const EdgeInsets.all(16),
                       child: IziBtn(
                         buttonText: _printingTest
-                            ? "Imprimiendo..."
-                            : "Imprimir prueba",
+                            ? LocaleKeys.errorPayment_buttons_printing.tr()
+                            : LocaleKeys.errorPayment_buttons_printTest.tr(),
                         buttonType: ButtonType.terciary,
                         buttonSize: ButtonSize.medium,
                         buttonOnPressed: _printingTest

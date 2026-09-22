@@ -71,6 +71,12 @@ class PosConfigBloc extends Cubit<PosConfigState> {
 
   Future<void> _loadSavedState() async {
     final saved = IzifyPosAddress.tryParse(await TokenUtils.getPosIp());
+    if (saved != null && await TokenUtils.getPosBackendIp() == null) {
+      // First run after the update: this kiosk was already paired, but nothing
+      // recorded which backend address that pairing answered. Take the current
+      // one, so only a later change of it moves the kiosk to another terminal.
+      await _acknowledgeBackend();
+    }
     if (saved != null && !isClosed) {
       emit(state.copyWith(
         status: PosConfigStatus.pairedLoaded,
@@ -177,7 +183,16 @@ class PosConfigBloc extends Cubit<PosConfigState> {
   /// Pairs with the terminal typed by the technician: `ip` or `ip:port`.
   Future<void> pairManually(String ip, {int? port, String? mqttClientId, String? mqttUserName, String? mqttPassword, String? commerceId, String? cajaId}) async {
     final address = IzifyPosAddress.tryParse(ip);
-    if (address == null) return;
+    if (address == null) {
+      // An empty or malformed address used to do nothing at all: the button
+      // looked broken.
+      if (!isClosed) {
+        emit(state.copyWith(
+            status: PosConfigStatus.error,
+            errorMessage: 'Escriba la dirección del datáfono, por ejemplo 192.168.0.18.'));
+      }
+      return;
+    }
     await pairDevice(
       _deviceFor(port != null ? IzifyPosAddress(address.host, port) : address),
       mqttClientId: mqttClientId,

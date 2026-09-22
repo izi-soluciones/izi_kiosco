@@ -24,9 +24,21 @@ class IzifyPosAddress {
     if (value.isEmpty) return null;
     value = value.replaceFirst(RegExp(r'^[a-z]+://', caseSensitive: false), '');
     value = value.split('/').first;
+    // A bracketed IPv6 literal keeps its brackets: splitting on every colon
+    // would turn "[fe80::1]:8081" into the host "[fe80".
+    if (value.startsWith('[')) {
+      final close = value.indexOf(']');
+      if (close < 0) return null;
+      final host = value.substring(0, close + 1);
+      final rest = value.substring(close + 1);
+      final port = rest.startsWith(':') ? int.tryParse(rest.substring(1).trim()) : null;
+      return IzifyPosAddress(host, port ?? defaultPort);
+    }
     final parts = value.split(':');
     final host = parts.first.trim();
     if (host.isEmpty) return null;
+    // A bare IPv6 address (more than one colon) has no port to read.
+    if (parts.length > 2) return IzifyPosAddress(value, defaultPort);
     final port = parts.length > 1 ? int.tryParse(parts[1].trim()) : null;
     return IzifyPosAddress(host, port ?? defaultPort);
   }
@@ -49,7 +61,7 @@ class IzifyPosAddress {
   String toString() => hostPort;
 }
 
-/// What the terminal reports on `GET /health`. Fields added in PayPOS 1.25
+/// What the terminal reports on `GET /health`. Fields added in PayPOS 1.26
 /// are null when talking to an older terminal.
 class IzifyPosHealth {
   final bool? paired;
@@ -199,10 +211,20 @@ class IzifyPosClient {
   final http.Client Function() _payClientFactory;
   final bool _closePayClient;
 
+  final bool _ownsHttp;
+
   IzifyPosClient({http.Client? httpClient})
       : _http = httpClient ?? http.Client(),
+        _ownsHttp = httpClient == null,
         _payClientFactory = httpClient != null ? (() => httpClient) : http.Client.new,
         _closePayClient = httpClient == null;
+
+  /// Releases the connections this client holds. A bloc that builds its own
+  /// client closes it when it goes away; one that was handed a client leaves
+  /// it to its owner.
+  void close() {
+    if (_ownsHttp) _http.close();
+  }
 
   static final Random _random = Random.secure();
 

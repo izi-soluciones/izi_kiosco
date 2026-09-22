@@ -25,6 +25,7 @@ class HomeBloc extends Cubit<HomeState>{
   @override
   Future<void> close() {
     _subscription?.cancel();
+    _izifyPosClient.close();
     return super.close();
   }
 
@@ -74,7 +75,9 @@ class HomeBloc extends Cubit<HomeState>{
       _subscription?.cancel();
       return;
     }
-    if (!ready) {
+    // Report the change, not the state: this runs every 30 s, so a terminal
+    // left switched off used to file thousands of identical reports a day.
+    if (!ready && state.statusServerPos != false) {
       CrashReport.report("Error connection POS", "Izify POS not ready at $address");
     }
     emit(state.copyWith(statusServer: true, statusServerPos: ready));
