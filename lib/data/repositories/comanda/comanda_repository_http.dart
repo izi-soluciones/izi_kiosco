@@ -207,22 +207,6 @@ class ComandaRepositoryHttp extends ComandaRepository {
   }
 
   @override
-  Future<void> emitContingencia(
-      {required InvoiceDto invoice, required int orderId}) async {
-    String path = "/comandas/$orderId/facturar-contingencia";
-    var response = await _dioClient.put(
-        uri: path,
-        body: invoice.toJson(),
-        options: Options(responseType: ResponseType.json));
-    if (response.statusCode != 200) {
-      if (response.data?["status"] ?? false) {
-        throw response.data?["data"];
-      }
-      throw response.data;
-    }
-  }
-
-  @override
   Future<Payment> addPayment(
       {required Payment payment,
       required int orderId,

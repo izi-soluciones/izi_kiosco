@@ -189,8 +189,6 @@ class PaymentBloc extends Cubit<PaymentState> {
   validateInput(
       {bool documentNumber = false,
       bool businessName = false,
-      bool invoiceNumber = false,
-      bool authorization = false,
       bool email = false,
       bool firstDigits = false,
       bool lastDigits = false,
@@ -235,12 +233,9 @@ class PaymentBloc extends Cubit<PaymentState> {
   changeInputs(
       {int? cashRegister,
       bool? withException,
-      bool? isManual,
       String? documentNumber,
       String? complement,
       String? businessName,
-      String? authorization,
-      String? invoiceNumber,
         String? phonePrefix,
       String? email,
         String? firstDigits,
@@ -254,10 +249,6 @@ class PaymentBloc extends Cubit<PaymentState> {
     if (phoneNumber != null) {
       emit(state.copyWith(phoneNumber: state.phoneNumber.changeValue(phoneNumber)));
     }
-    if (isManual != null) {
-      emit(state.copyWith(isManual: isManual));
-    }
-
     if (withException != null) {
       emit(state.copyWith(withException: withException));
     }
