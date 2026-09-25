@@ -20,16 +20,9 @@ class Contribuyente {
     this.actividadApi,
     this.secretUuid,
     this.customData,
-    this.habilitadoRestaurantes,
-    this.habilitadoAnalitica,
     this.habilitadoVentas,
-    this.habilitadoIntegracion,
-    this.habilitadoInventarios,
-    this.habilitadoTerceros,
     this.habilitadoCobros,
     this.habilitadoFacturacion,
-    this.habilitadoTerminal,
-    this.habilitadoMesas,
     this.modulos,
     this.usaSiat,
     this.configTerminada,
@@ -49,7 +42,7 @@ class Contribuyente {
 
   @override
   String toString() {
-    return 'Contribuyente{id: $id, nombre: $nombre, razonSocial: $razonSocial, administrador: $administrador, nit: $nit, correoElectronico: $correoElectronico, plan: $plan, logo: $logo, logoId: $logoId, logoOrientation: $logoOrientation, estado: $estado, creado: $creado, bloqueadoPago: $bloqueadoPago, apiClientId: $apiClientId, sucursalApi: $sucursalApi, actividadApi: $actividadApi, secretUuid: $secretUuid, customData: $customData, habilitadoRestaurantes: $habilitadoRestaurantes, habilitadoAnalitica: $habilitadoAnalitica, habilitadoVentas: $habilitadoVentas, habilitadoIntegracion: $habilitadoIntegracion, habilitadoInventarios: $habilitadoInventarios, habilitadoTerceros: $habilitadoTerceros, habilitadoCobros: $habilitadoCobros, habilitadoFacturacion: $habilitadoFacturacion, usaSiat: $usaSiat, configTerminada: $configTerminada, configCobros: $configCobros, config: $config, totalSucursales: $totalSucursales, sucursales: $sucursales, actividadesEconomicas: $actividadesEconomicas, autorizadosAPI: $autorizadosAPI, llaves: $llaves, tiposFactura: $tiposFactura, camposExtra: $camposExtra, autorizaciones: $autorizaciones, usuarios: $usuarios}';
+    return 'Contribuyente{id: $id, nombre: $nombre, razonSocial: $razonSocial, administrador: $administrador, nit: $nit, correoElectronico: $correoElectronico, plan: $plan, logo: $logo, logoId: $logoId, logoOrientation: $logoOrientation, estado: $estado, creado: $creado, bloqueadoPago: $bloqueadoPago, apiClientId: $apiClientId, sucursalApi: $sucursalApi, actividadApi: $actividadApi, secretUuid: $secretUuid, customData: $customData, habilitadoVentas: $habilitadoVentas, habilitadoCobros: $habilitadoCobros, habilitadoFacturacion: $habilitadoFacturacion, usaSiat: $usaSiat, configTerminada: $configTerminada, configCobros: $configCobros, config: $config, totalSucursales: $totalSucursales, sucursales: $sucursales, actividadesEconomicas: $actividadesEconomicas, autorizadosAPI: $autorizadosAPI, llaves: $llaves, tiposFactura: $tiposFactura, camposExtra: $camposExtra, autorizaciones: $autorizaciones, usuarios: $usuarios}';
   }
 
   int? id;
@@ -71,27 +64,15 @@ class Contribuyente {
   int? actividadApi;
   String? secretUuid;
   dynamic customData;
-  bool? habilitadoRestaurantes;
-  bool? habilitadoAnalitica;
   bool? habilitadoVentas;
-  bool? habilitadoIntegracion;
-  bool? habilitadoInventarios;
-  bool? habilitadoTerceros;
   bool? habilitadoCobros;
   bool? habilitadoFacturacion;
-  bool? habilitadoTerminal;
-  bool? habilitadoMesas;
   Modulos? modulos;
   bool? usaSiat;
 
-  bool get tieneFacturacion {
-    if (modulos != null) return modulos!.facturacionEnabled;
-    return habilitadoFacturacion == true;
-  }
-
-  bool get tieneVentas {
-    if (modulos != null) return modulos!.ventasEnabled;
-    return habilitadoVentas == true;
+  bool tieneModulo(Modulo m) {
+    if (modulos != null) return modulos!.isEnabled(m.name);
+    return false;
   }
   bool? configTerminada;
   dynamic configCobros;
@@ -125,16 +106,9 @@ class Contribuyente {
     actividadApi : json['actividadApi'],
     secretUuid : json['secretUuid'],
     customData : json["customData"] is Map<String,dynamic>?json["customData"]:null,
-    habilitadoRestaurantes : json['habilitadoRestaurantes'],
-    habilitadoAnalitica : json['habilitadoAnalitica'],
     habilitadoVentas : json['habilitadoVentas'],
-    habilitadoIntegracion : json['habilitadoIntegracion'],
-    habilitadoInventarios : json['habilitadoInventarios'],
-    habilitadoTerceros : json['habilitadoTerceros'],
     habilitadoCobros : json['habilitadoCobros'],
     habilitadoFacturacion : json['habilitadoFacturacion'],
-    habilitadoTerminal : json['habilitadoTerminal'],
-      habilitadoMesas : json['habilitadoMesas'],
     modulos : json['modulos'] is Map<String,dynamic> ? Modulos.fromJson(json['modulos'] as Map<String,dynamic>) : null,
     usaSiat : json['usaSiat'],
     configTerminada : json['configTerminada'],
@@ -177,16 +151,9 @@ class Contribuyente {
       actividadApi : json['actividadApi'],
       secretUuid : json['secretUuid'],
       customData : json["customData"],
-      habilitadoRestaurantes : json['habilitadoRestaurantes'],
-      habilitadoAnalitica : json['habilitadoAnalitica'],
       habilitadoVentas : json['habilitadoVentas'],
-      habilitadoIntegracion : json['habilitadoIntegracion'],
-      habilitadoInventarios : json['habilitadoInventarios'],
-      habilitadoTerceros : json['habilitadoTerceros'],
       habilitadoCobros : json['habilitadoCobros'],
       habilitadoFacturacion : json['habilitadoFacturacion'],
-      habilitadoTerminal : json['habilitadoTerminal'],
-      habilitadoMesas : json['habilitadoMesas'],
       modulos : json['modulos'] is Map<String,dynamic> ? Modulos.fromJson(json['modulos'] as Map<String,dynamic>) : null,
       usaSiat : json['usaSiat'],
       configTerminada : json['configTerminada'],

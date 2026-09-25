@@ -123,5 +123,26 @@ class AppInterceptor extends InterceptorsWrapper {
     return handler.next(options);
   }
 
+  @override
+  Future onError(DioException err, ErrorInterceptorHandler handler) async {
+    // 403 por gating de modulos / limites: traducir a mensaje claro y no crashear.
+    if (err.response?.statusCode == 403 && err.response?.data is Map) {
+      final code = err.response?.data["code"];
+      if (code == "MODULO_NO_HABILITADO" || code == "LIMITE_ALCANZADO") {
+        final msg = err.response?.data["msg"] ??
+            (code == "LIMITE_ALCANZADO"
+                ? "Has alcanzado el límite permitido para este módulo."
+                : "Este módulo no está habilitado para tu plan.");
+        return handler.next(DioException(
+          requestOptions: err.requestOptions,
+          response: err.response,
+          type: err.type,
+          error: msg,
+        ));
+      }
+    }
+    return handler.next(err);
+  }
+
 
 }

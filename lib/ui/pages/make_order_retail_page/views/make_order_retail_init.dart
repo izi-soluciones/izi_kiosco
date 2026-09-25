@@ -12,6 +12,7 @@ import 'package:izi_kiosco/app/values/routes_keys.dart';
 import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/make_order_retail/make_order_retail_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/page_utils/page_utils_bloc.dart';
+import 'package:izi_kiosco/domain/models/modulos.dart';
 import 'package:izi_kiosco/ui/general/izi_header_kiosk.dart';
 import 'package:izi_kiosco/ui/utils/dynamic_list.dart';
 import 'package:izi_kiosco/ui/utils/responsive_utils.dart';
@@ -32,7 +33,7 @@ class _MakeOrderRetailInitState extends State<MakeOrderRetailInit> {
   @override
   Widget build(BuildContext context) {
     final ru = ResponsiveUtils(context);
-    final canInvoice=context.read<AuthBloc>().state.currentContribuyente?.tieneFacturacion==true;
+    final canInvoice=context.read<AuthBloc>().state.currentContribuyente?.tieneModulo(Modulo.facturacion)==true;
     return KeyboardListener(
       focusNode: focusNodeKeyboard,
       autofocus: true,

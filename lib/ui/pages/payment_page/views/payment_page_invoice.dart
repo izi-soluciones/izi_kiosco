@@ -15,6 +15,7 @@ import 'package:izi_kiosco/app/values/locale_keys.g.dart';
 import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/page_utils/page_utils_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/payment/payment_bloc.dart';
+import 'package:izi_kiosco/domain/models/modulos.dart';
 import 'package:izi_kiosco/domain/utils/input_obj.dart';
 import 'package:izi_kiosco/ui/general/izi_header_kiosk.dart';
 import 'package:izi_kiosco/ui/pages/payment_page/modals/card_type_atc_modal.dart';
@@ -53,7 +54,7 @@ class _PaymentPageInvoiceState extends State<PaymentPageInvoice> {
   bool get _needsCustomerName => widget.state.paymentObj?.isComanda == true;
 
   bool get _canInvoice =>
-      authState.currentContribuyente?.tieneFacturacion == true;
+      authState.currentContribuyente?.tieneModulo(Modulo.facturacion) == true;
 
   @override
   Widget build(BuildContext context) {
