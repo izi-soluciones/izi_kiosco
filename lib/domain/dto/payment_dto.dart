@@ -43,6 +43,7 @@ class PaymentDtoVentaData{
   String nit;
   String? complemento;
   String razonSocial;
+  String? clienteNombre;
   String? telefonoComprador;
   String? correoElectronico;
   PaymentDtoVentaDataCo? co;
@@ -54,6 +55,7 @@ class PaymentDtoVentaData{
       required this.nit,
       this.correoElectronico,
       required this.razonSocial,
+      this.clienteNombre,
       this.co,
       required this.telefonoComprador});
 
@@ -62,6 +64,7 @@ class PaymentDtoVentaData{
     "nit": nit,
     if(complemento?.isNotEmpty==true)"complemento": complemento,
     "razonSocial": razonSocial,
+    if(clienteNombre?.isNotEmpty==true)"clienteNombre": clienteNombre,
     if(telefonoComprador?.isNotEmpty==true)"telefonoComprador": telefonoComprador,
     if(correoElectronico?.isNotEmpty==true)"correoElectronico": correoElectronico,
     if(co!=null)"CO": co

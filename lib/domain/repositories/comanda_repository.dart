@@ -23,8 +23,6 @@ abstract class ComandaRepository {
       {required FiltersComanda filters, required int page});
   Future<Comanda> getComanda({required String orderUuid});
   Future<void> emit({required InvoiceDto invoice, required int orderId});
-  Future<void> emitContingencia(
-      {required InvoiceDto invoice, required int orderId});
   Future<Payment> addPayment(
       {required Payment payment,
       required int orderId,

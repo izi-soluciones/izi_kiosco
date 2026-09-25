@@ -1,6 +1,8 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:izi_design_system/atoms/izi_typography.dart';
 import 'package:izi_design_system/tokens/colors.dart';
+import 'package:izi_kiosco/app/values/locale_keys.g.dart';
 import 'package:izi_kiosco/domain/blocs/login/login_bloc.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
@@ -15,11 +17,11 @@ class LoginForm extends StatelessWidget {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          IziText.titleBig(text: "Iniciar Sesión con QR", color: context.iziColors.dark),
+          IziText.titleBig(text: LocaleKeys.login_subtitles_qrLogin.tr(), color: context.iziColors.dark),
           const SizedBox(height: 25,),
           IziText.body(
             maxLines: 79,
-            fontWeight: FontWeight.normal, text: "Escanea este código con la cámara de tu celular (donde tienes tu sesión web de admin) para autorizar este kiosco.", color: context.iziColors.darkGrey, textAlign: TextAlign.center),
+            fontWeight: FontWeight.normal, text: LocaleKeys.login_body_qrInstructions.tr(), color: context.iziColors.darkGrey, textAlign: TextAlign.center),
           const SizedBox(height: 25,),
           Center(
             child: QrImageView(
@@ -42,7 +44,7 @@ class LoginForm extends StatelessWidget {
         children: [
           const CircularProgressIndicator(),
           const SizedBox(height: 20,),
-          IziText.body(fontWeight: FontWeight.normal, text: "Generando código QR...", color: context.iziColors.darkGrey, textAlign: TextAlign.center),
+          IziText.body(fontWeight: FontWeight.normal, text: LocaleKeys.login_messages_generatingQR.tr(), color: context.iziColors.darkGrey, textAlign: TextAlign.center),
         ],
       ),
     );

@@ -143,7 +143,7 @@ class _PaymentPageDemoState extends State<PaymentPageDemo> {
                 children: [
                   IziText.body(
                     color: context.iziColors.darkGrey,
-                    text: "Tiempo Restante: ",
+                    text: LocaleKeys.payment_body_timeRemaining.tr(),
                     fontWeight: FontWeight.w400,
                   ),
                   IziText.body(
@@ -217,7 +217,7 @@ class _PaymentPageDemoState extends State<PaymentPageDemo> {
             children: [
               IziText.titleMedium(
                 color: context.iziColors.primaryDarken,
-                text: "Paga a través de Bre-B",
+                text: LocaleKeys.payment_subtitles_payWithBreB.tr(),
               ),
               const SizedBox(height: 24),
               Flexible(
@@ -238,7 +238,7 @@ class _PaymentPageDemoState extends State<PaymentPageDemo> {
                 children: [
                   IziText.body(
                     color: context.iziColors.darkGrey,
-                    text: "Tiempo Restante: ",
+                    text: LocaleKeys.payment_body_timeRemaining.tr(),
                     fontWeight: FontWeight.w400,
                   ),
                   IziText.body(
@@ -254,7 +254,7 @@ class _PaymentPageDemoState extends State<PaymentPageDemo> {
                 children: [
                   IziText.titleMedium(
                     color: context.iziColors.darkGrey,
-                    text: "Llave: ",
+                    text: LocaleKeys.payment_body_brebKey.tr(),
                     fontWeight: FontWeight.w700,
                   ),
                   const SizedBox(width: 8),

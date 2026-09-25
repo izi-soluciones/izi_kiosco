@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:izi_design_system/atoms/izi_card.dart';
@@ -8,6 +9,7 @@ import 'package:izi_design_system/molecules/izi_btn.dart';
 import 'package:izi_design_system/tokens/colors.dart';
 import 'package:izi_design_system/tokens/types.dart';
 import 'package:izi_kiosco/app/values/app_constants.dart';
+import 'package:izi_kiosco/app/values/locale_keys.g.dart';
 import 'package:izi_kiosco/domain/blocs/page_utils/page_utils_bloc.dart';
 import 'package:izi_kiosco/ui/utils/money_formatter.dart';
 import 'package:izi_kiosco/ui/utils/responsive_utils.dart';
@@ -43,11 +45,11 @@ class _CardTypeIzifyModalState extends State<CardTypeIzifyModal> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         IziText.title(
-            color: context.iziColors.dark, text: "Elige un tipo de tarjeta"),
+            color: context.iziColors.dark, text: LocaleKeys.payment_subtitles_chooseCardType.tr()),
         const SizedBox(height: 16,),
         Row(
           children: [
-            IziText.titleSmall(color: context.iziColors.grey, text: "Monto a pagar"),
+            IziText.titleSmall(color: context.iziColors.grey, text: LocaleKeys.payment_body_amountToPay.tr()),
             const SizedBox(width: 8,),
             IziText.titleSmall(
                 color: context.iziColors.dark, text: widget.amount.moneyFormat(digitsTaxes: digitsTaxes)),
@@ -62,14 +64,14 @@ class _CardTypeIzifyModalState extends State<CardTypeIzifyModal> {
             mainAxisSpacing: 10,
             shrinkWrap: true,
             children: [
-              _buttonPayment(context,title: "Débito", icon: Icons.credit_card_outlined, ru: ru,type: "DEBITO"),
-              _buttonPayment(context,title: "Crédito", icon: Icons.credit_score_outlined, ru: ru,type: "CREDITO"),
+              _buttonPayment(context,title: LocaleKeys.payment_buttons_debit.tr(), icon: Icons.credit_card_outlined, ru: ru,type: "DEBITO"),
+              _buttonPayment(context,title: LocaleKeys.payment_buttons_credit.tr(), icon: Icons.credit_score_outlined, ru: ru,type: "CREDITO"),
             ],
           ),
         ),
         const SizedBox(height: 16,),
         IziBtn(
-            buttonText: "Cancelar",
+            buttonText: LocaleKeys.general_buttons_cancel.tr(),
             buttonType: ButtonType.terciary,
             buttonSize: ButtonSize.large,
             buttonOnPressed: (){

@@ -13,7 +13,7 @@ class TaxesStrategyFactory{
       return TaxesStrategyBo();
     }
     if(contribuyente?.config is Map && contribuyente?.config?["paisId"]=="CO"){
-      return TaxesStrategyCo();
+      return TaxesStrategyCo(decimalesMoneda: TaxesStrategyCo.decimalesMonedaDe(contribuyente?.config));
     }
     return TaxesStrategyDefault();
   }

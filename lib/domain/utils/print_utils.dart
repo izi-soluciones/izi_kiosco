@@ -202,14 +202,6 @@ class PrintUtils {
     if (kIsWeb) {
     } else {
       if (Platform.isAndroid) {
-        log("iZi Kiosco: printTest - Attempting _satPrint for SDK verification.");
-        try {
-          await _satPrint([IziPrintText(text: "SAT Printer OK", size: IziPrintSize.md, bold: true, align: IziPrintAlign.center)]);
-          log("iZi Kiosco: printTest - _satPrint dispatched.");
-        } catch (e) {
-          log("iZi Kiosco: printTest - _satPrint failed: $e");
-        }
-
         var resBinding = await SunmiPrinter.bindingPrinter();
         await SunmiPrinter.initPrinter();
         var status = await SunmiPrinter.getPrinterStatus();
@@ -250,6 +242,7 @@ class PrintUtils {
   }
 
   print(List<IziPrintItem> values, Device? device) async {
+    if (device?.config.noPrintRollo == true) return;
     if (kIsWeb) {
       await _pdfPrint(values);
     } else {
@@ -515,6 +508,11 @@ class PrintUtils {
 
   Future _pdfPrint(List<IziPrintItem> values) async {
     log("pdfPrint");
+    var bytes = await buildPdfBytes(values);
+    await Printing.layoutPdf(onLayout: (format)=>bytes,format: PdfPageFormat.roll80,usePrinterSettings: false);
+  }
+
+  Future<Uint8List> buildPdfBytes(List<IziPrintItem> values) async {
     const double xs = 6;
     const double sm = 7;
     const double sml = 9;
@@ -625,7 +623,6 @@ class PrintUtils {
           return pw.Column(children: items,crossAxisAlignment: pw.CrossAxisAlignment.stretch); // Center
         }));
 
-    var bytes = await pdf.save();
-    await Printing.layoutPdf(onLayout: (format)=>bytes,format: PdfPageFormat.roll80,usePrinterSettings: false);
+    return pdf.save();
   }
 }

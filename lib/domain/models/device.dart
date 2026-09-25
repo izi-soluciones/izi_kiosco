@@ -69,6 +69,8 @@ class ConfigDevice {
   final bool noPrintRollo;
   final IziColorPalette? colors;
   final KioskColors kioskColors;
+  final String? idiomaDefecto;
+  final bool permiteCambioIdioma;
 
   const ConfigDevice(
       {this.ipAtc,
@@ -99,6 +101,8 @@ class ConfigDevice {
       required this.demo,
       required this.colors,
       required this.kioskColors,
+      required this.idiomaDefecto,
+      required this.permiteCambioIdioma,
       required this.sortByPriority});
 
   factory ConfigDevice.fromJson(dynamic json) {
@@ -144,6 +148,8 @@ class ConfigDevice {
       colors: IziColorPalette.fromMap(jsonObj?["colors"]),
       noPrintRollo: jsonObj?["noPrintRollo"] is bool ? jsonObj!["noPrintRollo"] : false,
       kioskColors: KioskColors.fromJson(jsonObj?["kioskColors"]),
+      idiomaDefecto: jsonObj?["idiomaDefecto"] is String ? jsonObj!["idiomaDefecto"] : null,
+      permiteCambioIdioma: jsonObj?["permiteCambioIdioma"] is bool ? jsonObj!["permiteCambioIdioma"] : false,
     );
     return config;
   }

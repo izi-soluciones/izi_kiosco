@@ -279,7 +279,8 @@ static List<IziPrintItem> invoice80Co(
       Sucursal sucursal,
       PaymentObj? paymentObj,
       Currency? currency, {
-        required TaxesStrategy taxesStrategy
+        required TaxesStrategy taxesStrategy,
+        String? clienteNombre
       }) async {
     List<IziPrintItem> items = [];
     items.add(IziPrintText(
@@ -338,18 +339,21 @@ static List<IziPrintItem> invoice80Co(
       align: IziPrintAlign.center,
     ));
 
-    items.add(IziPrintSeparator(dotted: true));
-    items.add(IziPrintText(
-      text: "Cliente: ${
-          paymentObj?.custom is Map &&
-              paymentObj?.custom["pagadorData"] is Map &&
-              paymentObj?.custom["pagadorData"]["razonSocial"] is String
-              ? paymentObj?.custom["pagadorData"]["razonSocial"]
-              : "-"
-      }",
-      size: IziPrintSize.md,
-      align: IziPrintAlign.center,
-    ));
+    String? nombreCliente = clienteNombre?.trim().isNotEmpty == true
+        ? clienteNombre?.trim()
+        : paymentObj?.custom is Map &&
+                paymentObj?.custom["pagadorData"] is Map &&
+                paymentObj?.custom["pagadorData"]["razonSocial"] is String
+            ? paymentObj?.custom["pagadorData"]["razonSocial"]
+            : null;
+    if (nombreCliente != null && nombreCliente.isNotEmpty) {
+      items.add(IziPrintSeparator(dotted: true));
+      items.add(IziPrintText(
+        text: "Cliente: $nombreCliente",
+        size: IziPrintSize.md,
+        align: IziPrintAlign.center,
+      ));
+    }
     items.add(IziPrintSeparator());
     items.add(IziPrintText(
         text: "Generada a través de ${taxesStrategy.brandName}",

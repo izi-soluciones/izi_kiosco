@@ -15,6 +15,7 @@ import 'package:izi_kiosco/app/utils/app_behavior.dart';
 import 'package:izi_kiosco/app/utils/go_router_refresh_stream.dart';
 import 'package:izi_kiosco/app/values/env_keys.dart';
 
+import 'package:izi_kiosco/app/values/locale_keys.g.dart';
 import 'package:izi_kiosco/app/values/routes.dart';
 import 'package:izi_kiosco/app/values/routes_keys.dart';
 import 'package:izi_kiosco/data/repositories/auth/auth_repository_http.dart';
@@ -251,13 +252,13 @@ class MyApp extends StatelessWidget {
       body: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          IziText.titleSmall(color: context.iziColors.darkGrey, text:"Ocurrio un error"),
+          IziText.titleSmall(color: context.iziColors.darkGrey, text:LocaleKeys.general_messages_error.tr()),
           const SizedBox(height: 16,),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               IziBtn(
-                  buttonText: "Recargar",
+                  buttonText: LocaleKeys.general_buttons_reload.tr(),
                   buttonType: ButtonType.primary,
                   buttonSize: ButtonSize.medium,
                   buttonOnPressed: (){

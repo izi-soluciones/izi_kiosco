@@ -33,9 +33,20 @@ class AssetsKeys{
   static const String iziSound="assets/sounds/izi_sound.wav";
   static const String symbioticLogo="assets/icons/isoSym.png";
   static const String homeTitleRetailSvg="assets/graphics/escanea.svg";
+  static const String homeTitleRetailSvgEn="assets/graphics/escanea_en.svg";
   static const String barCodeSvg="assets/graphics/barcode.svg";
   static const String barCodeJson="assets/graphics/barcode.json";
   static const String homeTitleSvg="assets/graphics/ordena.svg";
+  static const String homeTitleSvgEn="assets/graphics/ordena_en.svg";
+
+  // El texto del titulo va vectorizado en el SVG, asi que no lo alcanza .tr():
+  // hay un archivo por idioma y se elige aqui.
+  static String homeTitleForLocale(String languageCode, {required bool retail}) {
+    switch (languageCode) {
+      case 'en': return retail ? homeTitleRetailSvgEn : homeTitleSvgEn;
+      default:   return retail ? homeTitleRetailSvg : homeTitleSvg;
+    }
+  }
   static const String cardPOSSvg="assets/graphics/cardPOS.svg";
   static const String qrDemoPng="assets/qr_demo.png";
 
