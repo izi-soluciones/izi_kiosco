@@ -366,6 +366,14 @@ class PaymentBloc extends Cubit<PaymentState> {
     emit(state.copyWith(step: 3, paymentType: PaymentType.qr));
   }
 
+  // El retail sin facturacion va del selector de metodo al cobro sin pasar por el
+  // formulario, asi que sus campos quedan vacios y exigirlos deja el cobro mudo.
+  bool _skipInvoiceForm(AuthState authState) {
+    return authState.currentContribuyente?.tieneFacturacion != true &&
+        (authState.currentDevice?.config.isRetail == true ||
+            authState.currentDevice?.config.isRetailBarcode == true);
+  }
+
   bool _validateInputs() {
     final requireCustomerName = state.paymentObj?.isComanda == true;
     final wantsInvoice = state.wantsInvoice;
@@ -693,7 +701,8 @@ class PaymentBloc extends Cubit<PaymentState> {
 
   Future<bool> makeCardPayment(AuthState authState,
       {bool atc = false, bool linkser = false, bool izify = false, bool contactless = true, String cardType = "DEBITO"}) async {
-    if (!_validateInputs() || !(atc || linkser || izify)) {
+    if (!(_skipInvoiceForm(authState) || _validateInputs()) ||
+        !(atc || linkser || izify)) {
       return false;
     }
     if (state.paymentObj?.isComanda == true) {
@@ -783,7 +792,7 @@ class PaymentBloc extends Cubit<PaymentState> {
   Timer? timerSuccess;
   Future<bool> generateQR(AuthState authState) async {
     try {
-      if (_validateInputs()) {
+      if (_skipInvoiceForm(authState) || _validateInputs()) {
         emit(state.copyWith(step: 3));
         if (state.paymentObj?.isComanda == true) {
           return await _generateOrderQR(authState);
@@ -912,7 +921,7 @@ class PaymentBloc extends Cubit<PaymentState> {
 
   Future<bool> generateBREB(AuthState authState) async {
     try {
-      if (_validateInputs()) {
+      if (_skipInvoiceForm(authState) || _validateInputs()) {
         if (state.paymentObj?.isComanda == true) {
           return await _generateOrderBREB(authState);
         } else {
