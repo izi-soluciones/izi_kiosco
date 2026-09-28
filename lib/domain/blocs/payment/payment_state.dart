@@ -215,6 +215,24 @@ class PaymentState extends Equatable {
     this.qrPaymentKey,
   });
 
+  /// Dial code the phone field starts with: the account's country, so a
+  /// Colombian kiosk opens on +57 whatever build it runs. The build's
+  /// default when the account says nothing.
+  static String phonePrefixFor(Contribuyente? contribuyente) {
+    final config = contribuyente?.config;
+    switch (config is Map ? config["paisId"] : null) {
+      case 'CO':
+        return '+57';
+      case 'BO':
+        return '+591';
+      default:
+        return _defaultPhonePrefix;
+    }
+  }
+
+  static const String _defaultPhonePrefix =
+      String.fromEnvironment('FLAVOR', defaultValue: 'local') == 'izify' ? '+57' : '+591';
+
   factory PaymentState.init() => PaymentState(
     status: PaymentStatus.waitingGet,
     paymentObj: null,
@@ -233,7 +251,7 @@ class PaymentState extends Equatable {
     complement: PaymentInputs.complementInput(),
     documentNumber: PaymentInputs.documentNumberInput(),
     withException: false,
-    phonePrefix: const String.fromEnvironment('FLAVOR', defaultValue: 'local') == 'izify' ? '+57' : '+591',
+    phonePrefix: _defaultPhonePrefix,
     phoneNumber: PaymentInputs.phoneNumberInput(),
     qrLoading: false,
     brebCharge: null,

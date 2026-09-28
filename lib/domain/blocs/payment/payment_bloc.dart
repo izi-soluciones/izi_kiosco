@@ -193,6 +193,7 @@ class PaymentBloc extends Cubit<PaymentState> {
           currentCurrency: currentCurrency,
           paymentObj: paymentObj,
           izifyPosIp: savedIzifyPosIp,
+          phonePrefix: PaymentState.phonePrefixFor(authState.currentContribuyente),
           countryTaxes: countryTaxes,
           cashRegisters: cashRegisters,
           currentCashRegister: currentCashRegister,
