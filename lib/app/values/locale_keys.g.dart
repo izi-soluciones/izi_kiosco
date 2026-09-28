@@ -346,6 +346,13 @@ abstract class  LocaleKeys {
   static const payment_messages_processingInvoiceElectronic = 'payment.messages.processingInvoiceElectronic';
   static const payment_messages_pendingCard = 'payment.messages.pendingCard';
   static const payment_messages = 'payment.messages';
+  static const payment_cardError_title = 'payment.cardError.title';
+  static const payment_cardError_description = 'payment.cardError.description';
+  static const payment_cardError_retry = 'payment.cardError.retry';
+  static const payment_cardError_otherMethod = 'payment.cardError.otherMethod';
+  static const payment_cardError_pendingTitle = 'payment.cardError.pendingTitle';
+  static const payment_cardError_pendingDescription = 'payment.cardError.pendingDescription';
+  static const payment_cardError = 'payment.cardError';
   static const payment_links_addEmail = 'payment.links.addEmail';
   static const payment_links_advancedData = 'payment.links.advancedData';
   static const payment_links = 'payment.links';

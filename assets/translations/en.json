@@ -428,6 +428,14 @@
     "links": {
       "addEmail": "+ Add email",
       "advancedData": "Advanced details"
+    },
+    "cardError": {
+      "title": "The card payment could not be completed",
+      "description": "Your card was not charged. You can try again or choose another payment method.",
+      "retry": "Retry payment",
+      "otherMethod": "Choose another payment method",
+      "pendingTitle": "Payment not confirmed",
+      "pendingDescription": "We could not confirm whether your card was charged. Before paying again, ask the staff to check it."
     }
   },
   "tapOnPhone": {

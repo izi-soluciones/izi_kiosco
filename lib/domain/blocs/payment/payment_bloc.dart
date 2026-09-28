@@ -1318,6 +1318,31 @@ class PaymentBloc extends Cubit<PaymentState> {
     }
   }
 
+  /// The terms of the last card charge started, so a declined one can be
+  /// retried from the error screen without asking the customer again.
+  ({bool atc, bool linkser, bool izify, bool contactless, String cardType, int quotas})?
+      _lastCardCharge;
+
+  /// Whether the last card charge can be retried as is.
+  bool get canRetryLastCardCharge => _lastCardCharge != null;
+
+  /// Starts the last card charge again, with the same terminal and terms.
+  /// Only for a charge that ended in [PaymentStatus.cardError], which means
+  /// nothing was charged; never after [PaymentStatus.cardPending].
+  Future<bool> retryLastCardCharge(AuthState authState) async {
+    final last = _lastCardCharge;
+    if (last == null) return false;
+    return makeCardPayment(
+      authState,
+      atc: last.atc,
+      linkser: last.linkser,
+      izify: last.izify,
+      contactless: last.contactless,
+      cardType: last.cardType,
+      quotas: last.quotas,
+    );
+  }
+
   Future<bool> makeCardPayment(
     AuthState authState, {
     bool atc = false,
@@ -1331,6 +1356,14 @@ class PaymentBloc extends Cubit<PaymentState> {
         !(atc || linkser || izify)) {
       return false;
     }
+    _lastCardCharge = (
+      atc: atc,
+      linkser: linkser,
+      izify: izify,
+      contactless: contactless,
+      cardType: cardType,
+      quotas: quotas,
+    );
     if (state.paymentObj?.isComanda == true) {
       return await _makeCardOrderPayment(
         authState,

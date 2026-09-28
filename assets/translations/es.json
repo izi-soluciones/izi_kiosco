@@ -428,6 +428,14 @@
     "links": {
       "addEmail": "+ Agregar correo electrónico",
       "advancedData": "Datos avanzados"
+    },
+    "cardError": {
+      "title": "No se pudo completar el pago con tarjeta",
+      "description": "No se realizó ningún cobro a tu tarjeta. Puedes intentarlo de nuevo o elegir otro medio de pago.",
+      "retry": "Reintentar pago",
+      "otherMethod": "Elegir otro medio de pago",
+      "pendingTitle": "Pago sin confirmar",
+      "pendingDescription": "No pudimos confirmar si tu tarjeta fue cobrada. Antes de volver a pagar, pide ayuda al personal para verificarlo."
     }
   },
   "tapOnPhone": {

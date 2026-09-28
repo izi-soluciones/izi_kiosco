@@ -283,6 +283,12 @@ void main() {
     expect(pos.charges, hasLength(2));
   });
 
+  test('with no card charge started there is nothing to retry and nothing is charged', () async {
+    expect(bloc.canRetryLastCardCharge, isFalse);
+    expect(await bloc.retryLastCardCharge(auth), isFalse);
+    expect(pos.charges, isEmpty);
+  });
+
   test('a decline shows the acquirer message and does not register the order', () async {
     pos.outcome = 'ERROR';
     pos.declineMessage = 'FONDOS INSUFICIENTES';
