@@ -71,8 +71,12 @@ class IzifyPosDiscovery {
     Duration probeTimeout = sweepProbeTimeout,
     int sweepPort = IzifyPosAddress.defaultPort,
   })  : _client = client ?? IzifyPosClient(),
+        // dart:io's HttpClient throws on web, where it would take the whole
+        // app down at startup; the browser's client has no connect timeout.
         _sweepClient = client ??
-            IzifyPosClient(httpClient: IOClient(HttpClient()..connectionTimeout = probeTimeout)),
+            (kIsWeb
+                ? IzifyPosClient()
+                : IzifyPosClient(httpClient: IOClient(HttpClient()..connectionTimeout = probeTimeout))),
         _browser = browser ?? (kIsWeb ? null : NsdMdnsBrowser()),
         _subnetHosts = subnetHosts ?? localSubnetHosts,
         _probeTimeout = probeTimeout,
