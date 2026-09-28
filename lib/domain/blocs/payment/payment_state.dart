@@ -133,7 +133,6 @@ class PaymentState extends Equatable {
   //INPUTS
   final CashRegister? currentCashRegister;
   final bool withException;
-  final bool isManual;
   final InputObj documentNumber;
   final InputObj complement;
   final InputObj businessName;
@@ -190,7 +189,6 @@ class PaymentState extends Equatable {
     this.currentCashRegister,
     this.paramsBo,
     this.paramsCo,
-    required this.isManual,
     required this.usaSiat,
     required this.queryBusinessList,
     required this.tipAmount,
@@ -227,7 +225,6 @@ class PaymentState extends Equatable {
     queryBusinessList: const [],
     paymentType: PaymentType.others,
     step: 5,
-    isManual: false,
     currentCurrency: null,
     email: PaymentInputs.emailInput(),
     businessName: PaymentInputs.businessNameInput(),
@@ -260,7 +257,6 @@ class PaymentState extends Equatable {
     bool? usaSiat,
     num? tipAmount,
     List<Customer>? queryBusinessList,
-    bool? isManual,
     bool? withException,
     InputObj? documentNumber,
     InputObj? complement,
@@ -316,7 +312,6 @@ class PaymentState extends Equatable {
 
       paramsBo: paramsBo ?? this.paramsBo,
       paramsCo: paramsCo ?? this.paramsCo,
-      isManual: isManual ?? this.isManual,
       qrAmount: qrAmount ?? this.qrAmount,
       phoneNumber: phoneNumber ?? this.phoneNumber,
       qrCharge: qrCharge != null ? qrCharge() : this.qrCharge,
@@ -356,7 +351,6 @@ class PaymentState extends Equatable {
     documentNumber,
     paramsBo,
     paramsCo,
-    isManual,
     qrWait,
     queryBusinessList,
     phoneNumber,

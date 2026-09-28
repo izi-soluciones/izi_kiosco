@@ -232,8 +232,6 @@ class PaymentBloc extends Cubit<PaymentState> {
   validateInput({
     bool documentNumber = false,
     bool businessName = false,
-    bool invoiceNumber = false,
-    bool authorization = false,
     bool email = false,
     bool firstDigits = false,
     bool lastDigits = false,
@@ -289,12 +287,9 @@ class PaymentBloc extends Cubit<PaymentState> {
   changeInputs(
       {int? cashRegister,
       bool? withException,
-      bool? isManual,
       String? documentNumber,
       String? complement,
       String? businessName,
-      String? authorization,
-      String? invoiceNumber,
         String? phonePrefix,
       String? email,
         String? firstDigits,
@@ -310,10 +305,6 @@ class PaymentBloc extends Cubit<PaymentState> {
         state.copyWith(phoneNumber: state.phoneNumber.changeValue(phoneNumber)),
       );
     }
-    if (isManual != null) {
-      emit(state.copyWith(isManual: isManual));
-    }
-
     if (withException != null) {
       emit(state.copyWith(withException: withException));
     }
@@ -445,6 +436,14 @@ class PaymentBloc extends Cubit<PaymentState> {
 
   markPaidQr() {
     emit(state.copyWith(step: 3, paymentType: PaymentType.qr));
+  }
+
+  // El retail sin facturacion va del selector de metodo al cobro sin pasar por el
+  // formulario, asi que sus campos quedan vacios y exigirlos deja el cobro mudo.
+  bool _skipInvoiceForm(AuthState authState) {
+    return authState.currentContribuyente?.tieneFacturacion != true &&
+        (authState.currentDevice?.config.isRetail == true ||
+            authState.currentDevice?.config.isRetailBarcode == true);
   }
 
   bool _validateInputs() {
@@ -1327,7 +1326,8 @@ class PaymentBloc extends Cubit<PaymentState> {
     String cardType = "DEBITO",
     int quotas = 0,
   }) async {
-    if (!_validateInputs() || !(atc || linkser || izify)) {
+    if (!(_skipInvoiceForm(authState) || _validateInputs()) ||
+        !(atc || linkser || izify)) {
       return false;
     }
     if (state.paymentObj?.isComanda == true) {
@@ -1459,7 +1459,7 @@ class PaymentBloc extends Cubit<PaymentState> {
   Timer? timerSuccess;
   Future<bool> generateQR(AuthState authState) async {
     try {
-      if (_validateInputs()) {
+      if (_skipInvoiceForm(authState) || _validateInputs()) {
         emit(state.copyWith(step: 3));
         if (state.paymentObj?.isComanda == true) {
           return await _generateOrderQR(authState);
@@ -1620,7 +1620,7 @@ class PaymentBloc extends Cubit<PaymentState> {
 
   Future<bool> generateBREB(AuthState authState) async {
     try {
-      if (_validateInputs()) {
+      if (_skipInvoiceForm(authState) || _validateInputs()) {
         if (state.paymentObj?.isComanda == true) {
           return await _generateOrderBREB(authState);
         } else {

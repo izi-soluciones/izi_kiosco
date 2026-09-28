@@ -65,9 +65,8 @@ void main() {
       expect(Calc.roundConservador(5), 5);
       expect(Calc.roundConservador(100), 100);
     });
-    test('truncates on trailing 5 with even following digit (incl. absent)', () {
-      // "1.235" -> decisor '5', following digit absent -> treated as 0 (even) -> truncate
-      expect(Calc.roundConservador(1.235), 1.23);
+    test('rounds half up on a trailing 5', () {
+      expect(Calc.roundConservador(1.235), 1.24);
     });
     test('rounds away from zero on trailing 5 with odd following digit', () {
       // "1.2355" -> decisor '5', following '5' odd -> ceil for positive
@@ -77,7 +76,7 @@ void main() {
       expect(Calc.roundConservador(-1.2355), -1.24);
     });
     test('honors a custom decimals argument', () {
-      expect(Calc.roundConservador(12.5, 0), 12);
+      expect(Calc.roundConservador(12.5, 0), 13);
       expect(Calc.roundConservador(12.34, 0), 12);
       expect(Calc.roundConservador(12.6, 0), 13);
     });

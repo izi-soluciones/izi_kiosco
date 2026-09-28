@@ -151,26 +151,4 @@ class PaymentInputs{
       },
     );
   }
-  static InputObj invoiceNumber({String value =""}){
-    return InputObj(
-      value: value,
-      validator: (val) {
-        if(val.isEmpty){
-          return InputError.required;
-        }
-        return null;
-      },
-    );
-  }
-  static InputObj authorization({String value =""}){
-    return InputObj(
-      value: value,
-      validator: (val) {
-        if(val.isEmpty){
-          return InputError.required;
-        }
-        return null;
-      },
-    );
-  }
 }
