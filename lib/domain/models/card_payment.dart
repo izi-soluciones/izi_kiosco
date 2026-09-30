@@ -40,6 +40,9 @@ class CardPayment{
   /// pending one from the transactions screen — still reaches the backend.
   String? markUuid;
   int? markInternalId;
+  /// The charge's own POS token (`custom.datosIntegracion.token`), which is
+  /// what iZi checks on that notice. Valid for that charge only, for two days.
+  String? markToken;
   /// Transient: whether the POS acknowledged the `/pay` request (HTTP 202).
   /// When it did not, an unknown reference means the charge never arrived.
   bool payAcknowledged;
@@ -85,6 +88,7 @@ class CardPayment{
     this.status,
     this.markUuid,
     this.markInternalId,
+    this.markToken,
     this.payAcknowledged = true,
     this.authCode,
     this.cardBrand,
@@ -119,6 +123,7 @@ class CardPayment{
       status: json["estado"],
       markUuid: json["cobroUuid"],
       markInternalId: json["intentoPago"] is int ? json["intentoPago"] : null,
+      markToken: json["tokenCobro"],
       authCode: json["autorizacion"],
       cardBrand: json["marca"],
       acquirerTerminalId: json["terminal"],
@@ -140,6 +145,7 @@ class CardPayment{
     if (status != null) "estado": status,
     if (markUuid != null) "cobroUuid": markUuid,
     if (markInternalId != null) "intentoPago": markInternalId,
+    if (markToken != null) "tokenCobro": markToken,
     if (authCode != null) "autorizacion": authCode,
     if (cardBrand != null) "marca": cardBrand,
     if (acquirerTerminalId != null) "terminal": acquirerTerminalId,
@@ -182,6 +188,7 @@ class CardPayment{
         return CardPaymentStatus.declined;
       case 'PENDING':
       case 'UNKNOWN':
+      case 'IN_PROGRESS':
         return CardPaymentStatus.pending;
     }
     final r = response.toLowerCase();
@@ -198,6 +205,15 @@ class CardPayment{
     }
     return CardPaymentStatus.unknown;
   }
+
+  /// Sent to the terminal and not settled yet. A row that stays like this is
+  /// a charge the kiosk lost track of (the page reloaded mid-charge).
+  bool get inProgress => status == 'IN_PROGRESS';
+
+  /// Charged, but iZi was never told: the order still has to be registered.
+  bool get chargedNotRegistered =>
+      retryStatus == CardPaymentStatus.success &&
+      response.toLowerCase().contains('error sync server');
 
   /// Retry is allowed for anything that is NOT a confirmed success.
   bool get canRetry => retryStatus != CardPaymentStatus.success;

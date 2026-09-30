@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:izi_kiosco/data/local/local_storage_card_errors.dart';
+import 'package:izi_kiosco/data/pos/card_charge_recovery.dart';
 import 'package:izi_kiosco/data/pos/izify_pos_client.dart';
 import 'package:izi_kiosco/data/pos/izify_pos_session.dart';
 import 'package:izi_kiosco/data/telemetry/telemetry.dart';
@@ -23,15 +24,22 @@ class _MarkingComandaRepository implements ComandaRepository {
   final List<(String, int?)> marked = [];
   final List<Map<String, dynamic>?> proofs = [];
   final List<Map<String, dynamic>> attempts = [];
+  final List<String?> tokens = [];
+  int markCalls = 0;
+  /// Thrown by every notice when set, instead of accepting it.
+  Object? failWith;
 
   @override
-  Future<void> markPaymentATC(String chargeUuid, int? internalId, {Map<String, dynamic>? transaccion}) async {
+  Future<void> markPaymentATC(String chargeUuid, int? internalId, {Map<String, dynamic>? transaccion, String? token}) async {
+    markCalls++;
+    if (failWith != null) throw failWith!;
     marked.add((chargeUuid, internalId));
     proofs.add(transaccion);
+    tokens.add(token);
   }
 
   @override
-  Future<void> reportTerminalResult(String chargeUuid, int? internalId, Map<String, dynamic> transaccion) async {
+  Future<void> reportTerminalResult(String chargeUuid, int? internalId, Map<String, dynamic> transaccion, {String? token}) async {
     attempts.add(transaccion);
   }
 
@@ -73,7 +81,7 @@ void main() {
         },
       });
 
-  CardPayment original({String status = 'ERROR', String? reference}) => CardPayment(
+  CardPayment original({String status = 'ERROR', String? reference, String? markToken}) => CardPayment(
         response: 'Rechazada',
         cardNumber: '****',
         date: '2026-09-19',
@@ -84,6 +92,7 @@ void main() {
         status: status,
         markUuid: 'charge-uuid-1',
         markInternalId: 55,
+        markToken: markToken,
       );
 
   setUp(() async {
@@ -413,6 +422,114 @@ void main() {
       expect((await stored('KOS-SLOW'))['estado'], 'PENDING');
       await flush();
       expect(statuses(), contains(PaymentStatus.cardPending));
+    });
+  });
+
+  group('the charge token', () {
+    test('a retry notifies iZi with the token of the charge it retries', () async {
+      final ok = await bloc.retryCardPayment(auth, original(markToken: 'tok-charge-1'));
+
+      expect(ok, isTrue);
+      expect(comandas.tokens.single, 'tok-charge-1');
+    });
+
+    test('without any token the notice is not retried ten times', () async {
+      comandas.failWith = const MissingChargeToken();
+      final ok = await bloc.retryCardPayment(auth, original());
+
+      // The card was charged: the retry still counts as approved...
+      expect(ok, isTrue);
+      // ...and the missing token is asked once, not in a one-minute loop.
+      expect(comandas.markCalls, 1);
+      final row = (await rows()).single;
+      expect(row.chargedNotRegistered, isTrue);
+    });
+  });
+
+  group('recovering charges a reload cut off', () {
+    Future<void> storeRow(CardPayment cp) =>
+        LocalStorageCardErrors.saveCardErrors(jsonEncode(cp.toJson()));
+
+    CardPayment lost(String reference, {String status = 'IN_PROGRESS', String response = 'En curso', String? date}) =>
+        CardPayment(
+          response: response,
+          cardNumber: '****',
+          date: date ?? DateTime.now().toIso8601String().split('T').first,
+          hour: '10:00',
+          amount: '9509.00',
+          currency: 'COP',
+          reference: reference,
+          status: status,
+          markUuid: 'charge-lost',
+          markInternalId: 77,
+          markToken: 'tok-lost',
+        );
+
+    Future<void> pair() async {
+      // A first charge pairs the kiosk with the terminal and saves the session.
+      await bloc.retryCardPayment(auth, original());
+      await (await SharedPreferences.getInstance()).setStringList('cardErrors', []);
+      comandas.marked.clear();
+      comandas.tokens.clear();
+      comandas.attempts.clear();
+    }
+
+    test('an approved charge is registered with its own token', () async {
+      await pair();
+      await storeRow(lost('KOS-LOST-1'));
+      pos.settle('KOS-LOST-1', 'SUCCESS');
+
+      final settled = await CardChargeRecovery(repository: comandas).run(auth.currentDevice);
+
+      expect(settled, 1);
+      expect(comandas.marked.single, ('charge-lost', 77));
+      expect(comandas.tokens.single, 'tok-lost');
+      final row = (await rows()).single;
+      expect(row.status, 'SUCCESS');
+      expect(row.response, contains('recuperado'));
+      expect(row.authCode, '654321');
+    });
+
+    test('a declined charge is recorded and never marked paid', () async {
+      await pair();
+      await storeRow(lost('KOS-LOST-2'));
+      pos.settle('KOS-LOST-2', 'ERROR', message: 'FONDOS INSUFICIENTES');
+
+      await CardChargeRecovery(repository: comandas).run(auth.currentDevice);
+
+      expect(comandas.marked, isEmpty);
+      expect(comandas.attempts.single['estado'], 'RECHAZADA');
+      final row = (await rows()).single;
+      expect(row.status, 'ERROR');
+      expect(row.canRetry, isTrue);
+    });
+
+    test('a charge the page is still waiting for is left alone', () async {
+      await pair();
+      await storeRow(lost('KOS-LIVE-1'));
+      pos.settle('KOS-LIVE-1', 'SUCCESS');
+      CardChargeRecovery.active.add('KOS-LIVE-1');
+      addTearDown(() => CardChargeRecovery.active.remove('KOS-LIVE-1'));
+
+      await CardChargeRecovery(repository: comandas).run(auth.currentDevice);
+
+      expect(comandas.marked, isEmpty);
+      expect((await rows()).single.status, 'IN_PROGRESS');
+    });
+
+    test('an approved charge left unregistered is notified again while its token lasts', () async {
+      await storeRow(lost('KOS-UNREG-1', status: 'SUCCESS', response: 'Aprobada - Error sync server: sin red'));
+      await storeRow(lost('KOS-UNREG-OLD',
+          status: 'SUCCESS',
+          response: 'Aprobada - Error sync server: sin red',
+          date: DateTime.now().subtract(const Duration(days: 3)).toIso8601String().split('T').first));
+
+      await CardChargeRecovery(repository: comandas).run(auth.currentDevice);
+
+      expect(comandas.markCalls, 1);
+      final byRef = {for (final r in await rows()) r.reference: r};
+      expect(byRef['KOS-UNREG-1']!.response, 'Aprobada - pedido registrado');
+      expect(byRef['KOS-UNREG-OLD']!.chargedNotRegistered, isTrue);
     });
   });
 }

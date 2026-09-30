@@ -12,6 +12,7 @@ import 'package:izi_kiosco/app/values/app_constants.dart';
 import 'package:izi_kiosco/data/local/local_storage_card_errors.dart';
 import 'package:izi_kiosco/data/pos/izify_pos_client.dart';
 import 'package:izi_kiosco/data/pos/izify_pos_session.dart';
+import 'package:izi_kiosco/data/pos/card_charge_recovery.dart';
 import 'package:izi_kiosco/data/telemetry/pos_telemetry.dart';
 import 'package:izi_kiosco/data/telemetry/telemetry.dart';
 import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
@@ -488,6 +489,9 @@ class PaymentBloc extends Cubit<PaymentState> {
 
   @override
   Future<void> close() async {
+    // Nobody waits for these any more (the page timed out mid-charge): hand
+    // them to the recovery, which asks the terminal how they ended.
+    CardChargeRecovery.active.removeAll(_chargesInProgress);
     if (state.status != PaymentStatus.successInvoice &&
         state.status != PaymentStatus.successPayment &&
         state.status != PaymentStatus.paymentProcessed &&
@@ -696,6 +700,9 @@ class PaymentBloc extends Cubit<PaymentState> {
     return cardPayment;
   }
 
+  /// Charges this page wrote as `IN_PROGRESS` and has not settled yet.
+  final Set<String> _chargesInProgress = {};
+
   /// Session each charge in flight was sent with, by reference.
   final Map<String, IzifyPosSession> _chargeSessions = {};
 
@@ -890,14 +897,20 @@ class PaymentBloc extends Cubit<PaymentState> {
     int? internalId, {
     int attempts = 10,
     Map<String, dynamic>? transaccion,
+    String? token,
   }) async {
     Object? lastError;
     for (var i = 0; i < attempts; i++) {
       try {
-        await _comandaRepository.markPaymentATC(uuid, internalId, transaccion: transaccion);
+        await _comandaRepository.markPaymentATC(uuid, internalId,
+            transaccion: transaccion, token: token);
         return (true, null);
       } on PaymentConflict catch (e) {
         // iZi holds a different payment for this order: retrying cannot help.
+        return (false, e);
+      } on MissingChargeToken catch (e) {
+        // Nothing to authenticate with: ten tries only kept the customer
+        // waiting a minute for the same answer.
         return (false, e);
       } catch (e) {
         lastError = e;
@@ -927,12 +940,37 @@ class PaymentBloc extends Cubit<PaymentState> {
   /// Writes [cp] over the row it belongs to ([CardPayment.storedAs], else its
   /// own reference), or appends it as a new row.
   Future<void> _storeCardRecord(CardPayment cp) async {
+    if (!cp.inProgress && cp.reference != null) {
+      // Settled: from now on the row is the recovery's to look at.
+      CardChargeRecovery.active.remove(cp.reference);
+      _chargesInProgress.remove(cp.reference);
+    }
     final json = jsonEncode(cp.toJson());
     final key = cp.storedAs ?? cp.reference;
     final updated =
         key != null && await LocalStorageCardErrors.updateByReference(key, json);
     if (!updated) await LocalStorageCardErrors.saveCardErrors(json);
     cp.storedAs = cp.reference;
+  }
+
+  /// Writes the charge as sent and not settled before waiting for its verdict.
+  /// If the page reloads now (a crash, a restart, someone pressing F5), this
+  /// row is all that is left of a charge the terminal may still approve:
+  /// [CardChargeRecovery] asks the terminal about it on the next start and
+  /// registers the order when it went through.
+  Future<void> _recordChargeInProgress(CardPayment cp) async {
+    final reference = cp.reference;
+    if (reference != null) {
+      CardChargeRecovery.active.add(reference);
+      _chargesInProgress.add(reference);
+    }
+    try {
+      cp.status = 'IN_PROGRESS';
+      cp.response = 'En curso';
+      await _storeCardRecord(cp);
+    } catch (e) {
+      log('No se pudo guardar el cobro en curso: $e');
+    }
   }
 
   /// Keeps an approved, registered sale in the transactions list too, so the
@@ -968,7 +1006,8 @@ class PaymentBloc extends Cubit<PaymentState> {
     final uuid = cp.markUuid;
     if (uuid == null) return;
     unawaited(_comandaRepository
-        .reportTerminalResult(uuid, cp.markInternalId, cp.terminalData(estado))
+        .reportTerminalResult(uuid, cp.markInternalId, cp.terminalData(estado),
+            token: cp.markToken)
         .catchError((_) {}));
   }
 
@@ -1083,6 +1122,9 @@ class PaymentBloc extends Cubit<PaymentState> {
   /// [charged] says the card was charged anyway: the customer must never be
   /// shown the payment-failed screen then, because they paid and would pay
   /// again somewhere else.
+  /// How long the "charged but not registered" receipt stays on screen.
+  static const Duration chargedNotRegisteredTimeout = Duration(minutes: 3);
+
   void _emitMarkFailedFallback({bool charged = false, CardPayment? cardPayment}) {
     emit(state.copyWith(
       step: charged ? 9 : 6,
@@ -1090,9 +1132,10 @@ class PaymentBloc extends Cubit<PaymentState> {
       chargeProof: charged ? _chargeProof(cardPayment) : null,
     ));
     // A charged customer has just been told to show this screen at the counter,
-    // so it stays until they leave it; only the plain failure returns home.
-    if (charged) return;
-    timerSuccess = Timer(const Duration(seconds: 30), () async {
+    // so it stays longer than a plain failure. Not for ever, though: an
+    // unattended kiosk showed the next customer someone else's receipt under
+    // the screensaver. The charge stays in the transactions list.
+    timerSuccess = Timer(charged ? chargedNotRegisteredTimeout : const Duration(seconds: 30), () async {
       emit(state.copyWith(status: PaymentStatus.successInvoice));
     });
   }
@@ -1164,6 +1207,7 @@ class PaymentBloc extends Cubit<PaymentState> {
       );
       cardPayment.markUuid = original.markUuid;
       cardPayment.markInternalId = original.markInternalId;
+      cardPayment.markToken = original.markToken;
       // The outcome of this attempt replaces the row being retried.
       cardPayment.storedAs = original.reference;
       approved = await _awaitIzifyResult(authState, cardPayment);
@@ -1198,7 +1242,9 @@ class PaymentBloc extends Cubit<PaymentState> {
     if (cardPayment.markUuid != null) {
       final (marked, lastError) = await _retryMarkPayment(
           cardPayment.markUuid!, cardPayment.markInternalId,
-          attempts: 3, transaccion: cardPayment.terminalData('APROBADA'));
+          attempts: 3,
+          transaccion: cardPayment.terminalData('APROBADA'),
+          token: cardPayment.markToken);
       response = marked
           ? "Aprobada - pedido registrado"
           : "Aprobada - Error sync server: ${lastError ?? 'desconocido'}";
@@ -1329,8 +1375,10 @@ class PaymentBloc extends Cubit<PaymentState> {
       );
       cardPayment.markUuid = state.paymentObj?.uuid;
       cardPayment.markInternalId = charge.intentoPago;
+      cardPayment.markToken = charge.token;
 
       if (izify) {
+        await _recordChargeInProgress(cardPayment);
         final approved = await _awaitIzifyResult(authState, cardPayment);
         if (!approved) {
           // Error / cancelled / pending states are already emitted inside
@@ -1345,6 +1393,7 @@ class PaymentBloc extends Cubit<PaymentState> {
         state.paymentObj?.uuid ?? "",
         charge.intentoPago,
         transaccion: izify ? cardPayment.terminalData('APROBADA') : null,
+        token: charge.token,
       );
       if (marked) {
         await _recordRegisteredSale(cardPayment);
@@ -1424,8 +1473,10 @@ class PaymentBloc extends Cubit<PaymentState> {
         quotas: quotas,
       );
       cardPayment.markUuid = charge.uuid;
+      cardPayment.markToken = charge.token;
 
       if (izify) {
+        await _recordChargeInProgress(cardPayment);
         final approved = await _awaitIzifyResult(authState, cardPayment);
         if (!approved) {
           // Error / cancelled / pending states are already emitted inside
@@ -1437,7 +1488,8 @@ class PaymentBloc extends Cubit<PaymentState> {
       emit(state.copyWith(status: PaymentStatus.processingOrder));
 
       final (marked, lastError) = await _retryMarkPayment(charge.uuid, null,
-          transaccion: izify ? cardPayment.terminalData('APROBADA') : null);
+          transaccion: izify ? cardPayment.terminalData('APROBADA') : null,
+          token: charge.token);
       if (marked) {
         await _recordRegisteredSale(cardPayment);
         return true;

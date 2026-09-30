@@ -1,6 +1,7 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'dart:async';
+import 'package:izi_kiosco/data/pos/card_charge_recovery.dart';
 import 'package:izi_kiosco/data/pos/izify_pos_client.dart';
 import 'package:izi_kiosco/data/pos/izify_pos_discovery.dart';
 import 'package:izi_kiosco/data/pos/izify_pos_session.dart';
@@ -303,6 +304,7 @@ class PosConfigBloc extends Cubit<PosConfigState> {
     try {
       var address = IzifyPosAddress(device.ip, device.port);
       IzifyPosHealth? health;
+      IzifyPosHealth? foreign;
       String? problem;
       final rid = IzifyPosClient.newRequestId();
       final watch = Stopwatch()..start();
@@ -311,9 +313,11 @@ class PosConfigBloc extends Cubit<PosConfigState> {
         health = await _client.health(address, rid: rid);
         answeredMs = watch.elapsedMilliseconds;
         if (!await IzifyPosSession.isOurTerminal(health)) {
-          // The router gave our terminal's address to another one.
+          // The router gave our terminal's address to another one, or ours
+          // lost its storage and came back under a new name.
           problem = 'En ${address.host} responde otro datáfono (${health.name}).';
           _logWrongTerminal(address, health);
+          foreign = health;
           health = null;
         }
       } on IzifyPosException catch (e) {
@@ -351,6 +355,15 @@ class PosConfigBloc extends Cubit<PosConfigState> {
             emit(state.copyWith(pairedDevice: _deviceFor(address)));
           }
         }
+      }
+
+      if (health == null && foreign != null && _isReset(foreign)) {
+        // Ours is nowhere by its name, and the terminal at its address comes
+        // unpaired under another one: ours after a reset. On the web kiosk,
+        // which cannot search the LAN, this is the only way back.
+        await _adoptReset(address, foreign);
+        if (stale()) return;
+        health = foreign;
       }
 
       if (health == null) {
@@ -401,6 +414,10 @@ class PosConfigBloc extends Cubit<PosConfigState> {
         reason = result.reason;
       }
       _report(health, reason, ms: ms);
+      if (reason == null && health.notReadyReason == null) {
+        // The terminal answers and is ours: settle any charge a reload cut off.
+        unawaited(CardChargeRecovery.instance.maybeRun(authBloc.state.currentDevice));
+      }
     } on IzifyPosException catch (e) {
       final ms = watch.elapsedMilliseconds;
       if (stale()) return;
@@ -411,6 +428,28 @@ class PosConfigBloc extends Cubit<PosConfigState> {
         unawaited(reconnect());
       }
     }
+  }
+
+  /// A terminal that lost its pairing by itself, not unpaired by a person.
+  ///
+  /// PayPOS names itself after a PIN kept in its encrypted storage, so a
+  /// reinstall, cleared data or an Android keystore reset loses both the
+  /// pairing and the name. The kiosk used to call it "another terminal" for
+  /// ever, until someone paired it by hand. One another kiosk holds
+  /// (paired) is never taken.
+  bool _isReset(IzifyPosHealth health) =>
+      health.paired == false && health.unpairedByUser != true;
+
+  Future<void> _adoptReset(IzifyPosAddress address, IzifyPosHealth health) async {
+    Telemetry.event('pos.terminal_reset',
+        level: TelemetryLevel.warning,
+        data: {
+          'address': address.hostPort,
+          'storedName': await TokenUtils.getPosName(),
+          'name': health.name,
+        });
+    // The pairing that follows stores the new name.
+    await TokenUtils.deletePosName();
   }
 
   bool _pairedElsewhere(IzifyPosHealth health) {

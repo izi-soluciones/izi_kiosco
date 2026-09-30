@@ -704,17 +704,17 @@ class ComandaRepositoryHttp extends ComandaRepository {
     return result.isTerminal ? result : null;
   }
   @override
-  Future<void> markPaymentATC(String chargeUuid, int? internalId, {Map<String, dynamic>? transaccion}) async {
+  Future<void> markPaymentATC(String chargeUuid, int? internalId, {Map<String, dynamic>? transaccion, String? token}) async {
+    // The charge's own token is enough for iZi; the kiosk-wide tokenCard is
+    // only for charges created before the kiosk kept it.
+    final chargeToken = _nonEmpty(token) ?? _nonEmpty(await TokenUtils.getTokenCard());
+    if (chargeToken == null) throw const MissingChargeToken();
     try {
-      String? token = await TokenUtils.getTokenCard();
-      if(token==null){
-        throw "No existe un token"; 
-      }
       String path = "/solicitudes-cobro/$chargeUuid/notificacion-pos";
       var response = await _dioClient.post(
           uri: path,
           body: {
-            "token": token,
+            "token": chargeToken,
             if (internalId != null) "internalId": internalId,
             // Older backends ignore it; newer ones store it and answer a
             // resend of the same transaction with 200 instead of 404.
@@ -744,14 +744,14 @@ class ComandaRepositoryHttp extends ComandaRepository {
   }
 
   @override
-  Future<void> reportTerminalResult(String chargeUuid, int? internalId, Map<String, dynamic> transaccion) async {
-    final token = await TokenUtils.getTokenCard();
-    if (token == null) return;
+  Future<void> reportTerminalResult(String chargeUuid, int? internalId, Map<String, dynamic> transaccion, {String? token}) async {
+    final chargeToken = _nonEmpty(token) ?? _nonEmpty(await TokenUtils.getTokenCard());
+    if (chargeToken == null) return;
     try {
       await _dioClient.post(
           uri: "/solicitudes-cobro/$chargeUuid/resultado-pos",
           body: {
-            "token": token,
+            "token": chargeToken,
             if (internalId != null) "internalId": internalId,
             "transaccion": transaccion,
           },
@@ -858,4 +858,10 @@ class ComandaRepositoryHttp extends ComandaRepository {
       throw error.toString();
     }
   }
+}
+
+/// [value] trimmed, or null when absent or blank.
+String? _nonEmpty(String? value) {
+  final text = value?.trim();
+  return text == null || text.isEmpty ? null : text;
 }

@@ -67,13 +67,16 @@ abstract class ComandaRepository {
   Future<Invoice> getInvoice(String invoiceUuid);
   Future<void> createPaidCharge(PaidChargeDto paidChargeDto);
   /// Tells iZi the charge [chargeUuid] was paid by card. [transaccion] is the
-  /// terminal's proof of payment (see CardPayment.terminalData). Throws
-  /// [PaymentConflict] when iZi already holds a different payment for it.
-  Future<void> markPaymentATC(String chargeUuid, int? internalId, {Map<String, dynamic>? transaccion});
+  /// terminal's proof of payment (see CardPayment.terminalData). [token] is
+  /// the charge's own POS token (`custom.datosIntegracion.token` of the
+  /// charge or payment attempt); the kiosk-wide `tokenCard` is only a
+  /// fallback. Throws [PaymentConflict] when iZi already holds a different
+  /// payment for it, and [MissingChargeToken] when there is no token at all.
+  Future<void> markPaymentATC(String chargeUuid, int? internalId, {Map<String, dynamic>? transaccion, String? token});
 
   /// Stores a declined, unconfirmed or cancelled card attempt with its charge
   /// in iZi. Never marks anything paid. Best effort.
-  Future<void> reportTerminalResult(String chargeUuid, int? internalId, Map<String, dynamic> transaccion);
+  Future<void> reportTerminalResult(String chargeUuid, int? internalId, Map<String, dynamic> transaccion, {String? token});
 
   Future<List<Item>> getSaleItems(
       {String? catalog, List<String>? items, required bool sortByPriority});
@@ -88,6 +91,15 @@ abstract class ComandaRepository {
 
 /// iZi already recorded a different card payment for this charge: a possible
 /// double charge. Retrying cannot fix it; it needs a person.
+/// Neither the charge nor the kiosk has a POS token, so iZi cannot be told
+/// about the payment. Retrying cannot help.
+class MissingChargeToken implements Exception {
+  const MissingChargeToken();
+
+  @override
+  String toString() => 'No hay token del cobro para notificar el pago';
+}
+
 class PaymentConflict implements Exception {
   final String message;
   const PaymentConflict(this.message);

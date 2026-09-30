@@ -147,6 +147,39 @@ void main() {
     expect(state.health!.paired, isTrue);
   });
 
+  test('a terminal that lost its storage (new name, unpaired) is paired again', () async {
+    final pos = await pairedTerminal();
+    pos
+      ..pairedKioskId = null
+      ..token = null
+      // PayPOS names itself after a PIN in its encrypted storage: a reinstall
+      // or a keystore reset brings it back under another name.
+      ..name = 'izify-POS-55555';
+    auth.load(_device(ipEcopay: pos.hostPort));
+
+    final state = await settled(start(), healthy);
+
+    expect(pos.pairRequests, 1);
+    expect(pos.pairedKioskId, _kioskId);
+    expect(await TokenUtils.getPosName(), 'izify-POS-55555');
+    expect(state.health!.name, 'izify-POS-55555');
+  });
+
+  test('a renamed terminal unpaired on purpose is still not taken', () async {
+    final pos = await pairedTerminal();
+    pos
+      ..pairedKioskId = null
+      ..token = null
+      ..unpairedByUser = true
+      ..name = 'izify-POS-55555';
+    auth.load(_device(ipEcopay: pos.hostPort));
+
+    final state = await settled(start(), (s) => s.notReadyReason != null && !s.notReadyReason!.contains('Buscándolo'));
+
+    expect(state.isHealthy, isFalse);
+    expect(pos.pairRequests, 0);
+  });
+
   test('startup: a token the terminal no longer accepts is replaced', () async {
     final pos = await pairedTerminal();
     pos.token = 'tok-rotated-elsewhere';
