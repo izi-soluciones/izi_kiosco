@@ -11,6 +11,7 @@ import 'package:izi_kiosco/app/values/locale_keys.g.dart';
 import 'package:izi_kiosco/domain/blocs/page_utils/page_utils_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/pos_config/pos_config_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
+import 'package:izi_kiosco/ui/pages/pos_config_page/widgets/pos_diagnostics_dialog.dart';
 
 class PosConfigPage extends StatefulWidget {
   const PosConfigPage({super.key});
@@ -85,6 +86,19 @@ class _PosConfigPageState extends State<PosConfigPage> {
                 });
               },
             ),
+            actions: [
+              TextButton.icon(
+                onPressed: () => PosDiagnosticsDialog.show(
+                    context, context.read<AuthBloc>().state.currentDevice),
+                icon: Icon(Icons.monitor_heart_outlined, color: context.iziColors.primary),
+                label: IziText.body(
+                  color: context.iziColors.primary,
+                  fontWeight: FontWeight.w600,
+                  text: LocaleKeys.posConfig_buttons_diagnostics.tr(),
+                ),
+              ),
+              const SizedBox(width: 16),
+            ],
           ),
         body: BlocConsumer<PosConfigBloc, PosConfigState>(
           // Only on a change of status. The health check rebuilds this state

@@ -751,7 +751,8 @@
       "search": "Buscar",
       "searching": "Buscando...",
       "pair": "Vincular",
-      "checkNow": "Verificar ahora"
+      "checkNow": "Verificar ahora",
+      "diagnostics": "Diagnóstico"
     },
     "messages": {
       "paired": "POS Emparejado correctamente",
@@ -768,6 +769,19 @@
       "free": "Disponible",
       "thisKiosk": "Emparejado con este kiosko",
       "otherKiosk": "Emparejado con otro kiosko"
+    },
+    "diagnostics": {
+      "title": "Diagnóstico",
+      "kioskTab": "Kiosco",
+      "terminalTab": "Datáfono",
+      "refresh": "Actualizar",
+      "copy": "Copiar",
+      "close": "Cerrar",
+      "copied": "Diagnóstico copiado al portapapeles",
+      "empty": "Sin eventos registrados",
+      "notPaired": "Este kiosko no tiene un datáfono emparejado.",
+      "unsupported": "Esta versión de PayPOS no ofrece diagnóstico. Actualícela a la 1.28 o superior.",
+      "unreachable": "No se pudo consultar el datáfono: {}"
     }
   },
   "errorPayment": {

@@ -592,6 +592,7 @@ abstract class  LocaleKeys {
   static const posConfig_buttons_searching = 'posConfig.buttons.searching';
   static const posConfig_buttons_pair = 'posConfig.buttons.pair';
   static const posConfig_buttons_checkNow = 'posConfig.buttons.checkNow';
+  static const posConfig_buttons_diagnostics = 'posConfig.buttons.diagnostics';
   static const posConfig_buttons = 'posConfig.buttons';
   static const posConfig_messages_paired = 'posConfig.messages.paired';
   static const posConfig_messages_noTerminals = 'posConfig.messages.noTerminals';
@@ -606,6 +607,18 @@ abstract class  LocaleKeys {
   static const posConfig_discovered_thisKiosk = 'posConfig.discovered.thisKiosk';
   static const posConfig_discovered_otherKiosk = 'posConfig.discovered.otherKiosk';
   static const posConfig_discovered = 'posConfig.discovered';
+  static const posConfig_diagnostics_title = 'posConfig.diagnostics.title';
+  static const posConfig_diagnostics_kioskTab = 'posConfig.diagnostics.kioskTab';
+  static const posConfig_diagnostics_terminalTab = 'posConfig.diagnostics.terminalTab';
+  static const posConfig_diagnostics_refresh = 'posConfig.diagnostics.refresh';
+  static const posConfig_diagnostics_copy = 'posConfig.diagnostics.copy';
+  static const posConfig_diagnostics_close = 'posConfig.diagnostics.close';
+  static const posConfig_diagnostics_copied = 'posConfig.diagnostics.copied';
+  static const posConfig_diagnostics_empty = 'posConfig.diagnostics.empty';
+  static const posConfig_diagnostics_notPaired = 'posConfig.diagnostics.notPaired';
+  static const posConfig_diagnostics_unsupported = 'posConfig.diagnostics.unsupported';
+  static const posConfig_diagnostics_unreachable = 'posConfig.diagnostics.unreachable';
+  static const posConfig_diagnostics = 'posConfig.diagnostics';
   static const posConfig = 'posConfig';
   static const errorPayment_labels_number = 'errorPayment.labels.number';
   static const errorPayment_labels_response = 'errorPayment.labels.response';

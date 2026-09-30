@@ -727,7 +727,8 @@
       "search": "Search",
       "searching": "Searching...",
       "pair": "Pair",
-      "checkNow": "Check now"
+      "checkNow": "Check now",
+      "diagnostics": "Diagnostics"
     },
     "messages": {
       "paired": "POS paired",
@@ -744,6 +745,19 @@
       "free": "Available",
       "thisKiosk": "Paired with this kiosk",
       "otherKiosk": "Paired with another kiosk"
+    },
+    "diagnostics": {
+      "title": "Diagnostics",
+      "kioskTab": "Kiosk",
+      "terminalTab": "Card terminal",
+      "refresh": "Refresh",
+      "copy": "Copy",
+      "close": "Close",
+      "copied": "Diagnostics copied to the clipboard",
+      "empty": "No events recorded",
+      "notPaired": "This kiosk has no paired card terminal.",
+      "unsupported": "This PayPOS version has no diagnostics. Update it to 1.28 or later.",
+      "unreachable": "Could not reach the card terminal: {}"
     }
   },
   "errorPayment": {
