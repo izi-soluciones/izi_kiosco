@@ -130,6 +130,7 @@ class _MakeOrderDetailStateVertical extends State<MakeOrderDetailVertical> {
             height: 8,
           ),
           MakeOrderAmountBtn(
+              key: const Key('order_confirm_btn'),
               onPressed: _getTotal() > 0
                   ? () {
                 _next(context);

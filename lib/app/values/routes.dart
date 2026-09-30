@@ -81,7 +81,16 @@ class Routes {
             name: RoutesKeys.errorPayments,
             path: RoutesKeys.errorPaymentsLik,
             pageBuilder: (BuildContext context, GoRouterState state) {
-              return const NoTransitionPage(child: ErrorPaymentPage());
+              return NoTransitionPage(
+                child: BlocProvider(
+                  create: (context) => PaymentBloc(
+                    ComandaRepositoryHttp(),
+                    BusinessRepositoryHttp(),
+                    SocketRepositoryHttp(),
+                  ),
+                  child: const ErrorPaymentPage(),
+                ),
+              );
             },
           ),
           GoRoute(

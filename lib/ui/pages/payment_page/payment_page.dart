@@ -9,9 +9,11 @@ import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/page_utils/page_utils_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/payment/payment_bloc.dart';
 import 'package:izi_kiosco/ui/modals/warning_config_modal.dart';
+import 'package:izi_kiosco/ui/pages/payment_page/modals/card_error_modal.dart';
 import 'package:izi_kiosco/ui/pages/payment_page/views/payment_page_card.dart';
 import 'package:izi_kiosco/ui/pages/payment_page/views/payment_page_invoice.dart';
 import 'package:izi_kiosco/ui/pages/payment_page/views/payment_page_order_complete.dart';
+import 'package:izi_kiosco/ui/pages/payment_page/views/payment_page_charged_not_registered.dart';
 import 'package:izi_kiosco/ui/pages/payment_page/views/payment_page_order_error.dart';
 import 'package:izi_kiosco/ui/pages/payment_page/views/payment_page_qr.dart';
 import 'package:izi_kiosco/ui/pages/payment_page/views/payment_page_breb.dart';
@@ -53,13 +55,19 @@ class PaymentPage extends StatelessWidget {
         }
 
 
-        if(state.status== PaymentStatus.cardError){
+        if (state.status == PaymentStatus.cardError ||
+            state.status == PaymentStatus.cardPending) {
           context.read<PageUtilsBloc>().closeLoading();
-          context.read<PageUtilsBloc>().initScreenActiveInvoiced(context.read<AuthBloc>().state);
-          context.read<PageUtilsBloc>().showSnackBar(
-              snackBar: SnackBarInfo(
-                  text: LocaleKeys.payment_messages_errorCard.tr(),
-                  snackBarType: SnackBarType.error));
+          final authState = context.read<AuthBloc>().state;
+          context.read<PageUtilsBloc>().initScreenActiveInvoiced(authState);
+          _showCardError(
+            context,
+            authState,
+            // PENDING: the card may have been charged. No retry from here;
+            // staff verify it first.
+            pending: state.status == PaymentStatus.cardPending,
+            detail: state.errorDescription,
+          );
         }
         if (state.status == PaymentStatus.brebError) {
           context.read<PageUtilsBloc>().closeLoading();
@@ -134,10 +142,41 @@ class PaymentPage extends StatelessWidget {
             //7
             PaymentPageBREB(state: state),
             //8
-            PaymentPageDemo(state: state)
+            PaymentPageDemo(state: state),
+            //9
+            PaymentPageChargedNotRegistered(state: state)
           ],
         );
       },
     );
+  }
+
+  /// A card charge that did not go through, told on the screen. A declined
+  /// one (nothing charged) can be retried with the same terms or left for
+  /// another payment method; a pending one only goes back to the choices.
+  void _showCardError(
+    BuildContext context,
+    AuthState authState, {
+    required bool pending,
+    String? detail,
+  }) {
+    final paymentBloc = context.read<PaymentBloc>();
+    final pageUtils = context.read<PageUtilsBloc>();
+    CustomAlerts.defaultAlert(
+      context: context,
+      dismissible: false,
+      defaultScroll: false,
+      child: CardErrorModal(
+        pending: pending,
+        detail: detail,
+        canRetry: paymentBloc.canRetryLastCardCharge,
+      ),
+    ).then((choice) {
+      if (choice != CardErrorChoice.retry || pending) return;
+      pageUtils.closeScreenActive();
+      paymentBloc.retryLastCardCharge(authState).then((status) {
+        if (!status) pageUtils.initScreenActiveInvoiced(authState);
+      });
+    });
   }
 }

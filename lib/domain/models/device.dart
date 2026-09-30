@@ -65,6 +65,8 @@ class ConfigDevice {
   final bool printSat;
   final bool printAutoReply;
   final bool ocultarCash;
+  final bool ocultarQr;
+  final bool ocultarBreb;
   final bool facturaCompacto;
   final bool noPrintRollo;
   final IziColorPalette? colors;
@@ -95,6 +97,8 @@ class ConfigDevice {
       required this.printSat,
       required this.printAutoReply,
       required this.ocultarCash,
+      required this.ocultarQr,
+      required this.ocultarBreb,
       required this.facturaCompacto,
       this.video,
         required this.pin,
@@ -111,12 +115,15 @@ class ConfigDevice {
     var config = ConfigDevice(
       ipAtc: jsonObj?["ipAtc"] is String ? jsonObj!["ipAtc"] : null,
       ipLinkser: jsonObj?["ipLinkser"] is String ? jsonObj!["ipLinkser"] : null,
-      ipEcopay: jsonObj?["ipEcopay"] is String ? jsonObj!["ipEcopay"] : null,
-      mqttClientId: (jsonObj?["ecopayConfig"] is Map) ? jsonObj!["ecopayConfig"]["mqttClientId"] : jsonObj?["mqttClientId"],
-      mqttUserName: (jsonObj?["ecopayConfig"] is Map) ? jsonObj!["ecopayConfig"]["mqttUserName"] : jsonObj?["mqttUserName"],
-      mqttPassword: (jsonObj?["ecopayConfig"] is Map) ? jsonObj!["ecopayConfig"]["mqttPassword"] : jsonObj?["mqttPassword"],
-      commerceId: (jsonObj?["ecopayConfig"] is Map) ? jsonObj!["ecopayConfig"]["commerceId"]?.toString() : jsonObj?["commerceId"]?.toString(),
-      cajaId: (jsonObj?["ecopayConfig"] is Map) ? jsonObj!["ecopayConfig"]["cajaId"]?.toString() : jsonObj?["cajaId"]?.toString(),
+      ipEcopay: _nonEmptyString(jsonObj?["ipEcopay"]),
+      // EcoPay values come from the backend JSON, where ids like the MQTT user
+      // name or commerce id may be stored as numbers. A raw `dynamic` assigned
+      // to these String fields crashed the kiosk on login, so coerce them.
+      mqttClientId: _nonEmptyString(_ecopayField(jsonObj, "mqttClientId")),
+      mqttUserName: _nonEmptyString(_ecopayField(jsonObj, "mqttUserName")),
+      mqttPassword: _nonEmptyString(_ecopayField(jsonObj, "mqttPassword")),
+      commerceId: _nonEmptyString(_ecopayField(jsonObj, "commerceId")),
+      cajaId: _nonEmptyString(_ecopayField(jsonObj, "cajaId")),
       video: jsonObj?["video"] is String ? jsonObj!["video"] : null,
       demo: jsonObj?["demo"] is bool ? jsonObj!["demo"] : false,
       isRetail: jsonObj?["isRetail"] is bool ? jsonObj!["isRetail"] : false,
@@ -134,15 +141,17 @@ class ConfigDevice {
       jsonObj?["tiempoPago"] is int ? jsonObj!["tiempoPago"] : null,
       timeOrder:
       jsonObj?["tiempoOrden"] is int ? jsonObj!["tiempoOrden"] : null,
-      pin:
-      jsonObj?["pin"] is String ? jsonObj!["pin"] : null,
+      // Accept a numeric PIN too: without it pairing with the POS is refused.
+      pin: _nonEmptyString(jsonObj?["pin"]),
       sortByPriority:
       jsonObj?["ordenarPrioridad"] is bool ? jsonObj!["ordenarPrioridad"] : null,
-      token: jsonObj?["token"] is String ? jsonObj!["token"] : null,
+      token: _nonEmptyString(jsonObj?["token"]),
       descargarQR: jsonObj?["descargarQR"] is bool ? jsonObj!["descargarQR"] : false,
       printSat: jsonObj?["printSat"] is bool ? jsonObj!["printSat"] : false,
       printAutoReply: jsonObj?["printAutoReply"] is bool ? jsonObj!["printAutoReply"] : false,
       ocultarCash: jsonObj?["ocultarCash"] is bool ? jsonObj!["ocultarCash"] : false,
+      ocultarQr: jsonObj?["ocultarQr"] is bool ? jsonObj!["ocultarQr"] : false,
+      ocultarBreb: jsonObj?["ocultarBreb"] is bool ? jsonObj!["ocultarBreb"] : false,
       facturaCompacto: jsonObj?["facturaCompacto"] is bool ? jsonObj!["facturaCompacto"] : false,
       isRetailBarcode: jsonObj?["isRetailBarcode"] is bool ? jsonObj!["isRetailBarcode"] : false,
       colors: IziColorPalette.fromMap(jsonObj?["colors"]),
@@ -178,4 +187,21 @@ class KioskColors{
     return KioskColors(
       categoryBgColor: json?["categoryBgColor"] is String? parseColor(json?["categoryBgColor"]) : null,
       categoryTextColor: json?["categoryTextColor"] is String? parseColor(json?["categoryTextColor"]) : null);}
+}
+
+/// The EcoPay setting [key], read from `config.ecopayConfig` or, for older
+/// device configs, from the root of `config`.
+dynamic _ecopayField(Map? config, String key) {
+  final nested = config?["ecopayConfig"];
+  if (nested is Map && nested[key] != null) return nested[key];
+  return config?[key];
+}
+
+/// [value] as a trimmed string, or null when absent or blank. Numbers are
+/// accepted (the backend may store ids and PINs as numbers).
+String? _nonEmptyString(dynamic value) {
+  if (value == null) return null;
+  if (value is! String && value is! num) return null;
+  final text = value.toString().trim();
+  return text.isEmpty ? null : text;
 }

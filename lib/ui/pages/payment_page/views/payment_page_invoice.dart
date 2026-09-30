@@ -48,6 +48,13 @@ class _PaymentPageInvoiceState extends State<PaymentPageInvoice> {
   void initState() {
     super.initState();
     authState = context.read<AuthBloc>().state;
+    // This view is rebuilt every time the payment comes back to it (a failed
+    // or cancelled charge returns here): start from what the customer already
+    // typed, which the bloc still holds, instead of blank fields.
+    customerNameController.text = widget.state.customerName.value;
+    businessNameController.text = widget.state.businessName.value;
+    emailController.text = widget.state.email.value;
+    phoneController.text = widget.state.phoneNumber.value;
   }
 
   bool get _needsCustomerName => widget.state.paymentObj?.isComanda == true;
@@ -483,12 +490,15 @@ class _PaymentPageInvoiceState extends State<PaymentPageInvoice> {
             child: CardTypeIzifyModal(
                 amount: (widget.state.paymentObj?.amount ?? 0)))
         .then((value) async {
-      if (value is String) {
+      if (value is Map) {
+        final cardType = value['cardType'] as String;
+        final quotas = value['quotas'] as int;
         context.read<PageUtilsBloc>().closeScreenActive();
         var status = await context.read<PaymentBloc>().makeCardPayment(
             authState,
             izify: true,
-            cardType: value);
+            cardType: cardType,
+            quotas: quotas);
         if (!mounted) {
           return;
         }

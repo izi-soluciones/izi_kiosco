@@ -15,7 +15,9 @@ import 'package:izi_kiosco/domain/models/person_type.dart';
 import 'package:izi_kiosco/domain/models/tax_responsability.dart';
 import 'package:izi_kiosco/domain/repositories/business_repository.dart';
 class BusinessRepositoryHttp extends BusinessRepository{
-  final DioClient _dioClient = DioClient();
+  final DioClient _dioClient;
+
+  BusinessRepositoryHttp({DioClient? dioClient}) : _dioClient = dioClient ?? DioClient();
 
 
   @override
