@@ -26,16 +26,21 @@ class PaymentPageChargedNotRegistered extends StatelessWidget {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        IziText.titleBig(
-            color: context.iziColors.darkGrey,
-            text: LocaleKeys.payment_subtitles_chargedNotRegistered.tr(),
-            fontWeight: FontWeight.w600),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 32),
+          child: IziText.titleBig(
+              color: context.iziColors.darkGrey,
+              textAlign: TextAlign.center,
+              maxLines: 3,
+              text: LocaleKeys.payment_subtitles_chargedNotRegistered.tr(),
+              fontWeight: FontWeight.w600),
+        ),
         Icon(IziIcons.check, size: 180, color: context.iziColors.primary),
         const SizedBox(height: 16),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 32),
           child: IziText.titleMedium(
-              maxLines: 3,
+              maxLines: 5,
               textAlign: TextAlign.center,
               color: context.iziColors.darkGrey,
               text: LocaleKeys.payment_subtitles_chargedNotRegisteredDetail.tr(),

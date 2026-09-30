@@ -174,11 +174,18 @@ class _PaymentPageDemoState extends State<PaymentPageDemo> {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        IziText.titleSmall(
-          textAlign: TextAlign.center,
-          color: context.iziColors.dark,
-          text: LocaleKeys.payment_subtitles_enterYourCard.tr(),
-          fontWeight: FontWeight.w500,
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 32),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 600),
+            child: IziText.titleSmall(
+              textAlign: TextAlign.center,
+              maxLines: 5,
+              color: context.iziColors.dark,
+              text: LocaleKeys.payment_subtitles_enterYourCard.tr(),
+              fontWeight: FontWeight.w500,
+            ),
+          ),
         ),
         const SizedBox(height: 32),
         Flexible(
@@ -313,6 +320,7 @@ class _PaymentPageDemoState extends State<PaymentPageDemo> {
             text: LocaleKeys.demoPayment_title.tr(),
             color: IziColors.dark,
             textAlign: TextAlign.center,
+            maxLines: 3,
             fontWeight: FontWeight.bold,
           ),
           const SizedBox(height: 48),
@@ -320,6 +328,7 @@ class _PaymentPageDemoState extends State<PaymentPageDemo> {
             text: LocaleKeys.demoPayment_body.tr(),
             color: IziColors.darkGrey,
             textAlign: TextAlign.center,
+            maxLines: 5,
             fontWeight: FontWeight.normal,
           ),
         ],

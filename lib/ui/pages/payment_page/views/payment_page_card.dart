@@ -71,6 +71,8 @@ class _PaymentPageCardState extends State<PaymentPageCard> {
                 children: [
                   IziText.titleMedium(
                       color: context.iziColors.dark,
+                      textAlign: TextAlign.center,
+                      maxLines: 2,
                       text: LocaleKeys.payment_titles_cardPayment.tr()),
                   const SizedBox(
                     height: 8,
@@ -85,11 +87,20 @@ class _PaymentPageCardState extends State<PaymentPageCard> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             if(widget.state.status == PaymentStatus.cardProcessing)
-            IziText.titleSmall(
-                textAlign: TextAlign.center,
-                color: context.iziColors.dark,
-                text: LocaleKeys.payment_subtitles_enterYourCard.tr(),
-                fontWeight: FontWeight.w500),
+            // The design system text ellipsizes to one line unless given
+            // maxLines: the instructions were cut off mid-sentence.
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 32),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 600),
+                child: IziText.titleSmall(
+                    textAlign: TextAlign.center,
+                    maxLines: 5,
+                    color: context.iziColors.dark,
+                    text: LocaleKeys.payment_subtitles_enterYourCard.tr(),
+                    fontWeight: FontWeight.w500),
+              ),
+            ),
             const SizedBox(
               height: 32,
             ),
