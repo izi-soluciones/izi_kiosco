@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:izi_kiosco/data/local/local_storage_card_errors.dart';
 import 'package:izi_kiosco/data/pos/izify_pos_client.dart';
 import 'package:izi_kiosco/data/pos/izify_pos_session.dart';
+import 'package:izi_kiosco/data/telemetry/telemetry.dart';
 import 'package:izi_kiosco/data/utils/token_utils.dart';
 import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/payment/payment_bloc.dart';
@@ -239,6 +240,35 @@ void main() {
 
     expect(pos.charges.last['cardType'], 'CREDITO');
     expect(pos.charges.last['quotas'], 12);
+  });
+
+  test('a charge keeps one charge id across its retries, sent to the terminal and logged', () async {
+    Telemetry.install(Telemetry());
+    pos.outcome = 'ERROR';
+    await bloc.retryCardPayment(auth, original());
+    final declined = (await rows()).single;
+    final chargeId = declined.chargeId;
+    expect(chargeId, startsWith('CHG-'));
+    expect(pos.charges.single['correlationId'], chargeId);
+
+    pos.outcome = 'SUCCESS';
+    expect(await bloc.retryCardPayment(auth, declined), isTrue);
+    expect(pos.charges.last['correlationId'], chargeId,
+        reason: 'the retry is the same charge, with a new reference');
+    expect(pos.charges.last['reference'], isNot(declined.reference));
+
+    final events = Telemetry.recent(limit: 100).reversed.where((e) => e.chargeId == chargeId);
+    expect(events.map((e) => e.type), containsAllInOrder([
+      'charge.start', 'charge.pay_ack', 'charge.result',
+      'charge.start', 'charge.pay_ack', 'charge.result',
+    ]));
+    final results = events.where((e) => e.type == 'charge.result').toList();
+    expect(results.map((e) => e.data['status']), ['error', 'success']);
+    expect(events.where((e) => e.type == 'charge.start').last.data['retryOf'], declined.reference);
+    // Nothing secret reached the log.
+    final logged = jsonEncode([for (final e in Telemetry.recent(limit: 500)) e.toJson()]);
+    expect(logged, isNot(contains('PWD999')));
+    expect(logged, isNot(contains(pos.token!)));
   });
 
   test('a terminal unpaired on purpose is not re-paired even after this kiosk forgot it', () async {

@@ -4,6 +4,8 @@ import 'dart:async';
 import 'package:izi_kiosco/data/pos/izify_pos_client.dart';
 import 'package:izi_kiosco/data/pos/izify_pos_discovery.dart';
 import 'package:izi_kiosco/data/pos/izify_pos_session.dart';
+import 'package:izi_kiosco/data/telemetry/pos_telemetry.dart';
+import 'package:izi_kiosco/data/telemetry/telemetry.dart';
 import 'package:izi_kiosco/data/utils/token_utils.dart';
 import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
 
@@ -44,6 +46,7 @@ class PosConfigBloc extends Cubit<PosConfigState> {
   DateTime? _lastAutoRepair;
   DateTime? _lastRediscovery;
   int _failedChecks = 0;
+  final PosLinkTracker _link = PosLinkTracker('pos_config');
 
   static const Duration healthInterval = Duration(seconds: 30);
   static const Duration autoRepairBackoff = Duration(minutes: 2);
@@ -120,6 +123,7 @@ class PosConfigBloc extends Cubit<PosConfigState> {
     }
     if (_backendAttempts.contains(backend)) return; // Once per launch and value.
     if (await TokenUtils.getPosUnpairedByUser()) return;
+    _pairingTrigger = 'backend';
     final paired = await pairDevice(_deviceFor(backend));
     // Only a pairing that worked counts as attempted. A kiosk that boots
     // before the terminal — normal after a power cut — would otherwise stay
@@ -203,6 +207,10 @@ class PosConfigBloc extends Cubit<PosConfigState> {
     );
   }
 
+  /// What the next [pairDevice] was started by, for the log: the backend
+  /// configuration, or the technician on the configuration screen.
+  String _pairingTrigger = 'manual';
+
   /// Pairs this kiosk with [device]. Returns whether the pairing succeeded.
   Future<bool> pairDevice(PosDevice device, {String? mqttClientId, String? mqttUserName, String? mqttPassword, String? commerceId, String? cajaId}) async {
     // Anything still running for the previous terminal must not act after this.
@@ -211,6 +219,8 @@ class PosConfigBloc extends Cubit<PosConfigState> {
     if (isClosed) return false;
     final previous = state.pairedDevice;
     final previousToken = await TokenUtils.getPosToken();
+    final trigger = _pairingTrigger;
+    _pairingTrigger = 'manual';
     emit(state.copyWith(status: PosConfigStatus.pairing));
     try {
       final session = await IzifyPosSession.pair(
@@ -225,6 +235,7 @@ class PosConfigBloc extends Cubit<PosConfigState> {
           'cajaId': cajaId,
         },
         stillWanted: () => epoch == _epoch && !isClosed,
+        trigger: trigger,
       );
       await _acknowledgeBackend();
       _autoPairDisabled = false;
@@ -293,15 +304,22 @@ class PosConfigBloc extends Cubit<PosConfigState> {
       var address = IzifyPosAddress(device.ip, device.port);
       IzifyPosHealth? health;
       String? problem;
+      final rid = IzifyPosClient.newRequestId();
+      final watch = Stopwatch()..start();
+      int? answeredMs;
       try {
-        health = await _client.health(address);
+        health = await _client.health(address, rid: rid);
+        answeredMs = watch.elapsedMilliseconds;
         if (!await IzifyPosSession.isOurTerminal(health)) {
           // The router gave our terminal's address to another one.
           problem = 'En ${address.host} responde otro datáfono (${health.name}).';
+          _logWrongTerminal(address, health);
           health = null;
         }
       } on IzifyPosException catch (e) {
         problem = e.message;
+        unawaited(_link.failed(
+            address: address, rid: rid, ms: watch.elapsedMilliseconds, error: e));
       }
       if (stale()) return;
 
@@ -310,11 +328,23 @@ class PosConfigBloc extends Cubit<PosConfigState> {
           isHealthy: false,
           notReadyReason: () => '${problem ?? 'El datáfono no responde en ${address.host}.'} Buscándolo en la red...',
         ));
+        final search = Stopwatch()..start();
         final found = await _findPairedTerminal();
+        Telemetry.event('pos.rediscovery',
+            level: found == null ? TelemetryLevel.warning : TelemetryLevel.info,
+            data: {
+              'address': address.hostPort,
+              'manual': manual,
+              'found': found != null,
+              if (found != null) 'foundAt': found.address.hostPort,
+              'ms': search.elapsedMilliseconds,
+            });
         if (stale()) return;
         if (found != null) {
           health = found.health;
           if (found.address != address) {
+            Telemetry.event('pos.moved',
+                data: {'from': address.hostPort, 'to': found.address.hostPort});
             address = found.address;
             await IzifyPosSession.moveTo(address);
             if (stale()) return;
@@ -330,7 +360,7 @@ class PosConfigBloc extends Cubit<PosConfigState> {
       _failedChecks = 0;
       final result = await _ensurePaired(address, health, stale, manual: manual);
       if (stale()) return;
-      _report(result.health ?? health, result.reason);
+      _report(result.health ?? health, result.reason, ms: answeredMs);
     } finally {
       _reconnecting = false;
       if (_healthTimer == null && !stale() && state.pairedDevice != null) _startHealthPolling();
@@ -350,10 +380,14 @@ class PosConfigBloc extends Cubit<PosConfigState> {
     final epoch = _epoch;
     bool stale() => isClosed || epoch != _epoch;
     final address = IzifyPosAddress(device.ip, device.port);
+    final rid = IzifyPosClient.newRequestId();
+    final watch = Stopwatch()..start();
     try {
-      var health = await _client.health(address);
+      var health = await _client.health(address, rid: rid);
+      final ms = watch.elapsedMilliseconds;
       if (stale()) return;
       if (!await IzifyPosSession.isOurTerminal(health)) {
+        _logWrongTerminal(address, health);
         _report(null, 'En ${address.host} responde otro datáfono (${health.name}).');
         if (_mayRediscover() && !stale()) unawaited(reconnect());
         return;
@@ -366,10 +400,12 @@ class PosConfigBloc extends Cubit<PosConfigState> {
         health = result.health ?? health;
         reason = result.reason;
       }
-      _report(health, reason);
+      _report(health, reason, ms: ms);
     } on IzifyPosException catch (e) {
+      final ms = watch.elapsedMilliseconds;
       if (stale()) return;
       _failedChecks++;
+      unawaited(_link.failed(address: address, rid: rid, ms: ms, error: e));
       _report(null, e.message);
       if (_failedChecks >= failuresBeforeRediscovery && _mayRediscover()) {
         unawaited(reconnect());
@@ -408,6 +444,9 @@ class PosConfigBloc extends Cubit<PosConfigState> {
         await IzifyPosSession.rememberName(_client, address, health: health);
         return (health: null, reason: null);
       }
+      Telemetry.event('pos.token_rejected',
+          level: TelemetryLevel.warning,
+          data: {'address': address.hostPort, 'pairedElsewhere': _pairedElsewhere(health)});
       if (_pairedElsewhere(health)) {
         return (health: null, reason: 'El datáfono está emparejado con otro kiosko.');
       }
@@ -425,7 +464,8 @@ class PosConfigBloc extends Cubit<PosConfigState> {
     }
     _lastAutoRepair = DateTime.now();
     try {
-      await IzifyPosSession.pair(_client, device, address, stillWanted: () => !stale());
+      await IzifyPosSession.pair(_client, device, address,
+          stillWanted: () => !stale(), trigger: 'auto_repair');
       if (stale()) return (health: null, reason: null);
       _repairPending = false;
       return (health: await _client.health(address), reason: null);
@@ -453,9 +493,23 @@ class PosConfigBloc extends Cubit<PosConfigState> {
     return null;
   }
 
-  void _report(IzifyPosHealth? health, String? problem) {
+  void _logWrongTerminal(IzifyPosAddress address, IzifyPosHealth health) =>
+      Telemetry.event('pos.wrong_terminal',
+          level: TelemetryLevel.warning,
+          data: {'address': address.hostPort, 'answeredBy': health.name});
+
+  /// [ms]: how long the terminal took to answer, when this is its answer.
+  void _report(IzifyPosHealth? health, String? problem, {int? ms}) {
     if (isClosed) return;
     final reason = problem ?? health?.notReadyReason;
+    final device = state.pairedDevice;
+    if (health != null && device != null) {
+      _link.answered(
+          address: IzifyPosAddress(device.ip, device.port),
+          ms: ms,
+          notReadyReason: reason,
+          appVersion: health.appVersion);
+    }
     emit(state.copyWith(
       isHealthy: health != null && reason == null,
       healthData: health?.raw,
@@ -475,6 +529,10 @@ class PosConfigBloc extends Cubit<PosConfigState> {
   }
 
   Future<void> unpair() async {
+    Telemetry.event('pos.unpair', data: {
+      if (state.pairedDevice != null)
+        'address': '${state.pairedDevice!.ip}:${state.pairedDevice!.port}',
+    });
     // Stops any reconnect or health check in flight from pairing again.
     _epoch++;
     _healthTimer?.cancel();

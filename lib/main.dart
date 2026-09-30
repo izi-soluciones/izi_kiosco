@@ -12,6 +12,7 @@ import 'package:izi_kiosco/app/my_app.dart';
 import 'package:izi_kiosco/app/utils/custom_asset_loader.dart';
 import 'package:izi_kiosco/app/utils/kiosk_locale.dart';
 import 'package:izi_kiosco/app/values/assets_keys.dart';
+import 'package:izi_kiosco/data/telemetry/kiosk_telemetry.dart';
 import 'package:izi_kiosco/firebase_options.dart';
 
 // El flavor se inyecta en build time: --dart-define=FLAVOR=stg
@@ -41,7 +42,9 @@ void main() async {
     return true;
   };
 
-  runApp(
+  // Sentry wraps the error handler set above, so Crashlytics still gets its
+  // errors on mobile.
+  await KioskTelemetry.run(flavor: _flavor, appRunner: () => runApp(
     EasyLocalization(
       supportedLocales: KioskLocale.supported,
       path: AssetsKeys.translations,
@@ -54,5 +57,5 @@ void main() async {
       saveLocale: false,
       child: MyApp(),
     ),
-  );
+  ));
 }

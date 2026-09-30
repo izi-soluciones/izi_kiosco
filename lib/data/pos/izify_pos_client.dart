@@ -5,6 +5,7 @@ import 'dart:math';
 
 import 'package:crypto/crypto.dart';
 import 'package:http/http.dart' as http;
+import 'package:izi_kiosco/data/telemetry/tracked_http_client.dart';
 import 'package:izi_kiosco/domain/models/pos_payment_result.dart';
 
 /// Where an Izify POS (EcoPay terminal running PayPOS) listens on the LAN.
@@ -181,8 +182,11 @@ class IzifyPosException implements Exception {
   final int? statusCode;
   final bool? charged;
 
+  /// What the platform reported, for diagnostics only: never shown.
+  final Object? cause;
+
   const IzifyPosException(this.message,
-      {this.code, this.statusCode, this.charged = false});
+      {this.code, this.statusCode, this.charged = false, this.cause});
 
   bool get outcomeUnknown => charged == null;
   bool get isUnauthorized => statusCode == 401;
@@ -214,9 +218,11 @@ class IzifyPosClient {
   final bool _ownsHttp;
 
   IzifyPosClient({http.Client? httpClient})
-      : _http = httpClient ?? http.Client(),
+      : _http = httpClient ?? TrackedHttpClient(http.Client()),
         _ownsHttp = httpClient == null,
-        _payClientFactory = httpClient != null ? (() => httpClient) : http.Client.new,
+        _payClientFactory = httpClient != null
+            ? (() => httpClient)
+            : (() => TrackedHttpClient(http.Client())),
         _closePayClient = httpClient == null;
 
   /// Releases the connections this client holds. A bloc that builds its own
@@ -237,6 +243,17 @@ class IzifyPosClient {
         .toUpperCase();
     return 'KOS-$millis-$suffix';
   }
+
+  /// Identifies a whole charge (cobro) across its attempts, each with its own
+  /// [newReference]. Sent to the terminal so both sides log it.
+  static String newChargeId() => 'CHG-${DateTime.now().millisecondsSinceEpoch}-${_randomTag(6)}';
+
+  /// Tags one `/health` request (`?rid=`) so the terminal's log can say
+  /// whether a check the kiosk saw fail ever reached it.
+  static String newRequestId() => _randomTag(8);
+
+  static String _randomTag(int length) =>
+      List.generate(length, (_) => _random.nextInt(36).toRadixString(36)).join();
 
   /// The fields an EcoPay pairing needs, as `/pair` names them.
   static const ecoPayRequiredFields = ['mqttClientId', 'mqttUserName', 'mqttPassword', 'commerceId'];
@@ -263,12 +280,18 @@ class IzifyPosClient {
           .convert(utf8.encode('$amount|$currency|$reference'))
           .toString();
 
-  Future<IzifyPosHealth> health(IzifyPosAddress address, {Duration timeout = healthTimeout}) async {
+  /// [rid] tags the request for the terminal's log (PayPOS 1.28+); older
+  /// terminals ignore it.
+  Future<IzifyPosHealth> health(IzifyPosAddress address,
+      {Duration timeout = healthTimeout, String? rid}) async {
     final http.Response res;
+    final url = rid == null
+        ? address.http('/health')
+        : address.http('/health').replace(queryParameters: {'rid': rid});
     try {
-      res = await _http.get(address.http('/health')).timeout(timeout);
+      res = await _http.get(url).timeout(timeout);
     } catch (e) {
-      throw IzifyPosException(_unreachable(address), code: 'UNREACHABLE');
+      throw IzifyPosException(_unreachable(address), code: 'UNREACHABLE', cause: e);
     }
     if (res.statusCode != 200) {
       throw IzifyPosException('El datáfono respondió ${res.statusCode}.',
@@ -301,7 +324,7 @@ class IzifyPosClient {
           )
           .timeout(pairTimeout);
     } catch (e) {
-      throw IzifyPosException(_unreachable(address), code: 'UNREACHABLE');
+      throw IzifyPosException(_unreachable(address), code: 'UNREACHABLE', cause: e);
     }
 
     final data = _decode(res.body);
@@ -355,6 +378,7 @@ class IzifyPosClient {
     required String reference,
     required String cardType,
     required int quotas,
+    String? chargeId,
   }) async {
     final parsed = double.tryParse(amount);
     if (parsed == null || parsed <= 0) {
@@ -384,22 +408,26 @@ class IzifyPosClient {
               'cardType': cardType,
               'quotas': quotas,
               'sendTicket': 0,
+              // Not signed: it only labels the logs of both sides. Sent in
+              // the body because a new header would fail the CORS preflight
+              // of the terminals already installed.
+              if (chargeId != null) 'correlationId': chargeId,
             }),
           )
           .timeout(payTimeout);
-    } on TimeoutException {
-      throw const IzifyPosException('El datáfono no confirmó la recepción del cobro.',
-          code: 'PAY_TIMEOUT', charged: null);
+    } on TimeoutException catch (e) {
+      throw IzifyPosException('El datáfono no confirmó la recepción del cobro.',
+          code: 'PAY_TIMEOUT', charged: null, cause: e);
     } catch (e) {
       // Connection refused / no route: the request never left this kiosk.
       // A reset after connecting is different: it may have been read.
       // package:http wraps socket errors in ClientException, so both are
       // classified by what the platform said.
       if (_neverConnected(e)) {
-        throw IzifyPosException(_unreachable(address), code: 'UNREACHABLE');
+        throw IzifyPosException(_unreachable(address), code: 'UNREACHABLE', cause: e);
       }
       throw IzifyPosException('Se perdió la conexión con el datáfono.',
-          code: 'CONNECTION_LOST', charged: null);
+          code: 'CONNECTION_LOST', charged: null, cause: e);
     } finally {
       if (_closePayClient) payClient.close();
     }
@@ -466,6 +494,35 @@ class IzifyPosClient {
       return PosPaymentResult(
           status: PosPaymentStatus.unreachable, reference: reference);
     }
+  }
+
+  /// The terminal's own record of what happened to it (PayPOS 1.28+): its
+  /// latest events, device state and the requests it received. Null when
+  /// the terminal is too old to have it. Throws [IzifyPosException] when it
+  /// cannot be asked.
+  Future<Map<String, dynamic>?> diagnostics(IzifyPosAddress address,
+      {required String token, int limit = 200}) async {
+    final http.Response res;
+    try {
+      res = await _http.get(
+        address.http('/diagnostics').replace(queryParameters: {'limit': '$limit'}),
+        headers: {'Authorization': 'Bearer $token'},
+      ).timeout(statusTimeout);
+    } catch (e) {
+      throw IzifyPosException(_unreachable(address), code: 'UNREACHABLE', cause: e);
+    }
+    if (res.statusCode == 404) return null;
+    if (res.statusCode == 401) {
+      throw const IzifyPosException(
+          'El datáfono no reconoce a este kiosko. Es necesario volver a emparejar.',
+          statusCode: 401);
+    }
+    final data = _decode(res.body);
+    if (res.statusCode != 200 || data is! Map<String, dynamic>) {
+      throw IzifyPosException('El datáfono respondió ${res.statusCode}.',
+          statusCode: res.statusCode);
+    }
+    return data;
   }
 
   /// Whether [token] still opens the terminal at [address]: `false` when it

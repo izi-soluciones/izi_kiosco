@@ -1,4 +1,6 @@
 import 'package:izi_kiosco/data/pos/izify_pos_client.dart';
+import 'package:izi_kiosco/data/telemetry/pos_telemetry.dart';
+import 'package:izi_kiosco/data/telemetry/telemetry.dart';
 import 'package:izi_kiosco/data/utils/token_utils.dart';
 import 'package:izi_kiosco/domain/models/device.dart';
 
@@ -61,23 +63,60 @@ class IzifyPosSession {
   /// rotates the token, so two in a row would leave one caller holding a dead
   /// one. When [stillWanted] says no after the terminal answered, nothing is
   /// stored (the kiosk was unpaired or paired elsewhere meanwhile).
+  ///
+  /// [trigger] says what asked for the pairing, for the log: `backend`,
+  /// `manual`, `auto_repair`, `charge`.
   static Future<IzifyPosSession> pair(
     IzifyPosClient client,
     Device? device,
     IzifyPosAddress address, {
     Map<String, String?> overrides = const {},
     bool Function()? stillWanted,
+    String trigger = 'unknown',
   }) {
     final inFlight = _pairing;
     final automatic = overrides.values.every((v) => v == null || v.trim().isEmpty);
     if (inFlight != null && _pairingAddress == address && automatic) return inFlight;
-    final attempt = _pair(client, device, address, overrides, stillWanted);
+    final attempt = _logged(
+        _pair(client, device, address, overrides, stillWanted),
+        address: address,
+        trigger: trigger,
+        typedByTechnician: !automatic);
     _pairing = attempt;
     _pairingAddress = address;
     attempt.then((_) {}, onError: (_) {}).whenComplete(() {
       if (identical(_pairing, attempt)) _pairing = null;
     });
     return attempt;
+  }
+
+  static Future<IzifyPosSession> _logged(Future<IzifyPosSession> pairing,
+      {required IzifyPosAddress address,
+      required String trigger,
+      required bool typedByTechnician}) async {
+    final watch = Stopwatch()..start();
+    final base = {
+      'address': address.hostPort,
+      'trigger': trigger,
+      'typedByTechnician': typedByTechnician,
+    };
+    Telemetry.event('pos.pair_start', data: base);
+    try {
+      final session = await pairing;
+      Telemetry.event('pos.pair_ok', data: {...base, 'ms': watch.elapsedMilliseconds});
+      return session;
+    } catch (e) {
+      Telemetry.event('pos.pair_failed',
+          level: TelemetryLevel.warning,
+          data: {
+            ...base,
+            'ms': watch.elapsedMilliseconds,
+            if (e is IzifyPosException) 'code': e.code,
+            if (e is IzifyPosException && e.statusCode != null) 'status': e.statusCode,
+            'cause': posFailureCause(e),
+          });
+      rethrow;
+    }
   }
 
   static Future<IzifyPosSession> _pair(

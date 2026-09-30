@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
 import 'package:izi_kiosco/domain/repositories/business_repository.dart';
 import 'package:izi_kiosco/data/pos/izify_pos_client.dart';
+import 'package:izi_kiosco/data/telemetry/pos_telemetry.dart';
 import 'package:izi_kiosco/data/utils/token_utils.dart';
 import 'package:izi_kiosco/domain/utils/crash_report.dart';
 part 'home_state.dart';
@@ -17,6 +18,7 @@ class HomeBloc extends Cubit<HomeState>{
   StreamSubscription? _subscription;
 
   final IzifyPosClient _izifyPosClient;
+  final PosLinkTracker _link = PosLinkTracker('home');
 
   HomeBloc(this._businessRepository, {IzifyPosClient? izifyPosClient})
       : _izifyPosClient = izifyPosClient ?? IzifyPosClient(),
@@ -65,11 +67,20 @@ class HomeBloc extends Cubit<HomeState>{
   }
   Future<void> _verifyIzify(IzifyPosAddress address) async {
     bool ready;
+    final rid = IzifyPosClient.newRequestId();
+    final watch = Stopwatch()..start();
     try {
-      final health = await _izifyPosClient.health(address);
+      final health = await _izifyPosClient.health(address, rid: rid);
       ready = health.notReadyReason == null;
-    } catch (_) {
+      _link.answered(
+          address: address,
+          ms: watch.elapsedMilliseconds,
+          notReadyReason: health.notReadyReason,
+          appVersion: health.appVersion);
+    } catch (e) {
       ready = false;
+      unawaited(_link.failed(
+          address: address, rid: rid, ms: watch.elapsedMilliseconds, error: e));
     }
     if (isClosed) {
       _subscription?.cancel();

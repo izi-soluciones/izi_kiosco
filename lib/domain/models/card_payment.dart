@@ -66,6 +66,13 @@ class CardPayment{
   String? cardType;
   int? quotas;
 
+  /// Identifies the charge (cobro) across its attempts: a retry keeps it and
+  /// takes a new [reference]. Sent to the terminal so both logs carry it.
+  String? chargeId;
+
+  /// Transient: when this attempt was sent to the terminal, to time it.
+  DateTime? sentAt;
+
   CardPayment({
     required this.response,
     required this.cardNumber,
@@ -86,6 +93,7 @@ class CardPayment{
     this.terminalName,
     this.cardType,
     this.quotas,
+    this.chargeId,
 });
 
   factory CardPayment.fromJson(Map json)=>CardPayment(
@@ -117,7 +125,8 @@ class CardPayment{
       traceNumber: json["recibo"],
       terminalName: json["datafono"],
       cardType: json["tipoTarjeta"],
-      quotas: json["cuotas"] is int ? json["cuotas"] : null);
+      quotas: json["cuotas"] is int ? json["cuotas"] : null,
+      chargeId: json["cobroId"]);
 
   Map toJson()=>{
     "respuesta": response,
@@ -138,6 +147,7 @@ class CardPayment{
     if (terminalName != null) "datafono": terminalName,
     if (cardType != null) "tipoTarjeta": cardType,
     if (quotas != null) "cuotas": quotas,
+    if (chargeId != null) "cobroId": chargeId,
   };
 
   /// What iZi stores for this charge (`custom.datosTerminal`). [estado] is

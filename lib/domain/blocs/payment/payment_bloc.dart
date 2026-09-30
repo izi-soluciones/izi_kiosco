@@ -12,6 +12,8 @@ import 'package:izi_kiosco/app/values/app_constants.dart';
 import 'package:izi_kiosco/data/local/local_storage_card_errors.dart';
 import 'package:izi_kiosco/data/pos/izify_pos_client.dart';
 import 'package:izi_kiosco/data/pos/izify_pos_session.dart';
+import 'package:izi_kiosco/data/telemetry/pos_telemetry.dart';
+import 'package:izi_kiosco/data/telemetry/telemetry.dart';
 import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
 import 'package:izi_kiosco/domain/dto/payment_attempt_dto.dart';
 import 'package:izi_kiosco/domain/dto/payment_dto.dart';
@@ -541,7 +543,8 @@ class PaymentBloc extends Cubit<PaymentState> {
             'El datáfono fue desvinculado. Emparéjelo de nuevo desde "Configuración de POS".',
             code: 'UNPAIRED');
       }
-      session = await IzifyPosSession.pair(_izifyPosClient, device, address);
+      session = await IzifyPosSession.pair(_izifyPosClient, device, address,
+          trigger: 'charge');
     }
 
     var health = await _izifyPosClient.health(session.address);
@@ -560,7 +563,8 @@ class PaymentBloc extends Cubit<PaymentState> {
       // The terminal lost its pairing (reinstalled, data cleared) since this
       // kiosk paired: its token is dead. Pair again from the backend config.
       session =
-          await IzifyPosSession.pair(_izifyPosClient, device, session.address);
+          await IzifyPosSession.pair(_izifyPosClient, device, session.address,
+              trigger: 'charge');
       health = await _izifyPosClient.health(session.address);
     }
     final reason = health.notReadyReason;
@@ -573,14 +577,34 @@ class PaymentBloc extends Cubit<PaymentState> {
   /// Sends the charge to the terminal. Returns the record to track it by; its
   /// [CardPayment.payAcknowledged] is false when the terminal's answer was
   /// lost, in which case only the status lookup can tell what happened.
+  ///
+  /// [chargeId] continues a charge being retried ([retryOf] is the reference
+  /// of the attempt retried); a new sale starts a new one.
   Future<CardPayment> _startIzifyCharge(
     AuthState authState, {
     required String amount,
     required String currency,
     required String cardType,
     required int quotas,
+    String? chargeId,
+    String? retryOf,
   }) async {
-    var session = await _readyIzifySession(authState);
+    final charge = chargeId ?? IzifyPosClient.newChargeId();
+    IzifyPosSession session;
+    try {
+      session = await _readyIzifySession(authState);
+    } catch (e) {
+      Telemetry.event('charge.not_started',
+          level: TelemetryLevel.warning,
+          chargeId: charge,
+          data: {
+            if (e is IzifyPosException) 'code': e.code,
+            'cause': posFailureCause(e),
+            'reason': e is IzifyPosException ? e.message : e.runtimeType.toString(),
+            ...kioskSnapshot(),
+          });
+      rethrow;
+    }
     final reference = IzifyPosClient.newReference();
     final now = DateTime.now().toIso8601String();
     final cardPayment = CardPayment(
@@ -593,9 +617,22 @@ class PaymentBloc extends Cubit<PaymentState> {
       currency: currency,
       cardType: cardType,
       quotas: quotas,
+      chargeId: charge,
     );
+    cardPayment.sentAt = DateTime.now();
+    Telemetry.event('charge.start', chargeId: charge, reference: reference, data: {
+      'amount': amount,
+      'currency': currency,
+      'cardType': cardType,
+      'quotas': quotas,
+      'address': session.address.hostPort,
+      if (retryOf != null) 'retryOf': retryOf,
+    });
 
-    Future<void> send(IzifyPosSession s) => _izifyPosClient.pay(
+    Future<void> send(IzifyPosSession s) async {
+      final watch = Stopwatch()..start();
+      try {
+        await _izifyPosClient.pay(
           s.address,
           token: s.token,
           amount: amount,
@@ -603,7 +640,29 @@ class PaymentBloc extends Cubit<PaymentState> {
           reference: reference,
           cardType: cardType,
           quotas: quotas,
+          chargeId: charge,
         );
+        Telemetry.event('charge.pay_ack',
+            chargeId: charge,
+            reference: reference,
+            data: {'ms': watch.elapsedMilliseconds});
+      } on IzifyPosException catch (e) {
+        Telemetry.event('charge.pay_error',
+            level: TelemetryLevel.warning,
+            chargeId: charge,
+            reference: reference,
+            data: {
+              'ms': watch.elapsedMilliseconds,
+              'code': e.code,
+              if (e.statusCode != null) 'status': e.statusCode,
+              // null: the terminal may have received it.
+              'charged': e.charged?.toString() ?? 'unknown',
+              ...await probePosFailure(e, s.address),
+              ...kioskSnapshot(),
+            });
+        rethrow;
+      }
+    }
 
     // The verdict is read from this same terminal and token, whatever the
     // stored session becomes meanwhile (a re-pair elsewhere, a move).
@@ -616,7 +675,8 @@ class PaymentBloc extends Cubit<PaymentState> {
         // can be sent again once paired.
         try {
           session = await IzifyPosSession.pair(
-              _izifyPosClient, authState.currentDevice, session.address);
+              _izifyPosClient, authState.currentDevice, session.address,
+              trigger: 'charge');
           _chargeSessions[reference] = session;
           await send(session);
         } on IzifyPosException catch (e2) {
@@ -645,17 +705,42 @@ class PaymentBloc extends Cubit<PaymentState> {
     IzifyPosSession session, {
     required String reference,
     required bool payAcknowledged,
+    String? chargeId,
+    DateTime? sentAt,
   }) async {
     final completer = Completer<PosPaymentResult>();
-    void finish(PosPaymentResult result) {
-      if (!completer.isCompleted) completer.complete(result);
+    final watch = Stopwatch()..start();
+    var via = 'timeout';
+    var wsState = 'connecting';
+    var polls = 0;
+    var pollsUnreachable = 0;
+    void finish(PosPaymentResult result, String source) {
+      if (completer.isCompleted) return;
+      via = source;
+      completer.complete(result);
     }
+
+    void wsEvent(String type, TelemetryLevel level, Map<String, Object?> data) =>
+        Telemetry.event(type,
+            level: level,
+            chargeId: chargeId,
+            reference: reference,
+            data: {'ms': watch.elapsedMilliseconds, ...data});
 
     WebSocketChannel? channel;
     StreamSubscription? wsSub;
     try {
       channel = WebSocketChannel.connect(
           session.address.paymentUpdates(session.token));
+      channel.ready.then((_) {
+        wsState = 'open';
+        wsEvent('charge.ws_open', TelemetryLevel.info, const {});
+      }, onError: (Object e) {
+        wsState = 'failed';
+        // The URL carries the token: only the error type is kept.
+        wsEvent('charge.ws_failed', TelemetryLevel.warning,
+            {'error': e.runtimeType.toString(), ...kioskSnapshot()});
+      });
       wsSub = channel.stream.listen(
         (message) {
           try {
@@ -663,16 +748,33 @@ class PaymentBloc extends Cubit<PaymentState> {
             if (data is Map) {
               final result = PosPaymentResult.fromJson(data);
               if (result.reference == reference && result.isTerminal) {
-                finish(result);
+                finish(result, 'ws');
               }
             }
           } catch (_) {}
         },
-        onError: (e) => log('Izify WS error: $e'),
+        onError: (e) {
+          log('Izify WS error: ${e.runtimeType}');
+          wsEvent('charge.ws_error', TelemetryLevel.warning,
+              {'error': e.runtimeType.toString()});
+        },
+        onDone: () {
+          // Closed by the kiosk once the verdict is in; before that, the
+          // terminal or the network dropped it and only polling is left.
+          if (completer.isCompleted) return;
+          wsState = 'closed';
+          wsEvent('charge.ws_closed', TelemetryLevel.warning, {
+            if (channel?.closeCode != null) 'closeCode': channel!.closeCode,
+            if (channel?.closeReason != null) 'closeReason': channel!.closeReason,
+          });
+        },
         cancelOnError: false,
       );
     } catch (e) {
-      log('Izify WS connect failed: $e');
+      log('Izify WS connect failed: ${e.runtimeType}');
+      wsState = 'failed';
+      wsEvent('charge.ws_failed', TelemetryLevel.warning,
+          {'error': e.runtimeType.toString()});
     }
 
     var seenByTerminal = payAcknowledged;
@@ -687,15 +789,17 @@ class PaymentBloc extends Cubit<PaymentState> {
           token: session.token,
           reference: reference,
         );
+        polls++;
+        if (result.status == PosPaymentStatus.unreachable) pollsUnreachable++;
         if (result.isTerminal) {
-          finish(result);
+          finish(result, 'poll');
         } else if (result.status == PosPaymentStatus.processing) {
           seenByTerminal = true;
         } else if (result.status == PosPaymentStatus.notFound) {
           // Only meaningful when the terminal never acknowledged the charge:
           // then "unknown reference" means it never arrived.
           if (!seenByTerminal && ++notFound >= izifyNotFoundLimit) {
-            finish(result);
+            finish(result, 'not_found');
           }
         }
       } finally {
@@ -704,11 +808,38 @@ class PaymentBloc extends Cubit<PaymentState> {
     });
     final timeoutTimer = Timer(izifyResultTimeout, () {
       finish(PosPaymentResult(
-          status: PosPaymentStatus.unknown, reference: reference));
+          status: PosPaymentStatus.unknown, reference: reference), 'timeout');
     });
 
     try {
-      return await completer.future;
+      final result = await completer.future;
+      final settled = result.status == PosPaymentStatus.success ||
+          result.status == PosPaymentStatus.error ||
+          result.status == PosPaymentStatus.cancelled ||
+          result.status == PosPaymentStatus.notFound;
+      // Without a verdict the card may or may not have been charged: someone
+      // has to reconcile it, so it is also an issue.
+      Telemetry.event(via == 'timeout' ? 'charge.timeout' : 'charge.result',
+          level: settled ? TelemetryLevel.info : TelemetryLevel.error,
+          issue: !settled,
+          chargeId: chargeId,
+          reference: reference,
+          data: {
+            'status': result.status.name,
+            'via': via,
+            'ms': sentAt == null
+                ? watch.elapsedMilliseconds
+                : DateTime.now().difference(sentAt).inMilliseconds,
+            'waitMs': watch.elapsedMilliseconds,
+            'payAcknowledged': payAcknowledged,
+            'ws': wsState,
+            'polls': polls,
+            'pollsUnreachable': pollsUnreachable,
+            if (result.errorMessage != null) 'message': result.errorMessage,
+            if (result.transactionId != null) 'transactionId': result.transactionId,
+            ...kioskSnapshot(),
+          });
+      return result;
     } finally {
       pollTimer.cancel();
       timeoutTimer.cancel();
@@ -876,6 +1007,12 @@ class PaymentBloc extends Cubit<PaymentState> {
         await IzifyPosSession.current(authState.currentDevice);
     if (session == null) {
       // The charge may already be running, but there is nothing to ask.
+      Telemetry.event('charge.result',
+          level: TelemetryLevel.error,
+          issue: true,
+          chargeId: cardPayment.chargeId,
+          reference: cardPayment.reference,
+          data: const {'status': 'no_session'});
       cardPayment.status = 'UNKNOWN';
       await _saveCardError(cardPayment, "Sin confirmar - sin credenciales",
           "Izify sin credenciales para verificar el pago");
@@ -887,6 +1024,8 @@ class PaymentBloc extends Cubit<PaymentState> {
       session,
       reference: cardPayment.reference!,
       payAcknowledged: cardPayment.payAcknowledged,
+      chargeId: cardPayment.chargeId,
+      sentAt: cardPayment.sentAt,
     );
     await _takeProof(cardPayment, result);
 
@@ -1020,6 +1159,8 @@ class PaymentBloc extends Cubit<PaymentState> {
         currency: currency,
         cardType: retryCardType,
         quotas: retryQuotas,
+        chargeId: original.chargeId,
+        retryOf: original.reference,
       );
       cardPayment.markUuid = original.markUuid;
       cardPayment.markInternalId = original.markInternalId;
@@ -1210,6 +1351,15 @@ class PaymentBloc extends Cubit<PaymentState> {
         return true;
       }
 
+      if (izify) {
+        // Charged, but iZi does not know: the order must be registered by hand.
+        Telemetry.event('charge.register_failed',
+            level: TelemetryLevel.error,
+            issue: true,
+            chargeId: cardPayment.chargeId,
+            reference: cardPayment.reference,
+            data: {'error': '${lastError ?? 'desconocido'}'});
+      }
       await _saveCardError(
         cardPayment,
         "Aprobada - Error sync server: ${lastError ?? 'desconocido'}",
@@ -1293,6 +1443,15 @@ class PaymentBloc extends Cubit<PaymentState> {
         return true;
       }
 
+      if (izify) {
+        // Charged, but iZi does not know: the order must be registered by hand.
+        Telemetry.event('charge.register_failed',
+            level: TelemetryLevel.error,
+            issue: true,
+            chargeId: cardPayment.chargeId,
+            reference: cardPayment.reference,
+            data: {'error': '${lastError ?? 'desconocido'}'});
+      }
       await _saveCardError(
         cardPayment,
         "Aprobada - Error sync server: ${lastError ?? 'desconocido'}",
