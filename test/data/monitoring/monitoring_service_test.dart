@@ -7,9 +7,11 @@ import 'package:izi_kiosco/data/monitoring/monitoring_store.dart';
 import 'package:izi_kiosco/data/telemetry/telemetry.dart';
 import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
 import 'package:izi_kiosco/domain/dto/monitoring_enrollment_dto.dart';
+import 'package:izi_kiosco/domain/dto/monitoring_heartbeat_dto.dart';
 import 'package:izi_kiosco/domain/models/contribuyente.dart';
 import 'package:izi_kiosco/domain/models/device.dart';
 import 'package:izi_kiosco/domain/models/monitoring_enrollment.dart';
+import 'package:izi_kiosco/domain/models/monitoring_heartbeat_response.dart';
 import 'package:izi_kiosco/domain/repositories/monitoring_repository.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -34,6 +36,23 @@ class FakeMonitoringRepository extends MonitoringRepository {
     calls.add(dto);
     if (replies.isEmpty) throw StateError('unexpected enrollment');
     return replies.removeAt(0)();
+  }
+
+  /// Heartbeats sent, with the device token each one carried.
+  final List<({MonitoringHeartbeatDto dto, String token})> heartbeats = [];
+  final List<Future<MonitoringHeartbeatResponse> Function()> heartbeatReplies = [];
+
+  void acceptBeat([MonitoringHeartbeatResponse response = const MonitoringHeartbeatResponse()]) =>
+      heartbeatReplies.add(() async => response);
+
+  void rejectBeat(Object error) => heartbeatReplies.add(() async => throw error);
+
+  @override
+  Future<MonitoringHeartbeatResponse> heartbeat(MonitoringHeartbeatDto dto,
+      {required String deviceToken}) {
+    heartbeats.add((dto: dto, token: deviceToken));
+    if (heartbeatReplies.isEmpty) throw StateError('unexpected heartbeat');
+    return heartbeatReplies.removeAt(0)();
   }
 }
 
@@ -406,6 +425,48 @@ void main() {
       expect(repository.calls, hasLength(2));
       expect(service.deviceToken, 'izd_token2');
       expect((await MonitoringStore().enrollment())!.deviceToken, 'izd_token2');
+    });
+
+    test('a new token rejected again: the next enrollment waits with backoff', () async {
+      repository
+        ..succeed()
+        ..succeed()
+        ..succeed()
+        ..succeed();
+      await service.start(_context);
+      await timers.fire();
+
+      await service.onTokenRejected('izd_token1');
+      expect(repository.calls, hasLength(2), reason: 'the first rejection enrolls now');
+
+      await service.onTokenRejected('izd_token2');
+      expect(repository.calls, hasLength(2));
+      expect(service.deviceToken, isNull);
+      expect(service.status.value.state, MonitoringState.error);
+      expect(service.status.value.lastCause, MonitoringException.deviceTokenInvalid);
+      expect(service.status.value.failures, 2);
+      expect(service.status.value.nextAttemptAt, now.add(MonitoringService.initialBackoff));
+      expect(await timers.fire(), MonitoringService.initialBackoff);
+      expect(service.deviceToken, 'izd_token3');
+
+      await service.onTokenRejected('izd_token3');
+      expect(await timers.fire(), const Duration(minutes: 1));
+      expect(service.deviceToken, 'izd_token4');
+      expect(events('monitoring.reenroll_delayed').map((e) => e.data['rejections']), [3, 2]);
+    });
+
+    test('accepted in between, a rejection enrolls right away again', () async {
+      repository
+        ..succeed()
+        ..succeed()
+        ..succeed();
+      await service.start(_context);
+      await timers.fire();
+      await service.onTokenRejected('izd_token1');
+      service.onTokenAccepted('izd_token2');
+      await service.onTokenRejected('izd_token2');
+      expect(repository.calls, hasLength(3));
+      expect(timers.active, isEmpty);
     });
 
     test('a rejection of a token already replaced changes nothing', () async {

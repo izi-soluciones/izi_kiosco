@@ -20,6 +20,9 @@ import 'package:izi_kiosco/app/values/routes.dart';
 import 'package:izi_kiosco/app/values/routes_keys.dart';
 import 'package:izi_kiosco/data/repositories/auth/auth_repository_http.dart';
 import 'package:izi_kiosco/data/repositories/business/business_repository_http.dart';
+import 'package:izi_kiosco/data/monitoring/kiosk_activity.dart';
+import 'package:izi_kiosco/data/monitoring/kiosk_health_collector.dart';
+import 'package:izi_kiosco/data/monitoring/monitoring_heartbeat.dart';
 import 'package:izi_kiosco/data/monitoring/monitoring_service.dart';
 import 'package:izi_kiosco/data/repositories/comanda/comanda_repository_http.dart';
 import 'package:izi_kiosco/data/telemetry/kiosk_telemetry.dart';
@@ -70,6 +73,23 @@ class MyApp extends StatelessWidget {
   final AuthBloc _auth =
       AuthBloc(AuthRepositoryHttp(), BusinessRepositoryHttp());
 
+  /// Keeps the monitoring told of the screen on display (the route
+  /// template, never its ids) and of a login that failed.
+  void _followActivity() {
+    final activity = KioskActivity.instance;
+    void screen() {
+      try {
+        activity.screenChanged(route.routerDelegate.currentConfiguration.fullPath);
+      } catch (_) {}
+    }
+
+    route.routerDelegate.addListener(screen);
+    screen();
+    activity.authErrorChanged(_auth.state.status == AuthStatus.errorAuth);
+    _auth.stream.listen(
+        (state) => activity.authErrorChanged(state.status == AuthStatus.errorAuth));
+  }
+
   MyApp({Key? key}) : super(key: key);
   @override
   Widget build(BuildContext context) {
@@ -79,6 +99,8 @@ class MyApp extends StatelessWidget {
           create: (context) {
             KioskTelemetry.followAuth(_auth);
             MonitoringService.instance.followAuth(_auth);
+            _followActivity();
+            MonitoringHeartbeat.instance?.start();
             return _auth..verify();
           },
         ),
@@ -90,7 +112,11 @@ class MyApp extends StatelessWidget {
                 ComandaRepositoryHttp(),
                 BusinessRepositoryHttp())),
         BlocProvider(
-          create: (context) => PosConfigBloc(context.read<AuthBloc>()),
+          create: (context) {
+            final posConfig = PosConfigBloc(context.read<AuthBloc>());
+            KioskHealthCollector.instance.attach(auth: _auth, posConfig: posConfig);
+            return posConfig;
+          },
           lazy: false,
         ),
       ],

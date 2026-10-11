@@ -618,6 +618,10 @@ abstract class  LocaleKeys {
   static const posConfig_diagnostics_notPaired = 'posConfig.diagnostics.notPaired';
   static const posConfig_diagnostics_unsupported = 'posConfig.diagnostics.unsupported';
   static const posConfig_diagnostics_unreachable = 'posConfig.diagnostics.unreachable';
+  static const posConfig_diagnostics_heartbeatStopped = 'posConfig.diagnostics.heartbeatStopped';
+  static const posConfig_diagnostics_heartbeatPending = 'posConfig.diagnostics.heartbeatPending';
+  static const posConfig_diagnostics_heartbeatOk = 'posConfig.diagnostics.heartbeatOk';
+  static const posConfig_diagnostics_heartbeatFailing = 'posConfig.diagnostics.heartbeatFailing';
   static const posConfig_diagnostics = 'posConfig.diagnostics';
   static const posConfig_monitoring_title = 'posConfig.monitoring.title';
   static const posConfig_monitoring_enrolled = 'posConfig.monitoring.enrolled';

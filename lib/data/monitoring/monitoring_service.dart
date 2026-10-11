@@ -146,6 +146,13 @@ class MonitoringService {
   Timer? _retryTimer;
   int _failures = 0;
 
+  /// Tokens the service rejected in a row, with no heartbeat accepted in
+  /// between ([onTokenAccepted]). A fresh token that is rejected again (two
+  /// kiosk PCs cloned with the same installationId revoking each other's
+  /// token, or a service that cannot verify the tokens it issues) must not
+  /// turn into an enrollment on every heartbeat.
+  int _tokenRejections = 0;
+
   /// Bumped by [start] with a new identity and by [stop]: an attempt started
   /// under an older value must not act on its result.
   int _epoch = 0;
@@ -208,6 +215,7 @@ class MonitoringService {
       _cancelRetry();
       _running = true;
       _failures = 0;
+      _tokenRejections = 0;
       _deviceToken = null;
       final epoch = ++_epoch;
       _set(const MonitoringStatus(state: MonitoringState.pending));
@@ -239,6 +247,7 @@ class MonitoringService {
     _context = null;
     _deviceToken = null;
     _failures = 0;
+    _tokenRejections = 0;
     _set(MonitoringStatus.stopped);
     Telemetry.setContext({'monitoring.deviceId': null});
   }
@@ -260,16 +269,45 @@ class MonitoringService {
   /// that a manual retry or a re-enrollment already replaced must not wipe
   /// the new one, nor revoke it with yet another enrollment. While an
   /// enrollment is on its way it is left to replace the token.
+  ///
+  /// The first rejection enrolls now (a token revoked from the console, or
+  /// one the service lost). When the new token is rejected too, before any
+  /// heartbeat was accepted with it, the next enrollment waits with the same
+  /// backoff as a failed one ([retryDelayFor]: 30 s doubling up to 30 min);
+  /// nothing is sent in the meantime.
   Future<void> onTokenRejected(String rejectedToken) async {
     if (!_running || _deviceToken == null || rejectedToken != _deviceToken) return;
     if (_inFlightEpoch == _epoch) return;
     _deviceToken = null;
+    _tokenRejections++;
     await store.clearEnrollment(onlyToken: rejectedToken);
     if (!_running || _deviceToken != null || _inFlightEpoch == _epoch) return;
     _cancelRetry();
     _failures = 0;
-    _set(const MonitoringStatus(state: MonitoringState.pending));
-    await _attempt(_epoch);
+    if (_tokenRejections <= 1) {
+      _set(const MonitoringStatus(state: MonitoringState.pending));
+      await _attempt(_epoch);
+      return;
+    }
+    final epoch = _epoch;
+    final delay = retryDelayFor(_tokenRejections - 1, _random.nextDouble());
+    _set(MonitoringStatus(
+        state: MonitoringState.error,
+        deviceId: _status.value.deviceId,
+        applianceId: _status.value.applianceId,
+        lastCause: MonitoringException.deviceTokenInvalid,
+        nextAttemptAt: _now().add(delay),
+        failures: _tokenRejections));
+    Telemetry.event('monitoring.reenroll_delayed',
+        level: TelemetryLevel.warning,
+        data: {'rejections': _tokenRejections, 'retryInSec': delay.inSeconds});
+    _retryTimer = _timer(delay, () => unawaited(_attempt(epoch)));
+  }
+
+  /// The service accepted a heartbeat sent with [token]: it works, so the
+  /// next rejection enrolls again right away.
+  void onTokenAccepted(String token) {
+    if (token == _deviceToken) _tokenRejections = 0;
   }
 
   Future<void> _attempt(int epoch, {bool manual = false}) async {

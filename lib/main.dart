@@ -12,6 +12,8 @@ import 'package:izi_kiosco/app/my_app.dart';
 import 'package:izi_kiosco/app/utils/custom_asset_loader.dart';
 import 'package:izi_kiosco/app/utils/kiosk_locale.dart';
 import 'package:izi_kiosco/app/values/assets_keys.dart';
+import 'package:izi_kiosco/data/monitoring/kiosk_counters.dart';
+import 'package:izi_kiosco/data/monitoring/monitoring_heartbeat.dart';
 import 'package:izi_kiosco/data/monitoring/monitoring_service.dart';
 import 'package:izi_kiosco/data/telemetry/kiosk_telemetry.dart';
 import 'package:izi_kiosco/firebase_options.dart';
@@ -43,8 +45,16 @@ void main() async {
     return true;
   };
 
-  // Enrolls the kiosk in iZi's monitoring once it is logged in (MyApp).
-  MonitoringService.install(MonitoringService(flavor: _flavor));
+  // Enrolls the kiosk in iZi's monitoring once it is logged in (MyApp), and
+  // reports its health from then on.
+  final monitoring = MonitoringService(flavor: _flavor);
+  MonitoringService.install(monitoring);
+  final counters = KioskCounters(store: PrefsCountersStore());
+  KioskCounters.install(counters);
+  // What the previous session left unsent (a reload, a crash, an outage)
+  // comes back before anything is counted. Bounded: never holds up the start.
+  await counters.restore().timeout(const Duration(seconds: 2), onTimeout: () {});
+  MonitoringHeartbeat.install(MonitoringHeartbeat(enrollment: monitoring, flavor: _flavor));
 
   // Sentry wraps the error handler set above, so Crashlytics still gets its
   // errors on mobile.

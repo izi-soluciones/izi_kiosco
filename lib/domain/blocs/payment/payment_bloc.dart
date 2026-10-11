@@ -10,6 +10,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:izi_kiosco/app/values/app_constants.dart';
 import 'package:izi_kiosco/data/local/local_storage_card_errors.dart';
+import 'package:izi_kiosco/data/monitoring/kiosk_activity.dart';
+import 'package:izi_kiosco/data/monitoring/kiosk_counters.dart';
 import 'package:izi_kiosco/data/pos/izify_pos_client.dart';
 import 'package:izi_kiosco/data/pos/izify_pos_session.dart';
 import 'package:izi_kiosco/data/pos/card_charge_recovery.dart';
@@ -487,8 +489,32 @@ class PaymentBloc extends Cubit<PaymentState> {
     return true;
   }
 
+  /// Statuses during which a charge (or the order it pays) is on its way:
+  /// nothing may reload the kiosk then (contracts §6, `chargeInProgress`).
+  static const Set<PaymentStatus> chargeStatuses = {
+    PaymentStatus.cardProcessing,
+    PaymentStatus.processingOrder,
+  };
+
+  /// Tells the monitoring what the page is doing: whether a charge is on its
+  /// way, and each order completed (the success screen, step 5).
+  @override
+  void onChange(Change<PaymentState> change) {
+    super.onChange(change);
+    try {
+      final next = change.nextState;
+      KioskActivity.instance.paymentBusyChanged(chargeStatuses.contains(next.status));
+      final completed =
+          next.status == PaymentStatus.paymentProcessed && next.step == 5;
+      final wasCompleted = change.currentState.status == PaymentStatus.paymentProcessed &&
+          change.currentState.step == 5;
+      if (completed && !wasCompleted) KioskCounters.instance.add(KioskCounters.orders);
+    } catch (_) {}
+  }
+
   @override
   Future<void> close() async {
+    KioskActivity.instance.paymentBusyChanged(false);
     // Nobody waits for these any more (the page timed out mid-charge): hand
     // them to the recovery, which asks the terminal how they ended.
     CardChargeRecovery.active.removeAll(_chargesInProgress);
@@ -874,22 +900,47 @@ class PaymentBloc extends Cubit<PaymentState> {
         amount: (state.paymentObj?.amount ?? 0).toStringAsFixed(2),
       );
     }
-    if (linkser) {
-      return _comandaRepository.callCardPayment(
-        amount: _getIntFromDecimal(
-          _roundToNDecimals(state.paymentObj?.amount ?? 0, 2),
-        ),
-        ip: authState.currentDevice!.config.ipLinkser!,
-      );
+    final provider = linkser ? 'linkser' : 'atc';
+    final watch = Stopwatch()..start();
+    Telemetry.event('charge.start', data: {'provider': provider});
+    try {
+      final CardPayment cardPayment;
+      if (linkser) {
+        cardPayment = await _comandaRepository.callCardPayment(
+          amount: _getIntFromDecimal(
+            _roundToNDecimals(state.paymentObj?.amount ?? 0, 2),
+          ),
+          ip: authState.currentDevice!.config.ipLinkser!,
+        );
+      } else {
+        cardPayment = await _comandaRepository.callCardPaymentATC(
+          amount: (state.paymentObj?.amount ?? 0).moneyFormat(
+            digitsTaxes: authState.taxesStrategy.decimals,
+          ),
+          ip: authState.currentDevice!.config.ipAtc!,
+          cancelToken: cancelToken,
+          contactless: contactless,
+        );
+      }
+      Telemetry.event('charge.result', data: {
+        'provider': provider,
+        'status': 'success',
+        'ms': watch.elapsedMilliseconds,
+      });
+      return cardPayment;
+    } catch (e) {
+      // ATC and Linkser answer a decline and a failure alike. Only the type:
+      // their error text may carry the card's data.
+      Telemetry.event('charge.result',
+          level: TelemetryLevel.warning,
+          data: {
+            'provider': provider,
+            'status': 'failed',
+            'error': e.runtimeType.toString(),
+            'ms': watch.elapsedMilliseconds,
+          });
+      rethrow;
     }
-    return _comandaRepository.callCardPaymentATC(
-      amount: (state.paymentObj?.amount ?? 0).moneyFormat(
-        digitsTaxes: authState.taxesStrategy.decimals,
-      ),
-      ip: authState.currentDevice!.config.ipAtc!,
-      cancelToken: cancelToken,
-      contactless: contactless,
-    );
   }
 
   Future<(bool, Object?)> _retryMarkPayment(

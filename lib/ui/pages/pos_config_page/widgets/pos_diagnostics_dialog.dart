@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:easy_localization/easy_localization.dart';
@@ -6,6 +7,10 @@ import 'package:flutter/services.dart';
 import 'package:izi_design_system/atoms/izi_typography.dart';
 import 'package:izi_design_system/tokens/colors.dart';
 import 'package:izi_kiosco/app/values/locale_keys.g.dart';
+import 'package:izi_kiosco/data/monitoring/kiosk_counters.dart';
+import 'package:izi_kiosco/data/monitoring/kiosk_health_collector.dart';
+import 'package:izi_kiosco/data/monitoring/kiosk_health_snapshot.dart';
+import 'package:izi_kiosco/data/monitoring/monitoring_heartbeat.dart';
 import 'package:izi_kiosco/data/pos/izify_pos_client.dart';
 import 'package:izi_kiosco/data/pos/izify_pos_session.dart';
 import 'package:izi_kiosco/data/telemetry/pos_telemetry.dart';
@@ -14,10 +19,14 @@ import 'package:izi_kiosco/domain/models/device.dart';
 
 /// What this kiosk and its terminal recorded lately, for a technician in
 /// front of the kiosk (or on a remote session) to read or copy.
+///
+/// The "Kiosco" tab shows the same health the kiosk reports to iZi's
+/// monitoring ([KioskHealthSnapshot]), and how its heartbeat is doing.
 class PosDiagnosticsDialog extends StatefulWidget {
   final Device? device;
+  final KioskHealthCollector? collector;
 
-  const PosDiagnosticsDialog({super.key, required this.device});
+  const PosDiagnosticsDialog({super.key, required this.device, this.collector});
 
   static Future<void> show(BuildContext context, Device? device) => showDialog(
         context: context,
@@ -31,6 +40,7 @@ class PosDiagnosticsDialog extends StatefulWidget {
 class _PosDiagnosticsDialogState extends State<PosDiagnosticsDialog> {
   final IzifyPosClient _client = IzifyPosClient();
   List<TelemetryEvent> _events = const [];
+  KioskHealthSnapshot? _health;
   Map<String, dynamic>? _terminal;
   String? _terminalMessage;
   bool _loadingTerminal = false;
@@ -53,6 +63,7 @@ class _PosDiagnosticsDialogState extends State<PosDiagnosticsDialog> {
       _loadingTerminal = true;
       _terminalMessage = null;
     });
+    unawaited(_refreshHealth());
     Map<String, dynamic>? terminal;
     String? message;
     final session = await IzifyPosSession.current(widget.device);
@@ -75,11 +86,41 @@ class _PosDiagnosticsDialogState extends State<PosDiagnosticsDialog> {
     });
   }
 
+  Future<void> _refreshHealth() async {
+    KioskHealthSnapshot? health;
+    try {
+      health = await (widget.collector ?? KioskHealthCollector.instance).collect();
+    } catch (_) {}
+    if (!mounted) return;
+    setState(() => _health = health);
+  }
+
+  /// The monitoring heartbeat's own state, and the counters it has not
+  /// delivered yet.
+  Map<String, Object?> get _monitoring {
+    final status = MonitoringHeartbeat.instance?.status.value;
+    return {
+      if (_health != null) 'health': _health!.toJson(),
+      'counters': KioskCounters.instance.snapshot().toJson(),
+      if (status != null)
+        'heartbeat': {
+          'running': status.running,
+          'lastOkAt': status.lastOkAt?.toIso8601String(),
+          'nextAt': status.nextAt?.toIso8601String(),
+          'lastCause': status.lastCause,
+          'failures': status.failures,
+          'ackSeq': status.ackSeq,
+          'intervalSec': status.interval.inSeconds,
+        },
+    };
+  }
+
   Map<String, Object?> get _report => {
         'generated': DateTime.now().toIso8601String(),
         'kiosk': {
           'context': Telemetry.instance.context,
           'state': kioskSnapshot(),
+          'monitoring': _monitoring,
           'events': [for (final e in _events) e.toJson()],
         },
         'terminal': _terminal ?? _terminalMessage,
@@ -152,16 +193,37 @@ class _PosDiagnosticsDialogState extends State<PosDiagnosticsDialog> {
 
   Widget _kioskTab(BuildContext context) {
     final state = {...Telemetry.instance.context, ...kioskSnapshot()};
+    final health = _health;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
           child: SelectableText(
             state.entries.map((e) => '${e.key}: ${e.value}').join('   '),
             style: const TextStyle(fontSize: 12),
           ),
         ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: ValueListenableBuilder<HeartbeatStatus>(
+            valueListenable: MonitoringHeartbeat.instance?.status ??
+                ValueNotifier(HeartbeatStatus.stopped),
+            builder: (context, status, _) => SelectableText(
+              describeHeartbeat(status),
+              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+            ),
+          ),
+        ),
+        if (health != null)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+            child: SelectableText(
+              const JsonEncoder.withIndent('  ').convert(health.toJson()),
+              style: const TextStyle(fontSize: 12, fontFamily: 'monospace'),
+              maxLines: 12,
+            ),
+          ),
         const Divider(height: 1),
         Expanded(
           child: _events.isEmpty
@@ -219,6 +281,22 @@ class _PosDiagnosticsDialogState extends State<PosDiagnosticsDialog> {
       ],
     );
   }
+}
+
+/// One line on how the monitoring heartbeat is doing.
+String describeHeartbeat(HeartbeatStatus status) {
+  final time = DateFormat('HH:mm:ss');
+  String at(DateTime? t) => t == null ? '-' : time.format(t.toLocal());
+  if (!status.running) return LocaleKeys.posConfig_diagnostics_heartbeatStopped.tr();
+  if (status.failures > 0) {
+    return LocaleKeys.posConfig_diagnostics_heartbeatFailing
+        .tr(args: [status.lastCause ?? '?', '${status.failures}', at(status.nextAt)]);
+  }
+  if (status.lastOkAt == null) {
+    return LocaleKeys.posConfig_diagnostics_heartbeatPending.tr(args: [at(status.nextAt)]);
+  }
+  return LocaleKeys.posConfig_diagnostics_heartbeatOk
+      .tr(args: [at(status.lastOkAt), at(status.nextAt)]);
 }
 
 class _Row {
