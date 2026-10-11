@@ -4,6 +4,10 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:izi_kiosco/app/values/env_keys.dart';
 import 'package:izi_kiosco/data/monitoring/kiosk_counters.dart';
+import 'package:izi_kiosco/data/monitoring/kiosk_health_collector.dart';
+import 'package:izi_kiosco/data/monitoring/monitoring_heartbeat.dart';
+import 'package:izi_kiosco/data/monitoring/monitoring_service.dart';
+import 'package:izi_kiosco/data/monitoring/monitoring_telemetry_sink.dart';
 import 'package:izi_kiosco/data/telemetry/platform_signals.dart';
 import 'package:izi_kiosco/data/telemetry/pos_telemetry.dart';
 import 'package:izi_kiosco/data/telemetry/send_budget.dart';
@@ -22,8 +26,9 @@ import 'package:sentry_flutter/sentry_flutter.dart';
 /// `SENTRY_DSN`: usage as Sentry logs, and only what needs a person as
 /// issues (see [SendBudget]). No periodic heartbeat goes to Sentry, to stay
 /// within its free plan: the kiosk's heartbeat goes to iZi's monitoring
-/// service (`MonitoringHeartbeat`), which also counts the charges recorded
-/// here ([KioskCounters]).
+/// service ([MonitoringHeartbeat]), which also counts the charges recorded
+/// here ([KioskCounters]). Every event goes there too, once the kiosk is
+/// enrolled ([MonitoringTelemetrySink]), outside Sentry's budget.
 class KioskTelemetry {
   /// How often the watchdog timer should fire. When Chrome throttles the tab
   /// it fires much later, which is what [_watchTimers] reports.
@@ -37,10 +42,21 @@ class KioskTelemetry {
     final budget = SendBudget();
     final dsn = dotenv.env[EnvKeys.sentryDsn]?.trim() ?? '';
     final useSentry = dsn.isNotEmpty;
+    final upload = MonitoringTelemetrySink(
+        enrollment: MonitoringService.instance,
+        buffer: buffer,
+        store: PrefsEventStreamStore());
+    // Before anything new is recorded: it tells whether `seq` started over.
+    // Bounded: never holds up the start (the upload waits for it instead).
+    await upload.restore().timeout(const Duration(seconds: 2), onTimeout: () {});
+    MonitoringTelemetrySink.install(upload);
+    MonitoringHeartbeat.instance?.lastEventSeq = upload.lastEventSeq;
+    KioskHealthCollector.instance.telemetryBacklog = upload.backlog;
     Telemetry.install(Telemetry(
       buffer: buffer,
       budget: budget,
       sink: useSentry ? SentryTelemetrySink() : null,
+      sinks: [upload],
       // The monitoring heartbeat counts the charges the payment flow logs.
       observers: [(event) => KioskCounters.instance.observe(event)],
     ));

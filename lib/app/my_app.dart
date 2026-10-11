@@ -24,6 +24,7 @@ import 'package:izi_kiosco/data/monitoring/kiosk_activity.dart';
 import 'package:izi_kiosco/data/monitoring/kiosk_health_collector.dart';
 import 'package:izi_kiosco/data/monitoring/monitoring_heartbeat.dart';
 import 'package:izi_kiosco/data/monitoring/monitoring_service.dart';
+import 'package:izi_kiosco/data/monitoring/monitoring_telemetry_sink.dart';
 import 'package:izi_kiosco/data/repositories/comanda/comanda_repository_http.dart';
 import 'package:izi_kiosco/data/telemetry/kiosk_telemetry.dart';
 import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
@@ -101,6 +102,7 @@ class MyApp extends StatelessWidget {
             MonitoringService.instance.followAuth(_auth);
             _followActivity();
             MonitoringHeartbeat.instance?.start();
+            MonitoringTelemetrySink.instance?.start();
             return _auth..verify();
           },
         ),

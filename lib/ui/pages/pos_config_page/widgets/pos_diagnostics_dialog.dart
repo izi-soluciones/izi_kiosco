@@ -11,6 +11,7 @@ import 'package:izi_kiosco/data/monitoring/kiosk_counters.dart';
 import 'package:izi_kiosco/data/monitoring/kiosk_health_collector.dart';
 import 'package:izi_kiosco/data/monitoring/kiosk_health_snapshot.dart';
 import 'package:izi_kiosco/data/monitoring/monitoring_heartbeat.dart';
+import 'package:izi_kiosco/data/monitoring/monitoring_telemetry_sink.dart';
 import 'package:izi_kiosco/data/pos/izify_pos_client.dart';
 import 'package:izi_kiosco/data/pos/izify_pos_session.dart';
 import 'package:izi_kiosco/data/telemetry/pos_telemetry.dart';
@@ -95,10 +96,11 @@ class _PosDiagnosticsDialogState extends State<PosDiagnosticsDialog> {
     setState(() => _health = health);
   }
 
-  /// The monitoring heartbeat's own state, and the counters it has not
-  /// delivered yet.
+  /// The monitoring heartbeat's own state, the counters it has not
+  /// delivered yet, and how the event upload is doing.
   Map<String, Object?> get _monitoring {
     final status = MonitoringHeartbeat.instance?.status.value;
+    final events = MonitoringTelemetrySink.instance?.status.value;
     return {
       if (_health != null) 'health': _health!.toJson(),
       'counters': KioskCounters.instance.snapshot().toJson(),
@@ -112,6 +114,7 @@ class _PosDiagnosticsDialogState extends State<PosDiagnosticsDialog> {
           'ackSeq': status.ackSeq,
           'intervalSec': status.interval.inSeconds,
         },
+      if (events != null) 'events': events.toJson(),
     };
   }
 
