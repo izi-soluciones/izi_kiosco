@@ -12,6 +12,7 @@ import 'package:izi_kiosco/app/my_app.dart';
 import 'package:izi_kiosco/app/utils/custom_asset_loader.dart';
 import 'package:izi_kiosco/app/utils/kiosk_locale.dart';
 import 'package:izi_kiosco/app/values/assets_keys.dart';
+import 'package:izi_kiosco/data/monitoring/monitoring_service.dart';
 import 'package:izi_kiosco/data/telemetry/kiosk_telemetry.dart';
 import 'package:izi_kiosco/firebase_options.dart';
 
@@ -41,6 +42,9 @@ void main() async {
     FirebaseCrashlytics.instance.recordError(error, stack);
     return true;
   };
+
+  // Enrolls the kiosk in iZi's monitoring once it is logged in (MyApp).
+  MonitoringService.install(MonitoringService(flavor: _flavor));
 
   // Sentry wraps the error handler set above, so Crashlytics still gets its
   // errors on mobile.
