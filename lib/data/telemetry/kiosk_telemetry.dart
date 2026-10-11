@@ -162,11 +162,15 @@ class KioskTelemetry {
     final allowed = budget.allowIssue('error.uncaught:$type:${value.length > 60 ? value.substring(0, 60) : value}');
     // Kept on the device (and uploaded to the monitoring from there) but not
     // delivered to the sinks: sending it as a log too would count the same
-    // crash twice.
-    Telemetry.instance.record('error.uncaught',
+    // crash twice. The upload is still told, so the crash goes up within
+    // seconds like any other error (it only schedules, never sends here).
+    final recorded = Telemetry.instance.record('error.uncaught',
         level: TelemetryLevel.error,
         data: {'type': type, 'message': value, 'sent': allowed},
         deliver: false);
+    if (recorded != null) {
+      MonitoringTelemetrySink.instance?.onEvent(recorded, sendLog: false, sendIssue: false);
+    }
     if (!allowed) return null;
     for (final e in event.exceptions ?? const <SentryException>[]) {
       if (e.value != null) e.value = TelemetryRedactor.scrub(e.value!);
