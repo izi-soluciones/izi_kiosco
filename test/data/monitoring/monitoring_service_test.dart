@@ -7,9 +7,11 @@ import 'package:izi_kiosco/data/monitoring/monitoring_store.dart';
 import 'package:izi_kiosco/data/telemetry/telemetry.dart';
 import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
 import 'package:izi_kiosco/domain/dto/monitoring_enrollment_dto.dart';
+import 'package:izi_kiosco/domain/dto/monitoring_heartbeat_dto.dart';
 import 'package:izi_kiosco/domain/models/contribuyente.dart';
 import 'package:izi_kiosco/domain/models/device.dart';
 import 'package:izi_kiosco/domain/models/monitoring_enrollment.dart';
+import 'package:izi_kiosco/domain/models/monitoring_heartbeat_response.dart';
 import 'package:izi_kiosco/domain/repositories/monitoring_repository.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -34,6 +36,23 @@ class FakeMonitoringRepository extends MonitoringRepository {
     calls.add(dto);
     if (replies.isEmpty) throw StateError('unexpected enrollment');
     return replies.removeAt(0)();
+  }
+
+  /// Heartbeats sent, with the device token each one carried.
+  final List<({MonitoringHeartbeatDto dto, String token})> heartbeats = [];
+  final List<Future<MonitoringHeartbeatResponse> Function()> heartbeatReplies = [];
+
+  void acceptBeat([MonitoringHeartbeatResponse response = const MonitoringHeartbeatResponse()]) =>
+      heartbeatReplies.add(() async => response);
+
+  void rejectBeat(Object error) => heartbeatReplies.add(() async => throw error);
+
+  @override
+  Future<MonitoringHeartbeatResponse> heartbeat(MonitoringHeartbeatDto dto,
+      {required String deviceToken}) {
+    heartbeats.add((dto: dto, token: deviceToken));
+    if (heartbeatReplies.isEmpty) throw StateError('unexpected heartbeat');
+    return heartbeatReplies.removeAt(0)();
   }
 }
 
