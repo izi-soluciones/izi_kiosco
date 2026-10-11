@@ -20,6 +20,7 @@ import 'package:izi_kiosco/app/values/routes.dart';
 import 'package:izi_kiosco/app/values/routes_keys.dart';
 import 'package:izi_kiosco/data/repositories/auth/auth_repository_http.dart';
 import 'package:izi_kiosco/data/repositories/business/business_repository_http.dart';
+import 'package:izi_kiosco/data/monitoring/monitoring_service.dart';
 import 'package:izi_kiosco/data/repositories/comanda/comanda_repository_http.dart';
 import 'package:izi_kiosco/data/telemetry/kiosk_telemetry.dart';
 import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
@@ -77,6 +78,7 @@ class MyApp extends StatelessWidget {
         BlocProvider(
           create: (context) {
             KioskTelemetry.followAuth(_auth);
+            MonitoringService.instance.followAuth(_auth);
             return _auth..verify();
           },
         ),
