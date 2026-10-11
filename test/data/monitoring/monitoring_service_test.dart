@@ -427,6 +427,48 @@ void main() {
       expect((await MonitoringStore().enrollment())!.deviceToken, 'izd_token2');
     });
 
+    test('a new token rejected again: the next enrollment waits with backoff', () async {
+      repository
+        ..succeed()
+        ..succeed()
+        ..succeed()
+        ..succeed();
+      await service.start(_context);
+      await timers.fire();
+
+      await service.onTokenRejected('izd_token1');
+      expect(repository.calls, hasLength(2), reason: 'the first rejection enrolls now');
+
+      await service.onTokenRejected('izd_token2');
+      expect(repository.calls, hasLength(2));
+      expect(service.deviceToken, isNull);
+      expect(service.status.value.state, MonitoringState.error);
+      expect(service.status.value.lastCause, MonitoringException.deviceTokenInvalid);
+      expect(service.status.value.failures, 2);
+      expect(service.status.value.nextAttemptAt, now.add(MonitoringService.initialBackoff));
+      expect(await timers.fire(), MonitoringService.initialBackoff);
+      expect(service.deviceToken, 'izd_token3');
+
+      await service.onTokenRejected('izd_token3');
+      expect(await timers.fire(), const Duration(minutes: 1));
+      expect(service.deviceToken, 'izd_token4');
+      expect(events('monitoring.reenroll_delayed').map((e) => e.data['rejections']), [3, 2]);
+    });
+
+    test('accepted in between, a rejection enrolls right away again', () async {
+      repository
+        ..succeed()
+        ..succeed()
+        ..succeed();
+      await service.start(_context);
+      await timers.fire();
+      await service.onTokenRejected('izd_token1');
+      service.onTokenAccepted('izd_token2');
+      await service.onTokenRejected('izd_token2');
+      expect(repository.calls, hasLength(3));
+      expect(timers.active, isEmpty);
+    });
+
     test('a rejection of a token already replaced changes nothing', () async {
       repository
         ..succeed()

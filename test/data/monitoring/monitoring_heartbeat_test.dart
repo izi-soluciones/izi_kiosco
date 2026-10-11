@@ -354,6 +354,71 @@ void main() {
       expect(enrollTimers.active, hasLength(1), reason: 'the enrollment retries on its own');
     });
 
+    test('fresh tokens rejected again: the enrollments back off, nothing is sent meanwhile',
+        () async {
+      heartbeat.start();
+      await enrolled();
+
+      // The first rejection enrolls right away.
+      repository
+        ..rejectBeat(_invalidToken)
+        ..succeed();
+      await fireBeat();
+      expect(repository.calls, hasLength(1));
+      expect(enrollTimers.active, isEmpty);
+      expect(nextDelay(), MonitoringHeartbeat.firstBeatDelay);
+
+      // Every new token is rejected too (e.g. two PCs cloned from the same
+      // image revoking each other's token): each enrollment waits longer.
+      final waits = <Duration>[];
+      for (var i = 0; i < 7; i++) {
+        repository
+          ..rejectBeat(_invalidToken)
+          ..succeed();
+        await fireBeat();
+        expect(repository.calls, hasLength(i + 1), reason: 'no enrollment before the wait');
+        expect(beatTimers.active, isEmpty, reason: 'nothing is sent while waiting');
+        expect(enrollment.status.value.state, MonitoringState.error);
+        expect(enrollment.status.value.lastCause, MonitoringException.deviceTokenInvalid);
+        waits.add(await enrollTimers.fire());
+        expect(repository.calls, hasLength(i + 2));
+        expect(enrollment.deviceToken, 'izd_token${i + 2}');
+      }
+      expect(waits, const [
+        Duration(seconds: 30),
+        Duration(minutes: 1),
+        Duration(minutes: 2),
+        Duration(minutes: 4),
+        Duration(minutes: 8),
+        Duration(minutes: 16),
+        Duration(minutes: 30),
+      ]);
+      expect(Telemetry.recent().where((e) => e.type == 'monitoring.reenroll_delayed'), hasLength(7));
+    });
+
+    test('a heartbeat accepted with the new token resets the count', () async {
+      heartbeat.start();
+      await enrolled();
+      repository
+        ..rejectBeat(_invalidToken)
+        ..succeed()
+        ..rejectBeat(_invalidToken)
+        ..succeed();
+      await fireBeat();
+      await fireBeat();
+      expect(await enrollTimers.fire(), MonitoringService.initialBackoff);
+      expect(enrollment.deviceToken, 'izd_token2');
+
+      repository
+        ..acceptBeat()
+        ..rejectBeat(_invalidToken)
+        ..succeed();
+      await fireBeat();
+      await fireBeat();
+      expect(enrollTimers.active, isEmpty, reason: 'it worked in between: enrolls right away');
+      expect(enrollment.deviceToken, 'izd_token3');
+    });
+
     test('another 401 is an ordinary failure', () async {
       heartbeat.start();
       await enrolled();

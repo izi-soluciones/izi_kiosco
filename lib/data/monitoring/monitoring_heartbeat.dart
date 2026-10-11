@@ -49,8 +49,9 @@ class HeartbeatStatus {
 /// A heartbeat that fails is retried later with backoff (up to
 /// [maxBackoff]); the counters keep growing in the same window until one is
 /// accepted. A token the service rejects (`device_token_invalid`) is handed
-/// back to [MonitoringService], which forgets it and enrolls again; sending
-/// resumes with the new one.
+/// back to [MonitoringService], which forgets it and enrolls again (with
+/// backoff when the new tokens keep being rejected); sending resumes with the
+/// new one.
 ///
 /// Fail-safe like the enrollment: nothing here is awaited by the UI, nothing
 /// throws out of it, and building the heartbeat reads only what the kiosk
@@ -205,6 +206,7 @@ class MonitoringHeartbeat {
       final response =
           await _repository.heartbeat(dto, deviceToken: token).timeout(attemptTimeout);
       counters.acknowledge(window);
+      _enrollment.onTokenAccepted(token);
       if (_failures > 0) {
         Telemetry.event('monitoring.heartbeat_recovered', data: {'failures': _failures});
       }
