@@ -157,6 +157,151 @@ void main() {
       expect(order, ['result', 'restart']);
       expect(repository.results.single.result.status, MonitoringCommandStatus.succeeded);
     });
+
+    group('keeps to the busy rule up to the reload itself', () {
+      late bool busy;
+      late FakeTimers timers;
+      late List<String> order;
+
+      List<String> deferred() => [
+            for (final e in Telemetry.instance.buffer.events)
+              if (e.type == 'monitoring.reload_deferred') e.type
+          ];
+
+      setUp(() {
+        busy = false;
+        timers = FakeTimers();
+        order = [];
+        commands = KioskCommands(
+            enrollment: enrollment,
+            repository: repository,
+            reloadPage: () {
+              order.add(busy ? 'reload:busy' : 'reload');
+              return true;
+            },
+            beforeReload: () async => order.add('saved'),
+            busy: () => busy,
+            timer: timers.call)
+          // Off the web the handler needs a restart to claim success; the
+          // page reload above goes first.
+          ..restartApp = () => order.add('restart');
+      });
+
+      test('a customer who reaches the payment while the result leaves is not interrupted',
+          () async {
+        // The service answers just as the customer taps "Pagar".
+        repository.resultReplies.add(() async => busy = true);
+        final runner = MonitoringCommandRunner(
+            outbox: CommandResultOutbox(
+                enrollment: enrollment, repository: repository, store: MemoryCommandResultStore()),
+            handlers: commands.handlers,
+            busy: () => busy,
+            timer: FakeTimers().call,
+            now: () => now);
+        runner.enqueue([command('reload_app')]);
+        unawaited(runner.pump());
+        await pumpEventQueue();
+        expect(repository.results.single.result.status, MonitoringCommandStatus.succeeded);
+        expect(order, isEmpty);
+        expect(deferred(), hasLength(1));
+
+        // Still paying at the next check.
+        expect(await timers.fire(), MonitoringCommandRunner.busyRecheck);
+        expect(order, isEmpty);
+
+        busy = false;
+        await timers.fire();
+        expect(order, ['saved', 'reload']);
+        expect(deferred(), hasLength(1));
+      });
+
+      test('nor one who reaches it while the records are saved', () async {
+        commands = KioskCommands(
+            enrollment: enrollment,
+            repository: repository,
+            reloadPage: () {
+              order.add(busy ? 'reload:busy' : 'reload');
+              return true;
+            },
+            beforeReload: () async {
+              order.add('saved');
+              busy = order.length == 1;
+            },
+            busy: () => busy,
+            timer: timers.call)
+          // Off the web the handler needs a restart to claim success; the
+          // page reload above goes first.
+          ..restartApp = () => order.add('restart');
+        final outcome = await commands.reload(command('reload_app'));
+        final done = outcome.after!();
+        await pumpEventQueue();
+        expect(order, ['saved']);
+
+        busy = false;
+        await timers.fire();
+        await done;
+        expect(order, ['saved', 'saved', 'reload']);
+      });
+
+      test('a reload already reported stays due past the 2 min, until the kiosk is free',
+          () async {
+        busy = true;
+        final outcome = await commands.reload(command('reload_app'));
+        unawaited(outcome.after!());
+        await pumpEventQueue();
+        final checks = MonitoringCommandRunner.maxPostpone.inSeconds ~/
+                MonitoringCommandRunner.busyRecheck.inSeconds +
+            2;
+        for (var i = 0; i < checks; i++) {
+          await timers.fire();
+        }
+        expect(order, isEmpty);
+
+        busy = false;
+        await timers.fire();
+        expect(order, ['saved', 'reload']);
+      });
+
+      test('a busy rule that cannot be read counts as busy', () async {
+        commands = KioskCommands(
+            enrollment: enrollment,
+            repository: repository,
+            reloadPage: () {
+              order.add('reload');
+              return true;
+            },
+            beforeReload: () async {},
+            busy: () => throw StateError('no activity'),
+            timer: timers.call)
+          // Off the web the handler needs a restart to claim success; the
+          // page reload above goes first.
+          ..restartApp = () => order.add('restart');
+        final outcome = await commands.reload(command('reload_app'));
+        unawaited(outcome.after!());
+        await pumpEventQueue();
+        expect(order, isEmpty);
+        expect(timers.active, hasLength(1));
+      });
+
+      test('outside the browser the restart keeps to it too', () async {
+        commands = KioskCommands(
+            enrollment: enrollment,
+            repository: repository,
+            reloadPage: () => false,
+            beforeReload: () async {},
+            busy: () => busy,
+            timer: timers.call)
+          ..restartApp = () => order.add(busy ? 'restart:busy' : 'restart');
+        busy = true;
+        final outcome = await commands.reload(command('reload_app'));
+        unawaited(outcome.after!());
+        await pumpEventQueue();
+        expect(order, isEmpty);
+        busy = false;
+        await timers.fire();
+        expect(order, ['restart']);
+      });
+    });
   });
 
   group('repair_pos', () {

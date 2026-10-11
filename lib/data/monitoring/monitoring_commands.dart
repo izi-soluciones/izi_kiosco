@@ -24,7 +24,10 @@ class CommandOutcome {
   final Map<String, Object?> data;
 
   /// Runs once the result is on its way (or could not leave in time):
-  /// `reload_app` reloads the page only after reporting that it will.
+  /// `reload_app` reloads the page only after reporting that it will. It
+  /// must keep to the busy rule itself (the customer may have reached the
+  /// payment since the runner checked), and may wait for that: the queue
+  /// waits with it, as whatever is behind a reload would be cut off by it.
   final Future<void> Function()? after;
 
   const CommandOutcome.succeeded({this.detail, this.data = const {}, this.after})

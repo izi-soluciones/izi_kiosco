@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
+import 'package:izi_kiosco/data/monitoring/kiosk_activity.dart';
 import 'package:izi_kiosco/data/monitoring/kiosk_counters.dart';
 import 'package:izi_kiosco/data/monitoring/kiosk_diagnostics.dart';
 import 'package:izi_kiosco/data/monitoring/monitoring_commands.dart';
@@ -31,6 +32,8 @@ class KioskCommands {
   final KioskDiagnostics _diagnostics;
   final bool Function() _reloadPage;
   final Future<void> Function() _beforeReload;
+  final bool Function() _busy;
+  final MonitoringTimerFactory _timer;
 
   /// The most a reload waits for the device log and the counters to be
   /// saved.
@@ -54,12 +57,16 @@ class KioskCommands {
       MonitoringRepository? repository,
       KioskDiagnostics? diagnostics,
       bool Function()? reloadPage,
-      Future<void> Function()? beforeReload})
+      Future<void> Function()? beforeReload,
+      bool Function()? busy,
+      MonitoringTimerFactory? timer})
       : _enrollment = enrollment,
         _injectedRepository = repository,
         _diagnostics = diagnostics ?? KioskDiagnostics(),
         _reloadPage = reloadPage ?? page.reloadPage,
-        _beforeReload = beforeReload ?? _saveRecords;
+        _beforeReload = beforeReload ?? _saveRecords,
+        _busy = busy ?? (() => KioskActivity.instance.busy),
+        _timer = timer ?? Timer.new;
 
   static Future<void> _saveRecords() async {
     await Telemetry.instance.buffer.flush();
@@ -94,22 +101,72 @@ class KioskCommands {
 
   /// `reload_app`: reports first, then reloads the page (web) or restarts
   /// the app to its home screen (Android).
+  ///
+  /// The runner checked the busy rule before this handler, but the reload
+  /// happens only after the result left (up to
+  /// [MonitoringCommandRunner.flushBeforeAfter]) and the records were saved
+  /// (up to [saveTimeout]): a customer may have reached the payment in the
+  /// meantime. So the busy rule is checked again before saving and once more
+  /// right before reloading, with nothing asynchronous in between. The
+  /// result already said the kiosk reloads, so a busy kiosk does not drop
+  /// the reload: it stays due, checked again every
+  /// [MonitoringCommandRunner.busyRecheck], and happens as soon as the
+  /// customer is done (`monitoring.reload_deferred` says it waited).
   Future<CommandOutcome> reload(MonitoringCommand command) async {
     if (!kIsWeb && restartApp == null) {
       return const CommandOutcome.failed(detail: 'not_available');
     }
     return CommandOutcome.succeeded(
-        detail: kIsWeb ? 'page_reload' : 'app_restart',
-        after: () async {
-          try {
-            // What was recorded in the last seconds is still only in
-            // memory: saved first, it is uploaded after the reload.
-            await _beforeReload().timeout(saveTimeout, onTimeout: () {});
-          } catch (_) {}
-          try {
-            if (!_reloadPage()) restartApp?.call();
-          } catch (_) {}
-        });
+        detail: kIsWeb ? 'page_reload' : 'app_restart', after: () => _reloadWhenIdle(command));
+  }
+
+  Future<void> _reloadWhenIdle(MonitoringCommand command) async {
+    var deferred = false;
+    while (true) {
+      if (_isBusy()) {
+        if (!deferred) {
+          deferred = true;
+          Telemetry.event('monitoring.reload_deferred',
+              level: TelemetryLevel.warning, data: {'id': command.id, 'type': command.type});
+        }
+        await _wait(MonitoringCommandRunner.busyRecheck);
+        continue;
+      }
+      try {
+        // What was recorded in the last seconds is still only in
+        // memory: saved first, it is uploaded after the reload.
+        await _beforeReload().timeout(saveTimeout, onTimeout: () {});
+      } catch (_) {}
+      // The last check: from here to the reload nothing yields, so no
+      // customer can reach the payment in between.
+      if (_isBusy()) continue;
+      try {
+        if (!_reloadPage()) restartApp?.call();
+      } catch (_) {}
+      return;
+    }
+  }
+
+  bool _isBusy() {
+    try {
+      return _busy();
+    } catch (_) {
+      // Unknown counts as busy, as for the runner: a reload never risks a
+      // sale.
+      return true;
+    }
+  }
+
+  Future<void> _wait(Duration delay) {
+    final done = Completer<void>();
+    try {
+      _timer(delay, () {
+        if (!done.isCompleted) done.complete();
+      });
+    } catch (_) {
+      return Future<void>.delayed(delay);
+    }
+    return done.future;
   }
 
   /// `repair_pos`: what "Verificar ahora" does: the terminal is asked, paired
