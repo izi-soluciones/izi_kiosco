@@ -47,6 +47,15 @@ void main() {
       expect(out['nested'], {'secretKey': TelemetryRedactor.mask, 'ok': 1});
     });
 
+    test('scrubs a monitoring device token out of any text', () {
+      expect(TelemetryRedactor.scrub('rejected izd_AbC-12_xyz by the service'),
+          'rejected ${TelemetryRedactor.mask} by the service');
+      expect(TelemetryRedactor.redact({'deviceToken': 'izd_x'})['deviceToken'],
+          TelemetryRedactor.mask);
+      // A word that only contains the prefix is not a token.
+      expect(TelemetryRedactor.scrub('wizd_mode'), 'wizd_mode');
+    });
+
     test('keeps what diagnosis needs', () {
       final data = {
         'company': 'Gasaje',

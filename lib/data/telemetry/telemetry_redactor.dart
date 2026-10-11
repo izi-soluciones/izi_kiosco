@@ -4,7 +4,8 @@
 /// Two layers, because a secret can hide in a key or inside a message:
 /// - a key naming a secret drops its value whatever it holds;
 /// - every string is scrubbed of card-like digit runs, bearer tokens and URL
-///   query strings (the `/payment-updates` URL carries `?token=`).
+///   query strings (the `/payment-updates` URL carries `?token=`), and of
+///   monitoring device tokens (`izd_...`).
 class TelemetryRedactor {
   static const String mask = '[redactado]';
   static const int maxStringLength = 300;
@@ -39,6 +40,9 @@ class TelemetryRedactor {
   /// reference survives.
   static final RegExp _cardLike = RegExp(r'(?<![\w-])(?:\d[ -]?){11,18}\d(?![\w-])');
   static final RegExp _bearer = RegExp(r'Bearer\s+\S+', caseSensitive: false);
+
+  /// A monitoring device token (`izd_` + base64url).
+  static final RegExp _deviceToken = RegExp(r'\bizd_[A-Za-z0-9_-]+');
   static final RegExp _urlQuery =
       RegExp(r'\b((?:https?|wss?)://[^\s?#]+)\?[^\s#]*', caseSensitive: false);
   static final RegExp _secretParam = RegExp(
@@ -48,6 +52,7 @@ class TelemetryRedactor {
   static String scrub(String value) {
     var out = value
         .replaceAll(_bearer, 'Bearer $mask')
+        .replaceAll(_deviceToken, mask)
         .replaceAllMapped(_urlQuery, (m) => '${m[1]}?$mask')
         .replaceAllMapped(_secretParam, (m) => '${m[1]}=$mask')
         .replaceAll(_cardLike, mask);
