@@ -49,7 +49,11 @@ void main() async {
   // reports its health from then on.
   final monitoring = MonitoringService(flavor: _flavor);
   MonitoringService.install(monitoring);
-  KioskCounters.install(KioskCounters(store: PrefsCountersStore()));
+  final counters = KioskCounters(store: PrefsCountersStore());
+  KioskCounters.install(counters);
+  // What the previous session left unsent (a reload, a crash, an outage)
+  // comes back before anything is counted. Bounded: never holds up the start.
+  await counters.restore().timeout(const Duration(seconds: 2), onTimeout: () {});
   MonitoringHeartbeat.install(MonitoringHeartbeat(enrollment: monitoring, flavor: _flavor));
 
   // Sentry wraps the error handler set above, so Crashlytics still gets its

@@ -237,10 +237,15 @@ class KioskCounters {
     });
   }
 
+  /// Saves the counters. What an earlier session left unsent is loaded
+  /// first ([restore]), so a save that comes before the first heartbeat (the
+  /// health checks count from the first seconds) adds to it instead of
+  /// writing over it.
   Future<void> flush() async {
     _saveTimer?.cancel();
     _saveTimer = null;
     try {
+      await restore();
       await _store.save(jsonEncode({
         'windowStartAt': _windowStartAt.toUtc().toIso8601String(),
         'values': _values,

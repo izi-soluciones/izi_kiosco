@@ -105,6 +105,25 @@ void main() {
       expect(counters.windowStartAt, DateTime.utc(2026, 10, 12, 13));
     });
 
+    test('a save before the restore does not write over what was left unsent', () async {
+      store.saved = jsonEncode({'windowStartAt': '2026-10-12T13:00:00.000Z', 'values': {'orders': 4}});
+      counters = KioskCounters(
+          store: store, now: () => now, saveDelay: const Duration(milliseconds: 10));
+      // The first health check counts within seconds of the start, long
+      // before the first heartbeat restores.
+      counters.add(KioskCounters.posHealthChecks);
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+
+      final saved = jsonDecode(store.saved!) as Map;
+      expect(saved['windowStartAt'], '2026-10-12T13:00:00.000Z');
+      expect(saved['values'], {'orders': 4, 'posHealthChecks': 1});
+
+      await counters.restore();
+      expect(counters[KioskCounters.orders], 4);
+      expect(counters[KioskCounters.posHealthChecks], 1);
+      expect(counters.windowStartAt, DateTime.utc(2026, 10, 12, 13));
+    });
+
     test('restores only once', () async {
       store.saved = jsonEncode({'windowStartAt': '2026-10-12T13:00:00.000Z', 'values': {'orders': 4}});
       await counters.restore();
