@@ -144,16 +144,13 @@ class KioskTelemetry {
     final value = TelemetryRedactor.scrub(
         exception?.value ?? event.message?.formatted ?? '');
     final allowed = budget.allowIssue('error.uncaught:$type:${value.length > 60 ? value.substring(0, 60) : value}');
-    // Recorded through the buffer only: sending it as a log too would count
-    // the same crash twice.
-    Telemetry.instance.buffer.add(TelemetryEvent(
-      seq: 0,
-      ts: DateTime.now(),
-      upMs: Telemetry.instance.uptime.inMilliseconds,
-      type: 'error.uncaught',
-      level: TelemetryLevel.error,
-      data: {'type': type, 'message': value, 'sent': allowed},
-    ));
+    // Kept on the device (and uploaded to the monitoring from there) but not
+    // delivered to the sinks: sending it as a log too would count the same
+    // crash twice.
+    Telemetry.instance.record('error.uncaught',
+        level: TelemetryLevel.error,
+        data: {'type': type, 'message': value, 'sent': allowed},
+        deliver: false);
     if (!allowed) return null;
     for (final e in event.exceptions ?? const <SentryException>[]) {
       if (e.value != null) e.value = TelemetryRedactor.scrub(e.value!);

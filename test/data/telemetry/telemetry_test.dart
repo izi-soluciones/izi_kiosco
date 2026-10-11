@@ -25,6 +25,15 @@ class RecordingSink implements TelemetrySink {
   void setContext(Map<String, Object?> context) => this.context = context;
 }
 
+class _ThrowingSink implements TelemetrySink {
+  @override
+  void onEvent(TelemetryEvent event, {required bool sendLog, required bool sendIssue}) =>
+      throw StateError('boom');
+
+  @override
+  void setContext(Map<String, Object?> context) => throw StateError('boom');
+}
+
 void main() {
   group('TelemetryRedactor', () {
     test('drops the value of every key that names a secret', () {
@@ -139,6 +148,34 @@ void main() {
       expect(reloaded.recent().map((e) => e.type), ['e4', 'e3', 'e2']);
     });
 
+    test('seq goes on across reloads instead of starting over', () async {
+      final store = MemoryTelemetryStore();
+      final first = Telemetry(buffer: TelemetryBuffer(store: store, saveDelay: Duration.zero));
+      for (var i = 0; i < 3; i++) {
+        first.record('e$i');
+      }
+      await first.buffer.flush();
+
+      final buffer = TelemetryBuffer(store: store);
+      await buffer.restore();
+      expect(buffer.lastSeq, 3);
+      final second = Telemetry(buffer: buffer);
+      second.record('after');
+      expect(buffer.events.map((e) => e.seq), [1, 2, 3, 4]);
+      expect(second.lastSeq, 4);
+    });
+
+    test('lastSeq is the highest seq held, also once it is trimmed away', () {
+      final buffer = TelemetryBuffer(capacity: 2);
+      final telemetry = Telemetry(buffer: buffer);
+      for (var i = 0; i < 5; i++) {
+        telemetry.record('e$i');
+      }
+      expect(buffer.events.map((e) => e.seq), [4, 5]);
+      expect(buffer.lastSeq, 5);
+      expect(buffer.isFull, isTrue);
+    });
+
     test('a broken store leaves the buffer empty instead of failing', () async {
       final buffer = TelemetryBuffer(store: MemoryTelemetryStore()..saved = ['{nope', '[]']);
       await buffer.restore();
@@ -158,6 +195,37 @@ void main() {
       expect(telemetry.buffer.recent().last.data['token'], TelemetryRedactor.mask);
       expect(sink.received.map((r) => (r.log, r.issue)), [(true, true), (false, false)]);
       expect(sink.received.first.event.chargeId, 'CHG-1');
+    });
+
+    test('every sink is told of every event; a failing one does not stop the others', () {
+      final sentry = RecordingSink();
+      final monitoring = RecordingSink();
+      final telemetry = Telemetry(
+          sink: sentry,
+          sinks: [_ThrowingSink(), monitoring],
+          budget: SendBudget(maxLogsPerTypePerHour: 1));
+      telemetry.record('pos.health_failed');
+      telemetry.record('pos.health_failed');
+      expect(sentry.received.map((r) => r.log), [true, false], reason: 'the budget, once per event');
+      expect(monitoring.received.map((r) => r.event.seq), [1, 2]);
+      telemetry.updateContext({'sucursal.id': 7});
+      expect(monitoring.context, {'sucursal.id': 7});
+    });
+
+    test('an event not delivered is kept and numbered, and no sink hears of it', () {
+      final sink = RecordingSink();
+      final observed = <String>[];
+      final telemetry = Telemetry(
+          sink: sink, budget: SendBudget(maxIssuesPerDay: 1), observers: [(e) => observed.add(e.type)]);
+      telemetry.record('app.start');
+      telemetry.record('error.uncaught',
+          level: TelemetryLevel.error, data: {'message': 'izd_secret'}, issue: true, deliver: false);
+      final kept = telemetry.buffer.recent().first;
+      expect(kept.seq, 2);
+      expect(kept.data['message'], TelemetryRedactor.mask);
+      expect(sink.received.map((r) => r.event.type), ['app.start']);
+      expect(observed, ['app.start', 'error.uncaught']);
+      expect(telemetry.budget.allowIssue('x'), isTrue, reason: 'no budget spent on it');
     });
 
     test('context is merged, and null removes a key', () {
