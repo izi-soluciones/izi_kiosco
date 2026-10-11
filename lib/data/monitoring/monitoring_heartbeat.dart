@@ -93,7 +93,8 @@ class MonitoringHeartbeat {
   /// Changes on every app start.
   final String bootId = MonitoringStore.newUuidV4();
 
-  /// The last event `seq` recorded, filled by the event upload (KIO-03).
+  /// The last event `seq` recorded, filled by the event upload
+  /// (`MonitoringTelemetrySink`).
   int? Function() lastEventSeq = _unknown;
 
   // Created on first use: the HTTP client reads the API URL from the `.env`.
@@ -141,7 +142,9 @@ class MonitoringHeartbeat {
 
   ValueListenable<HeartbeatStatus> get status => _status;
 
-  /// The last event `seq` the service persisted, for the event upload (KIO-03).
+  /// The last event `seq` the service persisted, as the heartbeat answer
+  /// says (diagnostics only: it does not name the stream, so the event
+  /// upload goes by the answers to its own batches).
   int? get ackSeq => _ackSeq;
 
   Duration get interval => _interval;

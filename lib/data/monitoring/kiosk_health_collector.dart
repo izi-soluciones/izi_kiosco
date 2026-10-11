@@ -47,7 +47,7 @@ class KioskHealthCollector {
   KioskStateSection agent = _nothing;
 
   /// Events still to upload (`state.telemetryBacklog`), filled by the event
-  /// upload (KIO-03).
+  /// upload (`MonitoringTelemetrySink`).
   int? Function() telemetryBacklog = _unknown;
 
   KioskHealthCollector({
