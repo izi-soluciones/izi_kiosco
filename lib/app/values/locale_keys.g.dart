@@ -619,6 +619,16 @@ abstract class  LocaleKeys {
   static const posConfig_diagnostics_unsupported = 'posConfig.diagnostics.unsupported';
   static const posConfig_diagnostics_unreachable = 'posConfig.diagnostics.unreachable';
   static const posConfig_diagnostics = 'posConfig.diagnostics';
+  static const posConfig_monitoring_title = 'posConfig.monitoring.title';
+  static const posConfig_monitoring_enrolled = 'posConfig.monitoring.enrolled';
+  static const posConfig_monitoring_pending = 'posConfig.monitoring.pending';
+  static const posConfig_monitoring_enrolling = 'posConfig.monitoring.enrolling';
+  static const posConfig_monitoring_error = 'posConfig.monitoring.error';
+  static const posConfig_monitoring_stopped = 'posConfig.monitoring.stopped';
+  static const posConfig_monitoring_device = 'posConfig.monitoring.device';
+  static const posConfig_monitoring_nextAttempt = 'posConfig.monitoring.nextAttempt';
+  static const posConfig_monitoring_retry = 'posConfig.monitoring.retry';
+  static const posConfig_monitoring = 'posConfig.monitoring';
   static const posConfig = 'posConfig';
   static const errorPayment_labels_number = 'errorPayment.labels.number';
   static const errorPayment_labels_response = 'errorPayment.labels.response';
