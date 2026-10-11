@@ -39,6 +39,9 @@ class _PaymentPageCardState extends State<PaymentPageCard> {
     super.initState();
   }
 
+  /// True while the charge runs on an izify POS terminal, which has no cancel.
+  bool get _izifyCharge => widget.state.izifyPosIp != null;
+
   _cancelPayment(){
     CustomAlerts.defaultAlert(
         context: context,
@@ -68,6 +71,8 @@ class _PaymentPageCardState extends State<PaymentPageCard> {
                 children: [
                   IziText.titleMedium(
                       color: context.iziColors.dark,
+                      textAlign: TextAlign.center,
+                      maxLines: 2,
                       text: LocaleKeys.payment_titles_cardPayment.tr()),
                   const SizedBox(
                     height: 8,
@@ -82,11 +87,20 @@ class _PaymentPageCardState extends State<PaymentPageCard> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             if(widget.state.status == PaymentStatus.cardProcessing)
-            IziText.titleSmall(
-                textAlign: TextAlign.center,
-                color: context.iziColors.dark,
-                text: LocaleKeys.payment_subtitles_enterYourCard.tr(),
-                fontWeight: FontWeight.w500),
+            // The design system text ellipsizes to one line unless given
+            // maxLines: the instructions were cut off mid-sentence.
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 32),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 600),
+                child: IziText.titleSmall(
+                    textAlign: TextAlign.center,
+                    maxLines: 5,
+                    color: context.iziColors.dark,
+                    text: LocaleKeys.payment_subtitles_enterYourCard.tr(),
+                    fontWeight: FontWeight.w500),
+              ),
+            ),
             const SizedBox(
               height: 32,
             ),
@@ -130,7 +144,20 @@ class _PaymentPageCardState extends State<PaymentPageCard> {
                 textAlign: TextAlign.center,
                 text:LocaleKeys.payment_body_havingTrouble.tr(),
                 fontWeight: FontWeight.w400),
-            if(showCancel)
+            // On the izify path the charge is already running on the reader
+            // and cannot be recalled from here, so offering to stop it would
+            // be a button that does nothing.
+            if(showCancel && _izifyCharge)
+            Padding(
+              padding: const EdgeInsets.only(top: 16.0),
+              child: IziText.body(
+                  color: context.iziColors.darkGrey,
+                  textAlign: TextAlign.center,
+                  maxLines: 3,
+                  text: LocaleKeys.payment_body_chargeInProgress.tr(),
+                  fontWeight: FontWeight.w400),
+            ),
+            if(showCancel && !_izifyCharge)
             Padding(
               padding: const EdgeInsets.only(top: 16.0),
               child: InkWell(

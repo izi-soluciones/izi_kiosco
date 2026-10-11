@@ -19,6 +19,10 @@ enum PaymentStatus {
   cardProcessing,
   cashRegisterProcessing,
   cardError,
+  cardPending,
+  /// A charge confirmed after the sale flow ended (verified or retried from
+  /// the transactions screen). `errorDescription` carries the outcome text.
+  cardVerified,
   qrError,
   brebError,
   brebLoading,
@@ -168,6 +172,10 @@ class PaymentState extends Equatable {
   final PaymentCountryTaxes? countryTaxes;
   final String? izifyPosIp;
 
+  /// What identifies a charge the terminal made, shown to a customer whose card
+  /// was charged but whose order could not be registered, so staff can find it.
+  final String? chargeProof;
+
   const PaymentState({
     this.errorDescription,
     required this.paymentObj,
@@ -202,9 +210,28 @@ class PaymentState extends Equatable {
     this.brebLoading = false,
     this.countryTaxes,
     this.izifyPosIp,
+    this.chargeProof,
     required this.phonePrefix,
     this.qrPaymentKey,
   });
+
+  /// Dial code the phone field starts with: the account's country, so a
+  /// Colombian kiosk opens on +57 whatever build it runs. The build's
+  /// default when the account says nothing.
+  static String phonePrefixFor(Contribuyente? contribuyente) {
+    final config = contribuyente?.config;
+    switch (config is Map ? config["paisId"] : null) {
+      case 'CO':
+        return '+57';
+      case 'BO':
+        return '+591';
+      default:
+        return _defaultPhonePrefix;
+    }
+  }
+
+  static const String _defaultPhonePrefix =
+      String.fromEnvironment('FLAVOR', defaultValue: 'local') == 'izify' ? '+57' : '+591';
 
   factory PaymentState.init() => PaymentState(
     status: PaymentStatus.waitingGet,
@@ -224,12 +251,13 @@ class PaymentState extends Equatable {
     complement: PaymentInputs.complementInput(),
     documentNumber: PaymentInputs.documentNumberInput(),
     withException: false,
-    phonePrefix: const String.fromEnvironment('FLAVOR', defaultValue: 'local') == 'izify' ? '+57' : '+591',
+    phonePrefix: _defaultPhonePrefix,
     phoneNumber: PaymentInputs.phoneNumberInput(),
     qrLoading: false,
     brebCharge: null,
     brebLoading: false,
     izifyPosIp: null,
+    chargeProof: null,
     casaMatriz: null,
   );
 
@@ -271,6 +299,7 @@ class PaymentState extends Equatable {
     ParamsCo? paramsCo,
     PaymentCountryTaxes? countryTaxes,
     String? izifyPosIp,
+    String? chargeProof,
     PaymentObj? paymentObj,
   }) {
     return PaymentState(
@@ -314,6 +343,7 @@ class PaymentState extends Equatable {
       paymentObj: paymentObj ?? this.paymentObj,
       countryTaxes: countryTaxes ?? this.countryTaxes,
       izifyPosIp: izifyPosIp ?? this.izifyPosIp,
+      chargeProof: chargeProof ?? this.chargeProof,
     );
   }
 
@@ -347,5 +377,6 @@ class PaymentState extends Equatable {
     qrPaymentKey,
     qrLoading,
     izifyPosIp,
+    chargeProof,
   ];
 }

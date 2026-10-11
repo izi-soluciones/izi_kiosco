@@ -47,5 +47,12 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>Buscar y conectar el datáfono Izify en la red local.</string>
+	<key>NSBonjourServices</key>
+	<array>
+		<string>_izifypos._tcp</string>
+		<string>_http._tcp</string>
+	</array>
 </dict>
 </plist>

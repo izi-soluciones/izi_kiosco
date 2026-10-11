@@ -71,4 +71,48 @@ class TokenUtils{
     SharedPreferences prefs=await SharedPreferences.getInstance();
     await prefs.remove("posToken");
   }
+
+  /// The paired terminal's mDNS name (`izify-POS-<pin>`), used to find it
+  /// again when it moves to another IP.
+  static Future<void> savePosName(String name)async{
+    SharedPreferences prefs=await SharedPreferences.getInstance();
+    await prefs.setString("posName", name);
+  }
+  static Future<String?> getPosName()async{
+    SharedPreferences prefs=await SharedPreferences.getInstance();
+    return prefs.getString("posName");
+  }
+  static Future<void> deletePosName()async{
+    SharedPreferences prefs=await SharedPreferences.getInstance();
+    await prefs.remove("posName");
+  }
+
+  /// The backend `ipEcopay` this kiosk last paired with. A backend value
+  /// equal to it is not followed again, so a terminal the kiosk found at a
+  /// new address is not abandoned for the stale backend one.
+  static Future<void> savePosBackendIp(String ip)async{
+    SharedPreferences prefs=await SharedPreferences.getInstance();
+    await prefs.setString("posBackendIp", ip);
+  }
+  /// Whether a technician unpaired this kiosk on purpose. Persisted, so the
+  /// automatic pairing does not take the terminal back on the next launch —
+  /// the terminal remembers the same thing on its side.
+  static Future<void> savePosUnpairedByUser(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool("posUnpairedByUser", value);
+  }
+
+  static Future<bool> getPosUnpairedByUser() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool("posUnpairedByUser") ?? false;
+  }
+
+  static Future<String?> getPosBackendIp()async{
+    SharedPreferences prefs=await SharedPreferences.getInstance();
+    return prefs.getString("posBackendIp");
+  }
+  static Future<void> deletePosBackendIp()async{
+    SharedPreferences prefs=await SharedPreferences.getInstance();
+    await prefs.remove("posBackendIp");
+  }
 }

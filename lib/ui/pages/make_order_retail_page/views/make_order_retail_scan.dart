@@ -385,6 +385,7 @@ class _MakeOrderRetailScanState extends State<MakeOrderRetailScan> {
               Flexible(
                 flex: 4,
                   child: IziBtn(
+                    key: const Key('retail_finish_btn'),
                     buttonType: ButtonType.secondary,
                     iconSuffix: IziIcons.rightB,
                     buttonText: LocaleKeys.makeOrderRetail_scan_finishPurchase.tr(),

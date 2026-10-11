@@ -11,6 +11,7 @@ import 'package:izi_kiosco/app/values/locale_keys.g.dart';
 import 'package:izi_kiosco/domain/blocs/page_utils/page_utils_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/pos_config/pos_config_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
+import 'package:izi_kiosco/ui/pages/pos_config_page/widgets/pos_diagnostics_dialog.dart';
 
 class PosConfigPage extends StatefulWidget {
   const PosConfigPage({super.key});
@@ -85,8 +86,25 @@ class _PosConfigPageState extends State<PosConfigPage> {
                 });
               },
             ),
+            actions: [
+              TextButton.icon(
+                onPressed: () => PosDiagnosticsDialog.show(
+                    context, context.read<AuthBloc>().state.currentDevice),
+                icon: Icon(Icons.monitor_heart_outlined, color: context.iziColors.primary),
+                label: IziText.body(
+                  color: context.iziColors.primary,
+                  fontWeight: FontWeight.w600,
+                  text: LocaleKeys.posConfig_buttons_diagnostics.tr(),
+                ),
+              ),
+              const SizedBox(width: 16),
+            ],
           ),
         body: BlocConsumer<PosConfigBloc, PosConfigState>(
+          // Only on a change of status. The health check rebuilds this state
+          // every 30 s with a fresh health object, which used to re-show an old
+          // pairing error for as long as the screen stayed open.
+          listenWhen: (before, after) => before.status != after.status,
           listener: (context, state) {
             if (!context.mounted) return;
             if (state.status == PosConfigStatus.error &&
@@ -151,15 +169,55 @@ class _PosConfigPageState extends State<PosConfigPage> {
                                 ),
                               ],
                             ),
-                            if (state.healthData != null) ...[
-                              const SizedBox(height: 8),
+                            const SizedBox(height: 8),
+                            IziText.body(
+                              color: state.notReadyReason == null && state.isHealthy == true
+                                  ? Colors.green.shade700
+                                  : context.iziColors.red,
+                              fontWeight: FontWeight.w600,
+                              maxLines: 4,
+                              text: state.notReadyReason ??
+                                  (state.isHealthy == true
+                                      ? LocaleKeys.posConfig_messages_ready.tr()
+                                      : LocaleKeys.posConfig_messages_checking.tr()),
+                            ),
+                            if (state.health != null) ...[
+                              const SizedBox(height: 4),
                               IziText.body(
                                 color: context.iziColors.darkGrey,
                                 fontWeight: FontWeight.normal,
-                                maxLines: 5,
-                                text: state.healthData!.entries.map((e) => '${e.key}: ${e.value}').join(' | '),
+                                maxLines: 3,
+                                text: [
+                                  if (state.health!.appVersion != null)
+                                    'PayPOS ${state.health!.appVersion}',
+                                  if (state.health!.ecopayVersion != null)
+                                    'EcoPay ${state.health!.ecopayVersion}',
+                                  if (state.health!.batteryLevel != null)
+                                    '${LocaleKeys.posConfig_labels_battery.tr()} ${state.health!.batteryLevel}%',
+                                  if (state.health!.hasPaper == false)
+                                    LocaleKeys.posConfig_labels_noPaper.tr(),
+                                ].join(' · '),
                               ),
-                            ]
+                              if (state.health!.canOpenScreens == false) ...[
+                                const SizedBox(height: 4),
+                                IziText.body(
+                                  color: Colors.orange.shade800,
+                                  fontWeight: FontWeight.normal,
+                                  maxLines: 4,
+                                  text: LocaleKeys.posConfig_messages_overlayMissing.tr(),
+                                ),
+                              ],
+                            ],
+                            const SizedBox(height: 8),
+                            TextButton.icon(
+                              onPressed: () => context.read<PosConfigBloc>().reconnect(manual: true),
+                              icon: Icon(Icons.refresh, color: context.iziColors.primary),
+                              label: IziText.body(
+                                color: context.iziColors.primary,
+                                fontWeight: FontWeight.w600,
+                                text: LocaleKeys.posConfig_buttons_checkNow.tr(),
+                              ),
+                            ),
                           ],
                         ),
                         trailing: SizedBox(
@@ -197,7 +255,8 @@ class _PosConfigPageState extends State<PosConfigPage> {
                             filled: true,
                             fillColor: context.iziColors.white,
                           ),
-                          keyboardType: TextInputType.number,
+                          // ip or ip:port
+                          keyboardType: TextInputType.url,
                           onSubmitted: (_) {
                             if (state.status != PosConfigStatus.pairing) {
                               FocusScope.of(context).unfocus();
@@ -369,7 +428,11 @@ class _PosConfigPageState extends State<PosConfigPage> {
                       ),
                     ),
                   ...state.discoveredDevices.map((device) {
-                    final isPaired = state.pairedDevice?.ip == device.ip;
+                    // Two terminals can share an address only by port, so the
+                    // paired one is recognised by both.
+                    final paired = state.pairedDevice;
+                    final isPaired =
+                        paired?.ip == device.ip && paired?.port == device.port;
                     if (isPaired) return const SizedBox.shrink();
 
                     return Card(
@@ -386,7 +449,19 @@ class _PosConfigPageState extends State<PosConfigPage> {
                         subtitle: IziText.body(
                           color: context.iziColors.darkGrey,
                           fontWeight: FontWeight.normal,
-                          text: "${device.ip}:${device.port}",
+                          maxLines: 2,
+                          text: [
+                            "${device.ip}:${device.port}",
+                            if (device.terminalType == 'ECOPAY') "EcoPay"
+                            else if (device.terminalType != null) device.terminalType!,
+                            if (device.version != null) "PayPOS ${device.version}",
+                            switch (device.pairing) {
+                              PosPairing.free => LocaleKeys.posConfig_discovered_free.tr(),
+                              PosPairing.thisKiosk => LocaleKeys.posConfig_discovered_thisKiosk.tr(),
+                              PosPairing.otherKiosk => LocaleKeys.posConfig_discovered_otherKiosk.tr(),
+                              PosPairing.unknown => null,
+                            },
+                          ].whereType<String>().join(' · '),
                         ),
                         trailing: IziBtn(
                           buttonSize: ButtonSize.small,

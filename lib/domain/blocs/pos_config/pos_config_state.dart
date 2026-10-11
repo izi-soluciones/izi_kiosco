@@ -10,6 +10,12 @@ class PosConfigState extends Equatable {
   final Map<String, dynamic>? healthData;
   final String? errorMessage;
 
+  /// Last readiness report from the paired terminal.
+  final IzifyPosHealth? health;
+
+  /// Why the paired terminal cannot charge right now (Spanish), or null.
+  final String? notReadyReason;
+
   const PosConfigState({
     required this.status,
     required this.discoveredDevices,
@@ -17,6 +23,8 @@ class PosConfigState extends Equatable {
     this.isHealthy,
     this.healthData,
     this.errorMessage,
+    this.health,
+    this.notReadyReason,
   });
 
   factory PosConfigState.init() {
@@ -38,6 +46,8 @@ class PosConfigState extends Equatable {
     bool? isHealthy,
     Map<String, dynamic>? healthData,
     String? errorMessage,
+    IzifyPosHealth? Function()? health,
+    String? Function()? notReadyReason,
   }) {
     return PosConfigState(
       status: status ?? this.status,
@@ -46,6 +56,10 @@ class PosConfigState extends Equatable {
       isHealthy: clearPairedDevice ? null : (isHealthy ?? this.isHealthy),
       healthData: clearPairedDevice ? null : (healthData ?? this.healthData),
       errorMessage: errorMessage ?? this.errorMessage,
+      health: clearPairedDevice ? null : (health != null ? health() : this.health),
+      notReadyReason: clearPairedDevice
+          ? null
+          : (notReadyReason != null ? notReadyReason() : this.notReadyReason),
     );
   }
 
@@ -57,5 +71,7 @@ class PosConfigState extends Equatable {
     isHealthy,
     healthData,
     errorMessage,
+    health,
+    notReadyReason,
   ];
 }
