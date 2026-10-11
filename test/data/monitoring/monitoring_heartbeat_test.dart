@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:izi_kiosco/data/monitoring/command_result_outbox.dart';
 import 'package:izi_kiosco/data/monitoring/kiosk_activity.dart';
 import 'package:izi_kiosco/data/monitoring/kiosk_counters.dart';
 import 'package:izi_kiosco/data/monitoring/kiosk_health_collector.dart';
@@ -27,7 +28,7 @@ void main() {
   late FakeTimers beatTimers;
   late MonitoringService enrollment;
   late KioskCounters counters;
-  late PendingCommandQueue commands;
+  late MonitoringCommandRunner commands;
   late KioskHealthCollector collector;
   late MonitoringHeartbeat heartbeat;
   late String installationId;
@@ -78,7 +79,12 @@ void main() {
         now: () => now,
         random: FixedRandom());
     counters = KioskCounters(store: MemoryCountersStore(), now: () => now);
-    commands = PendingCommandQueue(now: () => now);
+    // Never fired: the heartbeat only hands commands over.
+    commands = MonitoringCommandRunner(
+        outbox: CommandResultOutbox(
+            enrollment: enrollment, repository: repository, store: MemoryCommandResultStore()),
+        timer: FakeTimers().call,
+        now: () => now);
     collector = KioskHealthCollector(
       activity: () => KioskActivity()..screenChanged('/home'),
       link: () => PosLinkHealth(now: () => now, counters: () => KioskCounters()),
@@ -216,6 +222,13 @@ void main() {
       ]));
       expect(commands.pending.single.type, 'reload_app');
       expect(Telemetry.recent().where((e) => e.type == 'monitoring.command_received'), hasLength(1));
+    });
+
+    test('with the service clock, so expiry does not depend on the kiosk clock', () async {
+      await answer(MonitoringHeartbeatResponse(
+          serverTime: now.add(const Duration(minutes: 3)),
+          commands: [MonitoringCommand(id: 'c1', type: 'reload_app', expiresAt: now)]));
+      expect(commands.serverNow, now.add(const Duration(minutes: 3)));
     });
   });
 

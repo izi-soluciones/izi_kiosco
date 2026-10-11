@@ -11,6 +11,7 @@ import 'package:izi_kiosco/data/monitoring/monitoring_store.dart';
 import 'package:izi_kiosco/data/telemetry/telemetry.dart';
 import 'package:izi_kiosco/domain/dto/monitoring_enrollment_dto.dart';
 import 'package:izi_kiosco/domain/dto/monitoring_heartbeat_dto.dart';
+import 'package:izi_kiosco/domain/models/monitoring_heartbeat_response.dart';
 import 'package:izi_kiosco/domain/repositories/monitoring_repository.dart';
 
 /// What the diagnostics dialog shows about the heartbeat.
@@ -126,7 +127,7 @@ class MonitoringHeartbeat {
         _injectedRepository = repository,
         _collector = collector ?? (() => KioskHealthCollector.instance),
         _counters = counters ?? (() => KioskCounters.instance),
-        commands = commands ?? PendingCommandQueue(),
+        commands = commands ?? const _NoCommands(),
         _appInfo = appInfo ?? _memo(() => MonitoringService.currentApp(flavor)),
         _timer = timer ?? Timer.new,
         _now = now ?? DateTime.now,
@@ -218,7 +219,7 @@ class MonitoringHeartbeat {
       _lastOkAt = _now();
       if (response.ackSeq != null) _ackSeq = response.ackSeq;
       _interval = intervalFor(response.nextInSec);
-      commands.enqueue(response.commands);
+      commands.enqueue(response.commands, serverTime: response.serverTime);
       next = _interval;
     } catch (error) {
       final cause = switch (error) {
@@ -315,4 +316,13 @@ class MonitoringHeartbeat {
     Future<T>? result;
     return () => result ??= compute();
   }
+}
+
+/// Without a runner (tests that do not care): the commands are left to
+/// expire on the service.
+class _NoCommands implements MonitoringCommandQueue {
+  const _NoCommands();
+
+  @override
+  void enqueue(List<MonitoringCommand> commands, {DateTime? serverTime}) {}
 }

@@ -381,6 +381,27 @@ class PosConfigBloc extends Cubit<PosConfigState> {
     }
   }
 
+  /// `repair_pos` from the support console: [reconnect] as "Verificar ahora"
+  /// does (pair again, look for the terminal on the LAN). Without a pairing,
+  /// pairs with the terminal the backend assigns, unless someone unpaired
+  /// this kiosk on purpose. The result is in [state] once it returns.
+  Future<void> repair() async {
+    if (isClosed) return;
+    Telemetry.event('pos.remote_repair', data: {'paired': state.pairedDevice != null});
+    if (state.pairedDevice == null) {
+      // A backend value already tried this launch is tried once more.
+      _backendAttempts.clear();
+      await _syncWithBackend();
+      return;
+    }
+    // A reconnection already running would make this one return at once,
+    // with its result still to come.
+    for (var i = 0; _reconnecting && i < 120 && !isClosed; i++) {
+      await Future.delayed(const Duration(milliseconds: 500));
+    }
+    await reconnect(manual: true);
+  }
+
   /// Refreshes the terminal's readiness every [healthInterval]. Hands over
   /// to [reconnect] when the terminal is not ours anymore or stopped answering.
   Future<void> checkHealth() async {

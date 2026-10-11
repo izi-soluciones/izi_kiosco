@@ -12,9 +12,15 @@ import 'package:izi_kiosco/app/my_app.dart';
 import 'package:izi_kiosco/app/utils/custom_asset_loader.dart';
 import 'package:izi_kiosco/app/utils/kiosk_locale.dart';
 import 'package:izi_kiosco/app/values/assets_keys.dart';
+import 'package:izi_kiosco/data/monitoring/agent_link.dart';
+import 'package:izi_kiosco/data/monitoring/command_result_outbox.dart';
+import 'package:izi_kiosco/data/monitoring/kiosk_commands.dart';
 import 'package:izi_kiosco/data/monitoring/kiosk_counters.dart';
+import 'package:izi_kiosco/data/monitoring/kiosk_health_collector.dart';
+import 'package:izi_kiosco/data/monitoring/monitoring_commands.dart';
 import 'package:izi_kiosco/data/monitoring/monitoring_heartbeat.dart';
 import 'package:izi_kiosco/data/monitoring/monitoring_service.dart';
+import 'package:izi_kiosco/data/monitoring/terminal_enrollment.dart';
 import 'package:izi_kiosco/data/telemetry/kiosk_telemetry.dart';
 import 'package:izi_kiosco/firebase_options.dart';
 
@@ -54,7 +60,22 @@ void main() async {
   // What the previous session left unsent (a reload, a crash, an outage)
   // comes back before anything is counted. Bounded: never holds up the start.
   await counters.restore().timeout(const Duration(seconds: 2), onTimeout: () {});
-  MonitoringHeartbeat.install(MonitoringHeartbeat(enrollment: monitoring, flavor: _flavor));
+  // Remote commands from the support console, run between sales.
+  final commands = KioskCommands(enrollment: monitoring);
+  KioskCommands.install(commands);
+  final runner = MonitoringCommandRunner(
+      outbox: CommandResultOutbox(enrollment: monitoring), handlers: commands.handlers);
+  MonitoringCommandRunner.install(runner);
+  MonitoringHeartbeat.install(
+      MonitoringHeartbeat(enrollment: monitoring, commands: runner, flavor: _flavor));
+  // The terminal and the PC agent join the monitoring on their own, with a
+  // code this kiosk asks for (the agent only exists next to the web kiosk).
+  TerminalEnrollment.install(TerminalEnrollment(enrollment: monitoring));
+  if (kIsWeb) {
+    final agent = AgentLink(enrollment: monitoring);
+    AgentLink.install(agent);
+    KioskHealthCollector.instance.agent = agent.stateSection;
+  }
 
   // Sentry wraps the error handler set above, so Crashlytics still gets its
   // errors on mobile.
