@@ -8,6 +8,7 @@ import 'package:izi_kiosco/data/monitoring/kiosk_health_collector.dart';
 import 'package:izi_kiosco/data/monitoring/monitoring_heartbeat.dart';
 import 'package:izi_kiosco/data/monitoring/monitoring_service.dart';
 import 'package:izi_kiosco/data/monitoring/monitoring_telemetry_sink.dart';
+import 'package:izi_kiosco/data/monitoring/printer_health.dart';
 import 'package:izi_kiosco/data/telemetry/platform_signals.dart';
 import 'package:izi_kiosco/data/telemetry/pos_telemetry.dart';
 import 'package:izi_kiosco/data/telemetry/send_budget.dart';
@@ -52,6 +53,7 @@ class KioskTelemetry {
     MonitoringTelemetrySink.install(upload);
     MonitoringHeartbeat.instance?.lastEventSeq = upload.lastEventSeq;
     KioskHealthCollector.instance.telemetryBacklog = upload.backlog;
+    KioskHealthCollector.instance.printer = () => PrinterHealth.instance.toJson();
     Telemetry.install(Telemetry(
       buffer: buffer,
       budget: budget,
