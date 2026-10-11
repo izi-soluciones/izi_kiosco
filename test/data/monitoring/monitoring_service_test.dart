@@ -7,10 +7,12 @@ import 'package:izi_kiosco/data/monitoring/monitoring_store.dart';
 import 'package:izi_kiosco/data/telemetry/telemetry.dart';
 import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
 import 'package:izi_kiosco/domain/dto/monitoring_enrollment_dto.dart';
+import 'package:izi_kiosco/domain/dto/monitoring_events_dto.dart';
 import 'package:izi_kiosco/domain/dto/monitoring_heartbeat_dto.dart';
 import 'package:izi_kiosco/domain/models/contribuyente.dart';
 import 'package:izi_kiosco/domain/models/device.dart';
 import 'package:izi_kiosco/domain/models/monitoring_enrollment.dart';
+import 'package:izi_kiosco/domain/models/monitoring_events_response.dart';
 import 'package:izi_kiosco/domain/models/monitoring_heartbeat_response.dart';
 import 'package:izi_kiosco/domain/repositories/monitoring_repository.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -53,6 +55,28 @@ class FakeMonitoringRepository extends MonitoringRepository {
     heartbeats.add((dto: dto, token: deviceToken));
     if (heartbeatReplies.isEmpty) throw StateError('unexpected heartbeat');
     return heartbeatReplies.removeAt(0)();
+  }
+
+  /// Batches of events sent, with the device token each one carried.
+  final List<({MonitoringEventsDto dto, String token})> uploads = [];
+  final List<Future<MonitoringEventsResponse> Function(MonitoringEventsDto dto)> uploadReplies =
+      [];
+
+  /// Keeps the batch: acknowledges up to its highest `seq`.
+  void acceptUpload() => uploadReplies.add((dto) async => MonitoringEventsResponse(
+      ackSeq: dto.events.map((e) => e.seq).reduce((a, b) => a > b ? a : b), stream: dto.stream));
+
+  void answerUpload(MonitoringEventsResponse Function(MonitoringEventsDto dto) answer) =>
+      uploadReplies.add((dto) async => answer(dto));
+
+  void rejectUpload(Object error) => uploadReplies.add((_) async => throw error);
+
+  @override
+  Future<MonitoringEventsResponse> uploadEvents(MonitoringEventsDto dto,
+      {required String deviceToken}) {
+    uploads.add((dto: dto, token: deviceToken));
+    if (uploadReplies.isEmpty) throw StateError('unexpected upload');
+    return uploadReplies.removeAt(0)(dto);
   }
 }
 

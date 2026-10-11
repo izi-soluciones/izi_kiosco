@@ -3,8 +3,10 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:izi_kiosco/app/values/env_keys.dart';
 import 'package:izi_kiosco/data/core/dio_client.dart';
 import 'package:izi_kiosco/domain/dto/monitoring_enrollment_dto.dart';
+import 'package:izi_kiosco/domain/dto/monitoring_events_dto.dart';
 import 'package:izi_kiosco/domain/dto/monitoring_heartbeat_dto.dart';
 import 'package:izi_kiosco/domain/models/monitoring_enrollment.dart';
+import 'package:izi_kiosco/domain/models/monitoring_events_response.dart';
 import 'package:izi_kiosco/domain/models/monitoring_heartbeat_response.dart';
 import 'package:izi_kiosco/domain/repositories/monitoring_repository.dart';
 
@@ -17,6 +19,7 @@ import 'package:izi_kiosco/domain/repositories/monitoring_repository.dart';
 class MonitoringRepositoryHttp extends MonitoringRepository {
   static const String enrollmentPath = "/monitoreo/kiosco/enrolamiento";
   static const String heartbeatPath = "/monitoreo/ingesta/heartbeat";
+  static const String eventsPath = "/monitoreo/ingesta/eventos";
   static const String deviceTokenHeader = "X-Device-Token";
 
   /// The gateway has no timeout of its own for these calls; without one a
@@ -83,6 +86,32 @@ class MonitoringRepositoryHttp extends MonitoringRepository {
             statusCode: status, code: errorCodeOf(response.data));
       }
       return MonitoringHeartbeatResponse.parse(response.data);
+    } on MonitoringException {
+      rethrow;
+    } on DioException catch (e) {
+      throw fromDio(e);
+    } catch (_) {
+      throw const MonitoringException('error');
+    }
+  }
+
+  @override
+  Future<MonitoringEventsResponse> uploadEvents(MonitoringEventsDto dto,
+      {required String deviceToken}) async {
+    try {
+      final response = await _ingestDio.post(eventsPath,
+          data: dto.toJson(),
+          options: Options(headers: {deviceTokenHeader: deviceToken}));
+      final status = response.statusCode ?? 0;
+      if (status < 200 || status >= 300) {
+        throw MonitoringException('http_$status',
+            statusCode: status, code: errorCodeOf(response.data));
+      }
+      final answer = MonitoringEventsResponse.tryParse(response.data);
+      if (answer == null) {
+        throw MonitoringException('invalid_response', statusCode: status);
+      }
+      return answer;
     } on MonitoringException {
       rethrow;
     } on DioException catch (e) {

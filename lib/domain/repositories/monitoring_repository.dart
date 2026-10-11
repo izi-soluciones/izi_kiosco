@@ -1,6 +1,8 @@
 import 'package:izi_kiosco/domain/dto/monitoring_enrollment_dto.dart';
+import 'package:izi_kiosco/domain/dto/monitoring_events_dto.dart';
 import 'package:izi_kiosco/domain/dto/monitoring_heartbeat_dto.dart';
 import 'package:izi_kiosco/domain/models/monitoring_enrollment.dart';
+import 'package:izi_kiosco/domain/models/monitoring_events_response.dart';
 import 'package:izi_kiosco/domain/models/monitoring_heartbeat_response.dart';
 
 abstract class MonitoringRepository {
@@ -16,6 +18,14 @@ abstract class MonitoringRepository {
   /// Throws [MonitoringException]: a revoked or unknown token is a 401 with
   /// code [MonitoringException.deviceTokenInvalid].
   Future<MonitoringHeartbeatResponse> heartbeat(MonitoringHeartbeatDto dto,
+      {required String deviceToken});
+
+  /// Uploads a batch of this kiosk's events, with its [deviceToken]. The
+  /// answer says up to which `seq` the service keeps them.
+  ///
+  /// Throws [MonitoringException] like [heartbeat]; a batch too big for the
+  /// service is a 413.
+  Future<MonitoringEventsResponse> uploadEvents(MonitoringEventsDto dto,
       {required String deviceToken});
 }
 
@@ -38,6 +48,9 @@ class MonitoringException implements Exception {
 
   /// The token was revoked or is unknown: the kiosk has to enroll again.
   bool get isTokenInvalid => statusCode == 401 && code == deviceTokenInvalid;
+
+  /// The service (or the gateway) refused the body for its size.
+  bool get isTooLarge => statusCode == 413;
 
   @override
   String toString() =>
