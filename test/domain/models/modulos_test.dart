@@ -10,15 +10,15 @@ void main() {
         'bloqueadoPago': true,
         'habilitadoIA': true,
       });
-      expect(m.ventasEnabled, isTrue);
-      expect(m.facturacionEnabled, isFalse);
+      expect(m.isEnabled(Modulo.ventas.name), isTrue);
+      expect(m.isEnabled(Modulo.facturacion.name), isFalse);
       expect(m.bloqueadoPago, isTrue);
       expect(m.habilitadoIA, isTrue);
     });
     test('defaults everything to false when keys missing or wrong type', () {
       final m = Modulos.fromJson({'ventas': true, 'facturacion': null});
-      expect(m.ventasEnabled, isFalse);
-      expect(m.facturacionEnabled, isFalse);
+      expect(m.isEnabled(Modulo.ventas.name), isFalse);
+      expect(m.isEnabled(Modulo.facturacion.name), isFalse);
       expect(m.bloqueadoPago, isFalse);
       expect(m.habilitadoIA, isFalse);
     });
@@ -26,7 +26,7 @@ void main() {
       final m = Modulos.fromJson({
         'ventas': {'enabled': 'true'},
       });
-      expect(m.ventasEnabled, isFalse);
+      expect(m.isEnabled(Modulo.ventas.name), isFalse);
     });
   });
 }

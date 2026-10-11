@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:izi_kiosco/domain/blocs/payment/payment_bloc.dart';
 import 'package:izi_kiosco/domain/models/contribuyente.dart';
 import 'package:izi_kiosco/domain/models/item.dart';
+import 'package:izi_kiosco/domain/models/modulos.dart';
 import 'package:izi_kiosco/domain/strategies/taxes/impl/taxes_strategy_bo.dart';
 import 'package:izi_kiosco/domain/strategies/taxes/impl/taxes_strategy_co.dart';
 import 'package:izi_kiosco/domain/strategies/taxes/impl/taxes_strategy_default.dart';
@@ -15,6 +16,10 @@ Contribuyente _contribuyente({
     Contribuyente(
       usaSiat: usaSiat,
       habilitadoFacturacion: habilitadoFacturacion,
+      // La estrategia mira el módulo facturación, no el flag legado.
+      modulos: habilitadoFacturacion == null
+          ? null
+          : Modulos(enabled: {Modulo.facturacion.name: habilitadoFacturacion}),
       config: config,
       actividadesEconomicas: null,
       autorizadosAPI: null,

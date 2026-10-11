@@ -1,21 +1,46 @@
+enum Modulo {
+  ventas,
+  facturacion,
+  contabilidad,
+  restaurantes,
+  cajas,
+  mesas,
+  integraciones,
+  inventarios,
+  cobros,
+  terminal,
+  retail,
+  compras,
+  clientes,
+  proveedores,
+  pedidos,
+  reportes,
+  dispositivos,
+}
+
 class Modulos {
-  final bool ventasEnabled;
-  final bool facturacionEnabled;
+  final Map<String, bool> _enabled;
   final bool bloqueadoPago;
   final bool habilitadoIA;
 
   Modulos({
-    this.ventasEnabled = false,
-    this.facturacionEnabled = false,
+    Map<String, bool>? enabled,
     this.bloqueadoPago = false,
     this.habilitadoIA = false,
-  });
+  }) : _enabled = enabled ?? const {};
 
-  factory Modulos.fromJson(Map<String, dynamic> j) => Modulos(
-        ventasEnabled: j['ventas'] is Map && j['ventas']['enabled'] == true,
-        facturacionEnabled:
-            j['facturacion'] is Map && j['facturacion']['enabled'] == true,
-        bloqueadoPago: j['bloqueadoPago'] == true,
-        habilitadoIA: j['habilitadoIA'] == true,
-      );
+  bool isEnabled(String key) => _enabled[key] == true;
+
+  factory Modulos.fromJson(Map<String, dynamic> j) {
+    final enabled = <String, bool>{};
+    for (final m in Modulo.values) {
+      final v = j[m.name];
+      enabled[m.name] = v is Map && v['enabled'] == true;
+    }
+    return Modulos(
+      enabled: enabled,
+      bloqueadoPago: j['bloqueadoPago'] == true,
+      habilitadoIA: j['habilitadoIA'] == true,
+    );
+  }
 }
