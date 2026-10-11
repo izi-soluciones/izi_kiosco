@@ -20,11 +20,15 @@ import 'package:izi_kiosco/app/values/routes.dart';
 import 'package:izi_kiosco/app/values/routes_keys.dart';
 import 'package:izi_kiosco/data/repositories/auth/auth_repository_http.dart';
 import 'package:izi_kiosco/data/repositories/business/business_repository_http.dart';
+import 'package:izi_kiosco/data/monitoring/agent_link.dart';
 import 'package:izi_kiosco/data/monitoring/kiosk_activity.dart';
+import 'package:izi_kiosco/data/monitoring/kiosk_commands.dart';
 import 'package:izi_kiosco/data/monitoring/kiosk_health_collector.dart';
+import 'package:izi_kiosco/data/monitoring/monitoring_commands.dart';
 import 'package:izi_kiosco/data/monitoring/monitoring_heartbeat.dart';
 import 'package:izi_kiosco/data/monitoring/monitoring_service.dart';
 import 'package:izi_kiosco/data/monitoring/monitoring_telemetry_sink.dart';
+import 'package:izi_kiosco/data/monitoring/terminal_enrollment.dart';
 import 'package:izi_kiosco/data/repositories/comanda/comanda_repository_http.dart';
 import 'package:izi_kiosco/data/telemetry/kiosk_telemetry.dart';
 import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
@@ -103,6 +107,15 @@ class MyApp extends StatelessWidget {
             _followActivity();
             MonitoringHeartbeat.instance?.start();
             MonitoringTelemetrySink.instance?.start();
+            MonitoringCommandRunner.instance?.start();
+            TerminalEnrollment.instance?.start();
+            AgentLink.instance?.start();
+            // `reload_app` outside the browser: back home, loading the kiosk
+            // again as the error screen's "reload" button does.
+            KioskCommands.instance?.restartApp = () {
+              route.go(RoutesKeys.homeLink);
+              _auth.verify();
+            };
             return _auth..verify();
           },
         ),
@@ -117,6 +130,8 @@ class MyApp extends StatelessWidget {
           create: (context) {
             final posConfig = PosConfigBloc(context.read<AuthBloc>());
             KioskHealthCollector.instance.attach(auth: _auth, posConfig: posConfig);
+            KioskCommands.instance?.attach(auth: _auth, posConfig: posConfig);
+            TerminalEnrollment.instance?.attach(auth: _auth, posConfig: posConfig);
             return posConfig;
           },
           lazy: false,

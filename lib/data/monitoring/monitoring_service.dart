@@ -304,6 +304,56 @@ class MonitoringService {
     _retryTimer = _timer(delay, () => unawaited(_attempt(epoch)));
   }
 
+  /// A device token the service sends with `rotate_token` (contracts
+  /// §12.5): `izd_` and 16 to 128 base64url characters.
+  static final RegExp rotatedTokenFormat = RegExp(r'^izd_[A-Za-z0-9_-]{16,128}$');
+
+  /// `rotate_token` with the new token in its args (contracts §12.5): keeps
+  /// [token] in place of the current one, stored first, so the result is
+  /// confirmed with it. The service revokes the old one only then.
+  ///
+  /// False when there is nothing to rotate (logged out, enrolling, or a
+  /// [token] that is not a device token); the current token stays.
+  Future<bool> adoptRotatedToken(String token) async {
+    try {
+      final context = _context;
+      final current = _deviceToken;
+      if (!_running || context == null || current == null) return false;
+      if (_inFlightEpoch == _epoch || !rotatedTokenFormat.hasMatch(token)) return false;
+      if (token == current) return true;
+      final epoch = _epoch;
+      final status = _status.value;
+      await store.saveEnrollment(MonitoringEnrollmentRecord(
+        deviceToken: token,
+        deviceId: status.deviceId,
+        applianceId: status.applianceId,
+        contribuyenteId: context.contribuyenteId,
+        dispositivoId: context.dispositivoId,
+      ));
+      if (epoch != _epoch || !_running || _deviceToken != current) return false;
+      _deviceToken = token;
+      _tokenRejections = 0;
+      _set(MonitoringStatus(
+          state: MonitoringState.enrolled,
+          deviceId: status.deviceId,
+          applianceId: status.applianceId));
+      Telemetry.event('monitoring.token_rotated', data: {'via': 'command'});
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// `rotate_token` without a token in its args: enrolls again, which gets
+  /// a new token and revokes the old one. Returns the new token, or null
+  /// when that enrollment failed (it is then retried with backoff).
+  Future<String?> reenroll() async {
+    final before = _deviceToken;
+    await retryNow();
+    final after = deviceToken;
+    return after != null && after != before ? after : null;
+  }
+
   /// The service accepted a heartbeat sent with [token]: it works, so the
   /// next rejection enrolls again right away.
   void onTokenAccepted(String token) {

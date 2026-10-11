@@ -1,7 +1,9 @@
+import 'package:izi_kiosco/domain/dto/monitoring_command_result_dto.dart';
 import 'package:izi_kiosco/domain/dto/monitoring_enrollment_dto.dart';
 import 'package:izi_kiosco/domain/dto/monitoring_events_dto.dart';
 import 'package:izi_kiosco/domain/dto/monitoring_heartbeat_dto.dart';
 import 'package:izi_kiosco/domain/models/monitoring_enrollment.dart';
+import 'package:izi_kiosco/domain/models/monitoring_enrollment_code.dart';
 import 'package:izi_kiosco/domain/models/monitoring_events_response.dart';
 import 'package:izi_kiosco/domain/models/monitoring_heartbeat_response.dart';
 
@@ -27,6 +29,30 @@ abstract class MonitoringRepository {
   /// service is a 413.
   Future<MonitoringEventsResponse> uploadEvents(MonitoringEventsDto dto,
       {required String deviceToken});
+
+  /// Asks for a one-time code for this kiosk's terminal or PC agent
+  /// ([MonitoringEnrollmentCode.forTerminal], [MonitoringEnrollmentCode.forAgent]),
+  /// tied to this kiosk's appliance (contracts §3.2). Goes with the kiosk's
+  /// iZi token and its [deviceToken].
+  ///
+  /// Throws [MonitoringException] like [heartbeat].
+  Future<MonitoringEnrollmentCode> requestEnrollmentCode(String forKind,
+      {required String deviceToken});
+
+  /// Reports how a remote command ended ([result], contracts §6).
+  ///
+  /// Throws [MonitoringException]: an id the service does not know for this
+  /// device is a 404 `command_not_found`, a command no longer open a 409
+  /// `command_not_open`.
+  Future<void> reportCommandResult(MonitoringCommandResultDto result,
+      {required String deviceToken});
+
+  /// Uploads a diagnostics report (JSON, at most 2 MB), for [commandId]
+  /// when a remote command asked for it (contracts §6, §12.5).
+  ///
+  /// Throws [MonitoringException] like [uploadEvents].
+  Future<MonitoringDiagnosticReceipt> uploadDiagnostics(Map<String, Object?> report,
+      {String? commandId, required String deviceToken});
 }
 
 /// Why a call to the monitoring service failed.
@@ -51,6 +77,18 @@ class MonitoringException implements Exception {
 
   /// The service (or the gateway) refused the body for its size.
   bool get isTooLarge => statusCode == 413;
+
+  /// The service answered, and will answer the same to the same request:
+  /// sending it again does not help (a 4xx other than 401, 408 and 429).
+  bool get isFinal {
+    final status = statusCode;
+    return status != null &&
+        status >= 400 &&
+        status < 500 &&
+        status != 401 &&
+        status != 408 &&
+        status != 429;
+  }
 
   @override
   String toString() =>

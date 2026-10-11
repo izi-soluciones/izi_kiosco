@@ -6,12 +6,14 @@ import 'package:izi_kiosco/data/monitoring/monitoring_service.dart';
 import 'package:izi_kiosco/data/monitoring/monitoring_store.dart';
 import 'package:izi_kiosco/data/telemetry/telemetry.dart';
 import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
+import 'package:izi_kiosco/domain/dto/monitoring_command_result_dto.dart';
 import 'package:izi_kiosco/domain/dto/monitoring_enrollment_dto.dart';
 import 'package:izi_kiosco/domain/dto/monitoring_events_dto.dart';
 import 'package:izi_kiosco/domain/dto/monitoring_heartbeat_dto.dart';
 import 'package:izi_kiosco/domain/models/contribuyente.dart';
 import 'package:izi_kiosco/domain/models/device.dart';
 import 'package:izi_kiosco/domain/models/monitoring_enrollment.dart';
+import 'package:izi_kiosco/domain/models/monitoring_enrollment_code.dart';
 import 'package:izi_kiosco/domain/models/monitoring_events_response.dart';
 import 'package:izi_kiosco/domain/models/monitoring_heartbeat_response.dart';
 import 'package:izi_kiosco/domain/repositories/monitoring_repository.dart';
@@ -77,6 +79,57 @@ class FakeMonitoringRepository extends MonitoringRepository {
     uploads.add((dto: dto, token: deviceToken));
     if (uploadReplies.isEmpty) throw StateError('unexpected upload');
     return uploadReplies.removeAt(0)(dto);
+  }
+
+  /// Enrollment codes asked for (`terminal` / `agent`), with the device
+  /// token each request carried.
+  final List<({String forKind, String token})> codeRequests = [];
+  final List<Future<MonitoringEnrollmentCode> Function()> codeReplies = [];
+
+  void issueCode([String code = 'K7Q-4MZ-9TD']) =>
+      codeReplies.add(() async => MonitoringEnrollmentCode(code: code));
+
+  void refuseCode(Object error) => codeReplies.add(() async => throw error);
+
+  @override
+  Future<MonitoringEnrollmentCode> requestEnrollmentCode(String forKind,
+      {required String deviceToken}) {
+    codeRequests.add((forKind: forKind, token: deviceToken));
+    if (codeReplies.isEmpty) throw StateError('unexpected code request');
+    return codeReplies.removeAt(0)();
+  }
+
+  /// Command results reported, with the device token each one carried.
+  final List<({MonitoringCommandResultDto result, String token})> results = [];
+  final List<Future<void> Function()> resultReplies = [];
+
+  void acceptResult() => resultReplies.add(() async {});
+
+  void rejectResult(Object error) => resultReplies.add(() async => throw error);
+
+  @override
+  Future<void> reportCommandResult(MonitoringCommandResultDto result,
+      {required String deviceToken}) {
+    results.add((result: result, token: deviceToken));
+    if (resultReplies.isEmpty) throw StateError('unexpected result');
+    return resultReplies.removeAt(0)();
+  }
+
+  /// Diagnostics uploaded.
+  final List<({Map<String, Object?> report, String? commandId, String token})> diagnostics = [];
+  final List<Future<MonitoringDiagnosticReceipt> Function()> diagnosticsReplies = [];
+
+  void acceptDiagnostics([String id = 'diag1']) => diagnosticsReplies
+      .add(() async => MonitoringDiagnosticReceipt(id: id, size: 1234));
+
+  void rejectDiagnostics(Object error) => diagnosticsReplies.add(() async => throw error);
+
+  @override
+  Future<MonitoringDiagnosticReceipt> uploadDiagnostics(Map<String, Object?> report,
+      {String? commandId, required String deviceToken}) {
+    diagnostics.add((report: report, commandId: commandId, token: deviceToken));
+    if (diagnosticsReplies.isEmpty) throw StateError('unexpected diagnostics');
+    return diagnosticsReplies.removeAt(0)();
   }
 }
 
