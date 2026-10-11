@@ -17,8 +17,12 @@ abstract class TelemetrySink {
   void setContext(Map<String, Object?> context);
 }
 
-/// Records what happens on this kiosk: to the device buffer always, and to
-/// the [TelemetrySink] within the [SendBudget].
+/// Told of every event recorded, already redacted (e.g. the monitoring
+/// counters). Must be quick and must not record events itself.
+typedef TelemetryObserver = void Function(TelemetryEvent event);
+
+/// Records what happens on this kiosk: to the device buffer always, to the
+/// [observers], and to the [TelemetrySink] within the [SendBudget].
 ///
 /// Everything goes through [TelemetryRedactor] first. Recording never throws
 /// and never waits: it must not be able to break a sale.
@@ -26,13 +30,19 @@ class Telemetry {
   final TelemetryBuffer buffer;
   final TelemetrySink? sink;
   final SendBudget budget;
+  final List<TelemetryObserver> observers;
   final Stopwatch _uptime = Stopwatch()..start();
   int _seq = 0;
   Map<String, Object?> _context = const {};
 
-  Telemetry({TelemetryBuffer? buffer, this.sink, SendBudget? budget})
+  Telemetry(
+      {TelemetryBuffer? buffer,
+      this.sink,
+      SendBudget? budget,
+      List<TelemetryObserver> observers = const []})
       : buffer = buffer ?? TelemetryBuffer(),
-        budget = budget ?? SendBudget();
+        budget = budget ?? SendBudget(),
+        observers = List.unmodifiable(observers);
 
   static Telemetry _instance = Telemetry();
 
@@ -90,6 +100,11 @@ class Telemetry {
         data: TelemetryRedactor.redact(data),
       );
       buffer.add(event);
+      for (final observer in observers) {
+        try {
+          observer(event);
+        } catch (_) {}
+      }
       final sink = this.sink;
       if (sink != null) {
         final sendLog = budget.allowLog(type);

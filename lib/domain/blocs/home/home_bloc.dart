@@ -4,6 +4,7 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
 import 'package:izi_kiosco/domain/repositories/business_repository.dart';
+import 'package:izi_kiosco/data/monitoring/pos_link_health.dart';
 import 'package:izi_kiosco/data/pos/izify_pos_client.dart';
 import 'package:izi_kiosco/data/telemetry/pos_telemetry.dart';
 import 'package:izi_kiosco/data/utils/token_utils.dart';
@@ -76,7 +77,8 @@ class HomeBloc extends Cubit<HomeState>{
           address: address,
           ms: watch.elapsedMilliseconds,
           notReadyReason: health.notReadyReason,
-          appVersion: health.appVersion);
+          appVersion: health.appVersion,
+          health: health);
     } catch (e) {
       ready = false;
       unawaited(_link.failed(
@@ -95,8 +97,15 @@ class HomeBloc extends Cubit<HomeState>{
   }
 
   _verify()async{
+    final watch = Stopwatch()..start();
     try {
       final isConnected = await _businessRepository.verifyConnectionPos();
+      // The bridge answered; whether the terminal behind it did is what counts.
+      if (isConnected) {
+        PosLinkHealth.instance.answered(ms: watch.elapsedMilliseconds);
+      } else {
+        PosLinkHealth.instance.failed(cause: 'no_answer');
+      }
       if(isClosed){
         _subscription?.cancel();
         return;
@@ -106,6 +115,7 @@ class HomeBloc extends Cubit<HomeState>{
       }
       emit(state.copyWith(statusServer: true,statusServerPos: isConnected));
     } catch (e) {
+      PosLinkHealth.instance.failed(cause: PosLinkHealth.bridgeFailureCause(e));
       if(isClosed){
         _subscription?.cancel();
         return;

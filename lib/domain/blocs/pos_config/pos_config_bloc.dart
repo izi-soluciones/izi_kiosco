@@ -1,6 +1,7 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'dart:async';
+import 'package:izi_kiosco/data/monitoring/pos_link_health.dart';
 import 'package:izi_kiosco/data/pos/card_charge_recovery.dart';
 import 'package:izi_kiosco/data/pos/izify_pos_client.dart';
 import 'package:izi_kiosco/data/pos/izify_pos_discovery.dart';
@@ -532,10 +533,15 @@ class PosConfigBloc extends Cubit<PosConfigState> {
     return null;
   }
 
-  void _logWrongTerminal(IzifyPosAddress address, IzifyPosHealth health) =>
-      Telemetry.event('pos.wrong_terminal',
-          level: TelemetryLevel.warning,
-          data: {'address': address.hostPort, 'answeredBy': health.name});
+  void _logWrongTerminal(IzifyPosAddress address, IzifyPosHealth health) {
+    Telemetry.event('pos.wrong_terminal',
+        level: TelemetryLevel.warning,
+        data: {'address': address.hostPort, 'answeredBy': health.name});
+    // Something answered, but not our terminal: it cannot charge for us.
+    PosLinkHealth.instance.answered(
+        address: address.hostPort,
+        notReadyReason: 'En ${address.host} responde otro datáfono (${health.name}).');
+  }
 
   /// [ms]: how long the terminal took to answer, when this is its answer.
   void _report(IzifyPosHealth? health, String? problem, {int? ms}) {
@@ -547,7 +553,8 @@ class PosConfigBloc extends Cubit<PosConfigState> {
           address: IzifyPosAddress(device.ip, device.port),
           ms: ms,
           notReadyReason: reason,
-          appVersion: health.appVersion);
+          appVersion: health.appVersion,
+          health: health);
     }
     emit(state.copyWith(
       isHealthy: health != null && reason == null,
@@ -595,6 +602,7 @@ class PosConfigBloc extends Cubit<PosConfigState> {
     }
 
     await IzifyPosSession.forget();
+    PosLinkHealth.instance.reset();
     if (isClosed) return;
     emit(
       state.copyWith(
