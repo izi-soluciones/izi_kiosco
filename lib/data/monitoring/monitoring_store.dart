@@ -87,9 +87,13 @@ class MonitoringStore {
 
   /// Forgets the device token (revoked, or issued for someone else). The
   /// installation id stays: the next enrollment updates the same device.
-  Future<void> clearEnrollment() async {
+  ///
+  /// With [onlyToken], only when that is the token stored: a newer one that
+  /// replaced it in the meantime stays.
+  Future<void> clearEnrollment({String? onlyToken}) async {
     try {
       final prefs = await SharedPreferences.getInstance();
+      if (onlyToken != null && prefs.getString(deviceTokenKey) != onlyToken) return;
       for (final key in [deviceTokenKey, deviceIdKey, applianceIdKey, contribuyenteKey, dispositivoKey]) {
         await prefs.remove(key);
       }

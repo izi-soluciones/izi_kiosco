@@ -109,13 +109,17 @@ typedef MonitoringTimerFactory = Timer Function(Duration delay, void Function() 
 ///
 /// Runs while the kiosk is logged in with its device loaded ([followAuth]),
 /// enrolls when it has no token for the current contribuyente and device,
-/// and retries with exponential backoff ([initialBackoff] → [maxBackoff])
-/// when the service cannot be reached. Nothing here is awaited by the UI
+/// and retries with exponential backoff ([initialBackoff] → [maxBackoff],
+/// each wait shortened by up to [jitter] so a fleet that saw the same outage
+/// does not come back in lockstep) when the service cannot be reached. Nothing here is awaited by the UI
 /// and nothing throws out of it: monitoring must never get in the way of a
 /// sale.
 class MonitoringService {
   static const Duration initialBackoff = Duration(seconds: 30);
   static const Duration maxBackoff = Duration(minutes: 30);
+
+  /// The share of each backoff wait that is random.
+  static const double jitter = 0.2;
 
   /// Lets the requests of the login (catalog, currencies, video) go first.
   static const Duration firstAttemptDelay = Duration(seconds: 5);
@@ -129,6 +133,7 @@ class MonitoringService {
   final Future<MonitoringApp> Function() _appInfo;
   final MonitoringTimerFactory _timer;
   final DateTime Function() _now;
+  final Random _random;
   final ValueNotifier<MonitoringStatus> _status = ValueNotifier(MonitoringStatus.stopped);
 
   // Created on first use: DioClient reads the API URL from the loaded `.env`.
@@ -153,12 +158,14 @@ class MonitoringService {
       String flavor = 'local',
       Future<MonitoringApp> Function()? appInfo,
       MonitoringTimerFactory? timer,
-      DateTime Function()? now})
+      DateTime Function()? now,
+      Random? random})
       : _injectedRepository = repository,
         store = store ?? MonitoringStore(),
         _appInfo = appInfo ?? _memo(() => currentApp(flavor)),
         _timer = timer ?? Timer.new,
-        _now = now ?? DateTime.now;
+        _now = now ?? DateTime.now,
+        _random = random ?? Random();
 
   static MonitoringService _instance = MonitoringService();
 
@@ -246,13 +253,19 @@ class MonitoringService {
     await _attempt(_epoch, manual: true);
   }
 
-  /// The service rejected the device token (`device_token_invalid`): forget
+  /// The service rejected [rejectedToken] (`device_token_invalid`): forget
   /// it and enroll again.
-  Future<void> onTokenRejected() async {
-    if (!_running) return;
+  ///
+  /// Only when it is still the current token: a request sent with a token
+  /// that a manual retry or a re-enrollment already replaced must not wipe
+  /// the new one, nor revoke it with yet another enrollment. While an
+  /// enrollment is on its way it is left to replace the token.
+  Future<void> onTokenRejected(String rejectedToken) async {
+    if (!_running || _deviceToken == null || rejectedToken != _deviceToken) return;
+    if (_inFlightEpoch == _epoch) return;
     _deviceToken = null;
-    await store.clearEnrollment();
-    if (!_running || _inFlightEpoch == _epoch) return;
+    await store.clearEnrollment(onlyToken: rejectedToken);
+    if (!_running || _deviceToken != null || _inFlightEpoch == _epoch) return;
     _cancelRetry();
     _failures = 0;
     _set(const MonitoringStatus(state: MonitoringState.pending));
@@ -308,7 +321,7 @@ class MonitoringService {
     } catch (error) {
       if (epoch != _epoch) return;
       _failures++;
-      final delay = backoffFor(_failures);
+      final delay = retryDelayFor(_failures, _random.nextDouble());
       final cause = switch (error) {
         MonitoringException e => e.cause,
         TimeoutException _ => 'timeout',
@@ -342,6 +355,16 @@ class MonitoringService {
     if (failures <= 1) return initialBackoff;
     final seconds = initialBackoff.inSeconds * pow(2, min(failures - 1, 16));
     return Duration(seconds: min(seconds.toInt(), maxBackoff.inSeconds));
+  }
+
+  /// The wait before the next attempt: [backoffFor] shortened by up to
+  /// [jitter], for [random] in [0, 1), and kept within [initialBackoff] and
+  /// [maxBackoff].
+  static Duration retryDelayFor(int failures, double random) {
+    final base = backoffFor(failures).inMilliseconds;
+    final jittered = (base * (1 - jitter * random.clamp(0.0, 1.0))).round();
+    return Duration(
+        milliseconds: jittered.clamp(initialBackoff.inMilliseconds, maxBackoff.inMilliseconds));
   }
 
   void _cancelRetry() {

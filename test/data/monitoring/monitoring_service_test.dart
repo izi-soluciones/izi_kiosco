@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:izi_kiosco/data/monitoring/monitoring_service.dart';
@@ -76,6 +77,23 @@ class FakeTimers {
   }
 }
 
+/// A [Random] whose [nextDouble] is what the test sets: 0 leaves the
+/// backoff as is.
+class FixedRandom implements Random {
+  double value;
+
+  FixedRandom([this.value = 0]);
+
+  @override
+  double nextDouble() => value;
+
+  @override
+  int nextInt(int max) => (value * max).floor();
+
+  @override
+  bool nextBool() => value >= 0.5;
+}
+
 class _Auth extends AuthBloc {
   _Auth() : super(MockAuthRepository(), MockBusinessRepository());
 
@@ -115,6 +133,7 @@ const _app = MonitoringApp(version: '2.3.1+45', flavor: 'izify', platform: 'web'
 void main() {
   late FakeMonitoringRepository repository;
   late FakeTimers timers;
+  late FixedRandom random;
   late MonitoringService service;
   final now = DateTime.utc(2026, 10, 12, 14);
 
@@ -123,7 +142,8 @@ void main() {
       store: MonitoringStore(),
       appInfo: () async => _app,
       timer: timers.call,
-      now: () => now);
+      now: () => now,
+      random: random);
 
   List<TelemetryEvent> events(String type) =>
       Telemetry.recent().where((e) => e.type == type).toList();
@@ -133,6 +153,7 @@ void main() {
     Telemetry.install(Telemetry());
     repository = FakeMonitoringRepository();
     timers = FakeTimers();
+    random = FixedRandom();
     service = build();
   });
 
@@ -275,6 +296,41 @@ void main() {
       expect(MonitoringService.backoffFor(7), const Duration(minutes: 30));
       expect(MonitoringService.backoffFor(1000), const Duration(minutes: 30));
     });
+
+    test('the jittered wait stays between 30 s and 30 min and spreads the fleet', () {
+      for (final failures in [1, 2, 5, 7, 50]) {
+        for (final r in [0.0, 0.25, 0.5, 0.999999, 1.0, -1.0, 2.0]) {
+          final delay = MonitoringService.retryDelayFor(failures, r);
+          expect(delay, greaterThanOrEqualTo(MonitoringService.initialBackoff), reason: '$failures $r');
+          expect(delay, lessThanOrEqualTo(MonitoringService.maxBackoff), reason: '$failures $r');
+          expect(delay, lessThanOrEqualTo(MonitoringService.backoffFor(failures)));
+          expect(delay.inMilliseconds,
+              greaterThanOrEqualTo((MonitoringService.backoffFor(failures).inMilliseconds * 0.8).floor()));
+        }
+      }
+      expect(MonitoringService.retryDelayFor(10, 0), MonitoringService.maxBackoff);
+      expect(MonitoringService.retryDelayFor(10, 0.5), const Duration(minutes: 27));
+      expect(MonitoringService.retryDelayFor(10, 0.5),
+          isNot(MonitoringService.retryDelayFor(10, 0.9)),
+          reason: 'kiosks capped at 30 min do not retry together');
+      expect(MonitoringService.retryDelayFor(3, 0.25), const Duration(seconds: 114));
+    });
+
+    test('the scheduled retry, its telemetry and the status use the jittered wait', () async {
+      random.value = 0.5;
+      repository
+        ..failWith(const MonitoringException('http_503', statusCode: 503))
+        ..failWith(const MonitoringException('http_503', statusCode: 503));
+      await service.start(_context);
+      await timers.fire(); // first attempt: 30 s cannot be shortened
+      expect(timers.active.single.delay, const Duration(seconds: 30));
+      await timers.fire(); // second failure: 60 s less 10 %
+
+      const expected = Duration(seconds: 54);
+      expect(timers.active.single.delay, expected);
+      expect(service.status.value.nextAttemptAt, now.add(expected));
+      expect(events('monitoring.enroll_failed').first.data['retryInSec'], 54);
+    });
   });
 
   group('stop and retry', () {
@@ -346,10 +402,58 @@ void main() {
       await service.start(_context);
       await timers.fire();
 
-      await service.onTokenRejected();
+      await service.onTokenRejected('izd_token1');
       expect(repository.calls, hasLength(2));
       expect(service.deviceToken, 'izd_token2');
       expect((await MonitoringStore().enrollment())!.deviceToken, 'izd_token2');
+    });
+
+    test('a rejection of a token already replaced changes nothing', () async {
+      repository
+        ..succeed()
+        ..succeed();
+      await service.start(_context);
+      await timers.fire();
+      await service.retryNow();
+      expect(service.deviceToken, 'izd_token2');
+
+      // A heartbeat sent with the old token comes back 401.
+      await service.onTokenRejected('izd_token1');
+      expect(repository.calls, hasLength(2), reason: 'no enrollment revokes the new token');
+      expect(service.deviceToken, 'izd_token2');
+      expect(service.status.value.state, MonitoringState.enrolled);
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getString('monitoring.deviceToken'), 'izd_token2');
+      expect(timers.active, isEmpty);
+    });
+
+    test('a rejection without a current token changes nothing', () async {
+      await service.onTokenRejected('izd_token1'); // stopped
+      await service.start(_context); // pending, no token yet
+      await service.onTokenRejected('izd_token1');
+      expect(repository.calls, isEmpty);
+      expect(service.status.value.state, MonitoringState.pending);
+      expect(timers.active.single.delay, MonitoringService.firstAttemptDelay);
+    });
+
+    test('a rejection while an enrollment is on its way leaves it to replace the token', () async {
+      repository.succeed();
+      final reply = Completer<MonitoringEnrollment>();
+      repository.replies.add(() => reply.future);
+      await service.start(_context);
+      await timers.fire();
+      unawaited(service.retryNow());
+      await pumpEventQueue();
+      expect(service.status.value.enrolling, isTrue);
+
+      await service.onTokenRejected('izd_token1');
+      reply.complete(const MonitoringEnrollment(
+          deviceId: 'dev1', applianceId: 'app1', deviceToken: 'izd_new'));
+      await pumpEventQueue();
+
+      expect(repository.calls, hasLength(2));
+      expect(service.deviceToken, 'izd_new');
+      expect((await MonitoringStore().enrollment())!.deviceToken, 'izd_new');
     });
   });
 

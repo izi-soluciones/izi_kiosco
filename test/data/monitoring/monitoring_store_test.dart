@@ -43,6 +43,9 @@ void main() {
     expect(saved.isFor(contribuyenteId: 6, dispositivoId: 7), isFalse);
     expect(saved.isFor(contribuyenteId: 5, dispositivoId: 8), isFalse);
 
+    await store.clearEnrollment(onlyToken: 'izd_older');
+    expect((await store.enrollment())!.deviceToken, 'izd_x', reason: 'a newer token stays');
+
     await store.clearEnrollment();
     expect(await store.enrollment(), isNull);
     expect(await MonitoringStore().installationId(), id);
