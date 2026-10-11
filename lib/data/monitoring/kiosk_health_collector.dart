@@ -40,7 +40,7 @@ class KioskHealthCollector {
   final bool? Function() _online;
   final DateTime Function() _now;
 
-  /// `state.printer`, filled by the printing (KIO-04).
+  /// `state.printer`, filled by the printing (`PrinterHealth`).
   KioskStateSection printer = _nothing;
 
   /// `state.agent`, filled by the PC agent link (KIO-05).

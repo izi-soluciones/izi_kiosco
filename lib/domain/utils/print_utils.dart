@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:izi_kiosco/data/monitoring/printer_health.dart';
 import 'package:izi_kiosco/domain/models/device.dart';
 import 'package:printing/printing.dart';
 import 'package:sunmi_printer_plus/column_maker.dart';
@@ -274,10 +275,21 @@ class PrintUtils {
     }
   }
 
+  // Every route reports how the ticket went to the monitoring
+  // (PrinterHealth: `print.ok` / `print.failed`, `state.printer`), around
+  // the printing itself: what prints, and what an error does, stay the same.
   print(List<IziPrintItem> values, Device? device) async {
     if (device?.config.noPrintRollo == true) return;
+    final watch = Stopwatch()..start();
+    final health = PrinterHealth.instance;
     if (kIsWeb) {
-      await _pdfPrint(values);
+      try {
+        await _pdfPrint(values);
+      } catch (e) {
+        health.failed(PrintRoute.webPdf, cause: PrinterHealth.causeOf(e));
+        rethrow;
+      }
+      health.printed(PrintRoute.webPdf, ms: watch.elapsedMilliseconds);
     } else {
       if (Platform.isAndroid) {
         // Routing precedence: explicit backend flags first (printSat,
@@ -289,24 +301,46 @@ class PrintUtils {
             log("iZi Kiosco: Routing to _satPrint...");
             await _satPrint(values);
             log("iZi Kiosco: _satPrint finished resolving channel.");
+            health.printed(PrintRoute.sat, ms: watch.elapsedMilliseconds);
           } catch (e) {
             log("SatPrint failed: $e");
+            health.failed(PrintRoute.sat, cause: PrinterHealth.causeOf(e));
           }
         } else if (device?.config.printAutoReply == true) {
           try {
             await _autoReplyPrint(values);
+            health.printed(PrintRoute.autoreply, ms: watch.elapsedMilliseconds);
           } catch (e) {
             log("AutoReplyPrint failed: $e");
+            health.failed(PrintRoute.autoreply, cause: PrinterHealth.causeOf(e));
           }
         } else {
-          var resBinding = await SunmiPrinter.bindingPrinter();
-          await SunmiPrinter.initPrinter();
-          var status = await SunmiPrinter.getPrinterStatus();
-          log(status.toString());
-          if (resBinding == true && status != PrinterStatus.ERROR) {
-            await _sunmiPrint(values);
-          } else {
-            //await _pdfPrint(values);
+          PrinterStatus? status;
+          try {
+            var resBinding = await SunmiPrinter.bindingPrinter();
+            await SunmiPrinter.initPrinter();
+            status = await SunmiPrinter.getPrinterStatus();
+            log(status.toString());
+            if (resBinding == true && status != PrinterStatus.ERROR) {
+              await _sunmiPrint(values);
+            } else {
+              //await _pdfPrint(values);
+            }
+            final problem = resBinding == true
+                ? PrinterHealth.sunmiProblem(status.name)
+                : 'not_bound';
+            final hasPaper = PrinterHealth.sunmiHasPaper(status.name);
+            if (problem == null) {
+              health.printed(PrintRoute.sunmi,
+                  ms: watch.elapsedMilliseconds, hasPaper: hasPaper);
+            } else {
+              health.failed(PrintRoute.sunmi, cause: problem, hasPaper: hasPaper);
+            }
+          } catch (e) {
+            health.failed(PrintRoute.sunmi,
+                cause: PrinterHealth.causeOf(e),
+                hasPaper: status == null ? null : PrinterHealth.sunmiHasPaper(status.name));
+            rethrow;
           }
         }
       } else {

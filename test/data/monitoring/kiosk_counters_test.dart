@@ -184,6 +184,31 @@ void main() {
       expect(of('charge.recovered', {'status': 'not_found'}), [KioskCounters.chargesTimeout]);
     });
 
+    test('QR and Bre-B payments, which log no charge events, by their summary', () {
+      List<String> tx(String method, String status) =>
+          of('tx.summary', {'method': method, 'status': status});
+      expect(tx('qr', 'approved'), [KioskCounters.chargesStarted, KioskCounters.chargesApproved]);
+      expect(tx('breb', 'approved'), [KioskCounters.chargesStarted, KioskCounters.chargesApproved]);
+      expect(tx('qr', 'cancelled'), [KioskCounters.chargesStarted, KioskCounters.chargesDeclined]);
+      expect(tx('qr', 'declined'), [KioskCounters.chargesStarted, KioskCounters.chargesDeclined]);
+      expect(tx('breb', 'timeout'), [KioskCounters.chargesStarted, KioskCounters.chargesTimeout]);
+      expect(tx('qr', 'error'), [KioskCounters.chargesStarted, KioskCounters.chargesError]);
+      expect(tx('qr', 'unregistered'), [
+        KioskCounters.chargesStarted,
+        KioskCounters.chargesApproved,
+        KioskCounters.chargesUnregistered
+      ]);
+      expect(tx('qr', 'nonsense'), isEmpty);
+    });
+
+    test('card summaries are not counted again, nor orders paid at the counter', () {
+      for (final status in ['approved', 'declined', 'timeout', 'error', 'unregistered']) {
+        expect(of('tx.summary', {'method': 'card', 'status': status}), isEmpty);
+      }
+      expect(of('tx.summary', {'method': 'cash', 'status': 'approved'}), isEmpty);
+      expect(of('tx.summary', {'status': 'approved'}), isEmpty);
+    });
+
     test('prints, and nothing for the rest', () {
       expect(of('print.ok'), [KioskCounters.printsOk]);
       expect(of('print.failed'), [KioskCounters.printsFailed]);

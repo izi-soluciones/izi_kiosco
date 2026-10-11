@@ -140,6 +140,10 @@ class KioskCounters {
   /// - `charge.register_failed`: approved, but iZi does not know. The
   ///   recovery's later attempts on the same charge are not counted again;
   ///   a charge it recovers after a reload counts as approved too.
+  /// - `tx.summary` of a QR or Bre-B payment, which logs no `charge.*`
+  ///   event: one charge started and its outcome, with the meaning above.
+  ///   Card summaries add nothing (their `charge.*` events counted them),
+  ///   nor do orders paid at the counter, which charge nothing here.
   /// - `print.ok` / `print.failed`.
   static List<String> countersFor(TelemetryEvent event) {
     final data = event.data;
@@ -169,6 +173,16 @@ class KioskCounters {
         return switch (data['status']) {
           'ERROR' || 'CANCELLED' => const [chargesDeclined],
           'not_found' => const [chargesTimeout],
+          _ => const [],
+        };
+      case 'tx.summary':
+        if (data['method'] != 'qr' && data['method'] != 'breb') return const [];
+        return switch (data['status']) {
+          'approved' => const [chargesStarted, chargesApproved],
+          'declined' || 'cancelled' => const [chargesStarted, chargesDeclined],
+          'timeout' => const [chargesStarted, chargesTimeout],
+          'error' => const [chargesStarted, chargesError],
+          'unregistered' => const [chargesStarted, chargesApproved, chargesUnregistered],
           _ => const [],
         };
       case 'print.ok':
