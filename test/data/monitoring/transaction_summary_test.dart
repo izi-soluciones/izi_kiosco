@@ -174,6 +174,43 @@ void main() {
     });
   });
 
+  group('reportInterim', () {
+    test('says how it stands, and the outcome reported later goes over it', () {
+      final tx = card()..sent(reference: 'KOS-1');
+      expect(tx.reportInterim(TxStatus.timeout), isTrue);
+      expect(tx.interim, isTrue);
+      expect(tx.reported, isFalse);
+      expect(tx.reportInterim(TxStatus.timeout), isFalse, reason: 'once');
+
+      now = now.add(const Duration(seconds: 3));
+      tx.verdict(via: 'poll');
+      expect(tx.report(TxStatus.declined), isTrue);
+      expect(tx.report(TxStatus.error), isFalse, reason: 'the outcome stays');
+
+      final events = summaries();
+      expect([for (final e in events) e.data['status']], ['timeout', 'declined']);
+      expect(events.first.level, TelemetryLevel.warning);
+      expect(events.first.data['msToVerdict'], isNull);
+      expect(events.last.data['msToVerdict'], 3000);
+      expect(events.last.chargeId, events.first.chargeId, reason: 'the monitoring keeps the latest');
+    });
+
+    test('an outcome settled afterwards is reported right away: nobody waits for iZi', () {
+      final tx = card()..sent(reference: 'KOS-1');
+      tx.verdict(via: 'ws');
+      tx.reportInterim(TxStatus.timeout);
+      tx.settle(TxStatus.approved);
+      expect(tx.reported, isTrue);
+      expect([for (final e in summaries()) e.data['status']], ['timeout', 'approved']);
+    });
+
+    test('nothing once reported', () {
+      final tx = card()..report(TxStatus.approved);
+      expect(tx.reportInterim(TxStatus.timeout), isFalse);
+      expect(summaries(), hasLength(1));
+    });
+  });
+
   group('from a stored card charge', () {
     test('takes what the row keeps', () {
       final cp = CardPayment(

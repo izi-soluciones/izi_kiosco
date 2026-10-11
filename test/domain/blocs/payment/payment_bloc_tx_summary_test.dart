@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -36,6 +37,17 @@ class _Comandas implements ComandaRepository {
   Object? orderFailure;
   int charges = 0;
 
+  /// Holds the ATC / Linkser answer until completed (the customer still at
+  /// the terminal), so the page can close meanwhile.
+  Completer<void>? cardHeld;
+
+  /// Holds the payment notice until completed (iZi still being told).
+  Completer<void>? markHeld;
+
+  /// Completes once the terminal is asked to charge / iZi is told.
+  final charging = Completer<void>();
+  final marking = Completer<void>();
+
   Charge _charge(String uuid) {
     charges++;
     if (chargeFailure != null) throw chargeFailure!;
@@ -50,6 +62,8 @@ class _Comandas implements ComandaRepository {
       _charge('cobro-orden-1');
 
   Future<CardPayment> _card() async {
+    if (!charging.isCompleted) charging.complete();
+    await cardHeld?.future;
     if (cardFailure != null) throw cardFailure!;
     return CardPayment(response: 'Aprobado', cardNumber: '****1111', date: '2026-10-12', hour: '14:00');
   }
@@ -68,6 +82,8 @@ class _Comandas implements ComandaRepository {
   @override
   Future<void> markPaymentATC(String chargeUuid, int? internalId,
       {Map<String, dynamic>? transaccion, String? token}) async {
+    if (!marking.isCompleted) marking.complete();
+    await markHeld?.future;
     if (markFailure != null) throw markFailure!;
   }
 
@@ -216,6 +232,47 @@ void main() {
       expect(await bloc.makeCardPayment(auth({'ipAtc': '10.0.0.9'}), atc: true), isTrue);
       await bloc.close();
       expect(summaries().single['status'], 'approved');
+    });
+
+    // The kiosk closes the page mid-charge: IziScreenInactive sends it home.
+    group('the page closing mid-charge', () {
+      test('while iZi is told: without a verdict for now, approved once iZi takes it', () async {
+        comandas.markHeld = Completer();
+        final flow = bloc.makeCardPayment(auth({'ipAtc': '10.0.0.9'}), atc: true);
+        await comandas.marking.future;
+        await bloc.close();
+        expect(summaries().single['status'], 'timeout', reason: 'charged, never cancelled');
+
+        comandas.markHeld!.complete();
+        await flow.catchError((_) => false);
+        final txs = summaries();
+        expect([for (final tx in txs) tx['status']], ['timeout', 'approved']);
+        expect(txs.last['chargeId'], txs.first['chargeId']);
+      });
+
+      test('while iZi is told, and iZi does not take it: unregistered', () async {
+        comandas.markHeld = Completer();
+        comandas.markFailure = const PaymentConflict('otro pago');
+        final flow = bloc.makeCardPayment(auth({'ipAtc': '10.0.0.9'}), atc: true);
+        await comandas.marking.future;
+        await bloc.close();
+        comandas.markHeld!.complete();
+        await flow.catchError((_) => false);
+        expect([for (final tx in summaries()) tx['status']], ['timeout', 'unregistered']);
+      });
+
+      test('while the customer is at the terminal: without a verdict, not an error', () async {
+        comandas.cardHeld = Completer();
+        final flow = bloc.makeCardPayment(auth({'ipAtc': '10.0.0.9'}), atc: true);
+        await comandas.charging.future;
+        await bloc.close();
+        comandas.cardHeld!.complete();
+        // The flow stops at the next screen it can no longer show.
+        await flow.catchError((_) => false);
+        final tx = summaries().single;
+        expect(tx['status'], 'timeout');
+        expect(tx['attempts'], 1);
+      });
     });
   });
 
@@ -398,6 +455,51 @@ void main() {
       expect(tx['status'], 'error');
       expect(tx['attempts'], 0);
       expect(pos.charges, isEmpty);
+    });
+
+    group('the page closing mid-charge', () {
+      Future<List<String>> statuses() async {
+        final prefs = await SharedPreferences.getInstance();
+        return [
+          for (final row in prefs.getStringList('cardErrors') ?? const <String>[])
+            (jsonDecode(row) as Map)['estado'] as String
+        ];
+      }
+
+      test('approved, while iZi is told: approved once iZi takes it', () async {
+        comandas.markHeld = Completer();
+        final flow = bloc.makeCardPayment(izify, izify: true);
+        await comandas.marking.future;
+        await bloc.close();
+        expect(summaries().single['status'], 'timeout');
+
+        comandas.markHeld!.complete();
+        await flow.catchError((_) => false);
+        final txs = summaries();
+        expect([for (final tx in txs) tx['status']], ['timeout', 'approved']);
+        expect(txs.last['chargeId'], pos.charges.single['correlationId']);
+        expect(txs.last['verdictVia'], anyOf('ws', 'poll'));
+        expect(await statuses(), ['SUCCESS']);
+      });
+
+      test('while the terminal decides: the decline it gives replaces the timeout', () async {
+        pos.outcome = 'ERROR';
+        pos.chargeDuration = const Duration(milliseconds: 600);
+        final flow = bloc.makeCardPayment(izify, izify: true);
+        while (pos.charges.isEmpty) {
+          await Future<void>.delayed(const Duration(milliseconds: 10));
+        }
+        await bloc.close();
+        expect(summaries().single['status'], 'timeout');
+
+        // The terminal wait outlives the page; its error screen cannot show.
+        await flow.catchError((_) => false);
+        final txs = summaries();
+        expect([for (final tx in txs) tx['status']], ['timeout', 'declined']);
+        expect(txs.last['reference'], pos.charges.single['reference']);
+        expect(txs.last['msToVerdict'], isA<int>());
+        expect(await statuses(), ['ERROR']);
+      });
     });
 
     test('the stored charge remembers its order, for the recovery', () async {

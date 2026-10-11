@@ -441,7 +441,7 @@ class PaymentBloc extends Cubit<PaymentState> {
       }
     } catch (e) {
       log(e.toString());
-      _report(cashTx, TxStatus.error);
+      _reportError(cashTx, e);
       emit(state.copyWith(status: PaymentStatus.markCreateError));
       emit(state.copyWith(status: PaymentStatus.successGet));
     }
@@ -616,16 +616,30 @@ class PaymentBloc extends Cubit<PaymentState> {
     _endTx(TxStatus.timeout);
   }
 
-  /// The page is going away. A card charge sent and still without a verdict
-  /// is left to the recovery, which reports how it ended; anything else not
-  /// over was abandoned.
+  /// The page is going away. A card charge not over yet keeps running
+  /// without it (the terminal still deciding, iZi still being told): it is
+  /// reported for now as without a verdict once sent (abandoned before), and
+  /// its flow, which keeps [_tx], reports how it ended over that; a flow cut
+  /// short leaves the charge to the recovery. Anything else not over was
+  /// abandoned.
   void _endTxOnClose() {
     try {
       final tx = _tx;
-      if (tx == null) return;
-      final waiting = tx.method == TxMethod.card && tx.started && !tx.hasVerdict;
-      _endTx(waiting ? TxStatus.timeout : TxStatus.cancelled);
+      if (tx == null || tx.reported) return;
+      if (tx.method == TxMethod.card && tx.settled == null) {
+        tx.reportInterim(tx.started ? TxStatus.timeout : TxStatus.cancelled);
+        return;
+      }
+      _endTx(TxStatus.cancelled);
     } catch (_) {}
+  }
+
+  /// A flow failed with [e]. Failing only because the page went away (its
+  /// next screen cannot be shown any more) says nothing about the
+  /// transaction: what was reported when the page closed stands.
+  void _reportError(TransactionSummary? tx, Object e) {
+    if (e is StateError && isClosed) return;
+    _report(tx, TxStatus.error);
   }
 
   /// How a confirmed card charge ended once the kiosk told iZi
@@ -1388,7 +1402,7 @@ class PaymentBloc extends Cubit<PaymentState> {
       settled = cardPayment;
     } catch (e) {
       log(e.toString());
-      _report(tx, TxStatus.error);
+      _reportError(tx, e);
       _emitCardError(authState,
           message: e is IzifyPosException ? e.message : null);
       return false;
@@ -1613,7 +1627,7 @@ class PaymentBloc extends Cubit<PaymentState> {
       return false;
     } catch (e) {
       log(e.toString());
-      _report(tx, TxStatus.error);
+      _reportError(tx, e);
       // An IzifyPosException here was raised before the terminal accepted
       // anything, so its message ("no se cobró" + why) is safe to show.
       emit(state.copyWith(
@@ -1715,7 +1729,7 @@ class PaymentBloc extends Cubit<PaymentState> {
       return false;
     } catch (e) {
       log(e.toString());
-      _report(tx, TxStatus.error);
+      _reportError(tx, e);
       // An IzifyPosException here was raised before the terminal accepted
       // anything, so its message ("no se cobró" + why) is safe to show.
       emit(state.copyWith(
@@ -1923,7 +1937,7 @@ class PaymentBloc extends Cubit<PaymentState> {
       return false;
     } catch (e) {
       log(e.toString());
-      _report(tx, TxStatus.error);
+      _reportError(tx, e);
       emit(
         state.copyWith(
           qrLoading: false,
@@ -2089,7 +2103,7 @@ class PaymentBloc extends Cubit<PaymentState> {
       return false;
     } catch (e) {
       log(e.toString());
-      _report(tx, TxStatus.error);
+      _reportError(tx, e);
       emit(
         state.copyWith(
           brebLoading: false,

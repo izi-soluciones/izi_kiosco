@@ -62,7 +62,9 @@ class TxVerdictVia {
 /// at the point where the transaction ends. The monitoring keeps the latest
 /// summary of each [chargeId], so a charge settled later (a pending one
 /// verified, a retry, the recovery after a reload) is reported again under
-/// the same [chargeId] and replaces the earlier outcome.
+/// the same [chargeId] and replaces the earlier outcome. That is also how a
+/// page closing mid-charge works: [reportInterim] says how it stands, and
+/// the flow still running reports how it ended.
 ///
 /// Nothing here may break a sale: it never throws.
 class TransactionSummary {
@@ -96,6 +98,7 @@ class TransactionSummary {
   DateTime? _sentAt;
   String? _settled;
   bool _reported = false;
+  bool _interim = false;
 
   TransactionSummary(
       {required this.method,
@@ -130,6 +133,9 @@ class TransactionSummary {
 
   /// Already reported: nothing changes it any more.
   bool get reported => _reported;
+
+  /// Reported for now ([reportInterim]): its outcome is still to come.
+  bool get interim => _interim;
 
   /// The outcome noted with [settle], not reported yet.
   String? get settled => _settled;
@@ -173,9 +179,13 @@ class TransactionSummary {
   }
 
   /// The outcome is known, but the transaction is not over: approved, while
-  /// iZi still makes the invoice. The first one noted stays.
+  /// iZi still makes the invoice. The first one noted stays. After
+  /// [reportInterim] nobody waits for the rest any more (the page is gone):
+  /// it is reported right away.
   void settle(String status) {
-    if (!_reported) _settled ??= status;
+    if (_reported) return;
+    _settled ??= status;
+    if (_interim) report();
   }
 
   /// The `tx.summary` data for [status], or null once reported: a
@@ -210,16 +220,31 @@ class TransactionSummary {
       if (outcome == null) return false;
       final data = finish(outcome);
       if (data == null) return false;
-      Telemetry.event('tx.summary',
-          level: levelOf(outcome),
-          chargeId: chargeId,
-          reference: reference,
-          data: data);
+      _record(outcome, data);
       return true;
     } catch (_) {
       return false;
     }
   }
+
+  /// Records the `tx.summary` for [status] for now: the page is going away
+  /// while the transaction's flow still runs (the terminal deciding, iZi
+  /// being told). What the flow learns next ([report], [settle]) is
+  /// reported over it; if nothing comes, this one stands. Once, and not
+  /// after [report]. Returns whether it did. Never throws.
+  bool reportInterim(String status) {
+    try {
+      if (_reported || _interim) return false;
+      _interim = true;
+      _record(status, toData(status));
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  void _record(String status, Map<String, Object?> data) => Telemetry.event('tx.summary',
+      level: levelOf(status), chargeId: chargeId, reference: reference, data: data);
 
   /// A charge without a verdict or one iZi does not know needs someone;
   /// a decline or a cancellation is routine.
