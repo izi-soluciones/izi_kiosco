@@ -757,7 +757,11 @@
       "empty": "No events recorded",
       "notPaired": "This kiosk has no paired card terminal.",
       "unsupported": "This PayPOS version has no diagnostics. Update it to 1.28 or later.",
-      "unreachable": "Could not reach the card terminal: {}"
+      "unreachable": "Could not reach the card terminal: {}",
+      "heartbeatStopped": "Heartbeat: not sending (the kiosk is not enrolled)",
+      "heartbeatPending": "Heartbeat: first one at {}",
+      "heartbeatOk": "Heartbeat: last accepted at {} · next at {}",
+      "heartbeatFailing": "Heartbeat: failing ({}), {} in a row · next at {}"
     },
     "monitoring": {
       "title": "Monitoring",
