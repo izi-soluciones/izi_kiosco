@@ -224,6 +224,11 @@ class TerminalEnrollment {
         next = _blocked(TerminalEnrollBlock.notPaired);
         return;
       }
+      // The session took a moment: the customer may have started paying.
+      if (_isBusy()) {
+        next = _blocked(TerminalEnrollBlock.busy);
+        return;
+      }
       _waitingForPos = false;
       _set(_snapshot('checking'));
       final terminal = await _client.monitoringStatus(session.address, token: session.token);

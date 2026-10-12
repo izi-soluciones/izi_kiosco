@@ -207,6 +207,31 @@ void main() {
       expect(timers.active.single.delay, TerminalEnrollment.busyRetry);
     });
 
+    test('a charge that starts while the pairing session is read: the terminal is not asked',
+        () async {
+      zeroTouch.stop();
+      zeroTouch = TerminalEnrollment(
+        enrollment: enrollment,
+        repository: repository,
+        client: IzifyPosClient(httpClient: terminal.client),
+        session: (_) async {
+          busy = true;
+          return const IzifyPosSession(IzifyPosAddress('192.168.1.50'), 'pairing-token');
+        },
+        busy: () => busy,
+        apiBaseUrl: () => api,
+        timer: timers.call,
+        now: () => now,
+        random: random,
+      )..attachState(pos: () => pos, changes: posChanges.stream);
+      await enrolledKiosk();
+      await timers.fire();
+      expect(terminal.requests, isEmpty, reason: 'no GET /monitoring/status during a charge');
+      expect(repository.codeRequests, isEmpty);
+      expect(zeroTouch.status.value.reason, 'busy');
+      expect(timers.active.single.delay, TerminalEnrollment.busyRetry);
+    });
+
     test('a charge that starts while the code is on its way stops the enrollment', () async {
       await enrolledKiosk();
       repository.codeReplies.add(() async {
