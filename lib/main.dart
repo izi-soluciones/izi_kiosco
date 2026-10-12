@@ -53,29 +53,7 @@ void main() async {
 
   // Enrolls the kiosk in iZi's monitoring once it is logged in (MyApp), and
   // reports its health from then on.
-  final monitoring = MonitoringService(flavor: _flavor);
-  MonitoringService.install(monitoring);
-  final counters = KioskCounters(store: PrefsCountersStore());
-  KioskCounters.install(counters);
-  // What the previous session left unsent (a reload, a crash, an outage)
-  // comes back before anything is counted. Bounded: never holds up the start.
-  await counters.restore().timeout(const Duration(seconds: 2), onTimeout: () {});
-  // Remote commands from the support console, run between sales.
-  final commands = KioskCommands(enrollment: monitoring);
-  KioskCommands.install(commands);
-  final runner = MonitoringCommandRunner(
-      outbox: CommandResultOutbox(enrollment: monitoring), handlers: commands.handlers);
-  MonitoringCommandRunner.install(runner);
-  MonitoringHeartbeat.install(
-      MonitoringHeartbeat(enrollment: monitoring, commands: runner, flavor: _flavor));
-  // The terminal and the PC agent join the monitoring on their own, with a
-  // code this kiosk asks for (the agent only exists next to the web kiosk).
-  TerminalEnrollment.install(TerminalEnrollment(enrollment: monitoring));
-  if (kIsWeb) {
-    final agent = AgentLink(enrollment: monitoring);
-    AgentLink.install(agent);
-    KioskHealthCollector.instance.agent = agent.stateSection;
-  }
+  await _setUpMonitoring();
 
   // Sentry wraps the error handler set above, so Crashlytics still gets its
   // errors on mobile.
@@ -93,4 +71,35 @@ void main() async {
       child: MyApp(),
     ),
   ));
+}
+
+/// The monitoring (contracts: enrollment, heartbeat, events, remote
+/// commands), ready for MyApp to start. It never keeps the kiosk from
+/// starting: whatever fails here leaves that part of it off.
+Future<void> _setUpMonitoring() async {
+  try {
+    final monitoring = MonitoringService(flavor: _flavor);
+    MonitoringService.install(monitoring);
+    final counters = KioskCounters(store: PrefsCountersStore());
+    KioskCounters.install(counters);
+    // What the previous session left unsent (a reload, a crash, an outage)
+    // comes back before anything is counted. Bounded: never holds up the start.
+    await counters.restore().timeout(const Duration(seconds: 2), onTimeout: () {});
+    // Remote commands from the support console, run between sales.
+    final commands = KioskCommands(enrollment: monitoring);
+    KioskCommands.install(commands);
+    final runner = MonitoringCommandRunner(
+        outbox: CommandResultOutbox(enrollment: monitoring), handlers: commands.handlers);
+    MonitoringCommandRunner.install(runner);
+    MonitoringHeartbeat.install(
+        MonitoringHeartbeat(enrollment: monitoring, commands: runner, flavor: _flavor));
+    // The terminal and the PC agent join the monitoring on their own, with a
+    // code this kiosk asks for (the agent only exists next to the web kiosk).
+    TerminalEnrollment.install(TerminalEnrollment(enrollment: monitoring));
+    if (kIsWeb) {
+      final agent = AgentLink(enrollment: monitoring);
+      AgentLink.install(agent);
+      KioskHealthCollector.instance.agent = agent.stateSection;
+    }
+  } catch (_) {}
 }

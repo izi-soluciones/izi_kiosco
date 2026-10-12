@@ -95,6 +95,26 @@ class MyApp extends StatelessWidget {
         (state) => activity.authErrorChanged(state.status == AuthStatus.errorAuth));
   }
 
+  /// Starts the monitoring set up in `main`. Runs while the login bloc is
+  /// created: nothing here may keep the kiosk from loading.
+  void _startMonitoring() {
+    try {
+      MonitoringService.instance.followAuth(_auth);
+      _followActivity();
+      MonitoringHeartbeat.instance?.start();
+      MonitoringTelemetrySink.instance?.start();
+      MonitoringCommandRunner.instance?.start();
+      TerminalEnrollment.instance?.start();
+      AgentLink.instance?.start();
+      // `reload_app` outside the browser: back home, loading the kiosk
+      // again as the error screen's "reload" button does.
+      KioskCommands.instance?.restartApp = () {
+        route.go(RoutesKeys.homeLink);
+        _auth.verify();
+      };
+    } catch (_) {}
+  }
+
   MyApp({Key? key}) : super(key: key);
   @override
   Widget build(BuildContext context) {
@@ -103,19 +123,7 @@ class MyApp extends StatelessWidget {
         BlocProvider(
           create: (context) {
             KioskTelemetry.followAuth(_auth);
-            MonitoringService.instance.followAuth(_auth);
-            _followActivity();
-            MonitoringHeartbeat.instance?.start();
-            MonitoringTelemetrySink.instance?.start();
-            MonitoringCommandRunner.instance?.start();
-            TerminalEnrollment.instance?.start();
-            AgentLink.instance?.start();
-            // `reload_app` outside the browser: back home, loading the kiosk
-            // again as the error screen's "reload" button does.
-            KioskCommands.instance?.restartApp = () {
-              route.go(RoutesKeys.homeLink);
-              _auth.verify();
-            };
+            _startMonitoring();
             return _auth..verify();
           },
         ),
@@ -129,9 +137,11 @@ class MyApp extends StatelessWidget {
         BlocProvider(
           create: (context) {
             final posConfig = PosConfigBloc(context.read<AuthBloc>());
-            KioskHealthCollector.instance.attach(auth: _auth, posConfig: posConfig);
-            KioskCommands.instance?.attach(auth: _auth, posConfig: posConfig);
-            TerminalEnrollment.instance?.attach(auth: _auth, posConfig: posConfig);
+            try {
+              KioskHealthCollector.instance.attach(auth: _auth, posConfig: posConfig);
+              KioskCommands.instance?.attach(auth: _auth, posConfig: posConfig);
+              TerminalEnrollment.instance?.attach(auth: _auth, posConfig: posConfig);
+            } catch (_) {}
             return posConfig;
           },
           lazy: false,

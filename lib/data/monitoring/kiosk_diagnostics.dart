@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:izi_kiosco/data/monitoring/agent_link.dart';
+import 'package:izi_kiosco/data/monitoring/kiosk_activity.dart';
 import 'package:izi_kiosco/data/monitoring/kiosk_counters.dart';
 import 'package:izi_kiosco/data/monitoring/kiosk_health_collector.dart';
 import 'package:izi_kiosco/data/monitoring/kiosk_health_snapshot.dart';
@@ -20,7 +21,10 @@ import 'package:izi_kiosco/domain/models/device.dart';
 /// the terminal's own record (`GET /diagnostics`) when it can be asked.
 ///
 /// The dialog shows it to a technician; `upload_diagnostics` sends it to
-/// the monitoring service ([build]), redacted and within [maxBytes].
+/// the monitoring service ([build]), redacted and within [maxBytes]. The
+/// terminal is asked only while no customer is paying, checked right before
+/// the call: gathering the kiosk's part takes a moment, and a charge may
+/// have started since the command was let through.
 class KioskDiagnostics {
   /// The service takes up to 2 MB (contracts §6); some room for the
   /// envelope.
@@ -32,16 +36,19 @@ class KioskDiagnostics {
   final Future<IzifyPosSession?> Function(Device? device) _session;
   final IzifyPosClient Function() _client;
   final DateTime Function() _now;
+  final bool Function() _busy;
 
   KioskDiagnostics({
     KioskHealthCollector Function()? collector,
     Future<IzifyPosSession?> Function(Device? device)? session,
     IzifyPosClient Function()? client,
     DateTime Function()? now,
+    bool Function()? busy,
   })  : _collector = collector ?? (() => KioskHealthCollector.instance),
         _session = session ?? IzifyPosSession.current,
         _client = client ?? IzifyPosClient.new,
-        _now = now ?? DateTime.now;
+        _now = now ?? DateTime.now,
+        _busy = busy ?? (() => KioskActivity.instance.busy);
 
   /// The monitoring's own state: the [health] it reports, the counters not
   /// delivered yet, the heartbeat, the event upload, the remote commands and
@@ -98,13 +105,15 @@ class KioskDiagnostics {
     return fit(TelemetryRedactor.redact(report, maxDepth: 12, maxItems: 1000));
   }
 
-  /// The terminal's record, or why there is none: `not_paired`,
-  /// `unsupported` (PayPOS too old) or `unreachable` with its cause.
+  /// The terminal's record, or why there is none: `not_paired`, `busy` (a
+  /// customer is paying: the terminal is not asked), `unsupported` (PayPOS
+  /// too old) or `unreachable` with its cause.
   Future<Object?> _terminal(Device? device) async {
     IzifyPosClient? client;
     try {
       final session = await _session(device);
       if (session == null) return {'unavailable': 'not_paired'};
+      if (_isBusy()) return {'unavailable': 'busy'};
       client = _client();
       final data = await client.diagnostics(session.address, token: session.token);
       return data ?? {'unavailable': 'unsupported'};
@@ -114,6 +123,15 @@ class KioskDiagnostics {
       return {'unavailable': 'error', 'cause': e.runtimeType.toString()};
     } finally {
       client?.close();
+    }
+  }
+
+  bool _isBusy() {
+    try {
+      return _busy();
+    } catch (_) {
+      // Unknown counts as busy: the terminal is never asked during a sale.
+      return true;
     }
   }
 

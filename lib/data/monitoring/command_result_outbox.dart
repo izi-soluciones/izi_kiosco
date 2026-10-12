@@ -117,7 +117,7 @@ class CommandResultOutbox {
     if (_started) return;
     _started = true;
     _enrollment.status.addListener(_onEnrollment);
-    unawaited(_restore().then((_) => _send()));
+    unawaited(_restore().then((_) => _send()).catchError((Object _) {}));
   }
 
   void stop() {

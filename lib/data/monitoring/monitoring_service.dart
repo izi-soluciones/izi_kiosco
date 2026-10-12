@@ -192,21 +192,27 @@ class MonitoringService {
 
   /// Starts and stops with the login: running while the kiosk is logged in
   /// with its device loaded, stopped once it logs out.
+  ///
+  /// Called while the login bloc is created: nothing here may throw into it.
   void followAuth(AuthBloc auth) {
-    _authSub?.cancel();
-    _applyAuth(auth.state);
-    _authSub = auth.stream.listen(_applyAuth);
+    try {
+      _authSub?.cancel();
+      _applyAuth(auth.state);
+      _authSub = auth.stream.listen(_applyAuth, onError: (Object _) {});
+    } catch (_) {}
   }
 
   void _applyAuth(AuthState state) {
-    final context = MonitoringContext.fromAuth(state);
-    if (context != null) {
-      unawaited(start(context));
-    } else if (state.status == AuthStatus.noAuth ||
-        state.status == AuthStatus.firstContribuyente) {
-      stop();
-    }
-    // init, waitingChange, errorAuth: passing states, the last one stands.
+    try {
+      final context = MonitoringContext.fromAuth(state);
+      if (context != null) {
+        unawaited(start(context));
+      } else if (state.status == AuthStatus.noAuth ||
+          state.status == AuthStatus.firstContribuyente) {
+        stop();
+      }
+      // init, waitingChange, errorAuth: passing states, the last one stands.
+    } catch (_) {}
   }
 
   /// Uses the stored token when it was issued for [context]'s contribuyente
