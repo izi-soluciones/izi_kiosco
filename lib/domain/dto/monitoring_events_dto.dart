@@ -28,9 +28,10 @@ class MonitoringEventsDto {
         'events': [for (final e in events) eventJson(e)],
       };
 
-  /// One event as the contract has it: `ts` in UTC (the buffer keeps the
-  /// PC's local time, without offset) and `level` one of `info|warn|error`.
-  /// Redacted again: events kept by an older build come back from storage.
+  /// One event as the contract has it (§5, §12.4): `ts` in UTC with `Z` (the
+  /// buffer keeps the PC's local time, without offset) and `level` one of
+  /// `debug|info|warn|error`. Redacted again: events kept by an older build
+  /// come back from storage.
   static Map<String, Object?> eventJson(TelemetryEvent event) {
     final chargeId = event.chargeId;
     final reference = event.reference;
@@ -46,9 +47,10 @@ class MonitoringEventsDto {
     };
   }
 
-  /// The contract has no `debug`: it travels as `info`.
+  /// The contract's name of [level]: `warning` is `warn`.
   static String level(TelemetryLevel level) => switch (level) {
-        TelemetryLevel.debug || TelemetryLevel.info => 'info',
+        TelemetryLevel.debug => 'debug',
+        TelemetryLevel.info => 'info',
         TelemetryLevel.warning => 'warn',
         TelemetryLevel.error => 'error',
       };
