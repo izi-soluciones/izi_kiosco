@@ -40,6 +40,7 @@ void main() {
   late KioskCommands commands;
   IzifyPosSession? session;
   late http.Client terminal;
+  late bool paying;
 
   MonitoringCommand command(String type, {Map<String, dynamic> args = const {}}) =>
       MonitoringCommand(id: 'cmd1', type: type, args: args, expiresAt: now.add(const Duration(minutes: 10)));
@@ -47,6 +48,7 @@ void main() {
   setUp(() async {
     now = DateTime.utc(2026, 10, 12, 14);
     session = null;
+    paying = false;
     terminal = MockClient((_) async => http.Response('', 404));
     SharedPreferences.setMockInitialValues({
       'monitoring.installationId': MonitoringStore.newUuidV4(),
@@ -84,6 +86,7 @@ void main() {
         session: (_) async => session,
         client: () => IzifyPosClient(httpClient: terminal),
         now: () => now,
+        busy: () => paying,
       ),
       reloadPage: () => false,
     );
@@ -389,6 +392,22 @@ void main() {
       expect(report, contains('charge.result'));
       expect(report, isNot(contains('pairing-token')));
       expect(report, isNot(contains('4111 1111')));
+    });
+
+    test('a customer who started paying meanwhile: the terminal is not asked', () async {
+      session = const IzifyPosSession(IzifyPosAddress('192.168.1.50'), 'pairing-token');
+      var asked = 0;
+      terminal = MockClient((_) async {
+        asked++;
+        return http.Response('{}', 200);
+      });
+      paying = true;
+      repository.acceptDiagnostics();
+      final outcome = await commands.upload(command('upload_diagnostics'));
+      expect(asked, 0);
+      expect(outcome.status, MonitoringCommandStatus.succeeded);
+      expect(outcome.data['terminal'], 'busy');
+      expect(repository.diagnostics.single.report['terminal'], {'unavailable': 'busy'});
     });
 
     test('an unreachable terminal does not fail the upload', () async {

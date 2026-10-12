@@ -17,7 +17,8 @@ void main() {
 
       expect(body['deviceName'], 'K' * MonitoringEnrollmentDto.maxDeviceNameLength);
       final business = body['business'] as Map<String, dynamic>;
-      for (final field in ['contribuyenteNombre', 'sucursalNombre', 'pais']) {
+      expect(business.containsKey('pais'), isFalse, reason: 'not a country code');
+      for (final field in ['contribuyenteNombre', 'sucursalNombre']) {
         expect((business[field] as String).length, MonitoringEnrollmentDto.maxBusinessFieldLength,
             reason: field);
       }
@@ -70,6 +71,20 @@ void main() {
       expect(body['deviceName'], 'KIOSKO-01');
       expect(body['business'], {'sucursalNombre': 'Casa Matriz'});
       expect(body['app'], {'version': '2.3.1+45', 'platform': 'web'});
+    });
+
+    test('pais goes as an ISO 3166-1 alpha-2 code, or not at all', () {
+      Object? pais(String? value) => (MonitoringEnrollmentDto(
+            installationId: _installation,
+            app: const MonitoringApp(version: '1', flavor: 'izify', platform: 'web'),
+            pais: value,
+          ).toJson()['business'] as Map?)?['pais'];
+
+      expect(pais('BO'), 'BO');
+      expect(pais(' co '), 'CO');
+      for (final other in [null, '', 'Bolivia', 'BOL', '59', 'B']) {
+        expect(pais(other), isNull, reason: '$other');
+      }
     });
 
     test('short values go as they are', () {

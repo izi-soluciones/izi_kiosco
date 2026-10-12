@@ -228,8 +228,13 @@ class MonitoringRepositoryHttp extends MonitoringRepository {
   }
 
   /// The service's `{"error": "<code>"}`, kept short: it goes to telemetry.
+  /// The gateway's `{"bloqueadoPago": true}` has no `error`: it is
+  /// [MonitoringException.paymentBlocked].
   static String? errorCodeOf(Object? data) {
     if (data is! Map) return null;
+    if (data['bloqueadoPago'] == true && data['error'] == null) {
+      return MonitoringException.paymentBlocked;
+    }
     final code = data['error'];
     if (code is! String || code.isEmpty) return null;
     return code.length > 60 ? code.substring(0, 60) : code;

@@ -4,6 +4,7 @@ import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 import 'package:izi_kiosco/data/monitoring/kiosk_activity.dart';
+import 'package:izi_kiosco/data/monitoring/monitoring_backoff.dart';
 import 'package:izi_kiosco/data/monitoring/monitoring_repository_http.dart';
 import 'package:izi_kiosco/data/monitoring/monitoring_service.dart';
 import 'package:izi_kiosco/data/monitoring/monitoring_store.dart';
@@ -150,6 +151,13 @@ class EventUploadStatus {
 /// acknowledged (the stored events were lost, so `seq` started over); also
 /// when the service holds more of the stream than the kiosk ever sent.
 ///
+/// `seq` only goes on across reloads while the buffer can be saved
+/// (contracts §12.4: a new stream per session when it does not persist).
+/// When the buffer cannot be saved before a batch, the events go up in a
+/// stream of this session's own, which is not saved either: a reload then
+/// goes back to the saved stream, where the service has none of the numbers
+/// the lost events took. Once the buffer is saved again, so is the place.
+///
 /// Every [interval] while the kiosk is enrolled ([MonitoringService]) it
 /// posts up to [MonitoringEventsDto.maxEvents] events (and [maxBatchBytes]),
 /// sooner ([urgentDelay]) when an error is recorded or [urgentPending]
@@ -189,8 +197,8 @@ class MonitoringTelemetrySink implements TelemetrySink {
   static const Duration attemptTimeout = Duration(seconds: 45);
   static const Duration restoreTimeout = Duration(seconds: 5);
 
-  /// The share of each backoff wait that is random.
-  static const double jitter = 0.2;
+  /// The share of each backoff wait that is random, either way.
+  static const double jitter = MonitoringBackoff.jitter;
 
   /// Failures in a row recorded in detail; after that, one in [logEvery].
   static const int detailedFailures = 3;
@@ -229,6 +237,10 @@ class MonitoringTelemetrySink implements TelemetrySink {
   DateTime? _lastOkAt;
   String? _lastCause;
   bool _waitingForCharge = false;
+
+  /// The buffer could not be saved the last time it was tried: the current
+  /// stream is this session's own and its place is not saved.
+  bool _unsaved = false;
 
   MonitoringTelemetrySink(
       {required MonitoringService enrollment,
@@ -389,7 +401,7 @@ class MonitoringTelemetrySink implements TelemetrySink {
       _reconcile();
       // What is acknowledged must survive a reload: the buffer saves later
       // by itself, and the events would come back without it.
-      await _buffer().flush();
+      _onBufferSaved(await _buffer().flush());
       final batch = _batch();
       if (batch.isEmpty || _chargeInProgress()) {
         _waitingForCharge = batch.isNotEmpty;
@@ -514,9 +526,7 @@ class MonitoringTelemetrySink implements TelemetrySink {
       state = _state!;
     }
 
-    while (_streamNotes.isNotEmpty) {
-      Telemetry.event('telemetry.stream_started', data: _streamNotes.removeAt(0));
-    }
+    _recordStreamNotes();
 
     state = _state!;
     final events = buffer.events;
@@ -543,6 +553,32 @@ class MonitoringTelemetrySink implements TelemetrySink {
       'reason': 'overflow',
       'capacity': buffer.capacity,
     });
+  }
+
+  void _recordStreamNotes() {
+    while (_streamNotes.isNotEmpty) {
+      Telemetry.event('telemetry.stream_started', data: _streamNotes.removeAt(0));
+    }
+  }
+
+  /// Whether the buffer could be saved before a batch ([saved]). Not saved:
+  /// the events about to go up may not come back after a reload, and the
+  /// next session would number its own from below them. They go up in a
+  /// stream of this session's own, kept out of storage, from where the
+  /// upload is. Saved again: everything in the buffer is, so the place of
+  /// the current stream can be saved too.
+  void _onBufferSaved(bool saved) {
+    if (saved == !_unsaved) return;
+    if (saved) {
+      _unsaved = false;
+      final state = _state;
+      if (state != null) unawaited(_save(state));
+      return;
+    }
+    final state = _state!;
+    _unsaved = true;
+    _startStream('not_persisted', base: state.ackSeq, deviceId: state.deviceId);
+    _recordStreamNotes();
   }
 
   /// The next batch: the oldest pending events, within [_maxBatch] and
@@ -578,7 +614,7 @@ class MonitoringTelemetrySink implements TelemetrySink {
 
   void _setState(EventStreamState state) {
     _state = state;
-    unawaited(_save(state));
+    if (!_unsaved) unawaited(_save(state));
   }
 
   Future<void> _save(EventStreamState state) async {
@@ -628,14 +664,11 @@ class MonitoringTelemetrySink implements TelemetrySink {
       );
 
   /// After [failures] in a row: [interval], then doubling up to
-  /// [maxBackoff], each wait shortened by up to [jitter] for [random] in
-  /// [0, 1).
-  static Duration retryDelayFor(int failures, double random) {
-    final factor = pow(2, min(max(failures - 1, 0), 16));
-    final base = min(interval.inMilliseconds * factor, maxBackoff.inMilliseconds).toInt();
-    final jittered = (base * (1 - jitter * random.clamp(0.0, 1.0))).round();
-    return Duration(milliseconds: max(jittered, drainDelay.inMilliseconds));
-  }
+  /// [maxBackoff], each wait moved by up to [jitter] either way for [random]
+  /// in [0, 1) (0.5 leaves it as is), and never out of that range
+  /// ([MonitoringBackoff]).
+  static Duration retryDelayFor(int failures, double random) => MonitoringBackoff.delay(
+      first: interval, max: maxBackoff, failures: failures, random: random);
 
   /// Within [urgentDelay], unless something is due before.
   void _soon() {

@@ -173,12 +173,13 @@ class FakeTimers {
   }
 }
 
-/// A [Random] whose [nextDouble] is what the test sets: 0 leaves the
-/// backoff as is.
+/// A [Random] whose [nextDouble] is what the test sets: 0.5 (the default)
+/// leaves the backoff as is, 0 shortens it by the whole jitter, 1 lengthens
+/// it by as much.
 class FixedRandom implements Random {
   double value;
 
-  FixedRandom([this.value = 0]);
+  FixedRandom([this.value = 0.5]);
 
   @override
   double nextDouble() => value;
@@ -324,6 +325,32 @@ void main() {
       expect(saved.isFor(contribuyenteId: 5, dispositivoId: 7), isTrue);
     });
 
+    test('another iZi device of the same contribuyente enrolls again (§12.1)', () async {
+      final auth = _Auth();
+      addTearDown(auth.close);
+      repository
+        ..succeed()
+        ..succeed();
+      service.followAuth(auth);
+      auth.login(device: 7);
+      await pumpEventQueue();
+      await timers.fire();
+      expect(service.deviceToken, 'izd_token1');
+
+      // The same PC set up as another kiosk device: same installation, the
+      // service updates its `dispositivo`.
+      auth.login(device: 8);
+      await pumpEventQueue();
+      expect(service.deviceToken, isNull, reason: 'the old token is not used for the new device');
+      await timers.fire();
+
+      expect(repository.calls, hasLength(2));
+      expect(repository.calls.last.installationId, repository.calls.first.installationId);
+      final saved = (await MonitoringStore().enrollment())!;
+      expect(saved.deviceToken, 'izd_token2');
+      expect(saved.isFor(contribuyenteId: 5, dispositivoId: 8), isTrue);
+    });
+
     test('starting again with the same identity does not enroll twice', () async {
       repository.succeed();
       await service.start(_context);
@@ -367,6 +394,41 @@ void main() {
       expect(events('monitoring.enrolled').single.data['attempts'], 9);
     });
 
+    test('a contribuyente blocked for non-payment (401 bloqueadoPago) keeps being retried',
+        () async {
+      const blocked = MonitoringException('http_401',
+          statusCode: 401, code: MonitoringException.paymentBlocked);
+      repository
+        ..failWith(blocked)
+        ..failWith(blocked)
+        ..succeed();
+      await service.start(_context);
+      await timers.fire();
+      expect(service.status.value.state, MonitoringState.error);
+      expect(service.status.value.lastCause, 'http_401');
+      expect(timers.active.single.delay, const Duration(seconds: 30));
+      expect(events('monitoring.enroll_failed').single.data['code'], 'bloqueado_pago');
+      await timers.fire();
+      expect(timers.active.single.delay, const Duration(seconds: 60));
+      await timers.fire();
+      expect(service.status.value.state, MonitoringState.enrolled);
+    });
+
+    test('a re-enrollment refused for non-payment keeps the token the kiosk has', () async {
+      repository
+        ..succeed()
+        ..failWith(const MonitoringException('http_401',
+            statusCode: 401, code: MonitoringException.paymentBlocked));
+      await service.start(_context);
+      await timers.fire();
+      expect(service.deviceToken, 'izd_token1');
+
+      await service.retryNow();
+      expect(service.status.value.state, MonitoringState.error);
+      expect(service.deviceToken, 'izd_token1', reason: 'not a token problem: heartbeats go on');
+      expect((await MonitoringStore().enrollment())!.deviceToken, 'izd_token1');
+    });
+
     test('the error status says when the next attempt is', () async {
       repository.failWith(const MonitoringException('unreachable'));
       await service.start(_context);
@@ -386,6 +448,14 @@ void main() {
       expect(timers.active.single.delay, const Duration(seconds: 30));
     });
 
+    test('the longest wait is 24 to 30 min, never over the cap', () {
+      expect(MonitoringService.longestRetryDelay(0.5), MonitoringService.maxBackoff);
+      expect(MonitoringService.longestRetryDelay(0), const Duration(minutes: 24));
+      expect(MonitoringService.longestRetryDelay(0.25), const Duration(minutes: 27));
+      expect(MonitoringService.longestRetryDelay(1), MonitoringService.maxBackoff);
+      expect(MonitoringService.longestRetryDelay(double.nan), MonitoringService.maxBackoff);
+    });
+
     test('backoff is capped', () {
       expect(MonitoringService.backoffFor(1), const Duration(seconds: 30));
       expect(MonitoringService.backoffFor(2), const Duration(minutes: 1));
@@ -393,27 +463,34 @@ void main() {
       expect(MonitoringService.backoffFor(1000), const Duration(minutes: 30));
     });
 
-    test('the jittered wait stays between 30 s and 30 min and spreads the fleet', () {
+    test('the jittered wait is ±20 %, stays between 30 s and 30 min and spreads the fleet', () {
       for (final failures in [1, 2, 5, 7, 50]) {
-        for (final r in [0.0, 0.25, 0.5, 0.999999, 1.0, -1.0, 2.0]) {
+        final base = MonitoringService.backoffFor(failures).inMilliseconds;
+        for (final r in [0.0, 0.25, 0.5, 0.999999, 1.0, -1.0, 2.0, double.nan]) {
           final delay = MonitoringService.retryDelayFor(failures, r);
           expect(delay, greaterThanOrEqualTo(MonitoringService.initialBackoff), reason: '$failures $r');
           expect(delay, lessThanOrEqualTo(MonitoringService.maxBackoff), reason: '$failures $r');
-          expect(delay, lessThanOrEqualTo(MonitoringService.backoffFor(failures)));
-          expect(delay.inMilliseconds,
-              greaterThanOrEqualTo((MonitoringService.backoffFor(failures).inMilliseconds * 0.8).floor()));
+          expect(delay.inMilliseconds, lessThanOrEqualTo((base * 1.2).ceil()));
+          expect(delay.inMilliseconds, greaterThanOrEqualTo((base * 0.8).floor()));
         }
       }
-      expect(MonitoringService.retryDelayFor(10, 0), MonitoringService.maxBackoff);
-      expect(MonitoringService.retryDelayFor(10, 0.5), const Duration(minutes: 27));
-      expect(MonitoringService.retryDelayFor(10, 0.5),
-          isNot(MonitoringService.retryDelayFor(10, 0.9)),
+      // Either way around the base.
+      expect(MonitoringService.retryDelayFor(3, 0), const Duration(seconds: 96));
+      expect(MonitoringService.retryDelayFor(3, 0.5), const Duration(seconds: 120));
+      expect(MonitoringService.retryDelayFor(3, 1), const Duration(seconds: 144));
+      expect(MonitoringService.retryDelayFor(3, 0.25), const Duration(seconds: 108));
+      // At the ends of the range only the half that stays inside it.
+      expect(MonitoringService.retryDelayFor(1, 0), MonitoringService.initialBackoff);
+      expect(MonitoringService.retryDelayFor(1, 1), const Duration(seconds: 36));
+      expect(MonitoringService.retryDelayFor(10, 1), MonitoringService.maxBackoff);
+      expect(MonitoringService.retryDelayFor(10, 0), const Duration(minutes: 24));
+      expect(MonitoringService.retryDelayFor(10, 0.25),
+          isNot(MonitoringService.retryDelayFor(10, 0.4)),
           reason: 'kiosks capped at 30 min do not retry together');
-      expect(MonitoringService.retryDelayFor(3, 0.25), const Duration(seconds: 114));
     });
 
     test('the scheduled retry, its telemetry and the status use the jittered wait', () async {
-      random.value = 0.5;
+      random.value = 0.25;
       repository
         ..failWith(const MonitoringException('http_503', statusCode: 503))
         ..failWith(const MonitoringException('http_503', statusCode: 503));

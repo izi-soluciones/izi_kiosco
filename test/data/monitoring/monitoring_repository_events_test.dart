@@ -49,7 +49,7 @@ const _stream = '3f0c2a8e-4d1f-4a9b-8c3e-5f6a7b8c9d0e';
 
 void main() {
   group('MonitoringEventsDto', () {
-    test('the contract body: every event, ts in UTC, levels info|warn|error', () {
+    test('the contract body: every event, ts in UTC, levels debug|info|warn|error', () {
       final dto = MonitoringEventsDto(
         installationId: '0b7c2a8e-4d1f-4a9b-8c3e-5f6a7b8c9d0e',
         stream: _stream,
@@ -75,7 +75,15 @@ void main() {
         'reference': 'KOS-1760277780000-1',
         'data': {},
       });
-      expect(events.skip(30).map((e) => e['level']), ['warn', 'error', 'info']);
+      expect(events.skip(30).map((e) => e['level']), ['warn', 'error', 'debug']);
+    });
+
+    test('an event kept on the device (local time, no offset) goes up in UTC with Z', () {
+      final stored = jsonDecode(jsonEncode(_event(1).toJson())) as Map;
+      expect(stored['ts'], isNot(endsWith('Z')), reason: 'the buffer keeps the PC local time');
+      final restored = TelemetryEvent.fromJson(stored)!;
+      final ts = MonitoringEventsDto.eventJson(restored)['ts'] as String;
+      expect(ts, '2026-10-12T14:03:00.000Z');
     });
 
     test('each event is redacted again', () {

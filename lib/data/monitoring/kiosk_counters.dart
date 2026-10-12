@@ -94,7 +94,7 @@ class KioskCounters {
       this.saveDelay = const Duration(seconds: 2)})
       : _store = store ?? MemoryCountersStore(),
         _now = now ?? DateTime.now {
-    _windowStartAt = _now();
+    _windowStartAt = wholeMillis(_now());
   }
 
   static KioskCounters _instance = KioskCounters();
@@ -211,14 +211,19 @@ class KioskCounters {
           _values.remove(name);
         }
       });
-      // Strictly later, so the service never takes the next window for a
-      // resend of this one.
-      _windowStartAt = sent.takenAt.isAfter(_windowStartAt)
-          ? sent.takenAt
-          : _windowStartAt.add(const Duration(milliseconds: 1));
+      // Strictly later, in the milliseconds the service compares windows
+      // by, so it never takes the next window for a resend of this one.
+      final next = wholeMillis(sent.takenAt);
+      _windowStartAt =
+          next.isAfter(_windowStartAt) ? next : _windowStartAt.add(const Duration(milliseconds: 1));
       _scheduleSave();
     } catch (_) {}
   }
+
+  /// [time] without its microseconds: the service keeps `windowStartAt` to
+  /// the millisecond (contracts §12.4), and a window is recognised by it.
+  static DateTime wholeMillis(DateTime time) =>
+      DateTime.fromMillisecondsSinceEpoch(time.millisecondsSinceEpoch, isUtc: time.isUtc);
 
   /// Loads what an earlier session left unsent, keeping its window, and adds
   /// what was counted since this one started. Once; never throws.
@@ -233,7 +238,7 @@ class KioskCounters {
       final start = DateTime.tryParse('${json['windowStartAt']}');
       final values = json['values'];
       if (start == null || values is! Map) return;
-      if (start.isBefore(_windowStartAt)) _windowStartAt = start;
+      if (start.isBefore(_windowStartAt)) _windowStartAt = wholeMillis(start);
       values.forEach((name, value) {
         if (name is String && value is int && value > 0) {
           _values[name] = (_values[name] ?? 0) + value;

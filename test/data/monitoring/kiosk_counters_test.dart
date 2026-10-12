@@ -85,6 +85,29 @@ void main() {
       expect(counters.windowStartAt.isAfter(start), isTrue);
     });
 
+    test('windows start on whole milliseconds, which is how the service tells them apart', () {
+      // A clock with microseconds (Android): the service keeps milliseconds.
+      now = start.add(const Duration(microseconds: 1500));
+      counters = KioskCounters(store: store, now: () => now);
+      expect(counters.snapshot().toJson()['windowStartAt'], '2026-10-12T14:00:00.001Z');
+
+      // Acknowledged within the same millisecond: the next window is still
+      // one the service sees as new, not a resend of this one.
+      now = start.add(const Duration(microseconds: 1900));
+      final first = counters.snapshot();
+      counters.acknowledge(first);
+      final next = counters.snapshot().toJson()['windowStartAt'];
+      expect(next, '2026-10-12T14:00:00.002Z');
+      expect(next, isNot(first.toJson()['windowStartAt']));
+
+      // Until a heartbeat is accepted the window stays the same, to the
+      // millisecond, however often it is sent.
+      now = now.add(const Duration(minutes: 3, microseconds: 250));
+      counters.add(KioskCounters.orders);
+      expect(counters.snapshot().toJson()['windowStartAt'], next);
+      expect(counters.snapshot().toJson()['windowStartAt'], next);
+    });
+
     test('nothing negative or zero is added', () {
       counters.add(KioskCounters.orders, 0);
       counters.add(KioskCounters.orders, -3);

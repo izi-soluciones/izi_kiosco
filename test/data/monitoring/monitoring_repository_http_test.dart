@@ -136,6 +136,28 @@ void main() {
     expect((await failure()).cause, 'error');
   });
 
+  test("the gateway's 401 bloqueadoPago is a transient failure, not a token problem", () async {
+    for (final reply in [
+      () => answer(() async => dioResponse({'bloqueadoPago': true}, statusCode: 401)),
+      () => reject(dioError(DioExceptionType.badResponse,
+          status: 401, data: {'bloqueadoPago': true})),
+    ]) {
+      reply();
+      final e = await failure();
+      expect(e.cause, 'http_401');
+      expect(e.code, MonitoringException.paymentBlocked);
+      expect(e.isPaymentBlocked, isTrue);
+      expect(e.isTokenInvalid, isFalse, reason: 'the kiosk keeps its device token');
+      expect(e.isFinal, isFalse, reason: 'retried with backoff');
+    }
+    // The service's own code still wins.
+    expect(
+        MonitoringRepositoryHttp.errorCodeOf(
+            {'bloqueadoPago': true, 'error': MonitoringException.deviceTokenInvalid}),
+        MonitoringException.deviceTokenInvalid);
+    expect(MonitoringRepositoryHttp.errorCodeOf({'bloqueadoPago': false}), isNull);
+  });
+
   test('a long service code is cut for telemetry', () {
     expect(MonitoringRepositoryHttp.errorCodeOf({'error': 'x' * 100})!.length, 60);
     expect(MonitoringRepositoryHttp.errorCodeOf('<html>'), isNull);

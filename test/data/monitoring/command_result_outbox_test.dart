@@ -85,11 +85,14 @@ void main() {
     expect(store.saved, isEmpty);
   });
 
-  test('retries back off up to 5 minutes', () {
-    expect(CommandResultOutbox.retryDelay(1, 0), const Duration(seconds: 10));
-    expect(CommandResultOutbox.retryDelay(2, 0), const Duration(seconds: 20));
-    expect(CommandResultOutbox.retryDelay(10, 0), CommandResultOutbox.maxBackoff);
-    expect(CommandResultOutbox.retryDelay(1, 0.99).inMilliseconds, greaterThan(8000));
+  test('retries back off up to 5 minutes, with jitter either way', () {
+    expect(CommandResultOutbox.retryDelay(1, 0.5), const Duration(seconds: 10));
+    expect(CommandResultOutbox.retryDelay(2, 0.5), const Duration(seconds: 20));
+    expect(CommandResultOutbox.retryDelay(2, 0), const Duration(seconds: 16));
+    expect(CommandResultOutbox.retryDelay(2, 1), const Duration(seconds: 24));
+    expect(CommandResultOutbox.retryDelay(10, 0.5), CommandResultOutbox.maxBackoff);
+    expect(CommandResultOutbox.retryDelay(10, 1), CommandResultOutbox.maxBackoff);
+    expect(CommandResultOutbox.retryDelay(1, 0), CommandResultOutbox.firstRetry);
   });
 
   test('a command the service no longer has open is dropped, not retried', () async {

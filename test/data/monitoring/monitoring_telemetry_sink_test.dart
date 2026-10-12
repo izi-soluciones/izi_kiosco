@@ -17,6 +17,17 @@ const _app = MonitoringApp(version: '2.3.1+45', flavor: 'izify', platform: 'web'
 const _invalidToken = MonitoringException('http_401',
     statusCode: 401, code: MonitoringException.deviceTokenInvalid);
 
+/// A device storage that can refuse to save (localStorage full or blocked).
+class _FlakyTelemetryStore extends MemoryTelemetryStore {
+  bool failing = false;
+
+  @override
+  Future<void> save(List<String> events) async {
+    if (failing) throw StateError('QuotaExceededError');
+    return super.save(events);
+  }
+}
+
 void main() {
   late FakeMonitoringRepository repository;
   late FakeTimers enrollTimers;
@@ -408,6 +419,75 @@ void main() {
       expect(note.data, containsPair('reason', 'restarted'));
       expect(note.data, containsPair('previousAckSeq', 40));
       expect(EventStreamState.tryDecode(streamStore.saved)!.stream, dto.stream);
+    });
+
+    test('a buffer that cannot be saved goes up in a stream of its own, which a reload forgets',
+        () async {
+      final flaky = _FlakyTelemetryStore();
+      bufferStore = flaky;
+      await boot();
+      record(3);
+      await enrolled();
+      repository.acceptUpload();
+      await fire();
+      final saved = sink.state!.stream;
+      final acked = sink.state!.ackSeq;
+      expect(acked, buffer.lastSeq);
+
+      flaky.failing = true;
+      record(2);
+      repository.acceptUpload();
+      await fire();
+      final dto = repository.uploads.last.dto;
+      expect(dto.stream, isNot(saved), reason: 'these seq may not come back after a reload');
+      expect(seqs(dto), [acked + 1, acked + 2, acked + 3]);
+      expect(dto.events.last.type, 'telemetry.stream_started');
+      expect(dto.events.last.data, containsPair('reason', 'not_persisted'));
+      final place = EventStreamState.tryDecode(streamStore.saved)!;
+      expect(place.stream, saved, reason: 'the session stream is never saved');
+      expect(place.ackSeq, acked);
+
+      // A reload: the buffer comes back as it was last saved, and its seq go
+      // on in the saved stream, where the service has none of them.
+      sink.stop();
+      flaky.failing = false;
+      await boot();
+      expect(sink.state!.stream, saved);
+      record(1);
+      expect(buffer.lastSeq, acked + 1);
+      sink.start();
+      repository.acceptUpload();
+      await fire();
+      expect(repository.uploads.last.dto.stream, saved);
+      expect(seqs(repository.uploads.last.dto), [acked + 1]);
+    });
+
+    test('once the buffer is saved again, so is the place of the stream it went up in',
+        () async {
+      final flaky = _FlakyTelemetryStore();
+      bufferStore = flaky;
+      await boot();
+      record(2);
+      await enrolled();
+      flaky.failing = true;
+      repository.acceptUpload();
+      await fire();
+      final session = sink.state!.stream;
+      expect(EventStreamState.tryDecode(streamStore.saved)?.stream, isNot(session));
+
+      flaky.failing = false;
+      record(1);
+      repository.acceptUpload();
+      await fire();
+      expect(repository.uploads.last.dto.stream, session);
+      final place = EventStreamState.tryDecode(streamStore.saved)!;
+      expect(place.stream, session);
+      expect(place.ackSeq, buffer.lastSeq);
+
+      sink.stop();
+      await boot();
+      expect(sink.state!.stream, session, reason: 'every seq of it is saved now');
+      expect(sink.backlog(), 0);
     });
 
     test('a buffer that lost what was acknowledged (seq restarted) starts a new stream',

@@ -20,6 +20,11 @@ enum AgentNext {
   /// Ask again soon: unreachable, or enrolling already.
   retry,
 
+  /// Its token is stored but cannot be read yet (`token_unreadable`, DPAPI
+  /// not ready at boot): it keeps trying by itself. Ask again later; a code
+  /// would replace a token that may still be fine.
+  wait,
+
   /// Not enrolled: get it a code.
   enroll,
 }
@@ -37,6 +42,15 @@ enum AgentNext {
 /// agent is unreachable. That is reported (`reachable:false`) and asked
 /// again with backoff (30 s → 30 min); nothing else happens.
 ///
+/// The agent's answers (contracts §12.7): `already_enrolled` is taken as
+/// enrolled, `enrollment_in_progress` is looked at again soon, a refused
+/// code (`enrollment_code_invalid`: a newer one replaced it, or it expired)
+/// is replaced by a new one right away, once. What a retry soon would not
+/// change ([lastingRefusals]) waits the longest backoff; anything else
+/// (`rate_limited`, `upstream_unavailable`...) the usual one. An agent whose
+/// token cannot be read yet gets [unreadableGrace] to read it before a code
+/// replaces it.
+///
 /// Web only: an Android kiosk has no PC agent.
 class AgentLink {
   static const Duration firstCheckDelay = Duration(seconds: 20);
@@ -44,9 +58,19 @@ class AgentLink {
   static const Duration enrollingRecheck = Duration(seconds: 30);
   static const Duration busyRetry = Duration(seconds: 30);
 
+  /// How long an agent may report `token_unreadable` before it gets a code.
+  static const Duration unreadableGrace = Duration(minutes: 5);
+
   /// Answers of the agent a retry soon would not change: it is set up for
-  /// another gateway, or does not allow the kiosk's origin.
-  static const Set<String> lastingRefusals = {'api_base_url_mismatch', 'origin_not_allowed'};
+  /// another gateway, does not allow the kiosk's origin, or does not take
+  /// what this kiosk sends.
+  static const Set<String> lastingRefusals = {
+    'api_base_url_mismatch',
+    'origin_not_allowed',
+    'invalid_request',
+  };
+
+  static const String codeInvalid = 'enrollment_code_invalid';
 
   final MonitoringService _enrollment;
   final MonitoringRepository? _injectedRepository;
@@ -69,6 +93,9 @@ class AgentLink {
   String? _lastCause;
   bool? _reachable;
   bool? _enrolled;
+
+  /// Since when the agent says `token_unreadable`, while it does.
+  DateTime? _unreadableSince;
 
   AgentLink(
       {required MonitoringService enrollment,
@@ -120,11 +147,19 @@ class AgentLink {
   }
 
   /// What follows from the agent's [health] (null: it could not be asked).
-  static AgentNext decide({required KioskAgentHealth? health, required bool monitoringEnrolled}) {
+  /// [unreadableFor]: how long it has said `token_unreadable`.
+  static AgentNext decide(
+      {required KioskAgentHealth? health,
+      required bool monitoringEnrolled,
+      Duration? unreadableFor}) {
     if (health == null) return AgentNext.retry;
     if (health.enrolled) return AgentNext.keep;
     if (health.status == 'enrolling') return AgentNext.retry;
     if (!monitoringEnrolled) return AgentNext.keep;
+    if (health.status == 'token_unreadable' &&
+        (unreadableFor == null || unreadableFor < unreadableGrace)) {
+      return AgentNext.wait;
+    }
     return AgentNext.enroll;
   }
 
@@ -152,14 +187,27 @@ class AgentLink {
       } on KioskAgentException catch (e) {
         _reachable = false;
         _enrolled = null;
-        next = _failed(e.code == 'unreachable' ? 'agent_unreachable' : e.code, null, log: false);
+        _unreadableSince = null;
+        final lasting = lastingRefusals.contains(e.code);
+        next = _failed(e.code == 'unreachable' ? 'agent_unreachable' : e.code,
+            lasting ? MonitoringService.longestRetryDelay(_random.nextDouble()) : null,
+            log: lasting);
         return;
       }
+      final unreadable = health.status == 'token_unreadable' && !health.enrolled;
+      _unreadableSince = unreadable ? (_unreadableSince ?? _now()) : null;
       final token = _enrollment.deviceToken;
-      switch (decide(health: health, monitoringEnrolled: token != null)) {
+      switch (decide(
+          health: health,
+          monitoringEnrolled: token != null,
+          unreadableFor: unreadable ? _now().difference(_unreadableSince!) : null)) {
         case AgentNext.retry:
           next = enrollingRecheck;
           _set(_snapshot('enrolling', next: next));
+          return;
+        case AgentNext.wait:
+          next = unreadableGrace;
+          _set(_snapshot('waiting', reason: 'token_unreadable', next: next));
           return;
         case AgentNext.keep:
           _failures = 0;
@@ -179,15 +227,25 @@ class AgentLink {
       }
       final apiBaseUrl = _apiBaseUrl();
       if (apiBaseUrl == null) {
-        next = _failed('no_api_url', MonitoringService.maxBackoff);
+        next = _failed('no_api_url', MonitoringService.longestRetryDelay(_random.nextDouble()));
         return;
       }
       _set(_snapshot('enrolling'));
-      final code = await _repository
-          .requestEnrollmentCode(MonitoringEnrollmentCode.forAgent, deviceToken: token!)
-          .timeout(MonitoringService.attemptTimeout);
-      await _client.enroll(code: code.code, apiBaseUrl: apiBaseUrl);
+      for (var attempt = 1;; attempt++) {
+        final code = await _repository
+            .requestEnrollmentCode(MonitoringEnrollmentCode.forAgent, deviceToken: token!)
+            .timeout(MonitoringService.attemptTimeout);
+        try {
+          await _client.enroll(code: code.code, apiBaseUrl: apiBaseUrl);
+          break;
+        } on KioskAgentException catch (e) {
+          // Replaced by a newer code, or expired on its way: a new one, now.
+          if (e.code != codeInvalid || attempt > 1 || _isBusy()) rethrow;
+          Telemetry.event('monitoring.agent_code_refused', level: TelemetryLevel.warning);
+        }
+      }
       _enrolled = true;
+      _unreadableSince = null;
       _failures = 0;
       _lastCause = null;
       Telemetry.event('monitoring.agent_enrolled', data: {'agentStatus': health.status});
@@ -204,7 +262,10 @@ class AgentLink {
         _set(_snapshot('enrolling', next: next));
       } else {
         next = _failed(
-            e.code, lastingRefusals.contains(e.code) ? MonitoringService.maxBackoff : null);
+            e.code,
+            lastingRefusals.contains(e.code)
+                ? MonitoringService.longestRetryDelay(_random.nextDouble())
+                : null);
       }
     } on MonitoringException catch (e) {
       final token = _enrollment.deviceToken;

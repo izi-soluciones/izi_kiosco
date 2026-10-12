@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 
+import 'package:izi_kiosco/data/monitoring/monitoring_backoff.dart';
 import 'package:izi_kiosco/data/monitoring/monitoring_repository_http.dart';
 import 'package:izi_kiosco/data/monitoring/monitoring_service.dart';
 import 'package:izi_kiosco/data/telemetry/telemetry.dart';
@@ -65,9 +66,9 @@ class MemoryCommandResultStore implements CommandResultStore {
 /// (§12.5). A result the service will never take (the command is unknown
 /// or no longer open, 404/409, or the body is refused) is dropped; one that
 /// could not be delivered is retried with backoff ([retryDelay]: 10 s
-/// doubling up to [maxBackoff]); a rejected device token is handed to the
-/// enrollment, and sending resumes with the next token. After [maxAge] a
-/// result is dropped: the service expired its command long ago.
+/// doubling up to [maxBackoff], with jitter); a rejected device token is
+/// handed to the enrollment, and sending resumes with the next token. After
+/// [maxAge] a result is dropped: the service expired its command long ago.
 class CommandResultOutbox {
   static const int capacity = 20;
   static const Duration firstRetry = Duration(seconds: 10);
@@ -116,7 +117,7 @@ class CommandResultOutbox {
     if (_started) return;
     _started = true;
     _enrollment.status.addListener(_onEnrollment);
-    unawaited(_restore().then((_) => _send()));
+    unawaited(_restore().then((_) => _send()).catchError((Object _) {}));
   }
 
   void stop() {
@@ -215,12 +216,10 @@ class CommandResultOutbox {
   }
 
   /// [firstRetry] after the first failure, doubling up to [maxBackoff],
-  /// shortened by up to 20 % for [random] in [0, 1).
-  static Duration retryDelay(int failures, double random) {
-    final base = firstRetry.inMilliseconds * pow(2, min(max(failures - 1, 0), 10));
-    final capped = min(base.toInt(), maxBackoff.inMilliseconds);
-    return Duration(milliseconds: (capped * (1 - 0.2 * random.clamp(0.0, 1.0))).round());
-  }
+  /// moved by up to 20 % either way for [random] in [0, 1) (0.5 leaves it as
+  /// is), and never out of that range ([MonitoringBackoff]).
+  static Duration retryDelay(int failures, double random) => MonitoringBackoff.delay(
+      first: firstRetry, max: maxBackoff, failures: failures, random: random);
 
   Future<void> _persist() => _store.save(_pending);
 

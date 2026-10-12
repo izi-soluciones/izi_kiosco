@@ -95,13 +95,17 @@ class TelemetryBuffer {
     });
   }
 
-  Future<void> flush() async {
+  /// Saves the events now. False when they could not be saved: they stay
+  /// in memory, and a reload would lose them (and the `seq` they took).
+  Future<bool> flush() async {
     _saveTimer?.cancel();
     _saveTimer = null;
     try {
       await _store.save([for (final e in _events) jsonEncode(e.toJson())]);
+      return true;
     } catch (_) {
       // localStorage full or blocked: the events stay in memory.
+      return false;
     }
   }
 
