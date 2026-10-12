@@ -4,6 +4,7 @@ import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 import 'package:izi_kiosco/data/monitoring/kiosk_activity.dart';
+import 'package:izi_kiosco/data/monitoring/monitoring_backoff.dart';
 import 'package:izi_kiosco/data/monitoring/monitoring_repository_http.dart';
 import 'package:izi_kiosco/data/monitoring/monitoring_service.dart';
 import 'package:izi_kiosco/data/monitoring/monitoring_store.dart';
@@ -189,8 +190,8 @@ class MonitoringTelemetrySink implements TelemetrySink {
   static const Duration attemptTimeout = Duration(seconds: 45);
   static const Duration restoreTimeout = Duration(seconds: 5);
 
-  /// The share of each backoff wait that is random.
-  static const double jitter = 0.2;
+  /// The share of each backoff wait that is random, either way.
+  static const double jitter = MonitoringBackoff.jitter;
 
   /// Failures in a row recorded in detail; after that, one in [logEvery].
   static const int detailedFailures = 3;
@@ -628,14 +629,11 @@ class MonitoringTelemetrySink implements TelemetrySink {
       );
 
   /// After [failures] in a row: [interval], then doubling up to
-  /// [maxBackoff], each wait shortened by up to [jitter] for [random] in
-  /// [0, 1).
-  static Duration retryDelayFor(int failures, double random) {
-    final factor = pow(2, min(max(failures - 1, 0), 16));
-    final base = min(interval.inMilliseconds * factor, maxBackoff.inMilliseconds).toInt();
-    final jittered = (base * (1 - jitter * random.clamp(0.0, 1.0))).round();
-    return Duration(milliseconds: max(jittered, drainDelay.inMilliseconds));
-  }
+  /// [maxBackoff], each wait moved by up to [jitter] either way for [random]
+  /// in [0, 1) (0.5 leaves it as is), and never out of that range
+  /// ([MonitoringBackoff]).
+  static Duration retryDelayFor(int failures, double random) => MonitoringBackoff.delay(
+      first: interval, max: maxBackoff, failures: failures, random: random);
 
   /// Within [urgentDelay], unless something is due before.
   void _soon() {

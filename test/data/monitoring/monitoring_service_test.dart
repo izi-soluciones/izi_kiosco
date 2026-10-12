@@ -173,12 +173,13 @@ class FakeTimers {
   }
 }
 
-/// A [Random] whose [nextDouble] is what the test sets: 0 leaves the
-/// backoff as is.
+/// A [Random] whose [nextDouble] is what the test sets: 0.5 (the default)
+/// leaves the backoff as is, 0 shortens it by the whole jitter, 1 lengthens
+/// it by as much.
 class FixedRandom implements Random {
   double value;
 
-  FixedRandom([this.value = 0]);
+  FixedRandom([this.value = 0.5]);
 
   @override
   double nextDouble() => value;
@@ -393,27 +394,34 @@ void main() {
       expect(MonitoringService.backoffFor(1000), const Duration(minutes: 30));
     });
 
-    test('the jittered wait stays between 30 s and 30 min and spreads the fleet', () {
+    test('the jittered wait is ±20 %, stays between 30 s and 30 min and spreads the fleet', () {
       for (final failures in [1, 2, 5, 7, 50]) {
-        for (final r in [0.0, 0.25, 0.5, 0.999999, 1.0, -1.0, 2.0]) {
+        final base = MonitoringService.backoffFor(failures).inMilliseconds;
+        for (final r in [0.0, 0.25, 0.5, 0.999999, 1.0, -1.0, 2.0, double.nan]) {
           final delay = MonitoringService.retryDelayFor(failures, r);
           expect(delay, greaterThanOrEqualTo(MonitoringService.initialBackoff), reason: '$failures $r');
           expect(delay, lessThanOrEqualTo(MonitoringService.maxBackoff), reason: '$failures $r');
-          expect(delay, lessThanOrEqualTo(MonitoringService.backoffFor(failures)));
-          expect(delay.inMilliseconds,
-              greaterThanOrEqualTo((MonitoringService.backoffFor(failures).inMilliseconds * 0.8).floor()));
+          expect(delay.inMilliseconds, lessThanOrEqualTo((base * 1.2).ceil()));
+          expect(delay.inMilliseconds, greaterThanOrEqualTo((base * 0.8).floor()));
         }
       }
-      expect(MonitoringService.retryDelayFor(10, 0), MonitoringService.maxBackoff);
-      expect(MonitoringService.retryDelayFor(10, 0.5), const Duration(minutes: 27));
-      expect(MonitoringService.retryDelayFor(10, 0.5),
-          isNot(MonitoringService.retryDelayFor(10, 0.9)),
+      // Either way around the base.
+      expect(MonitoringService.retryDelayFor(3, 0), const Duration(seconds: 96));
+      expect(MonitoringService.retryDelayFor(3, 0.5), const Duration(seconds: 120));
+      expect(MonitoringService.retryDelayFor(3, 1), const Duration(seconds: 144));
+      expect(MonitoringService.retryDelayFor(3, 0.25), const Duration(seconds: 108));
+      // At the ends of the range only the half that stays inside it.
+      expect(MonitoringService.retryDelayFor(1, 0), MonitoringService.initialBackoff);
+      expect(MonitoringService.retryDelayFor(1, 1), const Duration(seconds: 36));
+      expect(MonitoringService.retryDelayFor(10, 1), MonitoringService.maxBackoff);
+      expect(MonitoringService.retryDelayFor(10, 0), const Duration(minutes: 24));
+      expect(MonitoringService.retryDelayFor(10, 0.25),
+          isNot(MonitoringService.retryDelayFor(10, 0.4)),
           reason: 'kiosks capped at 30 min do not retry together');
-      expect(MonitoringService.retryDelayFor(3, 0.25), const Duration(seconds: 114));
     });
 
     test('the scheduled retry, its telemetry and the status use the jittered wait', () async {
-      random.value = 0.5;
+      random.value = 0.25;
       repository
         ..failWith(const MonitoringException('http_503', statusCode: 503))
         ..failWith(const MonitoringException('http_503', statusCode: 503));

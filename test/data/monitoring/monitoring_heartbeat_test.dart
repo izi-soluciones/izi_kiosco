@@ -297,13 +297,22 @@ void main() {
           {'failures': 5});
     });
 
-    test('jitter only shortens the wait, never under the minimum', () {
-      expect(MonitoringHeartbeat.retryDelayFor(const Duration(seconds: 60), 1, 0.999),
-          const Duration(milliseconds: 48012));
-      expect(MonitoringHeartbeat.retryDelayFor(const Duration(seconds: 10), 1, 0.999),
-          MonitoringHeartbeat.minInterval);
-      expect(MonitoringHeartbeat.retryDelayFor(const Duration(seconds: 60), 40, 0),
+    test('jitter moves the wait by up to 20 % either way, within interval and 5 min', () {
+      const interval = Duration(seconds: 60);
+      expect(MonitoringHeartbeat.retryDelayFor(interval, 2, 0.5), const Duration(seconds: 120));
+      expect(MonitoringHeartbeat.retryDelayFor(interval, 2, 0), const Duration(seconds: 96));
+      expect(MonitoringHeartbeat.retryDelayFor(interval, 2, 1), const Duration(seconds: 144));
+      // Never under the interval, nor over the cap.
+      expect(MonitoringHeartbeat.retryDelayFor(interval, 1, 0), interval);
+      expect(MonitoringHeartbeat.retryDelayFor(interval, 1, 0.999),
+          const Duration(milliseconds: 71976));
+      expect(MonitoringHeartbeat.retryDelayFor(interval, 40, 1), MonitoringHeartbeat.maxBackoff);
+      expect(MonitoringHeartbeat.retryDelayFor(interval, 40, 0), const Duration(minutes: 4));
+      // A service asking for more than the cap: retries come at the cap.
+      expect(MonitoringHeartbeat.retryDelayFor(const Duration(minutes: 10), 1, 1),
           MonitoringHeartbeat.maxBackoff);
+      expect(MonitoringHeartbeat.retryDelayFor(const Duration(seconds: 1), 1, 0),
+          MonitoringHeartbeat.minInterval);
     });
 
     test('a long outage is logged in detail at first, then sampled', () async {

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/foundation.dart';
+import 'package:izi_kiosco/data/monitoring/monitoring_backoff.dart';
 import 'package:izi_kiosco/data/monitoring/monitoring_repository_http.dart';
 import 'package:izi_kiosco/data/monitoring/monitoring_store.dart';
 import 'package:izi_kiosco/data/telemetry/telemetry.dart';
@@ -110,16 +111,19 @@ typedef MonitoringTimerFactory = Timer Function(Duration delay, void Function() 
 /// Runs while the kiosk is logged in with its device loaded ([followAuth]),
 /// enrolls when it has no token for the current contribuyente and device,
 /// and retries with exponential backoff ([initialBackoff] → [maxBackoff],
-/// each wait shortened by up to [jitter] so a fleet that saw the same outage
-/// does not come back in lockstep) when the service cannot be reached. Nothing here is awaited by the UI
+/// each wait moved by up to [jitter] either way so a fleet that saw the same
+/// outage does not come back in lockstep, [MonitoringBackoff]) when the
+/// service cannot be reached. A contribuyente blocked for non-payment (the
+/// gateway's `401 {"bloqueadoPago":true}`, contracts §12.1) is one more such
+/// failure: it ends when the payment does. Nothing here is awaited by the UI
 /// and nothing throws out of it: monitoring must never get in the way of a
 /// sale.
 class MonitoringService {
   static const Duration initialBackoff = Duration(seconds: 30);
   static const Duration maxBackoff = Duration(minutes: 30);
 
-  /// The share of each backoff wait that is random.
-  static const double jitter = 0.2;
+  /// The share of each backoff wait that is random, either way.
+  static const double jitter = MonitoringBackoff.jitter;
 
   /// Lets the requests of the login (catalog, currencies, video) go first.
   static const Duration firstAttemptDelay = Duration(seconds: 5);
@@ -439,21 +443,14 @@ class MonitoringService {
   }
 
   /// 30 s after the first failure, doubling up to 30 min.
-  static Duration backoffFor(int failures) {
-    if (failures <= 1) return initialBackoff;
-    final seconds = initialBackoff.inSeconds * pow(2, min(failures - 1, 16));
-    return Duration(seconds: min(seconds.toInt(), maxBackoff.inSeconds));
-  }
+  static Duration backoffFor(int failures) =>
+      MonitoringBackoff.base(first: initialBackoff, max: maxBackoff, failures: failures);
 
-  /// The wait before the next attempt: [backoffFor] shortened by up to
-  /// [jitter], for [random] in [0, 1), and kept within [initialBackoff] and
-  /// [maxBackoff].
-  static Duration retryDelayFor(int failures, double random) {
-    final base = backoffFor(failures).inMilliseconds;
-    final jittered = (base * (1 - jitter * random.clamp(0.0, 1.0))).round();
-    return Duration(
-        milliseconds: jittered.clamp(initialBackoff.inMilliseconds, maxBackoff.inMilliseconds));
-  }
+  /// The wait before the next attempt: [backoffFor] moved by up to [jitter]
+  /// either way, for [random] in [0, 1) (0.5 leaves it as is), and kept
+  /// within [initialBackoff] and [maxBackoff].
+  static Duration retryDelayFor(int failures, double random) => MonitoringBackoff.delay(
+      first: initialBackoff, max: maxBackoff, failures: failures, random: random);
 
   void _cancelRetry() {
     _retryTimer?.cancel();
