@@ -448,6 +448,14 @@ void main() {
       expect(timers.active.single.delay, const Duration(seconds: 30));
     });
 
+    test('the longest wait is 24 to 30 min, never over the cap', () {
+      expect(MonitoringService.longestRetryDelay(0.5), MonitoringService.maxBackoff);
+      expect(MonitoringService.longestRetryDelay(0), const Duration(minutes: 24));
+      expect(MonitoringService.longestRetryDelay(0.25), const Duration(minutes: 27));
+      expect(MonitoringService.longestRetryDelay(1), MonitoringService.maxBackoff);
+      expect(MonitoringService.longestRetryDelay(double.nan), MonitoringService.maxBackoff);
+    });
+
     test('backoff is capped', () {
       expect(MonitoringService.backoffFor(1), const Duration(seconds: 30));
       expect(MonitoringService.backoffFor(2), const Duration(minutes: 1));

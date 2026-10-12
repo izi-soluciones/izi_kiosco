@@ -458,6 +458,15 @@ class MonitoringService {
   static Duration retryDelayFor(int failures, double random) => MonitoringBackoff.delay(
       first: initialBackoff, max: maxBackoff, failures: failures, random: random);
 
+  /// The longest wait, for what a retry soon would not change: [maxBackoff]
+  /// moved by up to [jitter] for [random] in [0, 1), so 24 to 30 min (it
+  /// never goes over [maxBackoff]).
+  static Duration longestRetryDelay(double random) =>
+      retryDelayFor(_failuresToReachMaxBackoff, random);
+
+  /// Enough failures in a row for [backoffFor] to reach [maxBackoff].
+  static const int _failuresToReachMaxBackoff = 32;
+
   void _cancelRetry() {
     _retryTimer?.cancel();
     _retryTimer = null;

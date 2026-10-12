@@ -23,6 +23,14 @@ const _app = MonitoringApp(version: '2.3.1+45', flavor: 'izify', platform: 'web'
 const _device = PosDevice(name: 'POS', ip: '192.168.1.50', port: 8081);
 const _api = 'https://api.example.test/';
 
+/// The longest backoff for a random of 0.5 (as is), 0 (the whole jitter
+/// shorter) and 1 (kept at the cap).
+const _longestWaits = [
+  (0.5, MonitoringService.maxBackoff),
+  (0.0, Duration(minutes: 24)),
+  (1.0, MonitoringService.maxBackoff),
+];
+
 final _healthy = PosConfigState.init()
     .copyWith(status: PosConfigStatus.paired, pairedDevice: _device, isHealthy: true);
 
@@ -92,11 +100,15 @@ void main() {
     late PosConfigState pos;
     late StreamController<PosConfigState> posChanges;
     late bool busy;
+    late String? api;
+    late FixedRandom random;
     late TerminalEnrollment zeroTouch;
 
     setUp(() async {
       now = DateTime.utc(2026, 10, 12, 14);
       busy = false;
+      api = _api;
+      random = FixedRandom();
       pos = _healthy;
       posChanges = StreamController.broadcast();
       SharedPreferences.setMockInitialValues({
@@ -122,10 +134,10 @@ void main() {
         client: IzifyPosClient(httpClient: terminal.client),
         session: (_) async => const IzifyPosSession(IzifyPosAddress('192.168.1.50'), 'pairing-token'),
         busy: () => busy,
-        apiBaseUrl: () => _api,
+        apiBaseUrl: () => api,
         timer: timers.call,
         now: () => now,
-        random: FixedRandom(),
+        random: random,
       )..attachState(pos: () => pos, changes: posChanges.stream);
     });
 
@@ -292,14 +304,31 @@ void main() {
       expect(repository.calls, isEmpty, reason: 'no re-enrollment of the kiosk');
     });
 
-    test('a request this PayPOS build does not take waits the longest backoff', () async {
+    test('a request this PayPOS build does not take waits the longest backoff (24 to 30 min)',
+        () async {
       terminal.enroll =
           http.Response(jsonEncode({'success': false, 'code': 'INVALID_BODY', 'message': 'x'}), 400);
       await enrolledKiosk();
-      repository.issueCode();
-      await timers.fire();
-      expect(zeroTouch.status.value.lastCause, 'invalid_body');
-      expect(timers.active.single.delay, MonitoringService.maxBackoff);
+      for (final (r, wait) in _longestWaits) {
+        random.value = r;
+        repository.issueCode();
+        await timers.fire();
+        expect(zeroTouch.status.value.lastCause, 'invalid_body');
+        expect(timers.active.single.delay, wait, reason: 'random $r');
+      }
+    });
+
+    test('a kiosk without a gateway URL to hand over waits 24 to 30 min', () async {
+      api = null;
+      await enrolledKiosk();
+      for (final (r, wait) in _longestWaits) {
+        random.value = r;
+        await timers.fire();
+        expect(terminal.paths.last, 'GET /monitoring/status');
+        expect(repository.codeRequests, isEmpty);
+        expect(zeroTouch.status.value.lastCause, 'no_api_url');
+        expect(timers.active.single.delay, wait, reason: 'random $r');
+      }
     });
 
     test('a charge starting while the refused code is replaced stops the enrollment', () async {
@@ -317,12 +346,17 @@ void main() {
       expect(timers.active.single.delay, TerminalEnrollment.busyRetry);
     });
 
-    test('a gateway this PayPOS build refuses waits the longest backoff', () async {
+    test('a gateway this PayPOS build refuses waits the longest backoff (24 to 30 min)',
+        () async {
       terminal.enroll = http.Response(jsonEncode({'success': false, 'code': 'API_NOT_ALLOWED'}), 400);
       await enrolledKiosk();
-      repository.issueCode();
-      await timers.fire();
-      expect(timers.active.single.delay, MonitoringService.maxBackoff);
+      for (final (r, wait) in _longestWaits) {
+        random.value = r;
+        repository.issueCode();
+        await timers.fire();
+        expect(zeroTouch.status.value.lastCause, 'api_not_allowed');
+        expect(timers.active.single.delay, wait, reason: 'random $r');
+      }
     });
 
     test('a code the service will not issue backs off too', () async {

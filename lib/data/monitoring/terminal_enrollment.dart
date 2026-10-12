@@ -245,7 +245,7 @@ class TerminalEnrollment {
       }
       final apiBaseUrl = _apiBaseUrl();
       if (apiBaseUrl == null) {
-        next = _failed('no_api_url', MonitoringService.maxBackoff);
+        next = _failed('no_api_url', MonitoringService.longestRetryDelay(_random.nextDouble()));
         return;
       }
       _set(_snapshot('enrolling'));
@@ -283,7 +283,8 @@ class TerminalEnrollment {
         case final String code when lastingRefusals.contains(code):
           // This PayPOS build does not report to this gateway, or does not
           // take the request: nothing a retry soon would change.
-          next = _failed(code.toLowerCase(), MonitoringService.maxBackoff);
+          next = _failed(
+              code.toLowerCase(), MonitoringService.longestRetryDelay(_random.nextDouble()));
         default:
           next = _failed(e.code?.toLowerCase() ?? posFailureCause(e), null);
       }

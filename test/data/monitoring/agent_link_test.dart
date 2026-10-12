@@ -17,6 +17,14 @@ const _context = MonitoringContext(contribuyenteId: 5, dispositivoId: 7);
 const _app = MonitoringApp(version: '2.3.1+45', flavor: 'izify', platform: 'web');
 const _api = 'https://api.example.test/';
 
+/// The longest backoff for a random of 0.5 (as is), 0 (the whole jitter
+/// shorter) and 1 (kept at the cap).
+const _longestWaits = [
+  (0.5, MonitoringService.maxBackoff),
+  (0.0, Duration(minutes: 24)),
+  (1.0, MonitoringService.maxBackoff),
+];
+
 Map<String, Object?> _health({bool enrolled = false, String status = 'not_enrolled'}) => {
       'schema': 1,
       'kind': 'agent',
@@ -110,11 +118,15 @@ void main() {
     late FakeTimers timers;
     late _Agent agent;
     late bool busy;
+    late String? api;
+    late FixedRandom random;
     late AgentLink link;
 
     setUp(() async {
       now = DateTime.utc(2026, 10, 12, 14);
       busy = false;
+      api = _api;
+      random = FixedRandom();
       SharedPreferences.setMockInitialValues({
         'monitoring.installationId': MonitoringStore.newUuidV4(),
         'monitoring.deviceToken': 'izd_saved',
@@ -138,10 +150,10 @@ void main() {
         repository: repository,
         client: KioskAgentClient(httpClient: agent.client),
         busy: () => busy,
-        apiBaseUrl: () => _api,
+        apiBaseUrl: () => api,
         timer: timers.call,
         now: () => now,
-        random: FixedRandom(),
+        random: random,
       )..start();
     });
 
@@ -205,12 +217,26 @@ void main() {
       expect(timers.active.single.delay, AgentLink.busyRetry);
     });
 
-    test('an agent set up for another gateway is not insisted on', () async {
+    test('an agent set up for another gateway is not insisted on (24 to 30 min)', () async {
       agent.enroll = http.Response(jsonEncode({'error': 'api_base_url_mismatch'}), 409);
-      repository.issueCode();
-      await timers.fire();
-      expect(link.status.value.lastCause, 'api_base_url_mismatch');
-      expect(timers.active.single.delay, MonitoringService.maxBackoff);
+      for (final (r, wait) in _longestWaits) {
+        random.value = r;
+        repository.issueCode();
+        await timers.fire();
+        expect(link.status.value.lastCause, 'api_base_url_mismatch');
+        expect(timers.active.single.delay, wait, reason: 'random $r');
+      }
+    });
+
+    test('a kiosk without a gateway URL to hand over waits 24 to 30 min', () async {
+      api = null;
+      for (final (r, wait) in _longestWaits) {
+        random.value = r;
+        await timers.fire();
+        expect(repository.codeRequests, isEmpty);
+        expect(link.status.value.lastCause, 'no_api_url');
+        expect(timers.active.single.delay, wait, reason: 'random $r');
+      }
     });
 
     test('a refused code is replaced by a new one right away, once', () async {
@@ -256,12 +282,15 @@ void main() {
       expect(timers.active.single.delay, const Duration(seconds: 30));
     });
 
-    test('a request the agent does not take is not insisted on', () async {
+    test('a request the agent does not take is not insisted on (24 to 30 min)', () async {
       agent.enroll = http.Response(jsonEncode({'error': 'invalid_request'}), 400);
-      repository.issueCode();
-      await timers.fire();
-      expect(link.status.value.lastCause, 'invalid_request');
-      expect(timers.active.single.delay, MonitoringService.maxBackoff);
+      for (final (r, wait) in _longestWaits) {
+        random.value = r;
+        repository.issueCode();
+        await timers.fire();
+        expect(link.status.value.lastCause, 'invalid_request');
+        expect(timers.active.single.delay, wait, reason: 'random $r');
+      }
     });
 
     test('an agent busy redeeming (rate_limited, upstream_unavailable) backs off as usual',
@@ -303,11 +332,14 @@ void main() {
       expect(link.stateSection(), {'reachable': true, 'enrolled': true});
     });
 
-    test('a kiosk origin the agent does not allow is not insisted on', () async {
+    test('a kiosk origin the agent does not allow is not insisted on (24 to 30 min)', () async {
       agent.health = http.Response(jsonEncode({'error': 'origin_not_allowed'}), 403);
-      await timers.fire();
-      expect(link.status.value.lastCause, 'origin_not_allowed');
-      expect(timers.active.single.delay, MonitoringService.maxBackoff);
+      for (final (r, wait) in _longestWaits) {
+        random.value = r;
+        await timers.fire();
+        expect(link.status.value.lastCause, 'origin_not_allowed');
+        expect(timers.active.single.delay, wait, reason: 'random $r');
+      }
     });
 
     test('already enrolled by hand meanwhile: taken as enrolled', () async {

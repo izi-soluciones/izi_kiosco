@@ -190,7 +190,7 @@ class AgentLink {
         _unreadableSince = null;
         final lasting = lastingRefusals.contains(e.code);
         next = _failed(e.code == 'unreachable' ? 'agent_unreachable' : e.code,
-            lasting ? MonitoringService.maxBackoff : null,
+            lasting ? MonitoringService.longestRetryDelay(_random.nextDouble()) : null,
             log: lasting);
         return;
       }
@@ -227,7 +227,7 @@ class AgentLink {
       }
       final apiBaseUrl = _apiBaseUrl();
       if (apiBaseUrl == null) {
-        next = _failed('no_api_url', MonitoringService.maxBackoff);
+        next = _failed('no_api_url', MonitoringService.longestRetryDelay(_random.nextDouble()));
         return;
       }
       _set(_snapshot('enrolling'));
@@ -262,7 +262,10 @@ class AgentLink {
         _set(_snapshot('enrolling', next: next));
       } else {
         next = _failed(
-            e.code, lastingRefusals.contains(e.code) ? MonitoringService.maxBackoff : null);
+            e.code,
+            lastingRefusals.contains(e.code)
+                ? MonitoringService.longestRetryDelay(_random.nextDouble())
+                : null);
       }
     } on MonitoringException catch (e) {
       final token = _enrollment.deviceToken;
