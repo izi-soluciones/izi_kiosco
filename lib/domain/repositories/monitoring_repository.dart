@@ -60,6 +60,11 @@ class MonitoringException implements Exception {
   /// The service no longer accepts the device token (contracts §2).
   static const String deviceTokenInvalid = 'device_token_invalid';
 
+  /// [code] of the gateway's `401 {"bloqueadoPago":true}`: the contribuyente
+  /// is blocked for non-payment. Not a token problem (contracts §12.1): a
+  /// transient failure, retried with backoff like any other.
+  static const String paymentBlocked = 'bloqueado_pago';
+
   /// One word, stable for telemetry: `timeout`, `unreachable`, `http_<status>`,
   /// `invalid_response`, `cancelled` or `error`.
   final String cause;
@@ -73,7 +78,12 @@ class MonitoringException implements Exception {
   const MonitoringException(this.cause, {this.statusCode, this.code});
 
   /// The token was revoked or is unknown: the kiosk has to enroll again.
+  /// Only the service's own code says so: any other 401 (the gateway's
+  /// [paymentBlocked], an expired iZi token) leaves the token alone.
   bool get isTokenInvalid => statusCode == 401 && code == deviceTokenInvalid;
+
+  /// The gateway refused the kiosk's contribuyente for non-payment.
+  bool get isPaymentBlocked => statusCode == 401 && code == paymentBlocked;
 
   /// The service (or the gateway) refused the body for its size.
   bool get isTooLarge => statusCode == 413;

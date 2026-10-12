@@ -325,6 +325,32 @@ void main() {
       expect(saved.isFor(contribuyenteId: 5, dispositivoId: 7), isTrue);
     });
 
+    test('another iZi device of the same contribuyente enrolls again (§12.1)', () async {
+      final auth = _Auth();
+      addTearDown(auth.close);
+      repository
+        ..succeed()
+        ..succeed();
+      service.followAuth(auth);
+      auth.login(device: 7);
+      await pumpEventQueue();
+      await timers.fire();
+      expect(service.deviceToken, 'izd_token1');
+
+      // The same PC set up as another kiosk device: same installation, the
+      // service updates its `dispositivo`.
+      auth.login(device: 8);
+      await pumpEventQueue();
+      expect(service.deviceToken, isNull, reason: 'the old token is not used for the new device');
+      await timers.fire();
+
+      expect(repository.calls, hasLength(2));
+      expect(repository.calls.last.installationId, repository.calls.first.installationId);
+      final saved = (await MonitoringStore().enrollment())!;
+      expect(saved.deviceToken, 'izd_token2');
+      expect(saved.isFor(contribuyenteId: 5, dispositivoId: 8), isTrue);
+    });
+
     test('starting again with the same identity does not enroll twice', () async {
       repository.succeed();
       await service.start(_context);
@@ -366,6 +392,41 @@ void main() {
       expect(first.data['attempt'], 1);
       expect(first.data['retryInSec'], 30);
       expect(events('monitoring.enrolled').single.data['attempts'], 9);
+    });
+
+    test('a contribuyente blocked for non-payment (401 bloqueadoPago) keeps being retried',
+        () async {
+      const blocked = MonitoringException('http_401',
+          statusCode: 401, code: MonitoringException.paymentBlocked);
+      repository
+        ..failWith(blocked)
+        ..failWith(blocked)
+        ..succeed();
+      await service.start(_context);
+      await timers.fire();
+      expect(service.status.value.state, MonitoringState.error);
+      expect(service.status.value.lastCause, 'http_401');
+      expect(timers.active.single.delay, const Duration(seconds: 30));
+      expect(events('monitoring.enroll_failed').single.data['code'], 'bloqueado_pago');
+      await timers.fire();
+      expect(timers.active.single.delay, const Duration(seconds: 60));
+      await timers.fire();
+      expect(service.status.value.state, MonitoringState.enrolled);
+    });
+
+    test('a re-enrollment refused for non-payment keeps the token the kiosk has', () async {
+      repository
+        ..succeed()
+        ..failWith(const MonitoringException('http_401',
+            statusCode: 401, code: MonitoringException.paymentBlocked));
+      await service.start(_context);
+      await timers.fire();
+      expect(service.deviceToken, 'izd_token1');
+
+      await service.retryNow();
+      expect(service.status.value.state, MonitoringState.error);
+      expect(service.deviceToken, 'izd_token1', reason: 'not a token problem: heartbeats go on');
+      expect((await MonitoringStore().enrollment())!.deviceToken, 'izd_token1');
     });
 
     test('the error status says when the next attempt is', () async {

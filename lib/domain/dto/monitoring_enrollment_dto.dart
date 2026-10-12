@@ -48,6 +48,8 @@ class MonitoringEnrollmentDto {
   final String? deviceName;
   final String? contribuyenteNombre;
   final String? sucursalNombre;
+
+  /// Sent only as an ISO 3166-1 alpha-2 code ([countryCode]).
   final String? pais;
 
   const MonitoringEnrollmentDto(
@@ -62,7 +64,7 @@ class MonitoringEnrollmentDto {
     final deviceName = fitText(this.deviceName, maxDeviceNameLength);
     final contribuyenteNombre = fitText(this.contribuyenteNombre, maxBusinessFieldLength);
     final sucursalNombre = fitText(this.sucursalNombre, maxBusinessFieldLength);
-    final pais = fitText(this.pais, maxBusinessFieldLength);
+    final pais = countryCode(this.pais);
     final business = {
       if (contribuyenteNombre != null) "contribuyenteNombre": contribuyenteNombre,
       if (sucursalNombre != null) "sucursalNombre": sucursalNombre,
@@ -77,6 +79,17 @@ class MonitoringEnrollmentDto {
       if (business.isNotEmpty) "business": business,
     };
   }
+
+  /// [value] as the ISO 3166-1 alpha-2 code `business.pais` is (contracts
+  /// §12.1): `BO`, `CO`. Null for anything else, which the console could not
+  /// file under a country anyway.
+  static String? countryCode(String? value) {
+    final code = value?.trim().toUpperCase();
+    if (code == null || !_alpha2.hasMatch(code)) return null;
+    return code;
+  }
+
+  static final RegExp _alpha2 = RegExp(r'^[A-Z]{2}$');
 
   /// [value] trimmed and cut to at most [max] UTF-16 code units (how the
   /// service counts), never splitting an emoji or other surrogate pair. Null
