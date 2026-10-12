@@ -41,8 +41,12 @@ enum TerminalEnrollBlock {
 /// kiosk's gateway as `apiBaseUrl`), which redeems it.
 ///
 /// - Never while a customer is paying ([KioskActivity.busy]), checked before
-///   every call to the terminal; a terminal that answers `BUSY` is asked
-///   again in [busyRetry].
+///   every call to the terminal; a terminal that answers `BUSY` (409) is
+///   asked again in [busyRetry].
+/// - A code the terminal reports refused (`ENROLLMENT_CODE_INVALID`: a newer
+///   one replaced it, or it expired) is replaced by a new one right away,
+///   once (contracts §12.7). What a retry soon would not change
+///   ([lastingRefusals]) waits the longest backoff.
 /// - A terminal without the routes (404, PayPOS before monitoring) is left
 ///   alone, asked again in [recheckUnsupported] in case it was updated.
 /// - Failures back off like the kiosk's enrollment (30 s → 30 min, with
@@ -56,6 +60,12 @@ class TerminalEnrollment {
   static const Duration busyRetry = Duration(seconds: 30);
   static const Duration recheckEnrolled = Duration(minutes: 30);
   static const Duration recheckUnsupported = Duration(hours: 6);
+
+  /// Answers of PayPOS a retry soon would not change: it does not report to
+  /// this gateway, or does not take what this kiosk sends.
+  static const Set<String> lastingRefusals = {'API_NOT_ALLOWED', 'INVALID_BODY'};
+
+  static const String codeInvalid = 'ENROLLMENT_CODE_INVALID';
 
   /// Failures in a row recorded in detail; after that, one in [logEvery].
   static const int detailedFailures = 3;
@@ -239,16 +249,25 @@ class TerminalEnrollment {
         return;
       }
       _set(_snapshot('enrolling'));
-      final code = await _repository
-          .requestEnrollmentCode(MonitoringEnrollmentCode.forTerminal, deviceToken: token)
-          .timeout(MonitoringService.attemptTimeout);
-      // The code took a moment: the customer may have started paying.
-      if (_isBusy()) {
-        next = _blocked(TerminalEnrollBlock.busy);
-        return;
+      for (var attempt = 1;; attempt++) {
+        final code = await _repository
+            .requestEnrollmentCode(MonitoringEnrollmentCode.forTerminal, deviceToken: token)
+            .timeout(MonitoringService.attemptTimeout);
+        // The code took a moment: the customer may have started paying.
+        if (_isBusy()) {
+          next = _blocked(TerminalEnrollBlock.busy);
+          return;
+        }
+        try {
+          await _client.monitoringEnroll(session.address,
+              token: session.token, code: code.code, apiBaseUrl: apiBaseUrl);
+          break;
+        } on IzifyPosException catch (e) {
+          // Replaced by a newer code, or expired on its way: a new one, now.
+          if (e.code != codeInvalid || attempt > 1) rethrow;
+          Telemetry.event('monitoring.terminal_code_refused', level: TelemetryLevel.warning);
+        }
       }
-      await _client.monitoringEnroll(session.address,
-          token: session.token, code: code.code, apiBaseUrl: apiBaseUrl);
       Telemetry.event('monitoring.terminal_enrolled',
           data: {'address': session.address.hostPort, 'reenroll': terminal.reenrollRequired});
       _failures = 0;
@@ -261,10 +280,10 @@ class TerminalEnrollment {
           next = _blocked(TerminalEnrollBlock.busy);
         case 'UNSUPPORTED':
           next = _unsupported(_checkedAddress);
-        case 'API_NOT_ALLOWED':
-          // This PayPOS build does not report to this gateway: nothing a
-          // retry soon would change.
-          next = _failed('api_not_allowed', MonitoringService.maxBackoff);
+        case final String code when lastingRefusals.contains(code):
+          // This PayPOS build does not report to this gateway, or does not
+          // take the request: nothing a retry soon would change.
+          next = _failed(code.toLowerCase(), MonitoringService.maxBackoff);
         default:
           next = _failed(e.code?.toLowerCase() ?? posFailureCause(e), null);
       }

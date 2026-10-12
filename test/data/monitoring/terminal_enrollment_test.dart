@@ -217,7 +217,7 @@ void main() {
 
     test('failures back off from 30 s, doubling', () async {
       terminal.enroll = http.Response(
-          jsonEncode({'success': false, 'code': 'ENROLLMENT_CODE_INVALID', 'message': 'x'}), 400);
+          jsonEncode({'success': false, 'code': 'ENROLL_FAILED', 'message': 'x'}), 502);
       await enrolledKiosk();
       repository.issueCode();
       await timers.fire();
@@ -225,9 +225,96 @@ void main() {
       repository.issueCode();
       await timers.fire();
       expect(timers.active.single.delay, const Duration(seconds: 60));
-      expect(zeroTouch.status.value.lastCause, 'enrollment_code_invalid');
+      expect(zeroTouch.status.value.lastCause, 'enroll_failed');
       expect(Telemetry.recent().where((e) => e.type == 'monitoring.terminal_enroll_failed'),
           hasLength(2));
+    });
+
+    test('a code the terminal refuses is replaced by a new one right away, once', () async {
+      final codes = <String>[];
+      var posts = 0;
+      final refusing = MockClient((request) async {
+        if (request.url.path == '/monitoring/status') return terminal.status;
+        posts++;
+        codes.add((jsonDecode(request.body) as Map)['code'] as String);
+        return posts == 1
+            ? http.Response(
+                jsonEncode({'success': false, 'code': 'ENROLLMENT_CODE_INVALID', 'message': 'x'}),
+                400)
+            : http.Response(jsonEncode({'enrolled': true}), 200);
+      });
+      zeroTouch.stop();
+      zeroTouch = TerminalEnrollment(
+        enrollment: enrollment,
+        repository: repository,
+        client: IzifyPosClient(httpClient: refusing),
+        session: (_) async => const IzifyPosSession(IzifyPosAddress('192.168.1.50'), 'pairing-token'),
+        busy: () => busy,
+        apiBaseUrl: () => _api,
+        timer: timers.call,
+        now: () => now,
+        random: FixedRandom(),
+      )..attachState(pos: () => pos, changes: posChanges.stream);
+      await enrolledKiosk();
+      repository
+        ..issueCode('AAA-AAA-AAA')
+        ..issueCode('BBB-BBB-BBB');
+      await timers.fire();
+      expect(codes, ['AAA-AAA-AAA', 'BBB-BBB-BBB']);
+      expect(repository.codeRequests.map((r) => r.forKind), ['terminal', 'terminal']);
+      expect(zeroTouch.status.value.state, 'enrolled');
+      expect(zeroTouch.status.value.failures, 0);
+      expect(timers.active.single.delay, TerminalEnrollment.recheckEnrolled);
+    });
+
+    test('a second refused code in a row backs off, and gets a new code next time', () async {
+      terminal.enroll = http.Response(
+          jsonEncode({'success': false, 'code': 'ENROLLMENT_CODE_INVALID', 'message': 'x'}), 400);
+      await enrolledKiosk();
+      repository
+        ..issueCode()
+        ..issueCode();
+      await timers.fire();
+      expect(repository.codeRequests, hasLength(2));
+      expect(zeroTouch.status.value.lastCause, 'enrollment_code_invalid');
+      expect(timers.active.single.delay, const Duration(seconds: 30));
+    });
+
+    test('a code refused for non-payment (401 bloqueadoPago) backs off; the token stays',
+        () async {
+      await enrolledKiosk();
+      repository.refuseCode(const MonitoringException('http_401',
+          statusCode: 401, code: MonitoringException.paymentBlocked));
+      await timers.fire();
+      expect(zeroTouch.status.value.lastCause, 'http_401');
+      expect(timers.active.single.delay, const Duration(seconds: 30));
+      expect(enrollment.deviceToken, 'izd_saved');
+      expect(repository.calls, isEmpty, reason: 'no re-enrollment of the kiosk');
+    });
+
+    test('a request this PayPOS build does not take waits the longest backoff', () async {
+      terminal.enroll =
+          http.Response(jsonEncode({'success': false, 'code': 'INVALID_BODY', 'message': 'x'}), 400);
+      await enrolledKiosk();
+      repository.issueCode();
+      await timers.fire();
+      expect(zeroTouch.status.value.lastCause, 'invalid_body');
+      expect(timers.active.single.delay, MonitoringService.maxBackoff);
+    });
+
+    test('a charge starting while the refused code is replaced stops the enrollment', () async {
+      terminal.enroll = http.Response(
+          jsonEncode({'success': false, 'code': 'ENROLLMENT_CODE_INVALID', 'message': 'x'}), 400);
+      await enrolledKiosk();
+      repository
+        ..issueCode()
+        ..codeReplies.add(() async {
+          busy = true;
+          return const MonitoringEnrollmentCode(code: 'BBB-BBB-BBB');
+        });
+      await timers.fire();
+      expect(terminal.paths, ['GET /monitoring/status', 'POST /monitoring/enroll']);
+      expect(timers.active.single.delay, TerminalEnrollment.busyRetry);
     });
 
     test('a gateway this PayPOS build refuses waits the longest backoff', () async {

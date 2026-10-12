@@ -51,13 +51,28 @@ void main() {
 
     test('an agent not enrolled next to an enrolled kiosk gets a code', () {
       expect(AgentLink.decide(health: notEnrolled, monitoringEnrolled: true), AgentNext.enroll);
-      // After its token was revoked, or could not be read, too.
-      for (final status in ['token_invalid', 'token_unreadable', 'starting']) {
+      // After its token was revoked, too, or while it starts without one.
+      for (final status in ['token_invalid', 'starting']) {
         expect(
             AgentLink.decide(
                 health: KioskAgentHealth(enrolled: false, status: status), monitoringEnrolled: true),
             AgentNext.enroll);
       }
+    });
+
+    test('a token it cannot read yet gets a while before a code replaces it', () {
+      const unreadable = KioskAgentHealth(enrolled: false, status: 'token_unreadable');
+      expect(AgentLink.decide(health: unreadable, monitoringEnrolled: true), AgentNext.wait);
+      expect(
+          AgentLink.decide(
+              health: unreadable,
+              monitoringEnrolled: true,
+              unreadableFor: AgentLink.unreadableGrace - const Duration(seconds: 1)),
+          AgentNext.wait);
+      expect(
+          AgentLink.decide(
+              health: unreadable, monitoringEnrolled: true, unreadableFor: AgentLink.unreadableGrace),
+          AgentNext.enroll);
     });
 
     test('an enrolled agent is left alone', () {
@@ -195,6 +210,103 @@ void main() {
       repository.issueCode();
       await timers.fire();
       expect(link.status.value.lastCause, 'api_base_url_mismatch');
+      expect(timers.active.single.delay, MonitoringService.maxBackoff);
+    });
+
+    test('a refused code is replaced by a new one right away, once', () async {
+      var posts = 0;
+      final codes = <String>[];
+      final refusing = MockClient((request) async {
+        if (request.url.path != '/enroll') return agent.health;
+        posts++;
+        codes.add((jsonDecode(request.body) as Map)['code'] as String);
+        return posts == 1
+            ? http.Response(jsonEncode({'error': 'enrollment_code_invalid'}), 400)
+            : http.Response(jsonEncode({'enrolled': true}), 200);
+      });
+      link.stop();
+      link = AgentLink(
+        enrollment: enrollment,
+        repository: repository,
+        client: KioskAgentClient(httpClient: refusing),
+        busy: () => busy,
+        apiBaseUrl: () => _api,
+        timer: timers.call,
+        now: () => now,
+        random: FixedRandom(),
+      )..start();
+      repository
+        ..issueCode('AAA-AAA-AAA')
+        ..issueCode('BBB-BBB-BBB');
+      await timers.fire();
+      expect(codes, ['AAA-AAA-AAA', 'BBB-BBB-BBB']);
+      expect(repository.codeRequests.map((r) => r.forKind), ['agent', 'agent']);
+      expect(link.stateSection(), {'reachable': true, 'enrolled': true});
+      expect(link.status.value.failures, 0);
+    });
+
+    test('a second refused code in a row backs off', () async {
+      agent.enroll = http.Response(jsonEncode({'error': 'enrollment_code_invalid'}), 400);
+      repository
+        ..issueCode()
+        ..issueCode();
+      await timers.fire();
+      expect(repository.codeRequests, hasLength(2));
+      expect(link.status.value.lastCause, 'enrollment_code_invalid');
+      expect(timers.active.single.delay, const Duration(seconds: 30));
+    });
+
+    test('a request the agent does not take is not insisted on', () async {
+      agent.enroll = http.Response(jsonEncode({'error': 'invalid_request'}), 400);
+      repository.issueCode();
+      await timers.fire();
+      expect(link.status.value.lastCause, 'invalid_request');
+      expect(timers.active.single.delay, MonitoringService.maxBackoff);
+    });
+
+    test('an agent busy redeeming (rate_limited, upstream_unavailable) backs off as usual',
+        () async {
+      for (final (status, error) in [(429, 'rate_limited'), (502, 'upstream_unavailable')]) {
+        agent.enroll = http.Response(jsonEncode({'error': error}), status);
+        repository.issueCode();
+        await timers.fire();
+        expect(link.status.value.lastCause, error);
+        expect(timers.active.single.delay, lessThan(MonitoringService.maxBackoff));
+      }
+      expect(link.status.value.failures, 2);
+    });
+
+    test('an agent that cannot read its token yet gets 5 minutes before a code', () async {
+      agent.health =
+          http.Response(jsonEncode(_health(enrolled: false, status: 'token_unreadable')), 200);
+      await timers.fire();
+      expect(repository.codeRequests, isEmpty);
+      expect(link.status.value.reason, 'token_unreadable');
+      expect(timers.active.single.delay, AgentLink.unreadableGrace);
+
+      // It read it meanwhile: nothing to do.
+      agent.health = http.Response(jsonEncode(_health(enrolled: true, status: 'ok')), 200);
+      now = now.add(AgentLink.unreadableGrace);
+      await timers.fire();
+      expect(repository.codeRequests, isEmpty);
+
+      // Unreadable again, and still after the grace: it gets a code.
+      agent.health =
+          http.Response(jsonEncode(_health(enrolled: false, status: 'token_unreadable')), 200);
+      now = now.add(AgentLink.healthInterval);
+      await timers.fire();
+      expect(repository.codeRequests, isEmpty, reason: 'the grace starts over');
+      now = now.add(AgentLink.unreadableGrace);
+      repository.issueCode();
+      await timers.fire();
+      expect(repository.codeRequests.single.forKind, 'agent');
+      expect(link.stateSection(), {'reachable': true, 'enrolled': true});
+    });
+
+    test('a kiosk origin the agent does not allow is not insisted on', () async {
+      agent.health = http.Response(jsonEncode({'error': 'origin_not_allowed'}), 403);
+      await timers.fire();
+      expect(link.status.value.lastCause, 'origin_not_allowed');
       expect(timers.active.single.delay, MonitoringService.maxBackoff);
     });
 
