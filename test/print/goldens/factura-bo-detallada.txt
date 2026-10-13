@@ -1,0 +1,77 @@
+      iZi Soluciones Digitales SA       
+              Casa Matriz               
+          No. Punto de Venta 0          
+            ZONA: Los Pinos             
+    Av. América esq. Calle Colombia,    
+   Edificio Torres del Poeta, piso 3,   
+oficina 302B, Zona SopocachiAv. América 
+esq. Calle Colombia, Edificio Torres del
+   Poeta, piso 3, oficina 302B, Zona    
+    Sopocachi Av. América esq. Calle    
+  Colombia, Edificio Torres del Poeta,  
+piso 3, oficina 302B, Zona SopocachiAv. 
+ América esq. Calle Colombia, Edificio  
+Torres del Poeta, piso 3, oficina 302B, 
+             Zona Sopocachi             
+           TELF: +59171275940           
+          Santa Cruz, Bolivia           
+
+
+
+                FACTURA                 
+      Con derecho a crédito fiscal      
+         NIT EMISOR: 358658021          
+          FACTURA No: 1002335           
+          CÓD. AUTORIZACIÓN:            
+188A56309A310787088218FD5BF646D74D016255
+----------------------------------------
+      NOMBRE/RAZÓN SOCIAL: Chavez       
+        NIT/CI/CEX:  13435745010        
+          COD. CLIENTE: 12289           
+             FECHA: <fecha>             
+----------------------------------------
+CantDetalle     Precio U  Desc USubtotal
+----------------------------------------
+1   HAM01-.HAMB    70.00    0.00   70.00
+
+1   OR-002-Galle   30.00    0.00   30.00
+
+1   54FBB3D583C0   13.00    0.00   13.00
+
+1   duplicadoBRO   90.00    0.00   90.00
+
+1   1366-Shampoo   70.00    0.00   70.00
+
+1   ITEMNATURAL-    1.00    0.00    1.00
+
+1   Al02-06 pzs    20.00    0.00   20.00
+
+........................................
+                    SUBTOTAL      294.00
+                   DESCUENTO        0.00
+                       TOTAL      294.00
+             MONTO GIFT-CARD        0.00
+IMPORTE BASE DE CREDITO FISC      294.00
+               TOTAL A PAGAR      294.00
+........................................
+SON:  Doscientos noventa y cuatro 0/100 
+Bolivianos                              
+----------------------------------------
+[QR 3] https://pilotosiat.impuestos.gob.bo/consulta/QR?nit=358658021&cuf=188A56309A310787088218FD5BF646D74D016255637411E6177751673&numero=1002335&t=2
+
+ ESTA FACTURA CONTRIBUYE AL DESARROLLO  
+ DEL PAÍS, EL USO ILÍCITO DE ÉSTA SERÁ  
+ SANCIONADO PENALMENTE DE ACUERDO A LEY 
+
+Ley N° 453: La interrupción del servicio
+debe comunicarse con anterioridad a las 
+  Autoridades que correspondan y a los  
+          usuarios afectados.           
+
+  "Este documento es la Representación  
+ Gráfica de un Documento Fiscal Digital 
+  emitido fuera de línea, verifique su  
+ envío con su proveedor o en la página  
+       web www.impuestos.gob.bo"        
+----------------------------------------
+        Generada a través de iZi        

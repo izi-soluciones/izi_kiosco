@@ -1,0 +1,16 @@
+ IZI Soluciones Pruebas Nuevos Releases 
+      iZi Soluciones Digitales SA       
+               358658021                
+              Casa Matriz               
+NOMBRE: Chavez                          
+NIT/CI/CEX: 13435745010                 
+FACTURA N°: 1002335                     
+FECHA: <fecha>                          
+IMPORTE Bs: 294                         
+
+[QR 2] https://pilotosiat.impuestos.gob.bo/consulta/QR?nit=358658021&cuf=188A56309A310787088218FD5BF646D74D016255637411E6177751673&numero=1002335&t=2
+
+    Visualice su factura desde el QR    
+        Forma de pago: EFECTIVO         
+----------------------------------------
+        Generada a través de iZi        
