@@ -63,7 +63,11 @@ class _TestPaymentBloc extends PaymentBloc {
 AuthState _authState({required bool facturacion, required bool retail}) {
   return AuthState.init().copyWith(
       currentContribuyente:
-          Contribuyente.fromJson({"habilitadoFacturacion": facturacion}),
+          Contribuyente.fromJson({
+            "modulos": {
+              "facturacion": {"enabled": facturacion}
+            }
+          }),
       currentDevice: Device.fromJson({
         "id": 1,
         "sucursal": 1,
