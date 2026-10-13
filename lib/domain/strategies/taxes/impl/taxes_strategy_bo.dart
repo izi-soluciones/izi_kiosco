@@ -15,7 +15,7 @@ class TaxesStrategyBo implements TaxesStrategy{
   @override
   PaymentStatus? verifyParameters(Contribuyente? contribuyente, Sucursal? sucursal, Device? currentDevice, String? economicActivity) {
 
-    if (economicActivity==null) {
+    if (contribuyente?.tieneFacturacion == true && economicActivity == null) {
       return PaymentStatus.errorActivity;
     }
     return null;
