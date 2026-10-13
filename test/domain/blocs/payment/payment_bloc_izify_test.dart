@@ -532,4 +532,152 @@ void main() {
       expect(byRef['KOS-UNREG-OLD']!.chargedNotRegistered, isTrue);
     });
   });
+  group('the transaction summary (tx.summary)', () {
+    setUp(() => Telemetry.install(Telemetry()));
+
+    List<Map<String, Object?>> summaries() => [
+          for (final e in Telemetry.recent().reversed)
+            if (e.type == 'tx.summary') e.data,
+        ];
+
+    CardPayment declined() => original()
+      ..chargeId = 'CHG-ORIG'
+      ..attempts = 1
+      ..comandaId = 'comanda-1';
+
+    test('a retry replaces the outcome of its charge, one attempt more', () async {
+      expect(await bloc.retryCardPayment(auth, declined()), isTrue);
+
+      final tx = summaries().single;
+      expect(tx['chargeId'], 'CHG-ORIG');
+      expect(tx['reference'], pos.charges.single['reference']);
+      expect(tx['status'], 'approved');
+      expect(tx['attempts'], 2);
+      expect(tx['comandaId'], 'comanda-1');
+      expect(tx['amount'], 15000);
+      expect((await rows()).single.attempts, 2, reason: 'the next retry counts on from here');
+    });
+
+    test('a declined retry', () async {
+      pos.outcome = 'ERROR';
+      expect(await bloc.retryCardPayment(auth, declined()), isFalse);
+      expect(summaries().single['status'], 'declined');
+    });
+
+    test('a retry charged and not registered', () async {
+      comandas.failWith = const PaymentConflict('otro pago');
+      expect(await bloc.retryCardPayment(auth, declined()), isTrue);
+      expect(summaries().single['status'], 'unregistered');
+    });
+
+    test('a retry the terminal could not take', () async {
+      await pos.close();
+      expect(await bloc.retryCardPayment(auth, declined()), isFalse);
+      expect(summaries().single['status'], 'error');
+    });
+
+    test('a pending charge verified as approved settles its summary', () async {
+      await bloc.retryCardPayment(auth, original(reference: 'SETUP'));
+      Telemetry.install(Telemetry());
+      final cp = original(status: 'PENDING', reference: 'KOS-PEND-9')
+        ..chargeId = 'CHG-PEND'
+        ..comandaId = 'comanda-9';
+      await LocalStorageCardErrors.saveCardErrors(jsonEncode(cp.toJson()));
+      pos.accepted.add('KOS-PEND-9');
+      pos.settle('KOS-PEND-9', 'SUCCESS');
+
+      await bloc.verifyCardPayment(auth, cp);
+
+      final tx = summaries().single;
+      expect(tx['chargeId'], 'CHG-PEND');
+      expect(tx['status'], 'approved');
+      expect(tx['verdictVia'], 'poll');
+      expect(tx['comandaId'], 'comanda-9');
+    });
+
+    test('a pending charge still unconfirmed changes nothing', () async {
+      await bloc.retryCardPayment(auth, original(reference: 'SETUP'));
+      Telemetry.install(Telemetry());
+      final cp = original(status: 'PENDING', reference: 'KOS-SLOW-9');
+      await LocalStorageCardErrors.saveCardErrors(jsonEncode(cp.toJson()));
+      pos.accepted.add('KOS-SLOW-9');
+
+      await bloc.verifyCardPayment(auth, cp);
+      expect(summaries(), isEmpty);
+    });
+
+    group('the recovery after a reload', () {
+      CardPayment lost(String reference, {String status = 'IN_PROGRESS', String response = 'En curso'}) =>
+          CardPayment(
+            response: response,
+            cardNumber: '****',
+            date: DateTime.now().toIso8601String().split('T').first,
+            hour: '10:00',
+            amount: '9509.00',
+            currency: 'COP',
+            reference: reference,
+            status: status,
+            markUuid: 'charge-lost',
+            markToken: 'tok-lost',
+            chargeId: 'CHG-$reference',
+          );
+
+      Future<void> pair() async {
+        await bloc.retryCardPayment(auth, original());
+        await (await SharedPreferences.getInstance()).setStringList('cardErrors', []);
+        Telemetry.install(Telemetry());
+      }
+
+      test('a lost charge the terminal approved is reported approved', () async {
+        await pair();
+        await LocalStorageCardErrors.saveCardErrors(jsonEncode(lost('KOS-L1').toJson()));
+        pos.settle('KOS-L1', 'SUCCESS');
+
+        await CardChargeRecovery(repository: comandas).run(auth.currentDevice);
+
+        final tx = summaries().single;
+        expect(tx['chargeId'], 'CHG-KOS-L1');
+        expect(tx['status'], 'approved');
+        expect(tx['amount'], 9509);
+        expect(tx['verdictVia'], 'poll');
+      });
+
+      test('a lost charge approved and not registered', () async {
+        await pair();
+        comandas.failWith = StateError('sin red');
+        await LocalStorageCardErrors.saveCardErrors(jsonEncode(lost('KOS-L2').toJson()));
+        pos.settle('KOS-L2', 'SUCCESS');
+
+        await CardChargeRecovery(repository: comandas).run(auth.currentDevice);
+        expect(summaries().single['status'], 'unregistered');
+      });
+
+      test('a lost charge declined or cancelled', () async {
+        await pair();
+        await LocalStorageCardErrors.saveCardErrors(jsonEncode(lost('KOS-L3').toJson()));
+        await LocalStorageCardErrors.saveCardErrors(jsonEncode(lost('KOS-L4').toJson()));
+        pos.settle('KOS-L3', 'ERROR');
+        pos.settle('KOS-L4', 'CANCELLED');
+
+        await CardChargeRecovery(repository: comandas).run(auth.currentDevice);
+        expect({for (final tx in summaries()) tx['reference']: tx['status']},
+            {'KOS-L3': 'declined', 'KOS-L4': 'cancelled'});
+      });
+
+      test('an unregistered charge registered now resolves; one still failing says nothing new',
+          () async {
+        await LocalStorageCardErrors.saveCardErrors(jsonEncode(
+            lost('KOS-U1', status: 'SUCCESS', response: 'Aprobada - Error sync server: sin red').toJson()));
+        await CardChargeRecovery(repository: comandas).run(auth.currentDevice);
+        expect(summaries().single['status'], 'approved');
+
+        Telemetry.install(Telemetry());
+        comandas.failWith = StateError('sin red');
+        await LocalStorageCardErrors.saveCardErrors(jsonEncode(
+            lost('KOS-U2', status: 'SUCCESS', response: 'Aprobada - Error sync server: sin red').toJson()));
+        await CardChargeRecovery(repository: comandas).run(auth.currentDevice);
+        expect(summaries(), isEmpty);
+      });
+    });
+  });
 }

@@ -11,6 +11,7 @@ import 'package:izi_kiosco/app/values/locale_keys.g.dart';
 import 'package:izi_kiosco/domain/blocs/page_utils/page_utils_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/pos_config/pos_config_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
+import 'package:izi_kiosco/ui/pages/pos_config_page/widgets/monitoring_status_tile.dart';
 import 'package:izi_kiosco/ui/pages/pos_config_page/widgets/pos_diagnostics_dialog.dart';
 
 class PosConfigPage extends StatefulWidget {
@@ -131,6 +132,8 @@ class _PosConfigPageState extends State<PosConfigPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  const MonitoringStatusTile(),
+                  const SizedBox(height: 24),
                   // --- Paired Device Section ---
                   if (state.pairedDevice != null) ...[
                     IziText.titleSmall(

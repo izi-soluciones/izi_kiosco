@@ -10,6 +10,9 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:izi_kiosco/app/values/app_constants.dart';
 import 'package:izi_kiosco/data/local/local_storage_card_errors.dart';
+import 'package:izi_kiosco/data/monitoring/kiosk_activity.dart';
+import 'package:izi_kiosco/data/monitoring/kiosk_counters.dart';
+import 'package:izi_kiosco/data/monitoring/transaction_summary.dart';
 import 'package:izi_kiosco/data/pos/izify_pos_client.dart';
 import 'package:izi_kiosco/data/pos/izify_pos_session.dart';
 import 'package:izi_kiosco/data/pos/card_charge_recovery.dart';
@@ -375,6 +378,7 @@ class PaymentBloc extends Cubit<PaymentState> {
   }
 
   backReset() {
+    _endTx(TxStatus.cancelled);
     _socketRepository.closeQrListening();
     qrStream?.cancel();
     qrStream = null;
@@ -391,12 +395,15 @@ class PaymentBloc extends Cubit<PaymentState> {
   }
 
   selectPayment(PaymentType paymentType, AuthState authState) async {
+    TransactionSummary? cashTx;
     try {
       if (paymentType == PaymentType.cashRegister) {
+        cashTx = _beginTx(TxMethod.cash, authState)?..sent();
         emit(state.copyWith(status: PaymentStatus.processingOrder));
         Comanda comanda = await _comandaRepository.markAsCreated(
           state.paymentObj?.uuid ?? "",
         );
+        cashTx?.verdict();
         if (comanda.numero is int) {
           _printRolloOrder(
             authState,
@@ -414,6 +421,7 @@ class PaymentBloc extends Cubit<PaymentState> {
             paymentType: paymentType,
           ),
         );
+        _report(cashTx, TxStatus.approved);
         timerSuccess = Timer(const Duration(seconds: 10), () async {
           emit(state.copyWith(status: PaymentStatus.successInvoice));
         });
@@ -433,6 +441,7 @@ class PaymentBloc extends Cubit<PaymentState> {
       }
     } catch (e) {
       log(e.toString());
+      _reportError(cashTx, e);
       emit(state.copyWith(status: PaymentStatus.markCreateError));
       emit(state.copyWith(status: PaymentStatus.successGet));
     }
@@ -487,8 +496,33 @@ class PaymentBloc extends Cubit<PaymentState> {
     return true;
   }
 
+  /// Statuses during which a charge (or the order it pays) is on its way:
+  /// nothing may reload the kiosk then (contracts §6, `chargeInProgress`).
+  static const Set<PaymentStatus> chargeStatuses = {
+    PaymentStatus.cardProcessing,
+    PaymentStatus.processingOrder,
+  };
+
+  /// Tells the monitoring what the page is doing: whether a charge is on its
+  /// way, and each order completed (the success screen, step 5).
+  @override
+  void onChange(Change<PaymentState> change) {
+    super.onChange(change);
+    try {
+      final next = change.nextState;
+      KioskActivity.instance.paymentBusyChanged(chargeStatuses.contains(next.status));
+      final completed =
+          next.status == PaymentStatus.paymentProcessed && next.step == 5;
+      final wasCompleted = change.currentState.status == PaymentStatus.paymentProcessed &&
+          change.currentState.step == 5;
+      if (completed && !wasCompleted) KioskCounters.instance.add(KioskCounters.orders);
+    } catch (_) {}
+  }
+
   @override
   Future<void> close() async {
+    KioskActivity.instance.paymentBusyChanged(false);
+    _endTxOnClose();
     // Nobody waits for these any more (the page timed out mid-charge): hand
     // them to the recovery, which asks the terminal how they ended.
     CardChargeRecovery.active.removeAll(_chargesInProgress);
@@ -512,6 +546,106 @@ class PaymentBloc extends Cubit<PaymentState> {
     timerSuccess?.cancel();
     return super.close();
   }
+
+  /// The transaction under way on this page, for its `tx.summary` (contracts
+  /// §5.1). The sale only writes to it: nothing it does depends on it.
+  TransactionSummary? _tx;
+
+  /// Starts the summary of a transaction paid by [method]. One still open
+  /// ends first: as it settled, or cancelled (the customer left the QR for
+  /// the card). None on a demo kiosk, which charges nothing.
+  TransactionSummary? _beginTx(String method, AuthState authState,
+      {String? chargeId, num? amount, String? currency, String? comandaId, int attempts = 0}) {
+    try {
+      _endTx(TxStatus.cancelled);
+      if (authState.currentDevice?.config.demo == true) return null;
+      return _tx = TransactionSummary(
+        method: method,
+        chargeId: chargeId ?? IzifyPosClient.newChargeId(),
+        amount: amount ?? state.paymentObj?.amount,
+        currency: currency ?? TransactionSummary.currencyOf(authState.taxesStrategy.countryCode),
+        comandaId: comandaId ?? state.paymentObj?.uuid,
+        attempts: attempts,
+      );
+    } catch (_) {
+      return _tx = null;
+    }
+  }
+
+  /// The transaction under way, if it is the one of the terminal attempt
+  /// [reference].
+  TransactionSummary? _txFor(String? reference) {
+    final tx = _tx;
+    return tx != null && reference != null && tx.reference == reference ? tx : null;
+  }
+
+  /// Reports [tx] as [status] (once: later calls change nothing).
+  void _report(TransactionSummary? tx, String status) {
+    if (tx == null) return;
+    tx.report(status);
+    if (identical(_tx, tx)) _tx = null;
+  }
+
+  /// Ends the transaction under way as it settled, else as [fallback].
+  void _endTx([String? fallback]) {
+    final tx = _tx;
+    if (tx == null) return;
+    final status = tx.settled ?? fallback;
+    if (status != null) _report(tx, status);
+  }
+
+  /// iZi says the order was paid ([via]: its socket or the order itself).
+  /// [end]: the sale is over; otherwise iZi is still making the invoice, and
+  /// the transaction ends with the success screen.
+  void _txPaid(String via, {Object? facturaId, bool end = true}) {
+    try {
+      final tx = _tx;
+      if (tx == null) return;
+      tx.verdict(via: via);
+      if (facturaId is String && facturaId.isNotEmpty) tx.facturaId = facturaId;
+      tx.settle(TxStatus.approved);
+      if (end) _endTx();
+    } catch (_) {}
+  }
+
+  /// The order page gave up waiting for iZi. A card charge still waiting for
+  /// its terminal is not over: its own flow ends it.
+  void _endTxOnTimeout() {
+    final tx = _tx;
+    if (tx == null || (tx.method == TxMethod.card && tx.settled == null)) return;
+    _endTx(TxStatus.timeout);
+  }
+
+  /// The page is going away. A card charge not over yet keeps running
+  /// without it (the terminal still deciding, iZi still being told): it is
+  /// reported for now as without a verdict once sent (abandoned before), and
+  /// its flow, which keeps [_tx], reports how it ended over that; a flow cut
+  /// short leaves the charge to the recovery. Anything else not over was
+  /// abandoned.
+  void _endTxOnClose() {
+    try {
+      final tx = _tx;
+      if (tx == null || tx.reported) return;
+      if (tx.method == TxMethod.card && tx.settled == null) {
+        tx.reportInterim(tx.started ? TxStatus.timeout : TxStatus.cancelled);
+        return;
+      }
+      _endTx(TxStatus.cancelled);
+    } catch (_) {}
+  }
+
+  /// A flow failed with [e]. Failing only because the page went away (its
+  /// next screen cannot be shown any more) says nothing about the
+  /// transaction: what was reported when the page closed stands.
+  void _reportError(TransactionSummary? tx, Object e) {
+    if (e is StateError && isClosed) return;
+    _report(tx, TxStatus.error);
+  }
+
+  /// How a confirmed card charge ended once the kiosk told iZi
+  /// ([_settleConfirmedCharge]).
+  static String _registeredStatus(CardPayment cp) =>
+      cp.response.endsWith('pedido registrado') ? TxStatus.approved : TxStatus.unregistered;
 
   /// Deadline for the terminal's verdict after it accepted a charge. It must
   /// exceed what PayPOS may take before answering PENDING itself: up to 35 s
@@ -594,6 +728,9 @@ class PaymentBloc extends Cubit<PaymentState> {
     String? retryOf,
   }) async {
     final charge = chargeId ?? IzifyPosClient.newChargeId();
+    final tx = _tx;
+    tx?.chargeId = charge;
+    tx?.currency = currency;
     IzifyPosSession session;
     try {
       session = await _readyIzifySession(authState);
@@ -624,6 +761,7 @@ class PaymentBloc extends Cubit<PaymentState> {
       chargeId: charge,
     );
     cardPayment.sentAt = DateTime.now();
+    tx?.sent(reference: reference, at: cardPayment.sentAt);
     Telemetry.event('charge.start', chargeId: charge, reference: reference, data: {
       'amount': amount,
       'currency': currency,
@@ -650,6 +788,7 @@ class PaymentBloc extends Cubit<PaymentState> {
             chargeId: charge,
             reference: reference,
             data: {'ms': watch.elapsedMilliseconds});
+        tx?.acknowledged();
       } on IzifyPosException catch (e) {
         Telemetry.event('charge.pay_error',
             level: TelemetryLevel.warning,
@@ -846,6 +985,7 @@ class PaymentBloc extends Cubit<PaymentState> {
             if (result.transactionId != null) 'transactionId': result.transactionId,
             ...kioskSnapshot(),
           });
+      _txFor(reference)?.verdict(via: via);
       return result;
     } finally {
       pollTimer.cancel();
@@ -874,22 +1014,55 @@ class PaymentBloc extends Cubit<PaymentState> {
         amount: (state.paymentObj?.amount ?? 0).toStringAsFixed(2),
       );
     }
-    if (linkser) {
-      return _comandaRepository.callCardPayment(
-        amount: _getIntFromDecimal(
-          _roundToNDecimals(state.paymentObj?.amount ?? 0, 2),
-        ),
-        ip: authState.currentDevice!.config.ipLinkser!,
-      );
+    final provider = linkser ? 'linkser' : 'atc';
+    final watch = Stopwatch()..start();
+    final tx = _tx?..sent();
+    Telemetry.event('charge.start', data: {'provider': provider});
+    try {
+      final CardPayment cardPayment;
+      if (linkser) {
+        cardPayment = await _comandaRepository.callCardPayment(
+          amount: _getIntFromDecimal(
+            _roundToNDecimals(state.paymentObj?.amount ?? 0, 2),
+          ),
+          ip: authState.currentDevice!.config.ipLinkser!,
+        );
+      } else {
+        cardPayment = await _comandaRepository.callCardPaymentATC(
+          amount: (state.paymentObj?.amount ?? 0).moneyFormat(
+            digitsTaxes: authState.taxesStrategy.decimals,
+          ),
+          ip: authState.currentDevice!.config.ipAtc!,
+          cancelToken: cancelToken,
+          contactless: contactless,
+        );
+      }
+      Telemetry.event('charge.result', data: {
+        'provider': provider,
+        'status': 'success',
+        'ms': watch.elapsedMilliseconds,
+      });
+      tx?.verdict();
+      return cardPayment;
+    } catch (e) {
+      // ATC and Linkser answer a decline and a failure alike. Only the type:
+      // their error text may carry the card's data.
+      Telemetry.event('charge.result',
+          level: TelemetryLevel.warning,
+          data: {
+            'provider': provider,
+            'status': 'failed',
+            'error': e.runtimeType.toString(),
+            'ms': watch.elapsedMilliseconds,
+          });
+      // Cancelled from the payment page (cancelPaymentCard).
+      _report(
+          tx,
+          e is DioException && e.type == DioExceptionType.cancel
+              ? TxStatus.cancelled
+              : TxStatus.error);
+      rethrow;
     }
-    return _comandaRepository.callCardPaymentATC(
-      amount: (state.paymentObj?.amount ?? 0).moneyFormat(
-        digitsTaxes: authState.taxesStrategy.decimals,
-      ),
-      ip: authState.currentDevice!.config.ipAtc!,
-      cancelToken: cancelToken,
-      contactless: contactless,
-    );
   }
 
   Future<(bool, Object?)> _retryMarkPayment(
@@ -1052,6 +1225,7 @@ class PaymentBloc extends Cubit<PaymentState> {
           chargeId: cardPayment.chargeId,
           reference: cardPayment.reference,
           data: const {'status': 'no_session'});
+      _report(_txFor(cardPayment.reference), TxStatus.error);
       cardPayment.status = 'UNKNOWN';
       await _saveCardError(cardPayment, "Sin confirmar - sin credenciales",
           "Izify sin credenciales para verificar el pago");
@@ -1067,6 +1241,7 @@ class PaymentBloc extends Cubit<PaymentState> {
       sentAt: cardPayment.sentAt,
     );
     await _takeProof(cardPayment, result);
+    final tx = _txFor(cardPayment.reference);
 
     switch (result.status) {
       case PosPaymentStatus.success:
@@ -1079,6 +1254,7 @@ class PaymentBloc extends Cubit<PaymentState> {
         await _saveCardError(cardPayment, "Rechazada - no recibido por el datáfono",
             "Izify /pay never reached the terminal");
         _reportAttempt(cardPayment, 'RECHAZADA');
+        _report(tx, TxStatus.error);
         _emitCardError(authState,
             message: "El datáfono no recibió el cobro. No se realizó ningún cargo.");
         return false;
@@ -1091,6 +1267,8 @@ class PaymentBloc extends Cubit<PaymentState> {
             "Izify terminal rejected payment");
         _reportAttempt(cardPayment,
             result.status == PosPaymentStatus.cancelled ? 'CANCELADA' : 'RECHAZADA');
+        _report(tx,
+            result.status == PosPaymentStatus.cancelled ? TxStatus.cancelled : TxStatus.declined);
         _emitCardError(authState, message: result.errorMessage);
         return false;
       case PosPaymentStatus.pending:
@@ -1100,6 +1278,7 @@ class PaymentBloc extends Cubit<PaymentState> {
             "Pendiente - ${result.errorMessage ?? 'sin confirmar'}",
             "Izify payment PENDING (unconfirmed - verify before retry)");
         _reportAttempt(cardPayment, 'PENDIENTE');
+        _report(tx, TxStatus.timeout);
         _emitCardPending(authState, message: result.errorMessage);
         return false;
       case PosPaymentStatus.unknown:
@@ -1112,6 +1291,7 @@ class PaymentBloc extends Cubit<PaymentState> {
         await _saveCardError(cardPayment, "Sin confirmar (timeout)",
             "Izify no confirmed result within timeout");
         _reportAttempt(cardPayment, 'PENDIENTE');
+        _report(tx, TxStatus.timeout);
         _emitCardPending(authState);
         return false;
     }
@@ -1193,6 +1373,12 @@ class PaymentBloc extends Cubit<PaymentState> {
     final retryQuotas = quotas ?? original.quotas ?? 0;
 
     emit(state.copyWith(status: PaymentStatus.cardProcessing));
+    final tx = _beginTx(TxMethod.card, authState,
+        chargeId: original.chargeId,
+        amount: parsedAmount,
+        currency: currency,
+        comandaId: original.comandaId,
+        attempts: original.attempts ?? (original.reference != null ? 1 : 0));
     var approved = false;
     CardPayment? settled;
     try {
@@ -1208,12 +1394,15 @@ class PaymentBloc extends Cubit<PaymentState> {
       cardPayment.markUuid = original.markUuid;
       cardPayment.markInternalId = original.markInternalId;
       cardPayment.markToken = original.markToken;
+      cardPayment.comandaId = original.comandaId;
+      cardPayment.attempts = tx?.attempts ?? (original.attempts ?? 1) + 1;
       // The outcome of this attempt replaces the row being retried.
       cardPayment.storedAs = original.reference;
       approved = await _awaitIzifyResult(authState, cardPayment);
       settled = cardPayment;
     } catch (e) {
       log(e.toString());
+      _reportError(tx, e);
       _emitCardError(authState,
           message: e is IzifyPosException ? e.message : null);
       return false;
@@ -1227,6 +1416,7 @@ class PaymentBloc extends Cubit<PaymentState> {
     } catch (e) {
       log('No se pudo guardar el cobro aprobado: $e');
     }
+    _report(tx, _registeredStatus(settled));
     emit(state.copyWith(
         status: PaymentStatus.cardVerified,
         errorDescription: settled.response));
@@ -1272,6 +1462,14 @@ class PaymentBloc extends Cubit<PaymentState> {
     final result = await _izifyPosClient.paymentStatus(session.address,
         token: session.token, reference: reference);
     await _takeProof(cp, result);
+    // A settled outcome replaces what the monitoring had for this charge
+    // (it was left without a verdict).
+    void reportVerified(String status) {
+      try {
+        (TransactionSummary.ofCardPayment(cp)..verdictVia = TxVerdictVia.poll)
+            .report(status);
+      } catch (_) {}
+    }
 
     Future<void> store(String status, String response) async {
       cp.status = status;
@@ -1283,6 +1481,7 @@ class PaymentBloc extends Cubit<PaymentState> {
     switch (result.status) {
       case PosPaymentStatus.success:
         await _settleConfirmedCharge(cp);
+        reportVerified(_registeredStatus(cp));
         emit(state.copyWith(
             status: PaymentStatus.cardVerified, errorDescription: cp.response));
         emit(state.copyWith(status: PaymentStatus.successGet));
@@ -1290,6 +1489,9 @@ class PaymentBloc extends Cubit<PaymentState> {
       case PosPaymentStatus.cancelled:
         await store('ERROR',
             "Rechazada - ${result.errorMessage ?? 'verificada'}".trim());
+        reportVerified(result.status == PosPaymentStatus.cancelled
+            ? TxStatus.cancelled
+            : TxStatus.declined);
         _emitCardError(authState,
             message: 'No se cobró: ${result.errorMessage ?? 'rechazada'}. Puede reintentar.');
       case PosPaymentStatus.notFound:
@@ -1321,8 +1523,10 @@ class PaymentBloc extends Cubit<PaymentState> {
     String cardType = "DEBITO",
     int quotas = 0,
   }) async {
+    TransactionSummary? tx;
     try {
       emit(state.copyWith(step: 4, status: PaymentStatus.cardProcessing));
+      tx = _beginTx(TxMethod.card, authState, currency: izify ? 'COP' : null);
 
       PaymentAttemptDto newPayment = PaymentAttemptDto(
         uuid: state.paymentObj?.uuid ?? "",
@@ -1376,6 +1580,7 @@ class PaymentBloc extends Cubit<PaymentState> {
       cardPayment.markUuid = state.paymentObj?.uuid;
       cardPayment.markInternalId = charge.intentoPago;
       cardPayment.markToken = charge.token;
+      cardPayment.comandaId = state.paymentObj?.uuid;
 
       if (izify) {
         await _recordChargeInProgress(cardPayment);
@@ -1396,9 +1601,12 @@ class PaymentBloc extends Cubit<PaymentState> {
         token: charge.token,
       );
       if (marked) {
+        // Over once iZi says the sale is done (its socket), with the invoice.
+        tx?.settle(TxStatus.approved);
         await _recordRegisteredSale(cardPayment);
         return true;
       }
+      _report(tx, TxStatus.unregistered);
 
       if (izify) {
         // Charged, but iZi does not know: the order must be registered by hand.
@@ -1419,6 +1627,7 @@ class PaymentBloc extends Cubit<PaymentState> {
       return false;
     } catch (e) {
       log(e.toString());
+      _reportError(tx, e);
       // An IzifyPosException here was raised before the terminal accepted
       // anything, so its message ("no se cobró" + why) is safe to show.
       emit(state.copyWith(
@@ -1443,8 +1652,10 @@ class PaymentBloc extends Cubit<PaymentState> {
     String cardType = "DEBITO",
     int quotas = 0,
   }) async {
+    TransactionSummary? tx;
     try {
       emit(state.copyWith(step: 4, status: PaymentStatus.cardProcessing));
+      tx = _beginTx(TxMethod.card, authState, currency: izify ? 'COP' : null);
 
       PaymentDto newPayment = _buildPaymentDto(AppConstants.idPaymentMethodPOS);
 
@@ -1474,6 +1685,7 @@ class PaymentBloc extends Cubit<PaymentState> {
       );
       cardPayment.markUuid = charge.uuid;
       cardPayment.markToken = charge.token;
+      cardPayment.comandaId = state.paymentObj?.uuid;
 
       if (izify) {
         await _recordChargeInProgress(cardPayment);
@@ -1491,9 +1703,12 @@ class PaymentBloc extends Cubit<PaymentState> {
           transaccion: izify ? cardPayment.terminalData('APROBADA') : null,
           token: charge.token);
       if (marked) {
+        // Over once iZi says the sale is done (its socket), with the invoice.
+        tx?.settle(TxStatus.approved);
         await _recordRegisteredSale(cardPayment);
         return true;
       }
+      _report(tx, TxStatus.unregistered);
 
       if (izify) {
         // Charged, but iZi does not know: the order must be registered by hand.
@@ -1514,6 +1729,7 @@ class PaymentBloc extends Cubit<PaymentState> {
       return false;
     } catch (e) {
       log(e.toString());
+      _reportError(tx, e);
       // An IzifyPosException here was raised before the terminal accepted
       // anything, so its message ("no se cobró" + why) is safe to show.
       emit(state.copyWith(
@@ -1703,18 +1919,25 @@ class PaymentBloc extends Cubit<PaymentState> {
 
   Timer? timerSuccess;
   Future<bool> generateQR(AuthState authState) async {
+    TransactionSummary? tx;
     try {
       if (_skipInvoiceForm(authState) || _validateInputs()) {
         emit(state.copyWith(step: 3));
+        tx = _beginTx(TxMethod.qr, authState);
+        final bool generated;
         if (state.paymentObj?.isComanda == true) {
-          return await _generateOrderQR(authState);
+          generated = await _generateOrderQR(authState);
         } else {
-          return await _generateRetailQR(authState);
+          generated = await _generateRetailQR(authState);
         }
+        // On screen: what the customer takes to pay starts now.
+        tx?.sent();
+        return generated;
       }
       return false;
     } catch (e) {
       log(e.toString());
+      _reportError(tx, e);
       emit(
         state.copyWith(
           qrLoading: false,
@@ -1864,17 +2087,23 @@ class PaymentBloc extends Cubit<PaymentState> {
   }
 
   Future<bool> generateBREB(AuthState authState) async {
+    TransactionSummary? tx;
     try {
       if (_skipInvoiceForm(authState) || _validateInputs()) {
+        tx = _beginTx(TxMethod.breb, authState);
+        final bool generated;
         if (state.paymentObj?.isComanda == true) {
-          return await _generateOrderBREB(authState);
+          generated = await _generateOrderBREB(authState);
         } else {
-          return await _generateRetailBREB(authState);
+          generated = await _generateRetailBREB(authState);
         }
+        tx?.sent();
+        return generated;
       }
       return false;
     } catch (e) {
       log(e.toString());
+      _reportError(tx, e);
       emit(
         state.copyWith(
           brebLoading: false,
@@ -1911,6 +2140,7 @@ class PaymentBloc extends Cubit<PaymentState> {
       event,
     ) async {
       if (event is Map && event["statusVenta"] == "success") {
+        _txPaid(TxVerdictVia.ws, facturaId: event["uuidFactura"]);
         if (event["uuidFactura"] is String &&
             authState.currentDevice?.config.noPrintRollo != true) {
           await _printRollo(authState, idInvoice: event["uuidFactura"]);
@@ -1927,7 +2157,11 @@ class PaymentBloc extends Cubit<PaymentState> {
           emit(state.copyWith(status: PaymentStatus.successInvoice));
         });
       } else {
+        // Paid (iZi only sends paid charges), and the sale is still being
+        // made: over with the success screen.
+        _txPaid(TxVerdictVia.ws, end: false);
         timer = Timer(const Duration(seconds: 60), () async {
+          _endTx();
           emit(state.copyWith(step: 5, status: PaymentStatus.paymentProcessed));
           timerSuccess = Timer(const Duration(seconds: 10), () async {
             emit(state.copyWith(status: PaymentStatus.successInvoice));
@@ -1965,6 +2199,7 @@ class PaymentBloc extends Cubit<PaymentState> {
         qrStream?.cancel();
         timerManual?.cancel();
         timerQR?.cancel();
+        _endTxOnTimeout();
         emit(state.copyWith(step: 6, status: PaymentStatus.paymentProcessed));
         timerSuccess = Timer(
           const Duration(seconds: 10),
@@ -1992,6 +2227,8 @@ class PaymentBloc extends Cubit<PaymentState> {
             );
             if (comanda.factura != null && !isProcessing) {
               isProcessing = true;
+              _txPaid(TxVerdictVia.poll,
+                  facturaId: comanda.custom is Map ? comanda.custom["facturaUuid"] : null);
               if (qrStream != null) {
                 _socketRepository.closeQrListening();
                 qrStream?.cancel();
@@ -2038,6 +2275,7 @@ class PaymentBloc extends Cubit<PaymentState> {
       if (event is Map && event["statusVenta"] == "success") {
         if (!isProcessing) {
           isProcessing = true;
+          _txPaid(TxVerdictVia.ws, facturaId: event["uuidFactura"]);
           timerManual?.cancel();
           timerQR?.cancel();
           timeoutTimer.cancel();
@@ -2071,6 +2309,9 @@ class PaymentBloc extends Cubit<PaymentState> {
           });
         }
       } else {
+        // Paid; iZi is still making the sale (the order poll or the timeout
+        // ends it).
+        _txPaid(TxVerdictVia.ws, end: false);
         emit(
           state.copyWith(
             status: PaymentStatus.processingOrder,
@@ -2156,6 +2397,7 @@ class PaymentBloc extends Cubit<PaymentState> {
   }
 
   cancelQR(AuthState authState){
+    _endTx(TxStatus.cancelled);
     if(authState.currentContribuyente?.tieneFacturacion==true){
       emit(state.copyWith(step: 2,qrLoading: false,qrCharge: ()=>null));
     }
@@ -2165,6 +2407,7 @@ class PaymentBloc extends Cubit<PaymentState> {
   }
 
   cancelBREB(AuthState authState) {
+    _endTx(TxStatus.cancelled);
     emit(
       state.copyWith(
         step: authState.currentContribuyente?.tieneFacturacion == true ? 2 : 1,

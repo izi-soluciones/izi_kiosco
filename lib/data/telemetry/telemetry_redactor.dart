@@ -4,11 +4,13 @@
 /// Two layers, because a secret can hide in a key or inside a message:
 /// - a key naming a secret drops its value whatever it holds;
 /// - every string is scrubbed of card-like digit runs, bearer tokens and URL
-///   query strings (the `/payment-updates` URL carries `?token=`).
+///   query strings (the `/payment-updates` URL carries `?token=`), and of
+///   monitoring device tokens (`izd_...`).
 class TelemetryRedactor {
   static const String mask = '[redactado]';
   static const int maxStringLength = 300;
   static const int _maxDepth = 4;
+  static const int _maxItems = 20;
 
   /// Words that make a key secret, matched against the words of the key
   /// (`mqttPassword` → mqtt, password), so `company` never matches `pan`.
@@ -39,6 +41,9 @@ class TelemetryRedactor {
   /// reference survives.
   static final RegExp _cardLike = RegExp(r'(?<![\w-])(?:\d[ -]?){11,18}\d(?![\w-])');
   static final RegExp _bearer = RegExp(r'Bearer\s+\S+', caseSensitive: false);
+
+  /// A monitoring device token (`izd_` + base64url).
+  static final RegExp _deviceToken = RegExp(r'\bizd_[A-Za-z0-9_-]+');
   static final RegExp _urlQuery =
       RegExp(r'\b((?:https?|wss?)://[^\s?#]+)\?[^\s#]*', caseSensitive: false);
   static final RegExp _secretParam = RegExp(
@@ -48,6 +53,7 @@ class TelemetryRedactor {
   static String scrub(String value) {
     var out = value
         .replaceAll(_bearer, 'Bearer $mask')
+        .replaceAll(_deviceToken, mask)
         .replaceAllMapped(_urlQuery, (m) => '${m[1]}?$mask')
         .replaceAllMapped(_secretParam, (m) => '${m[1]}=$mask')
         .replaceAll(_cardLike, mask);
@@ -59,23 +65,31 @@ class TelemetryRedactor {
 
   /// A copy of [data] safe to keep and send. Values become JSON-friendly:
   /// strings, numbers, booleans, null, lists and maps.
-  static Map<String, Object?> redact(Map<String, Object?> data) =>
-      _map(data, 0);
+  ///
+  /// Nesting deeper than [maxDepth] becomes `…`, and lists keep their first
+  /// [maxItems]: enough for an event or a heartbeat. A diagnostics report,
+  /// with its hundreds of events, asks for more.
+  static Map<String, Object?> redact(Map<String, Object?> data,
+          {int maxDepth = _maxDepth, int maxItems = _maxItems}) =>
+      _map(data, 0, maxDepth, maxItems);
 
-  static Map<String, Object?> _map(Map data, int depth) => {
+  static Map<String, Object?> _map(Map data, int depth, int maxDepth, int maxItems) => {
         for (final e in data.entries)
           e.key.toString(): isSecretKey(e.key.toString())
               ? mask
-              : _value(e.value, depth + 1),
+              : _value(e.value, depth + 1, maxDepth, maxItems),
       };
 
-  static Object? _value(Object? value, int depth) {
+  static Object? _value(Object? value, int depth, int maxDepth, int maxItems) {
     if (value == null || value is num || value is bool) return value;
     if (value is String) return scrub(value);
-    if (depth > _maxDepth) return '…';
-    if (value is Map) return _map(value, depth);
+    if (depth > maxDepth) return '…';
+    if (value is Map) return _map(value, depth, maxDepth, maxItems);
     if (value is Iterable) {
-      return value.take(20).map((v) => _value(v, depth + 1)).toList();
+      return value
+          .take(maxItems)
+          .map((v) => _value(v, depth + 1, maxDepth, maxItems))
+          .toList();
     }
     if (value is Duration) return value.inMilliseconds;
     if (value is DateTime) return value.toIso8601String();

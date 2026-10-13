@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:izi_kiosco/data/local/local_storage_card_errors.dart';
+import 'package:izi_kiosco/data/monitoring/transaction_summary.dart';
 import 'package:izi_kiosco/data/pos/izify_pos_client.dart';
 import 'package:izi_kiosco/data/pos/izify_pos_session.dart';
 import 'package:izi_kiosco/data/repositories/comanda/comanda_repository_http.dart';
@@ -130,6 +131,7 @@ class CardChargeRecovery {
             chargeId: cp.chargeId,
             reference: cp.reference,
             data: {'status': cp.status});
+        _reportSummary(cp, cancelled ? TxStatus.cancelled : TxStatus.declined);
         return true;
       case PosPaymentStatus.notFound:
         // The terminal has no record of it: it may have been reinstalled or
@@ -143,6 +145,7 @@ class CardChargeRecovery {
             chargeId: cp.chargeId,
             reference: cp.reference,
             data: const {'status': 'not_found'});
+        _reportSummary(cp, TxStatus.timeout);
         return true;
       case PosPaymentStatus.pending:
       case PosPaymentStatus.processing:
@@ -188,7 +191,20 @@ class CardChargeRecovery {
           'recovered': recovered,
           if (error != null) 'error': '$error',
         });
+    // A charge still not registered on a later pass changes nothing.
+    if (registered || recovered) {
+      _reportSummary(cp, registered ? TxStatus.approved : TxStatus.unregistered);
+    }
     return registered;
+  }
+
+  /// How the charge ended, for the monitoring: it replaces what it had for
+  /// this charge (nothing, when a reload cut the page off; an unregistered
+  /// charge, when it is registered now). Never throws.
+  void _reportSummary(CardPayment cp, String status) {
+    try {
+      (TransactionSummary.ofCardPayment(cp)..verdictVia = TxVerdictVia.poll).report(status);
+    } catch (_) {}
   }
 
   /// iZi signs each charge's token for two days: past that, asking again

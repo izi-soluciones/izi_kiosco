@@ -448,4 +448,36 @@ void main() {
     await bloc.endDiscovery();
     expect(state.discoveredDevices.single.terminalType, 'ECOPAY');
   });
+
+  group('repair (repair_pos from the console)', () {
+    test('a terminal that forgot the kiosk since it was checked is paired again now', () async {
+      final pos = await pairedTerminal();
+      auth.load(_device(ipEcopay: pos.hostPort));
+      final bloc = start();
+      await settled(bloc, healthy);
+      pos
+        ..pairedKioskId = null
+        ..token = null;
+
+      await bloc.repair();
+
+      expect(pos.pairRequests, 1);
+      expect(bloc.state.isHealthy, isTrue);
+      expect(await TokenUtils.getPosToken(), pos.token);
+    });
+
+    test('a kiosk unpaired on purpose is not paired again by the console', () async {
+      final pos = await pairedTerminal();
+      auth.load(_device(ipEcopay: pos.hostPort));
+      final bloc = start();
+      await settled(bloc, healthy);
+      await bloc.unpair();
+      final pairs = pos.pairRequests;
+
+      await bloc.repair();
+
+      expect(pos.pairRequests, pairs);
+      expect(bloc.state.pairedDevice, isNull);
+    });
+  });
 }
