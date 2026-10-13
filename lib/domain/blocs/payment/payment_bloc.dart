@@ -370,7 +370,7 @@ class PaymentBloc extends Cubit<PaymentState> {
   // El retail sin facturacion va del selector de metodo al cobro sin pasar por el
   // formulario, asi que sus campos quedan vacios y exigirlos deja el cobro mudo.
   bool _skipInvoiceForm(AuthState authState) {
-    return authState.currentContribuyente?.tieneFacturacion != true &&
+    return authState.currentContribuyente?.tieneModulo(Modulo.facturacion) != true &&
         (authState.currentDevice?.config.isRetail == true ||
             authState.currentDevice?.config.isRetailBarcode == true);
   }
