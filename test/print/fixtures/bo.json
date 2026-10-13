@@ -13,7 +13,16 @@
     "notas": [
       "ninguna sucursal de este contribuyente tiene tipoFacturaVentas=\"compacto\" en staging; el escenario compacto lo activa el harness sobre esta misma sucursal",
       "el logo es PNG: los templates lo descartan (guarda !isPng), no se dibuja"
-    ]
+    ],
+    "porFuera": {
+      "origen": "arnés de regresión de izi-backbone (rama del IVA por fuera, Ley 1733): la factura tal como la devuelve POST /facturas/emitir",
+      "capturado": "2026-10-13",
+      "facturas": {
+        "facturaPorFuera": "compra y venta en bolivianos, modo final, 5,25 de descuento adicional y 10 de gift card",
+        "facturaPorFueraDolares": "compra y venta en dólares a 6,96",
+        "prefacturaPorFuera": "prefactura en modo neto"
+      }
+    }
   },
   "contribuyente": {
     "id": 28,
@@ -5037,5 +5046,2075 @@
       "denominacionesMonedas": null,
       "denominacionesBilletes": null
     }
-  ]
+  ],
+  "facturaPorFuera": {
+    "trx": null,
+    "isIzi": 1,
+    "uuid": "7e495a19-4495-42dc-ac94-60b17a633f25",
+    "numero": 1,
+    "tipoFactura": 1,
+    "isApi": 0,
+    "isFromKhipu": 0,
+    "isFromCobro": 0,
+    "contribuyenteApi": null,
+    "cobroBnb": null,
+    "cobroKhipu": null,
+    "contribuyente": 1,
+    "emisor": "1023456077",
+    "razonSocialEmisor": "FIXTURE POR FUERA S.R.L.",
+    "comprador": "4567891019",
+    "razonSocial": "COMERCIAL ANDINA",
+    "correoElectronicoComprador": "compras@example.com",
+    "caja": null,
+    "sinCredito": 0,
+    "descuentos": 5.25,
+    "giftCards": 10,
+    "tipoCompra": 1,
+    "terminosPago": "Efectivo con gift card",
+    "prefactura": 0,
+    "contingencia": 0,
+    "anulada": 0,
+    "notaInterna": null,
+    "isCuentaCobro": false,
+    "clienteId": null,
+    "fechaPago": null,
+    "fecha": "2026-10-13T23:24:38.000Z",
+    "usuarioCreacion": "65f0c0ffee00000000000001",
+    "usuarioCreacionNombre": "Cajero Regresion",
+    "isPruebas": false,
+    "metodoPago": 64,
+    "actividadEconomica": null,
+    "sucursal": 1,
+    "sucursalDireccion": "Av. Arce 2020",
+    "customFactura": {
+      "siat": {
+        "cuf": "460717C6129A0EF396B44592C9129DD366239E06A1CC0001",
+        "xml": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n<facturaElectronicaCompraVenta xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"facturaElectronicaCompraVenta.xsd\">\n  <cabecera>\n    <nitEmisor>1023456077</nitEmisor>\n    <razonSocialEmisor>FIXTURE POR FUERA S.R.L.</razonSocialEmisor>\n    <municipio>La Paz</municipio>\n    <telefono>22123456</telefono>\n    <numeroFactura>1</numeroFactura>\n    <cuf>460717C6129A0EF396B44592C9129DD366239E06A1CC0001</cuf>\n    <cufd>CUFD-1023456077-1</cufd>\n    <codigoSucursal>0</codigoSucursal>\n    <direccion>Av. Arce 2020</direccion>\n    <codigoPuntoVenta>0</codigoPuntoVenta>\n    <fechaEmision>2026-10-13T19:24:38.000</fechaEmision>\n    <nombreRazonSocial>COMERCIAL ANDINA</nombreRazonSocial>\n    <codigoTipoDocumentoIdentidad>5</codigoTipoDocumentoIdentidad>\n    <numeroDocumento>4567891019</numeroDocumento>\n    <complemento xsi:nil=\"true\"/>\n    <codigoCliente>4567891019</codigoCliente>\n    <codigoMetodoPago>27</codigoMetodoPago>\n    <numeroTarjeta xsi:nil=\"true\"/>\n    <subTotalNeto>110.84</subTotalNeto>\n    <totalPrecioNeto>106.19</totalPrecioNeto>\n    <iva>13.81</iva>\n    <montoaPagar>120.00</montoaPagar>\n    <codigoMoneda>1</codigoMoneda>\n    <tipoCambio>1.00</tipoCambio>\n    <montoTotalMoneda>120.00</montoTotalMoneda>\n    <montoGiftCard>10.00</montoGiftCard>\n    <descuentoAdicional>4.65</descuentoAdicional>\n    <codigoExcepcion>0</codigoExcepcion>\n    <cafc xsi:nil=\"true\"/>\n    <leyenda>Ley N° 453: El proveedor deberá entregar el producto en las modalidades y términos ofertados o convenidos.</leyenda>\n    <usuario>65f0c0ffee00000000000001</usuario>\n    <codigoDocumentoSector>101</codigoDocumentoSector>\n  </cabecera>\n  <detalle>\n    <actividadEconomica>620000</actividadEconomica>\n    <codigoProductoSin>83141</codigoProductoSin>\n    <codigoProducto>DEV-1</codigoProducto>\n    <descripcion>Desarrollo a medida</descripcion>\n    <cantidad>2.00</cantidad>\n    <unidadMedida>58</unidadMedida>\n    <precioNetoUnitario>44.69</precioNetoUnitario>\n    <montoDescuento>0.88</montoDescuento>\n    <subTotal>88.50</subTotal>\n    <numeroSerie xsi:nil=\"true\"/>\n    <numeroImei xsi:nil=\"true\"/>\n  </detalle>\n  <detalle>\n    <actividadEconomica>620000</actividadEconomica>\n    <codigoProductoSin>83141</codigoProductoSin>\n    <codigoProducto>SOP-1</codigoProducto>\n    <descripcion>Soporte mensual</descripcion>\n    <cantidad>1.00</cantidad>\n    <unidadMedida>58</unidadMedida>\n    <precioNetoUnitario>22.34</precioNetoUnitario>\n    <montoDescuento>0.00</montoDescuento>\n    <subTotal>22.34</subTotal>\n    <numeroSerie xsi:nil=\"true\"/>\n    <numeroImei xsi:nil=\"true\"/>\n  </detalle>\n<ds:Signature xmlns:ds=\"http://www.w3.org/2000/09/xmldsig#\"><ds:SignatureValue>firma-regresion</ds:SignatureValue></ds:Signature></facturaElectronicaCompraVenta>",
+        "cafc": null,
+        "cufd": "CUFD-1023456077-1",
+        "factura": {
+          "calculo": {
+            "lineas": [
+              {
+                "cantidad": 2,
+                "descuento": 1,
+                "precioTotal": 100,
+                "subTotalNeto": 88.5,
+                "montoDescuento": 0.88,
+                "precioUnitario": 50.5,
+                "descuentoImpuesto": 1,
+                "precioNetoUnitario": 44.69,
+                "precioTotalImpuesto": 100,
+                "precioUnitarioImpuesto": 50.5
+              },
+              {
+                "cantidad": 1,
+                "descuento": 0,
+                "precioTotal": 25.25,
+                "subTotalNeto": 22.34,
+                "montoDescuento": 0,
+                "precioUnitario": 25.25,
+                "descuentoImpuesto": 0,
+                "precioNetoUnitario": 22.34,
+                "precioTotalImpuesto": 25.25,
+                "precioUnitarioImpuesto": 25.25
+              }
+            ],
+            "totales": {
+              "iva": 13.81,
+              "montoaPagar": 120,
+              "subTotalNeto": 110.84,
+              "montoGiftCard": 10,
+              "totalPrecioNeto": 106.19,
+              "montoTotalMoneda": 120,
+              "descuentoAdicional": 4.65,
+              "noSujetoCreditoFiscal": 0
+            },
+            "tipoFactura": 1
+          },
+          "detalle": [
+            {
+              "cantidad": 2,
+              "subTotal": 100,
+              "numeroImei": {
+                "$": {
+                  "xsi:nil": "true"
+                }
+              },
+              "descripcion": "Desarrollo a medida",
+              "numeroSerie": {
+                "$": {
+                  "xsi:nil": "true"
+                }
+              },
+              "unidadMedida": 58,
+              "codigoProducto": "DEV-1",
+              "montoDescuento": 1,
+              "precioUnitario": 50.5,
+              "codigoProductoSin": "83141",
+              "actividadEconomica": "620000"
+            },
+            {
+              "cantidad": 1,
+              "subTotal": 25.25,
+              "numeroImei": {
+                "$": {
+                  "xsi:nil": "true"
+                }
+              },
+              "descripcion": "Soporte mensual",
+              "numeroSerie": {
+                "$": {
+                  "xsi:nil": "true"
+                }
+              },
+              "unidadMedida": 58,
+              "codigoProducto": "SOP-1",
+              "montoDescuento": 0,
+              "precioUnitario": 25.25,
+              "codigoProductoSin": "83141",
+              "actividadEconomica": "620000"
+            }
+          ],
+          "cabecera": {
+            "cuf": "460717C6129A0EF396B44592C9129DD366239E06A1CC0001",
+            "cafc": {
+              "$": {
+                "xsi:nil": "true"
+              }
+            },
+            "cufd": "CUFD-1023456077-1",
+            "leyenda": "Ley N° 453: El proveedor deberá entregar el producto en las modalidades y términos ofertados o convenidos.",
+            "usuario": "65f0c0ffee00000000000001",
+            "telefono": "22123456",
+            "direccion": "Av. Arce 2020",
+            "municipio": "La Paz",
+            "nitEmisor": "1023456077",
+            "montoTotal": 120,
+            "tipoCambio": 1,
+            "complemento": {
+              "$": {
+                "xsi:nil": "true"
+              }
+            },
+            "codigoMoneda": 1,
+            "fechaEmision": "2026-10-13T19:24:38.000",
+            "codigoCliente": "4567891019",
+            "montoGiftCard": 10,
+            "numeroFactura": 1,
+            "numeroTarjeta": {
+              "$": {
+                "xsi:nil": "true"
+              }
+            },
+            "codigoSucursal": 0,
+            "codigoExcepcion": 0,
+            "numeroDocumento": "4567891019",
+            "codigoMetodoPago": 27,
+            "codigoPuntoVenta": 0,
+            "montoTotalMoneda": 120,
+            "nombreRazonSocial": "COMERCIAL ANDINA",
+            "razonSocialEmisor": "FIXTURE POR FUERA S.R.L.",
+            "descuentoAdicional": 5.25,
+            "montoTotalSujetoIva": 110,
+            "codigoDocumentoSector": 1,
+            "codigoTipoDocumentoIdentidad": 5
+          }
+        },
+        "leyenda": "Ley N° 453: El proveedor deberá entregar el producto en las modalidades y términos ofertados o convenidos.",
+        "transaccion": true,
+        "codigoEstado": 908,
+        "codigoEmision": 1,
+        "isContingencia": 0,
+        "codigoRecepcion": "c109e6a8-5bf1-4b95-9b51-4e716f222df7",
+        "codigoDescripcion": "VALIDADA",
+        "linkFacturaImpuestos": "https://siat.impuestos.gob.bo/consulta/QR?nit=1023456077&cuf=460717C6129A0EF396B44592C9129DD366239E06A1CC0001&numero=1&t=2",
+        "tipoFacturaDocumento": 1,
+        "codigoDocumentoSector": 1,
+        "tipoDocumentoIdentidad": {
+          "descripcion": "NIT - NUMERO DE IDENTIFICACION TRIBUTARIA",
+          "codigoClasificador": 5
+        }
+      },
+      "exRate": 1,
+      "moneda": {
+        "id": 150,
+        "exRate": 1,
+        "moneda": 150,
+        "nombre": "Boliviano",
+        "simbolo": "Bs",
+        "customData": {
+          "siat": {
+            "codigo": 1
+          }
+        },
+        "autoActualiza": 0,
+        "contribuyente": 1,
+        "exRatePrincipal": 1,
+        "monedaReferencia": 150,
+        "denominacionesMonedas": null,
+        "monedaContribuyenteId": 1,
+        "denominacionesBilletes": null
+      },
+      "saldoNdc": [
+        {
+          "itemId": null,
+          "disponible": 2,
+          "codigoInventario": "DEV-1"
+        },
+        {
+          "itemId": null,
+          "disponible": 1,
+          "codigoInventario": "SOP-1"
+        }
+      ],
+      "modoPrecio": "final",
+      "regimenIva": "porFuera",
+      "codigoSistema": "5D2E0F1A9B3C4D5E6F7A8E5",
+      "tokenDesasociar": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuaXQiOiI0NTY3ODkxMDE5IiwiY29ycmVvIjoiY29tcHJhc0BleGFtcGxlLmNvbSIsInBhaXMiOiJCTyIsInRpbWVzdGFtcCI6MTc5MTkzMzg3ODIxOSwiaWF0IjoxNzkxOTMzODc4fQ.0gHzEiqX7ePZIQ_PoI7do8uwxNZT7s7PkwGhW2e_Q6c",
+      "totalesPorFuera": {
+        "iva": 13.81,
+        "montoaPagar": 120,
+        "subTotalNeto": 110.84,
+        "montoGiftCard": 10,
+        "totalPrecioNeto": 106.19,
+        "montoTotalMoneda": 120,
+        "descuentoAdicional": 4.65,
+        "noSujetoCreditoFiscal": 0
+      },
+      "saldoNdcPorLinea": true,
+      "tipoFacturaNombre": "Factura compra venta",
+      "printItems": [
+        {
+          "type": "image",
+          "data": "e30=",
+          "size": 70,
+          "align": "center"
+        },
+        {
+          "type": "lineWrap",
+          "lines": 4
+        },
+        {
+          "type": "text",
+          "text": "FIXTURE POR FUERA S.R.L.",
+          "size": "md",
+          "bold": true,
+          "align": "center"
+        },
+        {
+          "type": "text",
+          "text": "Casa Matriz",
+          "size": "sm",
+          "bold": true,
+          "align": "center"
+        },
+        {
+          "type": "text",
+          "text": "No. Punto de Venta 0",
+          "size": "sm",
+          "bold": false,
+          "align": "center"
+        },
+        {
+          "type": "text",
+          "text": "ZONA: ",
+          "size": "sm",
+          "bold": false,
+          "align": "center"
+        },
+        {
+          "type": "text",
+          "text": "Av. Arce 2020",
+          "size": "sm",
+          "bold": false,
+          "align": "center"
+        },
+        {
+          "type": "text",
+          "text": "TELF: 22123456",
+          "size": "sm",
+          "bold": false,
+          "align": "center"
+        },
+        {
+          "type": "text",
+          "text": "La Paz, Bolivia",
+          "size": "sm",
+          "bold": false,
+          "align": "center"
+        },
+        {
+          "type": "lineWrap",
+          "lines": 3
+        },
+        {
+          "type": "text",
+          "text": "FACTURA",
+          "size": "xl",
+          "bold": false,
+          "align": "center"
+        },
+        {
+          "type": "text",
+          "text": "Con derecho a crédito fiscal",
+          "size": "sm",
+          "bold": false,
+          "align": "center"
+        },
+        {
+          "type": "text",
+          "text": "NIT EMISOR: 1023456077",
+          "size": "sm",
+          "bold": false,
+          "align": "center"
+        },
+        {
+          "type": "text",
+          "text": "FACTURA No: 00001",
+          "size": "sm",
+          "bold": false,
+          "align": "center"
+        },
+        {
+          "type": "text",
+          "text": "CÓD. AUTORIZACIÓN:  460717C6129A0EF396B44592C9129DD366239E06A1CC0001",
+          "size": "sm",
+          "bold": false,
+          "align": "center"
+        },
+        {
+          "type": "separator",
+          "dotted": false
+        },
+        {
+          "type": "text",
+          "text": "NOMBRE/RAZÓN SOCIAL: COMERCIAL ANDINA",
+          "size": "sm",
+          "bold": true,
+          "align": "center"
+        },
+        {
+          "type": "text",
+          "text": "NIT/CI/CEX: 4567891019",
+          "size": "sm",
+          "bold": true,
+          "align": "center"
+        },
+        {
+          "type": "text",
+          "text": "COD. CLIENTE: 4567891019",
+          "size": "sm",
+          "bold": true,
+          "align": "center"
+        },
+        {
+          "type": "text",
+          "text": "FECHA: 13/10/2026 19:24",
+          "size": "sm",
+          "bold": true,
+          "align": "center"
+        },
+        {
+          "type": "separator",
+          "dotted": false
+        },
+        {
+          "type": "row",
+          "size": "sm",
+          "bold": true,
+          "cols": [
+            {
+              "text": "Cant.",
+              "width": 10,
+              "align": "left"
+            },
+            {
+              "text": "Detalle",
+              "width": 30,
+              "align": "left"
+            },
+            {
+              "text": "P. Neto",
+              "width": 20,
+              "align": "right"
+            },
+            {
+              "text": "Desc U",
+              "width": 20,
+              "align": "right"
+            },
+            {
+              "text": "Subtotal",
+              "width": 20,
+              "align": "right"
+            }
+          ]
+        },
+        {
+          "type": "separator",
+          "dotted": false
+        },
+        {
+          "type": "row",
+          "size": "sm",
+          "bold": true,
+          "cols": [
+            {
+              "text": "2",
+              "width": 10,
+              "align": "left"
+            },
+            {
+              "text": "Desarrollo a medida",
+              "width": 30,
+              "align": "left"
+            },
+            {
+              "text": "44.69",
+              "width": 20,
+              "align": "right"
+            },
+            {
+              "text": "0.88",
+              "width": 20,
+              "align": "right"
+            },
+            {
+              "text": "88.50",
+              "width": 20,
+              "align": "right"
+            }
+          ]
+        },
+        {
+          "type": "lineWrap",
+          "lines": 1
+        },
+        {
+          "type": "row",
+          "size": "sm",
+          "bold": true,
+          "cols": [
+            {
+              "text": "1",
+              "width": 10,
+              "align": "left"
+            },
+            {
+              "text": "Soporte mensual",
+              "width": 30,
+              "align": "left"
+            },
+            {
+              "text": "22.34",
+              "width": 20,
+              "align": "right"
+            },
+            {
+              "text": "0.00",
+              "width": 20,
+              "align": "right"
+            },
+            {
+              "text": "22.34",
+              "width": 20,
+              "align": "right"
+            }
+          ]
+        },
+        {
+          "type": "lineWrap",
+          "lines": 1
+        },
+        {
+          "type": "separator",
+          "dotted": true
+        },
+        {
+          "type": "row",
+          "size": "sm",
+          "bold": true,
+          "cols": [
+            {
+              "text": "SUBTOTAL",
+              "width": 70,
+              "align": "right"
+            },
+            {
+              "text": "110.84",
+              "width": 30,
+              "align": "right"
+            }
+          ]
+        },
+        {
+          "type": "row",
+          "size": "sm",
+          "bold": true,
+          "cols": [
+            {
+              "text": "MONTO GIFT CARD",
+              "width": 70,
+              "align": "right"
+            },
+            {
+              "text": "10.00",
+              "width": 30,
+              "align": "right"
+            }
+          ]
+        },
+        {
+          "type": "row",
+          "size": "sm",
+          "bold": true,
+          "cols": [
+            {
+              "text": "TOTAL PRECIO NETO",
+              "width": 70,
+              "align": "right"
+            },
+            {
+              "text": "106.19",
+              "width": 30,
+              "align": "right"
+            }
+          ]
+        },
+        {
+          "type": "row",
+          "size": "sm",
+          "bold": true,
+          "cols": [
+            {
+              "text": "DESCUENTO",
+              "width": 70,
+              "align": "right"
+            },
+            {
+              "text": "4.65",
+              "width": 30,
+              "align": "right"
+            }
+          ]
+        },
+        {
+          "type": "row",
+          "size": "sm",
+          "bold": true,
+          "cols": [
+            {
+              "text": "IVA",
+              "width": 70,
+              "align": "right"
+            },
+            {
+              "text": "13.81",
+              "width": 30,
+              "align": "right"
+            }
+          ]
+        },
+        {
+          "type": "row",
+          "size": "sm",
+          "bold": true,
+          "cols": [
+            {
+              "text": "MONTO A PAGAR",
+              "width": 70,
+              "align": "right"
+            },
+            {
+              "text": "120.00",
+              "width": 30,
+              "align": "right"
+            }
+          ]
+        },
+        {
+          "type": "separator",
+          "dotted": true
+        },
+        {
+          "type": "text",
+          "text": "SON:  Ciento veinte 0/100 Bolivianos",
+          "size": "sm",
+          "bold": false,
+          "align": "left"
+        },
+        {
+          "type": "separator",
+          "dotted": false
+        },
+        {
+          "type": "qr",
+          "content": "https://siat.impuestos.gob.bo/consulta/QR?nit=1023456077&cuf=460717C6129A0EF396B44592C9129DD366239E06A1CC0001&numero=1&t=2",
+          "size": 3,
+          "align": "center"
+        },
+        {
+          "type": "lineWrap",
+          "lines": 1
+        },
+        {
+          "type": "text",
+          "text": "ESTA FACTURA CONTRIBUYE AL DESARROLLO DEL PAÍS, EL USO ILÍCITO DE ÉSTA SERÁ SANCIONADO PENALMENTE DE ACUERDO A LEY",
+          "size": "sm",
+          "bold": false,
+          "align": "center"
+        },
+        {
+          "type": "lineWrap",
+          "lines": 1
+        },
+        {
+          "type": "text",
+          "text": "Ley N° 453: El proveedor deberá entregar el producto en las modalidades y términos ofertados o convenidos.",
+          "size": "sm",
+          "bold": false,
+          "align": "center"
+        },
+        {
+          "type": "lineWrap",
+          "lines": 1
+        },
+        {
+          "type": "text",
+          "text": "\"Este documento es la Representación Gráfica de un Documento Fiscal Digital emitido en una modalidad de facturación en línea\"",
+          "size": "sm",
+          "bold": false,
+          "align": "center"
+        },
+        {
+          "type": "separator",
+          "dotted": false
+        },
+        {
+          "type": "text",
+          "text": "Generada a través de iZi",
+          "size": "sm",
+          "bold": true,
+          "align": "center"
+        },
+        {
+          "type": "lineWrap",
+          "lines": 2
+        },
+        {
+          "type": "cut"
+        }
+      ],
+      "printItemsFormat": "full"
+    },
+    "searchstr": "1 1023456077 fixture por fuera s.r.l. 4567891019 comercial andina compras@example.com  620000 1 undefined Desarrollo a medida DEV-1 Soporte mensual SOP-1",
+    "listaItems": [
+      {
+        "articulo": "Desarrollo a medida",
+        "cantidad": 2,
+        "descuento": 1,
+        "customItem": {
+          "siat": {
+            "unidadMedida": 58,
+            "codigoProductoSin": "83141",
+            "actividadEconomica": "620000"
+          }
+        },
+        "precioTotal": 100,
+        "subTotalNeto": 88.5,
+        "montoDescuento": 0.88,
+        "precioUnitario": 50.5,
+        "codigoInventario": "DEV-1",
+        "unidadMedidaSiat": 58,
+        "descuentoImpuesto": 1,
+        "precioNetoUnitario": 44.69,
+        "precioTotalImpuesto": 100,
+        "precioUnitarioImpuesto": 50.5
+      },
+      {
+        "articulo": "Soporte mensual",
+        "cantidad": 1,
+        "descuento": 0,
+        "customItem": {
+          "siat": {
+            "unidadMedida": 58,
+            "codigoProductoSin": "83141",
+            "actividadEconomica": "620000"
+          }
+        },
+        "precioTotal": 25.25,
+        "subTotalNeto": 22.34,
+        "montoDescuento": 0,
+        "precioUnitario": 25.25,
+        "codigoInventario": "SOP-1",
+        "unidadMedidaSiat": 58,
+        "descuentoImpuesto": 0,
+        "precioNetoUnitario": 22.34,
+        "precioTotalImpuesto": 25.25,
+        "precioUnitarioImpuesto": 25.25
+      }
+    ],
+    "monto": 125.25,
+    "montoImpuesto": 125.25,
+    "descuentosImpuesto": 5.25,
+    "montoTotal": 120,
+    "montoTotalImpuesto": 120,
+    "giftCardsImpuesto": 10,
+    "sinCreditoImpuesto": 0,
+    "montoNeto": 106.19,
+    "iva": 13.81,
+    "montoNetoImpuesto": 106.19,
+    "ivaImpuesto": 13.81,
+    "validadorUnico": "1023456077#1#2026#1##1##vn",
+    "pdfCarta": "https://izi-bol-temp.s3.us-east-005.backblazeb2.com/facturas/Fixture_Por_Fuera_factura-7e495a19-4495-42dc-ac94-60b17a633f25.pdf",
+    "pdfRollo": "https://izi-bol-temp.s3.us-east-005.backblazeb2.com/facturas/Fixture_Por_Fuera_facturaR80-7e495a19-4495-42dc-ac94-60b17a633f25.pdf",
+    "id": 1,
+    "autorizacion": "460717C6129A0EF396B44592C9129DD366239E06A1CC0001",
+    "numeroPrefactura": null,
+    "iceVariable": null,
+    "iceFijo": null,
+    "control": null,
+    "concepto": null,
+    "pagada": 0,
+    "sucursalCompra": null,
+    "estadoEmision": "aprobado",
+    "customCasosEspeciales": null,
+    "creado": "2026-10-13T23:24:38.000Z",
+    "almacen": null,
+    "pagos": [
+      {
+        "fecha": "2026-10-13 19:24:38",
+        "moneda": 150,
+        "pagoId": 1,
+        "metodoPago": 6,
+        "montoPagado": 10,
+        "montoPropina": 0,
+        "terminosPago": "Gift Card"
+      }
+    ],
+    "usuarioPreCreacion": null,
+    "usuarioAnulacion": null,
+    "usuarioModificacion": null,
+    "usuarioCobro": null,
+    "usuarioPago": null,
+    "usuarioPreCreacionNombre": null,
+    "usuarioAnulacionNombre": null,
+    "usuarioModificacionNombre": null,
+    "usuarioCobroNombre": null,
+    "usuarioPagoNombre": null,
+    "pdfCartaPrefactura": null,
+    "pdfRolloPrefactura": null,
+    "actividadEconomicaId": 620000,
+    "actividadEconomicaCod": null,
+    "qr": null,
+    "codigoMetodoPago": 27,
+    "tipoDocumentoIdentidad": {
+      "codigoClasificador": 5,
+      "descripcion": "NIT - NUMERO DE IDENTIFICACION TRIBUTARIA"
+    }
+  },
+  "facturaPorFueraDolares": {
+    "trx": null,
+    "isIzi": 1,
+    "uuid": "6ee55ca8-fdd0-49d7-85c2-6b81f3e0741e",
+    "numero": 2,
+    "tipoFactura": 1,
+    "isApi": 0,
+    "isFromKhipu": 0,
+    "isFromCobro": 0,
+    "contribuyenteApi": null,
+    "cobroBnb": null,
+    "cobroKhipu": null,
+    "contribuyente": 1,
+    "emisor": "1023456077",
+    "razonSocialEmisor": "FIXTURE POR FUERA S.R.L.",
+    "comprador": "4567891019",
+    "razonSocial": "COMERCIAL ANDINA",
+    "correoElectronicoComprador": "compras@example.com",
+    "caja": null,
+    "sinCredito": 0,
+    "descuentos": 5.25,
+    "giftCards": 0,
+    "tipoCompra": 1,
+    "terminosPago": "Efectivo",
+    "prefactura": 0,
+    "contingencia": 0,
+    "anulada": 0,
+    "notaInterna": null,
+    "isCuentaCobro": false,
+    "clienteId": null,
+    "fechaPago": null,
+    "fecha": "2026-10-13T23:24:38.000Z",
+    "usuarioCreacion": "65f0c0ffee00000000000001",
+    "usuarioCreacionNombre": "Cajero Regresion",
+    "isPruebas": false,
+    "metodoPago": 1,
+    "actividadEconomica": null,
+    "sucursal": 1,
+    "sucursalDireccion": "Av. Arce 2020",
+    "customFactura": {
+      "siat": {
+        "cuf": "460717C6129A0EF396B44592C9129DD366239F8D45CC0001",
+        "xml": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n<facturaElectronicaCompraVenta xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"facturaElectronicaCompraVenta.xsd\">\n  <cabecera>\n    <nitEmisor>1023456077</nitEmisor>\n    <razonSocialEmisor>FIXTURE POR FUERA S.R.L.</razonSocialEmisor>\n    <municipio>La Paz</municipio>\n    <telefono>22123456</telefono>\n    <numeroFactura>2</numeroFactura>\n    <cuf>460717C6129A0EF396B44592C9129DD366239F8D45CC0001</cuf>\n    <cufd>CUFD-1023456077-1</cufd>\n    <codigoSucursal>0</codigoSucursal>\n    <direccion>Av. Arce 2020</direccion>\n    <codigoPuntoVenta>0</codigoPuntoVenta>\n    <fechaEmision>2026-10-13T19:24:38.000</fechaEmision>\n    <nombreRazonSocial>COMERCIAL ANDINA</nombreRazonSocial>\n    <codigoTipoDocumentoIdentidad>5</codigoTipoDocumentoIdentidad>\n    <numeroDocumento>4567891019</numeroDocumento>\n    <complemento xsi:nil=\"true\"/>\n    <codigoCliente>4567891019</codigoCliente>\n    <codigoMetodoPago>1</codigoMetodoPago>\n    <numeroTarjeta xsi:nil=\"true\"/>\n    <subTotalNeto>771.46</subTotalNeto>\n    <totalPrecioNeto>739.12</totalPrecioNeto>\n    <iva>96.08</iva>\n    <montoaPagar>835.20</montoaPagar>\n    <codigoMoneda>2</codigoMoneda>\n    <tipoCambio>6.96</tipoCambio>\n    <montoTotalMoneda>120.00</montoTotalMoneda>\n    <montoGiftCard>0.00</montoGiftCard>\n    <descuentoAdicional>32.34</descuentoAdicional>\n    <codigoExcepcion>0</codigoExcepcion>\n    <cafc xsi:nil=\"true\"/>\n    <leyenda>Ley N° 453: El proveedor deberá entregar el producto en las modalidades y términos ofertados o convenidos.</leyenda>\n    <usuario>65f0c0ffee00000000000001</usuario>\n    <codigoDocumentoSector>101</codigoDocumentoSector>\n  </cabecera>\n  <detalle>\n    <actividadEconomica>620000</actividadEconomica>\n    <codigoProductoSin>83141</codigoProductoSin>\n    <codigoProducto>DEV-1</codigoProducto>\n    <descripcion>Desarrollo a medida (por un valor de 50.5 USD)</descripcion>\n    <cantidad>2.00</cantidad>\n    <unidadMedida>58</unidadMedida>\n    <precioNetoUnitario>311.05</precioNetoUnitario>\n    <montoDescuento>6.16</montoDescuento>\n    <subTotal>615.94</subTotal>\n    <numeroSerie xsi:nil=\"true\"/>\n    <numeroImei xsi:nil=\"true\"/>\n  </detalle>\n  <detalle>\n    <actividadEconomica>620000</actividadEconomica>\n    <codigoProductoSin>83141</codigoProductoSin>\n    <codigoProducto>SOP-1</codigoProducto>\n    <descripcion>Soporte mensual (por un valor de 25.25 USD)</descripcion>\n    <cantidad>1.00</cantidad>\n    <unidadMedida>58</unidadMedida>\n    <precioNetoUnitario>155.52</precioNetoUnitario>\n    <montoDescuento>0.00</montoDescuento>\n    <subTotal>155.52</subTotal>\n    <numeroSerie xsi:nil=\"true\"/>\n    <numeroImei xsi:nil=\"true\"/>\n  </detalle>\n<ds:Signature xmlns:ds=\"http://www.w3.org/2000/09/xmldsig#\"><ds:SignatureValue>firma-regresion</ds:SignatureValue></ds:Signature></facturaElectronicaCompraVenta>",
+        "cafc": null,
+        "cufd": "CUFD-1023456077-1",
+        "factura": {
+          "calculo": {
+            "lineas": [
+              {
+                "cantidad": 2,
+                "descuento": 1,
+                "precioTotal": 100,
+                "subTotalNeto": 615.94,
+                "montoDescuento": 6.16,
+                "precioUnitario": 50.5,
+                "descuentoImpuesto": 6.96,
+                "precioNetoUnitario": 311.05,
+                "precioTotalImpuesto": 696,
+                "precioUnitarioImpuesto": 351.48
+              },
+              {
+                "cantidad": 1,
+                "descuento": 0,
+                "precioTotal": 25.25,
+                "subTotalNeto": 155.52,
+                "montoDescuento": 0,
+                "precioUnitario": 25.25,
+                "descuentoImpuesto": 0,
+                "precioNetoUnitario": 155.52,
+                "precioTotalImpuesto": 175.74,
+                "precioUnitarioImpuesto": 175.74
+              }
+            ],
+            "totales": {
+              "iva": 96.08,
+              "montoaPagar": 835.2,
+              "subTotalNeto": 771.46,
+              "montoGiftCard": 0,
+              "totalPrecioNeto": 739.12,
+              "montoTotalMoneda": 120,
+              "descuentoAdicional": 32.34,
+              "noSujetoCreditoFiscal": 0
+            },
+            "tipoFactura": 1
+          },
+          "detalle": [
+            {
+              "cantidad": 2,
+              "subTotal": 696,
+              "numeroImei": {
+                "$": {
+                  "xsi:nil": "true"
+                }
+              },
+              "descripcion": "Desarrollo a medida (por un valor de 50.5 USD)",
+              "numeroSerie": {
+                "$": {
+                  "xsi:nil": "true"
+                }
+              },
+              "unidadMedida": 58,
+              "codigoProducto": "DEV-1",
+              "montoDescuento": 6.96,
+              "precioUnitario": 351.48,
+              "codigoProductoSin": "83141",
+              "actividadEconomica": "620000"
+            },
+            {
+              "cantidad": 1,
+              "subTotal": 175.74,
+              "numeroImei": {
+                "$": {
+                  "xsi:nil": "true"
+                }
+              },
+              "descripcion": "Soporte mensual (por un valor de 25.25 USD)",
+              "numeroSerie": {
+                "$": {
+                  "xsi:nil": "true"
+                }
+              },
+              "unidadMedida": 58,
+              "codigoProducto": "SOP-1",
+              "montoDescuento": 0,
+              "precioUnitario": 175.74,
+              "codigoProductoSin": "83141",
+              "actividadEconomica": "620000"
+            }
+          ],
+          "cabecera": {
+            "cuf": "460717C6129A0EF396B44592C9129DD366239F8D45CC0001",
+            "cafc": {
+              "$": {
+                "xsi:nil": "true"
+              }
+            },
+            "cufd": "CUFD-1023456077-1",
+            "leyenda": "Ley N° 453: El proveedor deberá entregar el producto en las modalidades y términos ofertados o convenidos.",
+            "usuario": "65f0c0ffee00000000000001",
+            "telefono": "22123456",
+            "direccion": "Av. Arce 2020",
+            "municipio": "La Paz",
+            "nitEmisor": "1023456077",
+            "montoTotal": 835.2,
+            "tipoCambio": 6.96,
+            "complemento": {
+              "$": {
+                "xsi:nil": "true"
+              }
+            },
+            "codigoMoneda": 2,
+            "fechaEmision": "2026-10-13T19:24:38.000",
+            "codigoCliente": "4567891019",
+            "montoGiftCard": 0,
+            "numeroFactura": 2,
+            "numeroTarjeta": {
+              "$": {
+                "xsi:nil": "true"
+              }
+            },
+            "codigoSucursal": 0,
+            "codigoExcepcion": 0,
+            "numeroDocumento": "4567891019",
+            "codigoMetodoPago": 1,
+            "codigoPuntoVenta": 0,
+            "montoTotalMoneda": 120,
+            "nombreRazonSocial": "COMERCIAL ANDINA",
+            "razonSocialEmisor": "FIXTURE POR FUERA S.R.L.",
+            "descuentoAdicional": 36.54,
+            "montoTotalSujetoIva": 835.2,
+            "codigoDocumentoSector": 1,
+            "codigoTipoDocumentoIdentidad": 5
+          }
+        },
+        "leyenda": "Ley N° 453: El proveedor deberá entregar el producto en las modalidades y términos ofertados o convenidos.",
+        "transaccion": true,
+        "codigoEstado": 908,
+        "codigoEmision": 1,
+        "isContingencia": 0,
+        "codigoRecepcion": "13e27273-fa5f-47ad-a4b4-091ab8bbd48f",
+        "codigoDescripcion": "VALIDADA",
+        "linkFacturaImpuestos": "https://siat.impuestos.gob.bo/consulta/QR?nit=1023456077&cuf=460717C6129A0EF396B44592C9129DD366239F8D45CC0001&numero=2&t=2",
+        "tipoFacturaDocumento": 1,
+        "codigoDocumentoSector": 1,
+        "tipoDocumentoIdentidad": {
+          "descripcion": "NIT - NUMERO DE IDENTIFICACION TRIBUTARIA",
+          "codigoClasificador": 5
+        }
+      },
+      "exRate": 6.96,
+      "moneda": {
+        "id": 151,
+        "exRate": 6.96,
+        "moneda": 151,
+        "nombre": "DÃ³lar estadounidense",
+        "simbolo": "USD",
+        "customData": {
+          "siat": {
+            "codigo": 2
+          }
+        },
+        "autoActualiza": 0,
+        "contribuyente": 1,
+        "exRatePrincipal": 6.96,
+        "monedaReferencia": 150,
+        "denominacionesMonedas": null,
+        "monedaContribuyenteId": 2,
+        "denominacionesBilletes": null
+      },
+      "saldoNdc": [
+        {
+          "itemId": null,
+          "disponible": 2,
+          "codigoInventario": "DEV-1"
+        },
+        {
+          "itemId": null,
+          "disponible": 1,
+          "codigoInventario": "SOP-1"
+        }
+      ],
+      "modoPrecio": "final",
+      "regimenIva": "porFuera",
+      "codigoSistema": "5D2E0F1A9B3C4D5E6F7A8E5",
+      "tokenDesasociar": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuaXQiOiI0NTY3ODkxMDE5IiwiY29ycmVvIjoiY29tcHJhc0BleGFtcGxlLmNvbSIsInBhaXMiOiJCTyIsInRpbWVzdGFtcCI6MTc5MTkzMzg3ODYwNCwiaWF0IjoxNzkxOTMzODc4fQ.DOFnFKGpdjK7XQB0oLZHO8SdhNEf9xIEVpzBy7urHN4",
+      "totalesPorFuera": {
+        "iva": 96.08,
+        "montoaPagar": 835.2,
+        "subTotalNeto": 771.46,
+        "montoGiftCard": 0,
+        "totalPrecioNeto": 739.12,
+        "montoTotalMoneda": 120,
+        "descuentoAdicional": 32.34,
+        "noSujetoCreditoFiscal": 0
+      },
+      "saldoNdcPorLinea": true,
+      "tipoFacturaNombre": "Factura compra venta",
+      "printItems": [
+        {
+          "type": "image",
+          "data": "e30=",
+          "size": 70,
+          "align": "center"
+        },
+        {
+          "type": "lineWrap",
+          "lines": 4
+        },
+        {
+          "type": "text",
+          "text": "FIXTURE POR FUERA S.R.L.",
+          "size": "md",
+          "bold": true,
+          "align": "center"
+        },
+        {
+          "type": "text",
+          "text": "Casa Matriz",
+          "size": "sm",
+          "bold": true,
+          "align": "center"
+        },
+        {
+          "type": "text",
+          "text": "No. Punto de Venta 0",
+          "size": "sm",
+          "bold": false,
+          "align": "center"
+        },
+        {
+          "type": "text",
+          "text": "ZONA: ",
+          "size": "sm",
+          "bold": false,
+          "align": "center"
+        },
+        {
+          "type": "text",
+          "text": "Av. Arce 2020",
+          "size": "sm",
+          "bold": false,
+          "align": "center"
+        },
+        {
+          "type": "text",
+          "text": "TELF: 22123456",
+          "size": "sm",
+          "bold": false,
+          "align": "center"
+        },
+        {
+          "type": "text",
+          "text": "La Paz, Bolivia",
+          "size": "sm",
+          "bold": false,
+          "align": "center"
+        },
+        {
+          "type": "lineWrap",
+          "lines": 3
+        },
+        {
+          "type": "text",
+          "text": "FACTURA",
+          "size": "xl",
+          "bold": false,
+          "align": "center"
+        },
+        {
+          "type": "text",
+          "text": "Con derecho a crédito fiscal",
+          "size": "sm",
+          "bold": false,
+          "align": "center"
+        },
+        {
+          "type": "text",
+          "text": "NIT EMISOR: 1023456077",
+          "size": "sm",
+          "bold": false,
+          "align": "center"
+        },
+        {
+          "type": "text",
+          "text": "FACTURA No: 00002",
+          "size": "sm",
+          "bold": false,
+          "align": "center"
+        },
+        {
+          "type": "text",
+          "text": "CÓD. AUTORIZACIÓN:  460717C6129A0EF396B44592C9129DD366239F8D45CC0001",
+          "size": "sm",
+          "bold": false,
+          "align": "center"
+        },
+        {
+          "type": "separator",
+          "dotted": false
+        },
+        {
+          "type": "text",
+          "text": "NOMBRE/RAZÓN SOCIAL: COMERCIAL ANDINA",
+          "size": "sm",
+          "bold": true,
+          "align": "center"
+        },
+        {
+          "type": "text",
+          "text": "NIT/CI/CEX: 4567891019",
+          "size": "sm",
+          "bold": true,
+          "align": "center"
+        },
+        {
+          "type": "text",
+          "text": "COD. CLIENTE: 4567891019",
+          "size": "sm",
+          "bold": true,
+          "align": "center"
+        },
+        {
+          "type": "text",
+          "text": "FECHA: 13/10/2026 19:24",
+          "size": "sm",
+          "bold": true,
+          "align": "center"
+        },
+        {
+          "type": "text",
+          "text": "MONEDA (TIPO DE CAMBIO): USD (6.96)",
+          "size": "sm",
+          "bold": true,
+          "align": "center"
+        },
+        {
+          "type": "separator",
+          "dotted": false
+        },
+        {
+          "type": "row",
+          "size": "sm",
+          "bold": true,
+          "cols": [
+            {
+              "text": "Cant.",
+              "width": 10,
+              "align": "left"
+            },
+            {
+              "text": "Detalle",
+              "width": 30,
+              "align": "left"
+            },
+            {
+              "text": "P. Neto",
+              "width": 20,
+              "align": "right"
+            },
+            {
+              "text": "Desc U",
+              "width": 20,
+              "align": "right"
+            },
+            {
+              "text": "Subtotal",
+              "width": 20,
+              "align": "right"
+            }
+          ]
+        },
+        {
+          "type": "separator",
+          "dotted": false
+        },
+        {
+          "type": "row",
+          "size": "sm",
+          "bold": true,
+          "cols": [
+            {
+              "text": "2",
+              "width": 10,
+              "align": "left"
+            },
+            {
+              "text": "Desarrollo a medida (por un valor de 50.5 USD)",
+              "width": 30,
+              "align": "left"
+            },
+            {
+              "text": "311.05",
+              "width": 20,
+              "align": "right"
+            },
+            {
+              "text": "6.16",
+              "width": 20,
+              "align": "right"
+            },
+            {
+              "text": "615.94",
+              "width": 20,
+              "align": "right"
+            }
+          ]
+        },
+        {
+          "type": "lineWrap",
+          "lines": 1
+        },
+        {
+          "type": "row",
+          "size": "sm",
+          "bold": true,
+          "cols": [
+            {
+              "text": "1",
+              "width": 10,
+              "align": "left"
+            },
+            {
+              "text": "Soporte mensual (por un valor de 25.25 USD)",
+              "width": 30,
+              "align": "left"
+            },
+            {
+              "text": "155.52",
+              "width": 20,
+              "align": "right"
+            },
+            {
+              "text": "0.00",
+              "width": 20,
+              "align": "right"
+            },
+            {
+              "text": "155.52",
+              "width": 20,
+              "align": "right"
+            }
+          ]
+        },
+        {
+          "type": "lineWrap",
+          "lines": 1
+        },
+        {
+          "type": "separator",
+          "dotted": true
+        },
+        {
+          "type": "row",
+          "size": "sm",
+          "bold": true,
+          "cols": [
+            {
+              "text": "SUBTOTAL",
+              "width": 70,
+              "align": "right"
+            },
+            {
+              "text": "771.46",
+              "width": 30,
+              "align": "right"
+            }
+          ]
+        },
+        {
+          "type": "row",
+          "size": "sm",
+          "bold": true,
+          "cols": [
+            {
+              "text": "MONTO GIFT CARD",
+              "width": 70,
+              "align": "right"
+            },
+            {
+              "text": "0.00",
+              "width": 30,
+              "align": "right"
+            }
+          ]
+        },
+        {
+          "type": "row",
+          "size": "sm",
+          "bold": true,
+          "cols": [
+            {
+              "text": "TOTAL PRECIO NETO",
+              "width": 70,
+              "align": "right"
+            },
+            {
+              "text": "739.12",
+              "width": 30,
+              "align": "right"
+            }
+          ]
+        },
+        {
+          "type": "row",
+          "size": "sm",
+          "bold": true,
+          "cols": [
+            {
+              "text": "DESCUENTO",
+              "width": 70,
+              "align": "right"
+            },
+            {
+              "text": "32.34",
+              "width": 30,
+              "align": "right"
+            }
+          ]
+        },
+        {
+          "type": "row",
+          "size": "sm",
+          "bold": true,
+          "cols": [
+            {
+              "text": "IVA",
+              "width": 70,
+              "align": "right"
+            },
+            {
+              "text": "96.08",
+              "width": 30,
+              "align": "right"
+            }
+          ]
+        },
+        {
+          "type": "row",
+          "size": "sm",
+          "bold": true,
+          "cols": [
+            {
+              "text": "MONTO A PAGAR",
+              "width": 70,
+              "align": "right"
+            },
+            {
+              "text": "835.20",
+              "width": 30,
+              "align": "right"
+            }
+          ]
+        },
+        {
+          "type": "separator",
+          "dotted": true
+        },
+        {
+          "type": "text",
+          "text": "SON:  Ochocientos treinta y cinco 20/100 Bolivianos",
+          "size": "sm",
+          "bold": false,
+          "align": "left"
+        },
+        {
+          "type": "separator",
+          "dotted": false
+        },
+        {
+          "type": "qr",
+          "content": "https://siat.impuestos.gob.bo/consulta/QR?nit=1023456077&cuf=460717C6129A0EF396B44592C9129DD366239F8D45CC0001&numero=2&t=2",
+          "size": 3,
+          "align": "center"
+        },
+        {
+          "type": "lineWrap",
+          "lines": 1
+        },
+        {
+          "type": "text",
+          "text": "ESTA FACTURA CONTRIBUYE AL DESARROLLO DEL PAÍS, EL USO ILÍCITO DE ÉSTA SERÁ SANCIONADO PENALMENTE DE ACUERDO A LEY",
+          "size": "sm",
+          "bold": false,
+          "align": "center"
+        },
+        {
+          "type": "lineWrap",
+          "lines": 1
+        },
+        {
+          "type": "text",
+          "text": "Ley N° 453: El proveedor deberá entregar el producto en las modalidades y términos ofertados o convenidos.",
+          "size": "sm",
+          "bold": false,
+          "align": "center"
+        },
+        {
+          "type": "lineWrap",
+          "lines": 1
+        },
+        {
+          "type": "text",
+          "text": "\"Este documento es la Representación Gráfica de un Documento Fiscal Digital emitido en una modalidad de facturación en línea\"",
+          "size": "sm",
+          "bold": false,
+          "align": "center"
+        },
+        {
+          "type": "separator",
+          "dotted": false
+        },
+        {
+          "type": "text",
+          "text": "Generada a través de iZi",
+          "size": "sm",
+          "bold": true,
+          "align": "center"
+        },
+        {
+          "type": "lineWrap",
+          "lines": 2
+        },
+        {
+          "type": "cut"
+        }
+      ],
+      "printItemsFormat": "full"
+    },
+    "searchstr": "1 1023456077 fixture por fuera s.r.l. 4567891019 comercial andina compras@example.com  620000 2 undefined Desarrollo a medida DEV-1 Soporte mensual SOP-1",
+    "listaItems": [
+      {
+        "articulo": "Desarrollo a medida (por un valor de 50.5 USD)",
+        "cantidad": 2,
+        "descuento": 1,
+        "customItem": {
+          "siat": {
+            "unidadMedida": 58,
+            "codigoProductoSin": "83141",
+            "actividadEconomica": "620000"
+          }
+        },
+        "precioTotal": 100,
+        "subTotalNeto": 615.94,
+        "montoDescuento": 6.16,
+        "precioUnitario": 50.5,
+        "codigoInventario": "DEV-1",
+        "unidadMedidaSiat": 58,
+        "descuentoImpuesto": 6.96,
+        "precioNetoUnitario": 311.05,
+        "precioTotalImpuesto": 696,
+        "precioUnitarioImpuesto": 351.48
+      },
+      {
+        "articulo": "Soporte mensual (por un valor de 25.25 USD)",
+        "cantidad": 1,
+        "descuento": 0,
+        "customItem": {
+          "siat": {
+            "unidadMedida": 58,
+            "codigoProductoSin": "83141",
+            "actividadEconomica": "620000"
+          }
+        },
+        "precioTotal": 25.25,
+        "subTotalNeto": 155.52,
+        "montoDescuento": 0,
+        "precioUnitario": 25.25,
+        "codigoInventario": "SOP-1",
+        "unidadMedidaSiat": 58,
+        "descuentoImpuesto": 0,
+        "precioNetoUnitario": 155.52,
+        "precioTotalImpuesto": 175.74,
+        "precioUnitarioImpuesto": 175.74
+      }
+    ],
+    "monto": 125.25,
+    "montoImpuesto": 871.74,
+    "descuentosImpuesto": 36.54,
+    "montoTotal": 120,
+    "montoTotalImpuesto": 835.2,
+    "giftCardsImpuesto": 0,
+    "sinCreditoImpuesto": 0,
+    "montoNeto": 106.19,
+    "iva": 13.81,
+    "montoNetoImpuesto": 739.12,
+    "ivaImpuesto": 96.08,
+    "validadorUnico": "1023456077#1#2026#1##2##vn",
+    "pdfCarta": "https://izi-bol-temp.s3.us-east-005.backblazeb2.com/facturas/Fixture_Por_Fuera_factura-6ee55ca8-fdd0-49d7-85c2-6b81f3e0741e.pdf",
+    "pdfRollo": "https://izi-bol-temp.s3.us-east-005.backblazeb2.com/facturas/Fixture_Por_Fuera_facturaR80-6ee55ca8-fdd0-49d7-85c2-6b81f3e0741e.pdf",
+    "id": 2,
+    "autorizacion": "460717C6129A0EF396B44592C9129DD366239F8D45CC0001",
+    "numeroPrefactura": null,
+    "iceVariable": null,
+    "iceFijo": null,
+    "control": null,
+    "concepto": null,
+    "pagada": 0,
+    "sucursalCompra": null,
+    "estadoEmision": "aprobado",
+    "customCasosEspeciales": null,
+    "creado": "2026-10-13T23:24:38.000Z",
+    "almacen": null,
+    "pagos": null,
+    "usuarioPreCreacion": null,
+    "usuarioAnulacion": null,
+    "usuarioModificacion": null,
+    "usuarioCobro": null,
+    "usuarioPago": null,
+    "usuarioPreCreacionNombre": null,
+    "usuarioAnulacionNombre": null,
+    "usuarioModificacionNombre": null,
+    "usuarioCobroNombre": null,
+    "usuarioPagoNombre": null,
+    "pdfCartaPrefactura": null,
+    "pdfRolloPrefactura": null,
+    "actividadEconomicaId": 620000,
+    "actividadEconomicaCod": null,
+    "qr": null,
+    "codigoMetodoPago": 1,
+    "tipoDocumentoIdentidad": {
+      "codigoClasificador": 5,
+      "descripcion": "NIT - NUMERO DE IDENTIFICACION TRIBUTARIA"
+    }
+  },
+  "prefacturaPorFuera": {
+    "trx": null,
+    "isIzi": 1,
+    "uuid": "941d1e06-223a-49eb-8599-77a0b3a78f3e",
+    "numero": 0,
+    "tipoFactura": 1,
+    "isApi": 0,
+    "isFromKhipu": 0,
+    "isFromCobro": 0,
+    "contribuyenteApi": null,
+    "cobroBnb": null,
+    "cobroKhipu": null,
+    "contribuyente": 1,
+    "emisor": "1023456077",
+    "razonSocialEmisor": "FIXTURE POR FUERA S.R.L.",
+    "comprador": "4567891019",
+    "razonSocial": "COMERCIAL ANDINA",
+    "correoElectronicoComprador": "compras@example.com",
+    "caja": null,
+    "sinCredito": 0,
+    "descuentos": 5.93,
+    "giftCards": 0,
+    "tipoCompra": 1,
+    "terminosPago": "Efectivo",
+    "prefactura": 1,
+    "contingencia": 0,
+    "anulada": 0,
+    "notaInterna": null,
+    "isCuentaCobro": false,
+    "clienteId": null,
+    "fechaPago": null,
+    "fecha": "2026-10-13T23:24:39.000Z",
+    "usuarioPreCreacion": "65f0c0ffee00000000000001",
+    "usuarioPreCreacionNombre": "Cajero Regresion",
+    "isPruebas": false,
+    "metodoPago": 1,
+    "actividadEconomica": null,
+    "sucursal": 1,
+    "sucursalDireccion": "Av. Arce 2020",
+    "customFactura": {
+      "siat": {
+        "codigoMetodoPago": 1,
+        "actividadEconomica": {
+          "codigoCaeb": "620000",
+          "descripcion": "ACTIVIDADES DE PROGRAMACION INFORMATICA"
+        },
+        "tipoDocumentoIdentidad": {
+          "descripcion": "NIT - NUMERO DE IDENTIFICACION TRIBUTARIA",
+          "codigoClasificador": 5
+        }
+      },
+      "exRate": 1,
+      "moneda": {
+        "id": 150,
+        "exRate": 1,
+        "moneda": 150,
+        "nombre": "Boliviano",
+        "simbolo": "Bs",
+        "customData": {
+          "siat": {
+            "codigo": 1
+          }
+        },
+        "autoActualiza": 0,
+        "contribuyente": 1,
+        "exRatePrincipal": 1,
+        "monedaReferencia": 150,
+        "denominacionesMonedas": null,
+        "monedaContribuyenteId": 1,
+        "denominacionesBilletes": null
+      },
+      "saldoNdc": [
+        {
+          "itemId": null,
+          "disponible": 2,
+          "codigoInventario": "DEV-1"
+        },
+        {
+          "itemId": null,
+          "disponible": 1,
+          "codigoInventario": "SOP-1"
+        }
+      ],
+      "modoPrecio": "neto",
+      "regimenIva": "porFuera",
+      "tokenDesasociar": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuaXQiOiI0NTY3ODkxMDE5IiwiY29ycmVvIjoiY29tcHJhc0BleGFtcGxlLmNvbSIsInBhaXMiOiJCTyIsInRpbWVzdGFtcCI6MTc5MTkzMzg3OTA1NywiaWF0IjoxNzkxOTMzODc5fQ.XJkEsnOt_KdPjgX9ogabPjp0LzqvUohN8WazN4hn0PA",
+      "totalesPorFuera": {
+        "iva": 15.6,
+        "montoaPagar": 135.6,
+        "subTotalNeto": 125.25,
+        "montoGiftCard": 0,
+        "totalPrecioNeto": 120,
+        "montoTotalMoneda": 135.6,
+        "descuentoAdicional": 5.25,
+        "noSujetoCreditoFiscal": 0
+      },
+      "saldoNdcPorLinea": true,
+      "tipoFacturaNombre": "Factura compra venta",
+      "printItems": [
+        {
+          "type": "image",
+          "data": "e30=",
+          "size": 70,
+          "align": "center"
+        },
+        {
+          "type": "lineWrap",
+          "lines": 4
+        },
+        {
+          "type": "text",
+          "text": "FIXTURE POR FUERA S.R.L.",
+          "size": "md",
+          "bold": true,
+          "align": "center"
+        },
+        {
+          "type": "text",
+          "text": "Casa Matriz",
+          "size": "sm",
+          "bold": true,
+          "align": "center"
+        },
+        {
+          "type": "text",
+          "text": "No. Punto de Venta 0",
+          "size": "sm",
+          "bold": false,
+          "align": "center"
+        },
+        {
+          "type": "text",
+          "text": "ZONA: ",
+          "size": "sm",
+          "bold": false,
+          "align": "center"
+        },
+        {
+          "type": "text",
+          "text": "Av. Arce 2020",
+          "size": "sm",
+          "bold": false,
+          "align": "center"
+        },
+        {
+          "type": "text",
+          "text": "TELF: 22123456",
+          "size": "sm",
+          "bold": false,
+          "align": "center"
+        },
+        {
+          "type": "text",
+          "text": "La Paz, Bolivia",
+          "size": "sm",
+          "bold": false,
+          "align": "center"
+        },
+        {
+          "type": "lineWrap",
+          "lines": 3
+        },
+        {
+          "type": "text",
+          "text": "Pre-Factura: 1",
+          "size": "xl",
+          "bold": false,
+          "align": "center"
+        },
+        {
+          "type": "text",
+          "text": "NOMBRE: COMERCIAL ANDINA",
+          "size": "sm",
+          "bold": true,
+          "align": "center"
+        },
+        {
+          "type": "text",
+          "text": "CODIGO: 4567891019",
+          "size": "sm",
+          "bold": true,
+          "align": "center"
+        },
+        {
+          "type": "text",
+          "text": "COD. CLIENTE: 4567891019",
+          "size": "sm",
+          "bold": true,
+          "align": "center"
+        },
+        {
+          "type": "text",
+          "text": "FECHA: 13/10/2026 19:24",
+          "size": "sm",
+          "bold": true,
+          "align": "center"
+        },
+        {
+          "type": "separator",
+          "dotted": false
+        },
+        {
+          "type": "row",
+          "size": "sm",
+          "bold": true,
+          "cols": [
+            {
+              "text": "Cant.",
+              "width": 10,
+              "align": "left"
+            },
+            {
+              "text": "Detalle",
+              "width": 30,
+              "align": "left"
+            },
+            {
+              "text": "P. Neto",
+              "width": 20,
+              "align": "right"
+            },
+            {
+              "text": "Desc U",
+              "width": 20,
+              "align": "right"
+            },
+            {
+              "text": "Subtotal",
+              "width": 20,
+              "align": "right"
+            }
+          ]
+        },
+        {
+          "type": "separator",
+          "dotted": false
+        },
+        {
+          "type": "row",
+          "size": "sm",
+          "bold": true,
+          "cols": [
+            {
+              "text": "2",
+              "width": 10,
+              "align": "left"
+            },
+            {
+              "text": "Desarrollo a medida",
+              "width": 30,
+              "align": "left"
+            },
+            {
+              "text": "50.50",
+              "width": 20,
+              "align": "right"
+            },
+            {
+              "text": "1.00",
+              "width": 20,
+              "align": "right"
+            },
+            {
+              "text": "100.00",
+              "width": 20,
+              "align": "right"
+            }
+          ]
+        },
+        {
+          "type": "lineWrap",
+          "lines": 1
+        },
+        {
+          "type": "row",
+          "size": "sm",
+          "bold": true,
+          "cols": [
+            {
+              "text": "1",
+              "width": 10,
+              "align": "left"
+            },
+            {
+              "text": "Soporte mensual",
+              "width": 30,
+              "align": "left"
+            },
+            {
+              "text": "25.25",
+              "width": 20,
+              "align": "right"
+            },
+            {
+              "text": "0.00",
+              "width": 20,
+              "align": "right"
+            },
+            {
+              "text": "25.25",
+              "width": 20,
+              "align": "right"
+            }
+          ]
+        },
+        {
+          "type": "lineWrap",
+          "lines": 1
+        },
+        {
+          "type": "separator",
+          "dotted": true
+        },
+        {
+          "type": "row",
+          "size": "sm",
+          "bold": true,
+          "cols": [
+            {
+              "text": "SUBTOTAL",
+              "width": 70,
+              "align": "right"
+            },
+            {
+              "text": "125.25",
+              "width": 30,
+              "align": "right"
+            }
+          ]
+        },
+        {
+          "type": "row",
+          "size": "sm",
+          "bold": true,
+          "cols": [
+            {
+              "text": "MONTO GIFT CARD",
+              "width": 70,
+              "align": "right"
+            },
+            {
+              "text": "0.00",
+              "width": 30,
+              "align": "right"
+            }
+          ]
+        },
+        {
+          "type": "row",
+          "size": "sm",
+          "bold": true,
+          "cols": [
+            {
+              "text": "TOTAL PRECIO NETO",
+              "width": 70,
+              "align": "right"
+            },
+            {
+              "text": "120.00",
+              "width": 30,
+              "align": "right"
+            }
+          ]
+        },
+        {
+          "type": "row",
+          "size": "sm",
+          "bold": true,
+          "cols": [
+            {
+              "text": "DESCUENTO",
+              "width": 70,
+              "align": "right"
+            },
+            {
+              "text": "5.25",
+              "width": 30,
+              "align": "right"
+            }
+          ]
+        },
+        {
+          "type": "row",
+          "size": "sm",
+          "bold": true,
+          "cols": [
+            {
+              "text": "IVA",
+              "width": 70,
+              "align": "right"
+            },
+            {
+              "text": "15.60",
+              "width": 30,
+              "align": "right"
+            }
+          ]
+        },
+        {
+          "type": "row",
+          "size": "sm",
+          "bold": true,
+          "cols": [
+            {
+              "text": "MONTO A PAGAR",
+              "width": 70,
+              "align": "right"
+            },
+            {
+              "text": "135.60",
+              "width": 30,
+              "align": "right"
+            }
+          ]
+        },
+        {
+          "type": "separator",
+          "dotted": true
+        },
+        {
+          "type": "text",
+          "text": "SON:  Ciento treinta y cinco 60/100 Bolivianos",
+          "size": "sm",
+          "bold": false,
+          "align": "left"
+        },
+        {
+          "type": "separator",
+          "dotted": false
+        },
+        {
+          "type": "text",
+          "text": "Generada a través de iZi",
+          "size": "sm",
+          "bold": true,
+          "align": "center"
+        },
+        {
+          "type": "lineWrap",
+          "lines": 2
+        },
+        {
+          "type": "cut"
+        }
+      ],
+      "printItemsFormat": "full"
+    },
+    "searchstr": "1 1023456077 fixture por fuera s.r.l. 4567891019 comercial andina compras@example.com  620000 0 1 Desarrollo a medida DEV-1 Soporte mensual SOP-1",
+    "listaItems": [
+      {
+        "articulo": "Desarrollo a medida",
+        "cantidad": 2,
+        "descuento": 1.13,
+        "customItem": {
+          "siat": {
+            "unidadMedida": 58,
+            "codigoProductoSin": "83141",
+            "actividadEconomica": "620000"
+          }
+        },
+        "precioTotal": 113,
+        "subTotalNeto": 100,
+        "montoDescuento": 1,
+        "precioUnitario": 57.07,
+        "codigoInventario": "DEV-1",
+        "unidadMedidaSiat": 58,
+        "descuentoImpuesto": 1.13,
+        "precioNetoUnitario": 50.5,
+        "precioTotalImpuesto": 113,
+        "precioUnitarioImpuesto": 57.07
+      },
+      {
+        "articulo": "Soporte mensual",
+        "cantidad": 1,
+        "descuento": 0,
+        "customItem": {
+          "siat": {
+            "unidadMedida": 58,
+            "codigoProductoSin": "83141",
+            "actividadEconomica": "620000"
+          }
+        },
+        "precioTotal": 28.53,
+        "subTotalNeto": 25.25,
+        "montoDescuento": 0,
+        "precioUnitario": 28.53,
+        "codigoInventario": "SOP-1",
+        "unidadMedidaSiat": 58,
+        "descuentoImpuesto": 0,
+        "precioNetoUnitario": 25.25,
+        "precioTotalImpuesto": 28.53,
+        "precioUnitarioImpuesto": 28.53
+      }
+    ],
+    "monto": 141.53,
+    "montoImpuesto": 141.53,
+    "descuentosImpuesto": 5.93,
+    "montoTotal": 135.6,
+    "montoTotalImpuesto": 135.6,
+    "giftCardsImpuesto": 0,
+    "sinCreditoImpuesto": 0,
+    "montoNeto": 120,
+    "iva": 15.6,
+    "montoNetoImpuesto": 120,
+    "ivaImpuesto": 15.6,
+    "numeroPrefactura": 1,
+    "autorizacion": "0",
+    "validadorUnico": "1023456077#1#2026-10-13#1#1##PRE#vn",
+    "pdfCarta": "https://izi-bol-temp.s3.us-east-005.backblazeb2.com/facturas/Fixture_Por_Fuera_prefactura-941d1e06-223a-49eb-8599-77a0b3a78f3e.pdf",
+    "pdfRollo": "https://izi-bol-temp.s3.us-east-005.backblazeb2.com/facturas/Fixture_Por_Fuera_prefacturaR80-941d1e06-223a-49eb-8599-77a0b3a78f3e.pdf",
+    "id": 3,
+    "iceVariable": null,
+    "iceFijo": null,
+    "control": null,
+    "concepto": null,
+    "pagada": 0,
+    "sucursalCompra": null,
+    "estadoEmision": "creado",
+    "customCasosEspeciales": null,
+    "creado": "2026-10-13T23:24:39.000Z",
+    "almacen": null,
+    "pagos": null,
+    "usuarioCreacion": null,
+    "usuarioAnulacion": null,
+    "usuarioModificacion": null,
+    "usuarioCobro": null,
+    "usuarioPago": null,
+    "usuarioCreacionNombre": null,
+    "usuarioAnulacionNombre": null,
+    "usuarioModificacionNombre": null,
+    "usuarioCobroNombre": null,
+    "usuarioPagoNombre": null,
+    "pdfCartaPrefactura": null,
+    "pdfRolloPrefactura": null,
+    "actividadEconomicaId": 620000,
+    "actividadEconomicaCod": null,
+    "qr": null,
+    "codigoMetodoPago": 1
+  }
 }

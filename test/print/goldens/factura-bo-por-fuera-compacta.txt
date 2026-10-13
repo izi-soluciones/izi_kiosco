@@ -1,0 +1,19 @@
+ IZI Soluciones Pruebas Nuevos Releases 
+      iZi Soluciones Digitales SA       
+               358658021                
+              Casa Matriz               
+NOMBRE: COMERCIAL ANDINA                
+NIT/CI/CEX: 4567891019                  
+FACTURA N°: 1                           
+FECHA: <fecha>                          
+TOTAL PRECIO NETO Bs: 106.19            
+IVA Bs: 13.81                           
+MONTO GIFT CARD Bs: 10.00               
+MONTO A PAGAR Bs: 120.00                
+
+[QR 2] https://pilotosiat.impuestos.gob.bo/consulta/QR?nit=1023456077&cuf=460717C6129A0EF396B44592C9129DD366239E06A1CC0001&numero=1&t=2
+
+    Visualice su factura desde el QR    
+ Forma de pago: Efectivo con gift card  
+----------------------------------------
+        Generada a través de iZi        

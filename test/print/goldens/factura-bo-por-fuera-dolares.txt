@@ -1,0 +1,66 @@
+        FIXTURE POR FUERA S.R.L.        
+              Casa Matriz               
+          No. Punto de Venta 0          
+            ZONA: Los Pinos             
+    Av. América esq. Calle Colombia,    
+   Edificio Torres del Poeta, piso 3,   
+oficina 302B, Zona SopocachiAv. América 
+esq. Calle Colombia, Edificio Torres del
+   Poeta, piso 3, oficina 302B, Zona    
+    Sopocachi Av. América esq. Calle    
+  Colombia, Edificio Torres del Poeta,  
+piso 3, oficina 302B, Zona SopocachiAv. 
+ América esq. Calle Colombia, Edificio  
+Torres del Poeta, piso 3, oficina 302B, 
+             Zona Sopocachi             
+           TELF: +59171275940           
+          Santa Cruz, Bolivia           
+
+
+
+                FACTURA                 
+      Con derecho a crédito fiscal      
+         NIT EMISOR: 1023456077         
+           FACTURA No: 00002            
+          CÓD. AUTORIZACIÓN:            
+460717C6129A0EF396B44592C9129DD366239F8D
+----------------------------------------
+ NOMBRE/RAZÓN SOCIAL: COMERCIAL ANDINA  
+        NIT/CI/CEX:  4567891019         
+        COD. CLIENTE: 4567891019        
+             FECHA: <fecha>             
+  MONEDA (TIPO DE CAMBIO): USD (6.96)   
+----------------------------------------
+CantDetalle      P. Neto  Desc USubtotal
+----------------------------------------
+2   DEV-1-Desarr  311.05    6.16  615.94
+
+1   SOP-1-Soport  155.52    0.00  155.52
+
+........................................
+                    SUBTOTAL      771.46
+             MONTO GIFT CARD        0.00
+           TOTAL PRECIO NETO      739.12
+                   DESCUENTO       32.34
+                         IVA       96.08
+               MONTO A PAGAR      835.20
+........................................
+SON:  Ochocientos treinta y cinco 20/100
+Bolivianos                              
+----------------------------------------
+[QR 3] https://pilotosiat.impuestos.gob.bo/consulta/QR?nit=1023456077&cuf=460717C6129A0EF396B44592C9129DD366239F8D45CC0001&numero=2&t=2
+
+ ESTA FACTURA CONTRIBUYE AL DESARROLLO  
+ DEL PAÍS, EL USO ILÍCITO DE ÉSTA SERÁ  
+ SANCIONADO PENALMENTE DE ACUERDO A LEY 
+
+Ley N° 453: El proveedor deberá entregar
+    el producto en las modalidades y    
+    términos ofertados o convenidos.    
+
+  “Este documento es la Representación  
+ Gráfica de un Documento Fiscal Digital 
+emitido en una modalidad de facturación 
+               en línea”                
+----------------------------------------
+        Generada a través de iZi        

@@ -242,6 +242,10 @@ class Items {
   num? descuento;
   num? descuentoImpuesto;
   num? precioTotalImpuesto;
+  // Los montos netos de la línea del régimen por fuera (Ley 1733), tal como van al XML 3.0.
+  num? precioNetoUnitario;
+  num? montoDescuento;
+  num? subTotalNeto;
   dynamic codigoInventario;
   dynamic codigo;
   
@@ -260,6 +264,9 @@ class Items {
     this.descuentoImpuesto,
     this.precioUnitarioImpuesto,
     this.precioTotalImpuesto,
+    this.precioNetoUnitario,
+    this.montoDescuento,
+    this.subTotalNeto,
     this.codigoInventario,
     this.codigo,
         this.parametrosFacturacion
@@ -297,6 +304,9 @@ class Items {
         descuentoImpuesto: json["descuentoImpuesto"],
       precioUnitarioImpuesto: json["precioUnitarioImpuesto"],
       precioTotalImpuesto: json["precioTotalImpuesto"],
+      precioNetoUnitario: json["precioNetoUnitario"],
+      montoDescuento: json["montoDescuento"],
+      subTotalNeto: json["subTotalNeto"],
       codigo: json["codigo"],
       codigoInventario: json["codigoInventario"],
       parametrosFacturacion: json["parametrosFacturacion"] is Map?ParametrosFacturacionItem.fromJson(json["parametrosFacturacion"]) : null,

@@ -10,6 +10,7 @@ import 'package:izi_kiosco/domain/models/currency.dart';
 import 'package:izi_kiosco/domain/models/invoice.dart';
 import 'package:izi_kiosco/domain/models/payment_obj.dart';
 import 'package:izi_kiosco/domain/strategies/taxes/taxes_strategy.dart';
+import 'package:izi_kiosco/domain/utils/calc_utils.dart';
 import 'package:izi_kiosco/domain/utils/date_formatter.dart';
 import 'package:izi_kiosco/domain/utils/print_utils.dart';
 import 'package:izi_kiosco/ui/utils/money_formatter.dart';
@@ -374,6 +375,7 @@ static List<IziPrintItem> invoice80Co(
         ? contribuyente.customData["configSiat"]
         : null;
     Map? datosSiat = invoice.customFactura["siat"];
+    final Map? porFuera = _totalesPorFuera(invoice);
     List listCE = invoice.customFactura["camposExtra"] is List
         ? invoice.customFactura["camposExtra"]
         : [];
@@ -537,6 +539,15 @@ static List<IziPrintItem> invoice80Co(
           size: IziPrintSize.sm,
           align: IziPrintAlign.center,
           bold: true));
+      // Los montos del por fuera van en bolivianos, como el XML: el tipo de cambio dice cuánto fue en la moneda de la venta.
+      if (porFuera != null && invoice.customFactura["moneda"] is Map && invoice.customFactura["exRate"] != 1) {
+        items.add(IziPrintText(
+            text:
+                "MONEDA (TIPO DE CAMBIO): ${invoice.customFactura["moneda"]["simbolo"]} (${invoice.customFactura["exRate"]})",
+            size: IziPrintSize.sm,
+            align: IziPrintAlign.center,
+            bold: true));
+      }
 
       if (listCE.isNotEmpty) {
         items.add(IziPrintSeparator());
@@ -555,7 +566,7 @@ static List<IziPrintItem> invoice80Co(
         IziPrintColumn(text: "Cant.", width: 10, align: IziPrintAlign.left),
         IziPrintColumn(text: "Detalle", width: 30, align: IziPrintAlign.left),
         IziPrintColumn(
-            text: "Precio U.", width: 20, align: IziPrintAlign.right),
+            text: porFuera != null ? "P. Neto" : "Precio U.", width: 20, align: IziPrintAlign.right),
         IziPrintColumn(text: "Desc U", width: 20, align: IziPrintAlign.right),
         IziPrintColumn(text: "Subtotal", width: 20, align: IziPrintAlign.right),
       ], size: IziPrintSize.sm, bold: true));
@@ -574,6 +585,12 @@ static List<IziPrintItem> invoice80Co(
                 ? item.precioTotal
                 : item.precioTotalImpuesto) ??
             0;
+        // Los netos de la línea tal como van al XML, en HALF-UP. En modo neto el precio unitario es el que se escribió.
+        if (porFuera != null) {
+          precioUnitario = Calc.roundConservador(item.precioNetoUnitario ?? 0, 2);
+          descuento = Calc.roundConservador(item.montoDescuento ?? 0, 2);
+          precioTotal = Calc.roundConservador(item.subTotalNeto ?? 0, 2);
+        }
         var codInve = (item.codigoInventario == null && item.codigo == null)
             ? ' '
             : '${item.codigoInventario ?? item.codigo ?? "000"}-';
@@ -666,58 +683,79 @@ static List<IziPrintItem> invoice80Co(
               ? invoice.montoTotalImpuesto! - invoice.giftCardsImpuesto!
               : (invoice.montoTotal ?? 0) - (invoice.giftCards ?? 0)));
 
+      // En el por fuera, «SON» es el monto a pagar del XML, en bolivianos aunque se haya vendido en otra moneda.
+      if (porFuera != null) {
+        final montoAPagar = _num(porFuera["montoaPagar"]);
+        esUnMil = montoAPagar ~/ 1000 == 1;
+        auxCents = montoAPagar - montoAPagar.toInt();
+        totalCentavos = (auxCents * 100).round().toInt();
+        auxWritten = montoAPagar;
+      }
       var writtenTotal =
           (esUnMil ? "un " : "") + _formatNumberToWord(auxWritten.toInt());
       items.add(IziPrintSeparator(dotted: true));
 
-      items.add(IziPrintRow([
-        IziPrintColumn(text: "SUBTOTAL", width: 70, align: IziPrintAlign.right),
-        IziPrintColumn(
-            text: monto.toStringAsFixed(2),
-            width: 30,
-            align: IziPrintAlign.right),
-      ], size: IziPrintSize.sm, bold: true));
-      items.add(IziPrintRow([
-        IziPrintColumn(
-            text: "DESCUENTO", width: 70, align: IziPrintAlign.right),
-        IziPrintColumn(
-            text: descuento.toStringAsFixed(2),
-            width: 30,
-            align: IziPrintAlign.right),
-      ], size: IziPrintSize.sm, bold: true));
-      items.add(IziPrintRow([
-        IziPrintColumn(text: "TOTAL", width: 70, align: IziPrintAlign.right),
-        IziPrintColumn(
-            text: total.toStringAsFixed(2),
-            width: 30,
-            align: IziPrintAlign.right),
-      ], size: IziPrintSize.sm, bold: true));
-      items.add(IziPrintRow([
-        IziPrintColumn(
-            text: "MONTO GIFT-CARD", width: 70, align: IziPrintAlign.right),
-        IziPrintColumn(
-            text: giftCards.toStringAsFixed(2),
-            width: 30,
-            align: IziPrintAlign.right),
-      ], size: IziPrintSize.sm, bold: true));
-      items.add(IziPrintRow([
-        IziPrintColumn(
-            text: "IMPORTE BASE DE CREDITO FISCAL",
-            width: 70,
-            align: IziPrintAlign.right),
-        IziPrintColumn(
-            text: importeBase.toStringAsFixed(2),
-            width: 30,
-            align: IziPrintAlign.right),
-      ], size: IziPrintSize.sm, bold: true));
-      items.add(IziPrintRow([
-        IziPrintColumn(
-            text: "TOTAL A PAGAR", width: 70, align: IziPrintAlign.right),
-        IziPrintColumn(
-            text: importeBase.toStringAsFixed(2),
-            width: 30,
-            align: IziPrintAlign.right),
-      ], size: IziPrintSize.sm, bold: true));
+      if (porFuera != null) {
+        // El pie del ejemplo de representación gráfica del anexo 3.0, con las filas que tiene el XML del sector.
+        for (final (etiqueta, valor) in _filasPiePorFuera(porFuera, invoice.tipoFactura)) {
+          items.add(IziPrintRow([
+            IziPrintColumn(text: etiqueta, width: 70, align: IziPrintAlign.right),
+            IziPrintColumn(
+                text: valor.toStringAsFixed(2),
+                width: 30,
+                align: IziPrintAlign.right),
+          ], size: IziPrintSize.sm, bold: true));
+        }
+      } else {
+        items.add(IziPrintRow([
+          IziPrintColumn(text: "SUBTOTAL", width: 70, align: IziPrintAlign.right),
+          IziPrintColumn(
+              text: monto.toStringAsFixed(2),
+              width: 30,
+              align: IziPrintAlign.right),
+        ], size: IziPrintSize.sm, bold: true));
+        items.add(IziPrintRow([
+          IziPrintColumn(
+              text: "DESCUENTO", width: 70, align: IziPrintAlign.right),
+          IziPrintColumn(
+              text: descuento.toStringAsFixed(2),
+              width: 30,
+              align: IziPrintAlign.right),
+        ], size: IziPrintSize.sm, bold: true));
+        items.add(IziPrintRow([
+          IziPrintColumn(text: "TOTAL", width: 70, align: IziPrintAlign.right),
+          IziPrintColumn(
+              text: total.toStringAsFixed(2),
+              width: 30,
+              align: IziPrintAlign.right),
+        ], size: IziPrintSize.sm, bold: true));
+        items.add(IziPrintRow([
+          IziPrintColumn(
+              text: "MONTO GIFT-CARD", width: 70, align: IziPrintAlign.right),
+          IziPrintColumn(
+              text: giftCards.toStringAsFixed(2),
+              width: 30,
+              align: IziPrintAlign.right),
+        ], size: IziPrintSize.sm, bold: true));
+        items.add(IziPrintRow([
+          IziPrintColumn(
+              text: "IMPORTE BASE DE CREDITO FISCAL",
+              width: 70,
+              align: IziPrintAlign.right),
+          IziPrintColumn(
+              text: importeBase.toStringAsFixed(2),
+              width: 30,
+              align: IziPrintAlign.right),
+        ], size: IziPrintSize.sm, bold: true));
+        items.add(IziPrintRow([
+          IziPrintColumn(
+              text: "TOTAL A PAGAR", width: 70, align: IziPrintAlign.right),
+          IziPrintColumn(
+              text: importeBase.toStringAsFixed(2),
+              width: 30,
+              align: IziPrintAlign.right),
+        ], size: IziPrintSize.sm, bold: true));
+      }
       items.add(IziPrintSeparator(dotted: true));
 
       items.add(IziPrintText(
@@ -833,7 +871,18 @@ static Future<List<IziPrintItem>> invoiceCompact(
     items.add(IziPrintText(text: "NIT/CI/CEX: ${invoice.comprador}", size: IziPrintSize.sm,align: IziPrintAlign.left));
     items.add(IziPrintText(text: "FACTURA N°: ${invoice.numero}", size: IziPrintSize.sm,align: IziPrintAlign.left));
     items.add(IziPrintText(text: "FECHA: ${DateTime.parse(invoice.fecha).toLocal().dateFormat(DateFormatterType.dateHour)}", size: IziPrintSize.sm,align: IziPrintAlign.left));
-    items.add(IziPrintText(text: "IMPORTE Bs: ${invoice.montoTotalImpuesto}", size: IziPrintSize.sm,align: IziPrintAlign.left,bold: true));
+    // En el por fuera el IVA va por separado (Ley 1733) y los montos en bolivianos, como el XML.
+    final Map? porFuera = _totalesPorFuera(invoice);
+    if (porFuera != null) {
+      items.add(IziPrintText(text: "TOTAL PRECIO NETO Bs: ${_num(porFuera["totalPrecioNeto"]).toStringAsFixed(2)}", size: IziPrintSize.sm,align: IziPrintAlign.left));
+      items.add(IziPrintText(text: "IVA Bs: ${_num(porFuera["iva"]).toStringAsFixed(2)}", size: IziPrintSize.sm,align: IziPrintAlign.left));
+      if (_num(porFuera["montoGiftCard"]) > 0) {
+        items.add(IziPrintText(text: "MONTO GIFT CARD Bs: ${_num(porFuera["montoGiftCard"]).toStringAsFixed(2)}", size: IziPrintSize.sm,align: IziPrintAlign.left));
+      }
+      items.add(IziPrintText(text: "MONTO A PAGAR Bs: ${_num(porFuera["montoaPagar"]).toStringAsFixed(2)}", size: IziPrintSize.sm,align: IziPrintAlign.left,bold: true));
+    } else {
+      items.add(IziPrintText(text: "IMPORTE Bs: ${invoice.montoTotalImpuesto}", size: IziPrintSize.sm,align: IziPrintAlign.left,bold: true));
+    }
     items.add(IziPrintLineWrap(lines: 1));
 
         if (invoice.prefactura != 1 &&
@@ -985,6 +1034,34 @@ static Future<List<IziPrintItem>> invoiceCompactCo(
     800: 'ochocientos',
     900: 'novecientos',
   };
+  // Los totales del anexo 3.0 si la factura es SIAT y del régimen por fuera, como librerias/iva-bolivia/representacion.js
+  // del backbone: los recibos sin facturación no traen siat, y la conversión que vuelve al incluido deja los totales viejos.
+  static Map? _totalesPorFuera(Invoice invoice) {
+    final customFactura = invoice.customFactura;
+    return customFactura["siat"] is Map &&
+            customFactura["regimenIva"] == "porFuera" &&
+            customFactura["totalesPorFuera"] is Map
+        ? customFactura["totalesPorFuera"]
+        : null;
+  }
+
+  static num _num(dynamic valor) => valor is num ? valor : 0;
+
+  // Las filas del pie que tiene el XML del sector: el ICE lleva sus dos totales en lugar de la gift card (se reconoce por la
+  // clave); el alquiler y el boleto aéreo no tienen gift card, y el boleto tampoco descuento adicional.
+  static List<(String, num)> _filasPiePorFuera(Map totales, int? tipoFactura) => [
+        ('SUBTOTAL', _num(totales["subTotalNeto"])),
+        if (totales.containsKey("montoIceEspecifico")) ...[
+          ('TOTAL ICE PORCENTUAL', _num(totales["montoIcePorcentual"])),
+          ('TOTAL ICE ESPECÍFICO', _num(totales["montoIceEspecifico"])),
+        ] else if (tipoFactura != 3 && tipoFactura != 30)
+          ('MONTO GIFT CARD', _num(totales["montoGiftCard"])),
+        ('TOTAL PRECIO NETO', _num(totales["totalPrecioNeto"])),
+        if (tipoFactura != 30) ('DESCUENTO', _num(totales["descuentoAdicional"])),
+        ('IVA', _num(totales["iva"])),
+        ('MONTO A PAGAR', _num(totales["montoaPagar"])),
+      ];
+
   static num _roundNumber(num number, int decimalPlaces) {
     num factor = pow(10.0, decimalPlaces);
     return (number * factor).roundToDouble() / factor;
