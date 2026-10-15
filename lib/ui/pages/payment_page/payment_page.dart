@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:izi_design_system/molecules/izi_snack_bar.dart';
+import 'package:izi_kiosco/app/utils/attract_video.dart';
 import 'package:izi_kiosco/app/values/locale_keys.g.dart';
 import 'package:izi_kiosco/app/values/routes_keys.dart';
 import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
@@ -108,7 +109,8 @@ class PaymentPage extends StatelessWidget {
           context.read<PageUtilsBloc>().closeLoading();
         }
         if(state.status == PaymentStatus.successInvoice){
-          GoRouter.of(context).pushNamed(RoutesKeys.home);
+          GoRouter.of(context).pushNamed(RoutesKeys.home,
+              extra: AttractVideo.extraFromCompletedOrder);
         }
       },
       builder: (context, state) {

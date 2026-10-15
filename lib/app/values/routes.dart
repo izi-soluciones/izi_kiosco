@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:izi_design_system/tokens/colors.dart';
+import 'package:izi_kiosco/app/utils/attract_video.dart';
 import 'package:izi_kiosco/data/repositories/auth/auth_repository_http.dart';
 import 'package:izi_kiosco/data/repositories/business/business_repository_http.dart';
 import 'package:izi_kiosco/data/repositories/comanda/comanda_repository_http.dart';
@@ -72,7 +73,9 @@ class Routes {
                   create: (context) =>
                       HomeBloc(BusinessRepositoryHttp())
                         ..verifyServerPos(context.read<AuthBloc>().state),
-                  child: const HomePage(),
+                  child: HomePage(
+                      fromCompletedOrder:
+                          AttractVideo.isFromCompletedOrder(state.extra)),
                 ),
               );
             },

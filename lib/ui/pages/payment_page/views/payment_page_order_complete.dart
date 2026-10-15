@@ -5,6 +5,7 @@ import 'package:izi_design_system/atoms/izi_typography.dart';
 import 'package:izi_design_system/molecules/izi_btn.dart';
 import 'package:izi_design_system/tokens/colors.dart';
 import 'package:izi_design_system/tokens/types.dart';
+import 'package:izi_kiosco/app/utils/attract_video.dart';
 import 'package:izi_kiosco/app/values/assets_keys.dart';
 import 'package:izi_kiosco/app/values/locale_keys.g.dart';
 import 'package:izi_kiosco/app/values/routes_keys.dart';
@@ -51,7 +52,8 @@ class PaymentPageOrderComplete extends StatelessWidget {
                 buttonType: ButtonType.outline,
                 buttonSize: ButtonSize.medium,
                 buttonOnPressed: (){
-                  GoRouter.of(context).goNamed(RoutesKeys.home);
+                  GoRouter.of(context).goNamed(RoutesKeys.home,
+                      extra: AttractVideo.extraFromCompletedOrder);
                 }
             ),
           ],
