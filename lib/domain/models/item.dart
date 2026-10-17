@@ -191,13 +191,16 @@ class ModifierItem {
   bool defaultValue;
   bool check;
   List<ModifierIngredient> ingredientes;
+  /// URL de la foto de la opción (por ejemplo, del sabor). Null si no tiene.
+  String? imagen;
 
   ModifierItem(
       {required this.nombre,
       this.check = false,
       required this.modPrecio,
         required this.defaultValue,
-      required this.ingredientes});
+      required this.ingredientes,
+      this.imagen});
 
   factory ModifierItem.fromJson(Map<dynamic, dynamic> json) {
     List listIngredientes =
@@ -209,6 +212,9 @@ class ModifierItem {
         modPrecio: json["modPrecio"] ?? 0,
         check: json["check"] ?? false,
         defaultValue: json["default"] ?? false,
+        imagen: json["imagen"] is String && (json["imagen"] as String).isNotEmpty
+            ? json["imagen"]
+            : null,
         ingredientes: []//listIngredientes
             .map((e) => ModifierIngredient.fromJson(e))
             .toList());
@@ -218,13 +224,15 @@ class ModifierItem {
       modPrecio: modPrecio,
       check: check,
       defaultValue: defaultValue,
-      ingredientes: ingredientes.map((e) => e.copyWith()).toList());
+      ingredientes: ingredientes.map((e) => e.copyWith()).toList(),
+      imagen: imagen);
 
   Map<String,dynamic> toJson()=>{
     "nombre": nombre,
     "modPrecio": modPrecio,
     "check": check,
-    "ingredientes": ingredientes.map((e) => e.toJson()).toList()
+    "ingredientes": ingredientes.map((e) => e.toJson()).toList(),
+    if (imagen != null) "imagen": imagen,
   };
 }
 
