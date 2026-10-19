@@ -1214,7 +1214,7 @@ class PaymentBloc extends Cubit<PaymentState> {
   }
 
   cancelQR(AuthState authState){
-    if (!_skipInvoiceForm(authState) && authState.currentContribuyente?.tieneFacturacion == true) {
+    if (authState.currentContribuyente?.tieneFacturacion == true) {
       emit(state.copyWith(step: 2, qrLoading: false, qrCharge: () => null));
     } else {
       emit(state.copyWith(step: 1, qrLoading: false, qrCharge: () => null));
@@ -1223,7 +1223,7 @@ class PaymentBloc extends Cubit<PaymentState> {
 
   cancelBREB(AuthState authState) {
     emit(state.copyWith(
-      step: !_skipInvoiceForm(authState) && authState.currentContribuyente?.tieneFacturacion == true ? 2 : 1,
+      step: authState.currentContribuyente?.tieneFacturacion == true ? 2 : 1,
       brebLoading: false,
       brebCharge: null,
     ));
