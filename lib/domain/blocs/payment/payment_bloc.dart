@@ -24,6 +24,7 @@ import 'package:izi_kiosco/domain/models/document_type.dart';
 import 'package:izi_kiosco/domain/models/identification_type.dart';
 import 'package:izi_kiosco/domain/models/invoice.dart';
 import 'package:izi_kiosco/domain/models/iva_responsability.dart';
+import 'package:izi_kiosco/domain/models/modulos.dart';
 import 'package:izi_kiosco/domain/models/payment.dart';
 import 'package:izi_kiosco/domain/models/payment_method.dart';
 import 'package:izi_kiosco/domain/models/payment_obj.dart';
@@ -129,7 +130,7 @@ class PaymentBloc extends Cubit<PaymentState> {
       }
       
 
-      if(authState.currentContribuyente?.tieneFacturacion==true){
+      if(authState.currentContribuyente?.tieneModulo(Modulo.facturacion)==true){
         PaymentStatus? statusVerification = authState.taxesStrategy.verifyParameters(authState.currentContribuyente, authState.currentSucursal, authState.currentDevice, economicActivity);
         if(statusVerification!=null){
           return emit(state.copyWith(status: statusVerification));
@@ -369,7 +370,7 @@ class PaymentBloc extends Cubit<PaymentState> {
   // El retail sin facturacion va del selector de metodo al cobro sin pasar por el
   // formulario, asi que sus campos quedan vacios y exigirlos deja el cobro mudo.
   bool _skipInvoiceForm(AuthState authState) {
-    return authState.currentContribuyente?.tieneFacturacion != true &&
+    return authState.currentContribuyente?.tieneModulo(Modulo.facturacion) != true &&
         (authState.currentDevice?.config.isRetail == true ||
             authState.currentDevice?.config.isRetailBarcode == true);
   }
@@ -593,7 +594,7 @@ class PaymentBloc extends Cubit<PaymentState> {
       }
     } catch (e) {
       log(e.toString());
-      if(authState.currentContribuyente?.tieneFacturacion==true){
+      if(authState.currentContribuyente?.tieneModulo(Modulo.facturacion)==true){
         emit(state.copyWith(status: PaymentStatus.cardError,step: 2));
       }
       else{
@@ -688,7 +689,7 @@ class PaymentBloc extends Cubit<PaymentState> {
       }
     } catch (e) {
       log(e.toString());
-      if(authState.currentContribuyente?.tieneFacturacion==true){
+      if(authState.currentContribuyente?.tieneModulo(Modulo.facturacion)==true){
         emit(state.copyWith(status: PaymentStatus.cardError,step: 2));
       }
       else{
@@ -807,7 +808,7 @@ class PaymentBloc extends Cubit<PaymentState> {
           qrLoading: false,
           qrCharge: () => null,
           status: PaymentStatus.qrError));
-      if(authState.currentContribuyente?.tieneFacturacion==true){
+      if(authState.currentContribuyente?.tieneModulo(Modulo.facturacion)==true){
         emit(state.copyWith(step: 2, status: PaymentStatus.successGet));
       }
       else{
@@ -936,7 +937,7 @@ class PaymentBloc extends Cubit<PaymentState> {
         status: PaymentStatus.brebError,
         errorDescription: e.toString(),
       ));
-      if(authState.currentContribuyente?.tieneFacturacion==true){
+      if(authState.currentContribuyente?.tieneModulo(Modulo.facturacion)==true){
         emit(state.copyWith(step: 2, status: PaymentStatus.successGet));
       }
       else{
@@ -1223,7 +1224,7 @@ class PaymentBloc extends Cubit<PaymentState> {
 
   cancelBREB(AuthState authState) {
     emit(state.copyWith(
-      step: authState.currentContribuyente?.tieneFacturacion == true ? 2 : 1,
+      step: authState.currentContribuyente?.tieneModulo(Modulo.facturacion) == true ? 2 : 1,
       brebLoading: false,
       brebCharge: null,
     ));
@@ -1525,7 +1526,7 @@ class PaymentBloc extends Cubit<PaymentState> {
 
   PaymentCountryTaxes? _setCountryConfig(Contribuyente contribuyente){
 
-    if(contribuyente.tieneFacturacion==true){
+    if(contribuyente.tieneModulo(Modulo.facturacion)==true){
       if(contribuyente.usaSiat==true || (contribuyente.config is Map && contribuyente.config["paisId"] == "BO")){
         countryConfig = PaymentConfig(
           setParams: _setParamsBo,
