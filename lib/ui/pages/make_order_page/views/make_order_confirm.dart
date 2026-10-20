@@ -1,3 +1,4 @@
+import 'package:izi_kiosco/domain/utils/variable_particionada.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -364,7 +365,10 @@ class _MakeOrderConfirmState extends State<MakeOrderConfirm> {
                           )
                           ,
                           TextSpan(
-                            text:  e.caracteristicas.fold("", (previousValue, c){
+                            // Variable particionada: cada sabor con su porción, en orden de selección.
+                            text: e.isParticionada
+                                ? e.reparto.entries.map((r) => "${etiquetaPorciones(r.value, e.partes!)} ${r.key.nombre}").join(", ")
+                                : e.caracteristicas.fold("", (previousValue, c){
                               previousValue ??= "";
                               if(!c.check){
                                 return previousValue;

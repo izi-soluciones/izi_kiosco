@@ -1,3 +1,5 @@
+import 'package:izi_kiosco/domain/utils/variable_particionada.dart';
+
 class Item {
   bool activo;
   num cantidad;
@@ -120,6 +122,14 @@ class Item {
     Map<String,dynamic> modificadoresNames= {};
     for(var mod in modificadores){
       List<String> carNames=[];
+      if(mod.isParticionada){
+        // El orden decide el reparto de partes en el backbone: va el de selección, no el del catálogo.
+        carNames = mod.seleccionOrdenada.map((c) => c.nombre).toList();
+        if(carNames.isNotEmpty){
+          modificadoresNames[mod.nombre]=carNames;
+        }
+        continue;
+      }
       for(var car in mod.caracteristicas){
         if(car.check){
           carNames.add(car.nombre);
@@ -144,6 +154,10 @@ class Modifier {
   bool isMultiple;
   bool isObligatorio;
   int? isLimitado;
+  /// 'particionada' o null. Ver domain/utils/variable_particionada.dart.
+  String? tipo;
+  /// Solo particionada: en cuántas partes se divide el ítem (1, 2 o 4).
+  int? partes;
   List<ModifierItem> caracteristicas;
 
   Modifier(
@@ -152,6 +166,8 @@ class Modifier {
       required this.isObligatorio,
       required this.isIngreso,
         required this.isLimitado,
+      this.tipo,
+      this.partes,
       required this.caracteristicas});
 
   factory Modifier.fromJson(Map<dynamic, dynamic> json) {
@@ -164,6 +180,8 @@ class Modifier {
         isIngreso: json["isIngreso"] ?? false,
         isMultiple: json["isMultiple"] ?? false,
         isObligatorio: json["isLimitado"] is int  &&  json["isLimitado"] > 0? true: (json["isObligatorio"] ?? false),
+        tipo: json["tipo"] is String ? json["tipo"] : null,
+        partes: json["partes"] is num ? (json["partes"] as num).toInt() : null,
         caracteristicas:
         listCaracteristicas.map((e) => ModifierItem.fromJson(e)).toList());
   }
@@ -173,6 +191,8 @@ class Modifier {
       isLimitado: isLimitado,
       isObligatorio: isObligatorio,
       isIngreso: isIngreso,
+      tipo: tipo,
+      partes: partes,
       caracteristicas: caracteristicas.map((e) => e.copyWith()).toList());
 
   Map<String,dynamic> toJson()=>{
@@ -181,6 +201,8 @@ class Modifier {
     "isLimitado": isLimitado,
     "isObligatorio": isObligatorio,
     "isIngreso": isIngreso,
+    if (tipo != null) "tipo": tipo,
+    if (partes != null) "partes": partes,
     "caracteristicas": caracteristicas.map((e) => e.toJson()).toList()
   };
 }
@@ -193,6 +215,8 @@ class ModifierItem {
   List<ModifierIngredient> ingredientes;
   /// URL de la foto de la opción (por ejemplo, del sabor). Null si no tiene.
   String? imagen;
+  /// Variable particionada: posición del sabor en el orden de selección (1, 2...).
+  int? orden;
 
   ModifierItem(
       {required this.nombre,
@@ -200,7 +224,8 @@ class ModifierItem {
       required this.modPrecio,
         required this.defaultValue,
       required this.ingredientes,
-      this.imagen});
+      this.imagen,
+      this.orden});
 
   factory ModifierItem.fromJson(Map<dynamic, dynamic> json) {
     List listIngredientes =
@@ -215,6 +240,7 @@ class ModifierItem {
         imagen: json["imagen"] is String && (json["imagen"] as String).isNotEmpty
             ? json["imagen"]
             : null,
+        orden: json["orden"] is num ? (json["orden"] as num).toInt() : null,
         ingredientes: []//listIngredientes
             .map((e) => ModifierIngredient.fromJson(e))
             .toList());
@@ -225,7 +251,8 @@ class ModifierItem {
       check: check,
       defaultValue: defaultValue,
       ingredientes: ingredientes.map((e) => e.copyWith()).toList(),
-      imagen: imagen);
+      imagen: imagen,
+      orden: orden);
 
   Map<String,dynamic> toJson()=>{
     "nombre": nombre,
@@ -233,6 +260,7 @@ class ModifierItem {
     "check": check,
     "ingredientes": ingredientes.map((e) => e.toJson()).toList(),
     if (imagen != null) "imagen": imagen,
+    if (orden != null) "orden": orden,
   };
 }
 
