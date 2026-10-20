@@ -17,15 +17,76 @@ import android.hardware.usb.UsbConstants;
 import android.app.PendingIntent;
 import android.content.Intent;
 import android.content.Context;
+import java.util.HashMap;
 import com.printsdk.cmd.PrintCmd;
 import com.printsdk.usbsdk.UsbDriver;
 
 public class MainActivity extends FlutterActivity {
     private static final String CHANNEL = "com.izisoluciones.kiosco/print";
+    private static final String SCANNER_CHANNEL = "com.izisoluciones.kiosco/sunmi_scanner";
+
+    private SunmiScannerHelper sunmiScannerHelper;
+    private MethodChannel scannerChannel;
 
     @Override
     public void configureFlutterEngine(@NonNull FlutterEngine flutterEngine) {
         super.configureFlutterEngine(flutterEngine);
+
+        // Configure Sunmi Scanner Engine
+        sunmiScannerHelper = new SunmiScannerHelper(this);
+        sunmiScannerHelper.init();
+        scannerChannel = new MethodChannel(flutterEngine.getDartExecutor().getBinaryMessenger(), SCANNER_CHANNEL);
+        sunmiScannerHelper.setScanCallback(new SunmiScannerHelper.ScanCallback() {
+            @Override
+            public void onScanSuccess(String code, byte[] source) {
+                runOnUiThread(() -> {
+                    if (scannerChannel != null) {
+                        Map<String, Object> map = new HashMap<>();
+                        map.put("code", code);
+                        map.put("source", "sunmi_broadcast");
+                        scannerChannel.invokeMethod("onBarcodeScanned", map);
+                    }
+                });
+            }
+
+            @Override
+            public void onScanError(int errorCode, String message) {
+                runOnUiThread(() -> {
+                    if (scannerChannel != null) {
+                        Map<String, Object> map = new HashMap<>();
+                        map.put("errorCode", errorCode);
+                        map.put("message", message);
+                        scannerChannel.invokeMethod("onScanError", map);
+                    }
+                });
+            }
+        });
+
+        scannerChannel.setMethodCallHandler((call, result) -> {
+            switch (call.method) {
+                case "isSunmiDevice":
+                    result.success(SunmiScannerHelper.isSunmiDevice());
+                    break;
+                case "isScannerAvailable":
+                    result.success(sunmiScannerHelper.isConnected());
+                    break;
+                case "startScan":
+                    sunmiScannerHelper.startScan();
+                    result.success(true);
+                    break;
+                case "stopScan":
+                    sunmiScannerHelper.stopScan();
+                    result.success(true);
+                    break;
+                case "getScannerModel":
+                    result.success(sunmiScannerHelper.getScannerModel());
+                    break;
+                default:
+                    result.notImplemented();
+                    break;
+            }
+        });
+
         new MethodChannel(flutterEngine.getDartExecutor().getBinaryMessenger(), CHANNEL)
                 .setMethodCallHandler(
                         (call, result) -> {
@@ -474,4 +535,29 @@ public class MainActivity extends FlutterActivity {
             return false;
         }
     }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (sunmiScannerHelper != null) {
+            sunmiScannerHelper.registerReceiver();
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if (sunmiScannerHelper != null) {
+            sunmiScannerHelper.stopScan();
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (sunmiScannerHelper != null) {
+            sunmiScannerHelper.destroy();
+        }
+    }
 }
+

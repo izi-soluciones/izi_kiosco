@@ -1,4 +1,5 @@
 
+import 'dart:async';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -9,6 +10,7 @@ import 'package:izi_design_system/atoms/izi_card.dart';
 import 'package:izi_design_system/atoms/izi_typography.dart';
 import 'package:izi_design_system/molecules/izi_btn.dart';
 import 'package:izi_design_system/molecules/izi_btn_icon.dart';
+import 'package:izi_design_system/molecules/izi_snack_bar.dart';
 import 'package:izi_design_system/tokens/colors.dart';
 import 'package:izi_design_system/tokens/izi_icons.dart';
 import 'package:izi_design_system/tokens/izi_typography_config.dart';
@@ -22,6 +24,7 @@ import 'package:izi_kiosco/domain/blocs/page_utils/page_utils_bloc.dart';
 import 'package:izi_kiosco/domain/models/item.dart';
 import 'package:izi_kiosco/domain/models/payment_obj.dart';
 import 'package:izi_kiosco/domain/models/sale_link.dart';
+import 'package:izi_kiosco/domain/utils/sunmi_scanner_service.dart';
 import 'package:izi_kiosco/ui/modals/help_modal.dart';
 import 'package:izi_kiosco/ui/modals/warning_modal.dart';
 import 'package:izi_kiosco/ui/utils/custom_alerts.dart';
@@ -42,10 +45,32 @@ class _MakeOrderRetailScanState extends State<MakeOrderRetailScan> {
   late AuthState authState;
   FocusNode focusNodeKeyboard = FocusNode();
   String barCode = "";
+  StreamSubscription<String>? _scannerSubscription;
+
   @override
   void initState() {
     authState = context.read<AuthBloc>().state;
     super.initState();
+    _initScanner();
+  }
+
+  void _initScanner() {
+    _scannerSubscription =
+        SunmiScannerService.instance.onBarcodeScanned.listen((code) {
+      if (mounted) {
+        _processBarcode(code);
+      }
+    });
+    // Auto-start scanner engine when scan screen is active
+    SunmiScannerService.instance.startScan();
+  }
+
+  @override
+  void dispose() {
+    _scannerSubscription?.cancel();
+    SunmiScannerService.instance.stopScan();
+    focusNodeKeyboard.dispose();
+    super.dispose();
   }
 
   @override
@@ -402,7 +427,7 @@ class _MakeOrderRetailScanState extends State<MakeOrderRetailScan> {
   }
 
   _emitPurchase(){
-
+    SunmiScannerService.instance.stopScan();
     context.read<PageUtilsBloc>().showLoading(LocaleKeys.makeOrderRetail_scan_waitingPurchase.tr());
     context.read<PageUtilsBloc>().closeScreenActive();
     context.read<MakeOrderRetailBloc>().emitOrder(authState).then((value) {
@@ -425,6 +450,7 @@ class _MakeOrderRetailScanState extends State<MakeOrderRetailScan> {
             extra: paymentObj, pathParameters: {"id": value.id.toString()});
       } else {
         context.read<PageUtilsBloc>().initScreenActive(authState);
+        SunmiScannerService.instance.startScan();
         focusNodeKeyboard.requestFocus();
       }
     });
@@ -433,16 +459,16 @@ class _MakeOrderRetailScanState extends State<MakeOrderRetailScan> {
     return widget.state.itemsSelected.fold(0.0, (previousValue, element) => previousValue + element.taxPrice);
   }
 
-
   _verifyKeyboard(
     value,
   ) {
     if (value is KeyDownEvent) {
       if (value.logicalKey.keyLabel == 'Enter' ||
           value.logicalKey.keyId == 4294967309) {
-        _verifyBarCode(context, null);
-      }
-      if (value.character != null) {
+        final code = barCode;
+        barCode = "";
+        _processBarcode(code);
+      } else if (value.character != null) {
         RegExp regex = RegExp(r'^[a-zA-Z0-9 ]+$');
         if (regex.hasMatch(value.character!)) {
           barCode += value.character ?? "";
@@ -451,17 +477,37 @@ class _MakeOrderRetailScanState extends State<MakeOrderRetailScan> {
     }
   }
 
-  _verifyBarCode(BuildContext context, String? value) {
-    context.read<MakeOrderRetailBloc>().addItem(barCode: barCode);
-    focusNodeKeyboard.requestFocus();
-    barCode = "";
+  void _processBarcode(String code) {
+    final trimmed = code.trim();
+    if (trimmed.isEmpty) return;
+
+    final item = context.read<MakeOrderRetailBloc>().addItem(barCode: trimmed);
+    if (item != null) {
+      context.read<PageUtilsBloc>().updateScreenActive();
+      // Re-arm scanner so the customer can scan the next product immediately without pressing any button
+      SunmiScannerService.instance.startScan();
+    } else {
+      context.read<PageUtilsBloc>().showSnackBar(
+        snackBar: SnackBarInfo(
+          text: LocaleKeys.makeOrderRetail_scan_codeNotFound.tr(args: [trimmed]),
+          snackBarType: SnackBarType.warning,
+        ),
+      );
+      // Re-arm scanner to try again
+      SunmiScannerService.instance.startScan();
+    }
+    if (mounted) {
+      focusNodeKeyboard.requestFocus();
+    }
   }
+
   _back(){
     if(widget.state.itemsSelected.isNotEmpty){
       CustomAlerts.defaultAlert(
           context: context,
           child: WarningModal(
               onAccept: ()async{
+                SunmiScannerService.instance.stopScan();
                 GoRouter.of(context).goNamed(RoutesKeys.home);
                 context.read<PageUtilsBloc>().closeScreenActive();
               },
@@ -469,12 +515,14 @@ class _MakeOrderRetailScanState extends State<MakeOrderRetailScan> {
           )
       ).then((value) {
         if(mounted){
+          SunmiScannerService.instance.startScan();
           focusNodeKeyboard.requestFocus();
         }
       });
       return;
     }
 
+    SunmiScannerService.instance.stopScan();
     GoRouter.of(context).goNamed(RoutesKeys.home);
     context.read<PageUtilsBloc>().closeScreenActive();
   }
@@ -484,19 +532,24 @@ class _MakeOrderRetailScanState extends State<MakeOrderRetailScan> {
           context: context,
           child: WarningModal(
               onAccept: ()async{
+                SunmiScannerService.instance.resetDebounce();
                 context.read<MakeOrderRetailBloc>().resetItems();
+                SunmiScannerService.instance.startScan();
                 focusNodeKeyboard.requestFocus();
               },
               title: LocaleKeys.makeOrderRetail_scan_areYouSureInitAgain.tr()
           )
       ).then((value) {
         if(mounted){
+          SunmiScannerService.instance.startScan();
           focusNodeKeyboard.requestFocus();
         }
       });
       return;
     }
+    SunmiScannerService.instance.resetDebounce();
     context.read<MakeOrderRetailBloc>().resetItems();
+    SunmiScannerService.instance.startScan();
     focusNodeKeyboard.requestFocus();
   }
 }

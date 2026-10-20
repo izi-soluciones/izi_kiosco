@@ -548,7 +548,11 @@
       "finishPurchase": "Finish the purchase and pay",
       "finish": "Finish",
       "waitingScan": "Hold your products' barcodes up to the scanner",
-      "waitingPurchase": "Processing purchase"
+      "waitingPurchase": "Processing purchase",
+      "codeNotFound": "Product not found for barcode: {}",
+      "invalidCode": "Invalid or unreadable barcode",
+      "duplicateScan": "Duplicate scan ignored",
+      "scannerError": "Could not initialize barcode scanner"
     }
   },
   "helpModal": {

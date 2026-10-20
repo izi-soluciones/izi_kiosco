@@ -444,6 +444,10 @@ abstract class  LocaleKeys {
   static const makeOrderRetail_scan_finish = 'makeOrderRetail.scan.finish';
   static const makeOrderRetail_scan_waitingScan = 'makeOrderRetail.scan.waitingScan';
   static const makeOrderRetail_scan_waitingPurchase = 'makeOrderRetail.scan.waitingPurchase';
+  static const makeOrderRetail_scan_codeNotFound = 'makeOrderRetail.scan.codeNotFound';
+  static const makeOrderRetail_scan_invalidCode = 'makeOrderRetail.scan.invalidCode';
+  static const makeOrderRetail_scan_duplicateScan = 'makeOrderRetail.scan.duplicateScan';
+  static const makeOrderRetail_scan_scannerError = 'makeOrderRetail.scan.scannerError';
   static const makeOrderRetail_scan = 'makeOrderRetail.scan';
   static const makeOrderRetail = 'makeOrderRetail';
   static const helpModal_title = 'helpModal.title';

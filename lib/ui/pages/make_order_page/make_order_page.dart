@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -8,6 +9,7 @@ import 'package:izi_kiosco/app/values/locale_keys.g.dart';
 import 'package:izi_kiosco/app/values/routes_keys.dart';
 import 'package:izi_kiosco/domain/blocs/make_order/make_order_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/page_utils/page_utils_bloc.dart';
+import 'package:izi_kiosco/domain/utils/sunmi_scanner_service.dart';
 import 'package:izi_kiosco/ui/modals/warning_config_modal.dart';
 import 'package:izi_kiosco/ui/pages/make_order_page/views/make_order_confirm.dart';
 import 'package:izi_kiosco/ui/pages/make_order_page/views/make_order_detail.dart';
@@ -32,15 +34,32 @@ class _MakeOrderPageState extends State<MakeOrderPage> {
   late PageController pageController;
   FocusNode focusNodeKeyboard = FocusNode();
   String barCode = "";
+  StreamSubscription<String>? _scannerSubscription;
+
   @override
   void initState() {
     pageController= PageController(initialPage: widget.isRetail?1:0);
     FocusManager.instance.addListener(_recoverFocusKeyboard);
+    _initScanner();
     super.initState();
   }
+
+  void _initScanner() {
+    _scannerSubscription =
+        SunmiScannerService.instance.onBarcodeScanned.listen((code) {
+      if (mounted) {
+        _processBarcode(code);
+      }
+    });
+    SunmiScannerService.instance.startScan();
+  }
+
   @override
   void dispose() {
+    _scannerSubscription?.cancel();
+    SunmiScannerService.instance.stopScan();
     FocusManager.instance.removeListener(_recoverFocusKeyboard);
+    focusNodeKeyboard.dispose();
     super.dispose();
   }
   @override
@@ -130,9 +149,10 @@ class _MakeOrderPageState extends State<MakeOrderPage> {
     if (value is KeyDownEvent) {
       if (value.logicalKey.keyLabel == 'Enter' ||
           value.logicalKey.keyId == 4294967309) {
-        _verifyBarCode(context, null);
-      }
-      if (value.character != null) {
+        final code = barCode;
+        barCode = "";
+        _processBarcode(code);
+      } else if (value.character != null) {
         RegExp regex = RegExp(r'^[a-zA-Z0-9 ]+$');
         if (regex.hasMatch(value.character!)) {
           barCode += value.character ?? "";
@@ -141,14 +161,16 @@ class _MakeOrderPageState extends State<MakeOrderPage> {
     }
   }
 
-  _verifyBarCode(BuildContext context, String? value) {
-    if (barCode.isEmpty) return;
+  void _processBarcode(String code) {
+    final trimmed = code.trim();
+    if (trimmed.isEmpty) return;
+
     final state = context.read<MakeOrderBloc>().state;
     Item? foundItem;
     for (var cat in state.categories) {
       try {
         foundItem = cat.items.firstWhere((element) =>
-            element.codigoBarras?.toLowerCase() == barCode.toLowerCase());
+            element.codigoBarras?.trim().toLowerCase() == trimmed.toLowerCase());
         break;
       } catch (e) {}
     }
@@ -157,9 +179,22 @@ class _MakeOrderPageState extends State<MakeOrderPage> {
       var itemAdd = foundItem.copyWith();
       itemAdd.cantidad = 1;
       context.read<MakeOrderBloc>().addItem(item: itemAdd);
+      context.read<PageUtilsBloc>().updateScreenActive();
+      // Re-arm scanner so the customer can scan the next product
+      SunmiScannerService.instance.startScan();
+    } else {
+      context.read<PageUtilsBloc>().showSnackBar(
+        snackBar: SnackBarInfo(
+          text: LocaleKeys.makeOrderRetail_scan_codeNotFound.tr(args: [trimmed]),
+          snackBarType: SnackBarType.warning,
+        ),
+      );
+      // Re-arm scanner to try again
+      SunmiScannerService.instance.startScan();
     }
-    focusNodeKeyboard.requestFocus();
-    barCode = "";
+    if (mounted) {
+      focusNodeKeyboard.requestFocus();
+    }
   }
 
   // IziBtn hace unfocus() al tocarse y el foco sube al scope de la ruta, por encima
