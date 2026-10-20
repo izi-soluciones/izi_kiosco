@@ -1215,7 +1215,7 @@ class PaymentBloc extends Cubit<PaymentState> {
   }
 
   cancelQR(AuthState authState){
-    if (authState.currentContribuyente?.tieneFacturacion == true) {
+    if (authState.currentContribuyente?.tieneModulo(Modulo.facturacion) == true) {
       emit(state.copyWith(step: 2, qrLoading: false, qrCharge: () => null));
     } else {
       emit(state.copyWith(step: 1, qrLoading: false, qrCharge: () => null));

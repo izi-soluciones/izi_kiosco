@@ -17,8 +17,11 @@ void main() {
     });
 
     test('con facturación y sin actividad económica da errorActivity', () {
-      final contribuyente =
-          Contribuyente.fromJson({"habilitadoFacturacion": true});
+      final contribuyente = Contribuyente.fromJson({
+        "modulos": {
+          "facturacion": {"enabled": true}
+        }
+      });
       final status = strategy.verifyParameters(
           contribuyente, null, dummyDevice, null);
 
@@ -26,8 +29,11 @@ void main() {
     });
 
     test('sin facturación y sin actividad económica pasa la validación', () {
-      final contribuyente =
-          Contribuyente.fromJson({"habilitadoFacturacion": false});
+      final contribuyente = Contribuyente.fromJson({
+        "modulos": {
+          "facturacion": {"enabled": false}
+        }
+      });
       final status = strategy.verifyParameters(
           contribuyente, null, dummyDevice, null);
 
@@ -35,8 +41,11 @@ void main() {
     });
 
     test('con facturación y con actividad económica pasa la validación', () {
-      final contribuyente =
-          Contribuyente.fromJson({"habilitadoFacturacion": true});
+      final contribuyente = Contribuyente.fromJson({
+        "modulos": {
+          "facturacion": {"enabled": true}
+        }
+      });
       final status = strategy.verifyParameters(
           contribuyente, null, dummyDevice, '620000');
 

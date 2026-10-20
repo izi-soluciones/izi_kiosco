@@ -1,7 +1,6 @@
 
 
 import 'package:izi_kiosco/domain/models/contribuyente.dart';
-import 'package:izi_kiosco/domain/models/modulos.dart';
 import 'package:izi_kiosco/domain/strategies/taxes/impl/taxes_strategy_bo.dart';
 import 'package:izi_kiosco/domain/strategies/taxes/impl/taxes_strategy_co.dart';
 import 'package:izi_kiosco/domain/strategies/taxes/impl/taxes_strategy_default.dart';
