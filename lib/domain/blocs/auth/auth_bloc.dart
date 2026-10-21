@@ -152,7 +152,25 @@ class AuthBloc extends Cubit<AuthState> {
             if (matchedValue != null) matchedValue = matchedValue.trim();
           }
           if (matchedValue != null && matchedValue.isNotEmpty) {
-            camposExtraDisp[i] = c.copyWith(valor: matchedValue);
+            bool isValid = true;
+            if (c.tipoCampo == 'number') {
+              if (num.tryParse(matchedValue) == null) {
+                isValid = false;
+              }
+            } else if (c.tipoCampo == 'select') {
+              final options = c.values ?? [];
+              final found = options.firstWhereOrNull(
+                (v) => v.trim().toLowerCase() == matchedValue!.toLowerCase(),
+              );
+              if (found != null) {
+                matchedValue = found;
+              } else {
+                isValid = false;
+              }
+            }
+            if (isValid) {
+              camposExtraDisp[i] = c.copyWith(valor: () => matchedValue);
+            }
           }
         }
 

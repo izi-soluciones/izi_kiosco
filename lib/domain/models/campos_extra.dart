@@ -62,18 +62,23 @@ class CamposExtra {
     );
   }
 
-  CamposExtra copyWith({String? valor}) => CamposExtra(
+  CamposExtra copyWith({
+    String? Function()? valor,
+    List<String>? values,
+    bool? isObligatorio,
+  }) =>
+      CamposExtra(
         id: id,
         contribuyente: contribuyente,
         nombre: nombre,
         tipoCampo: tipoCampo,
         visibleFactura: visibleFactura,
         visibleReporte: visibleReporte,
-        valor: valor ?? this.valor,
-        isObligatorio: isObligatorio,
+        valor: valor != null ? valor() : this.valor,
+        isObligatorio: isObligatorio ?? this.isObligatorio,
         creado: creado,
         tipoModulo: tipoModulo,
-        values: values,
+        values: values ?? this.values,
       );
 
   Map<String, dynamic> toJson() => {

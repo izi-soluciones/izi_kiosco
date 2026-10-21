@@ -151,8 +151,9 @@ class _MakeOrderConfirmState extends State<MakeOrderConfirm> {
                                             CrossAxisAlignment.stretch,
                                         children: [
                                           _listItems(widget.state, ru),
-                                          if (widget.state.camposExtra
-                                              .isNotEmpty) ...[
+                                          if (authState.currentDevice?.config.isRetail != true &&
+                                              widget.state.camposExtra
+                                                  .isNotEmpty) ...[
                                             const SizedBox(height: 16),
                                             _camposExtraSection(
                                                 widget.state, ru),
@@ -546,15 +547,19 @@ class _MakeOrderConfirmState extends State<MakeOrderConfirm> {
   }
 
   _emitOrder(BuildContext context) async {
-    final validationError = context.read<MakeOrderBloc>().validateCamposExtra();
-    if (validationError != null) {
-      context.read<PageUtilsBloc>().showSnackBar(
-            snackBar: SnackBarInfo(
-              text: validationError,
-              snackBarType: SnackBarType.error,
-            ),
-          );
-      return;
+    final isRetail = authState.currentDevice?.config.isRetail == true;
+    if (!isRetail) {
+      final validationError =
+          context.read<MakeOrderBloc>().validateCamposExtra();
+      if (validationError != null) {
+        context.read<PageUtilsBloc>().showSnackBar(
+              snackBar: SnackBarInfo(
+                text: validationError,
+                snackBarType: SnackBarType.error,
+              ),
+            );
+        return;
+      }
     }
 
     setState(() {

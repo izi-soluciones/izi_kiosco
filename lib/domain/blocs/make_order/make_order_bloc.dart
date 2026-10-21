@@ -162,9 +162,11 @@ class MakeOrderBloc extends Cubit<MakeOrderState> {
       }
 
       if(!isClosed){
-        List<CamposExtra> camposExtra = authState.camposExtraDispositivos
-            .map((e) => e.copyWith())
-            .toList();
+        List<CamposExtra> camposExtra = authState.currentDevice?.config.isRetail == true
+            ? const []
+            : authState.camposExtraDispositivos
+                .map((e) => e.copyWith())
+                .toList();
 
         emit(state.copyWith(
             status: MakeOrderStatus.successGet,
@@ -364,9 +366,6 @@ class MakeOrderBloc extends Cubit<MakeOrderState> {
           if (nombreMesaVal == null || nombreMesaVal.isEmpty) {
             nombreMesaVal = c.valor!.trim();
           }
-          if (mesaVal.isEmpty) {
-            mesaVal = c.valor!.trim();
-          }
         }
       }
 
@@ -428,14 +427,15 @@ class MakeOrderBloc extends Cubit<MakeOrderState> {
   void updateCampoExtra(int id, String? value) {
     final updated = state.camposExtra.map((c) {
       if (c.id == id) {
-        return c.copyWith(valor: value);
+        return c.copyWith(valor: () => value);
       }
       return c;
     }).toList();
     emit(state.copyWith(camposExtra: updated));
   }
 
-  String? validateCamposExtra() {
+  String? validateCamposExtra({bool isRetail = false}) {
+    if (isRetail) return null;
     for (var c in state.camposExtra) {
       if (c.tipoCampo == 'fijo') continue;
       final val = c.valor?.trim() ?? "";
@@ -457,7 +457,8 @@ class MakeOrderBloc extends Cubit<MakeOrderState> {
     return null;
   }
 
-  bool hasMissingRequiredCamposExtra() {
+  bool hasMissingRequiredCamposExtra({bool isRetail = false}) {
+    if (isRetail) return false;
     for (var c in state.camposExtra) {
       if (c.tipoCampo == 'fijo') continue;
       final val = c.valor?.trim() ?? "";

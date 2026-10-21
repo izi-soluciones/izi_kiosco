@@ -105,5 +105,29 @@ void main() {
       expect(contrib.camposExtra?.first.nombre, "Número de mesa");
       expect(contrib.camposExtra?.first.tipoModulo, "dispositivos");
     });
+
+    test('copyWith should allow setting a new value and clearing to null', () {
+      final campo = CamposExtra(
+        id: 5,
+        contribuyente: 1,
+        nombre: "Mesa",
+        tipoCampo: "text",
+        visibleFactura: false,
+        visibleReporte: false,
+        isObligatorio: false,
+        creado: DateTime.now(),
+        tipoModulo: "dispositivos",
+        valor: "Mesa 1",
+      );
+
+      final sameVal = campo.copyWith();
+      expect(sameVal.valor, "Mesa 1");
+
+      final changedVal = campo.copyWith(valor: () => "Mesa 2");
+      expect(changedVal.valor, "Mesa 2");
+
+      final clearedVal = campo.copyWith(valor: () => null);
+      expect(clearedVal.valor, null);
+    });
   });
 }
