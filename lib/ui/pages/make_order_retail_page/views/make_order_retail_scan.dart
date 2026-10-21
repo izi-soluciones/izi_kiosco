@@ -67,13 +67,13 @@ class _MakeOrderRetailScanState extends State<MakeOrderRetailScan> {
       }
     });
     // Auto-start scanner engine when scan screen is active
-    SunmiScannerService.instance.startScan();
+    SunmiScannerService.instance.startScan('MakeOrderRetailScan');
   }
 
   @override
   void dispose() {
     _scannerSubscription?.cancel();
-    SunmiScannerService.instance.stopScan();
+    SunmiScannerService.instance.stopScan(clientId: 'MakeOrderRetailScan');
     focusNodeKeyboard.dispose();
     super.dispose();
   }
@@ -539,14 +539,14 @@ class _MakeOrderRetailScanState extends State<MakeOrderRetailScan> {
               onAccept: ()async{
                 SunmiScannerService.instance.resetDebounce();
                 context.read<MakeOrderRetailBloc>().resetItems();
-                SunmiScannerService.instance.startScan();
+                SunmiScannerService.instance.rearmScan();
                 focusNodeKeyboard.requestFocus();
               },
               title: LocaleKeys.makeOrderRetail_scan_areYouSureInitAgain.tr()
           )
       ).then((value) {
         if(mounted){
-          SunmiScannerService.instance.startScan();
+          SunmiScannerService.instance.rearmScan();
           focusNodeKeyboard.requestFocus();
         }
       });
@@ -554,7 +554,7 @@ class _MakeOrderRetailScanState extends State<MakeOrderRetailScan> {
     }
     SunmiScannerService.instance.resetDebounce();
     context.read<MakeOrderRetailBloc>().resetItems();
-    SunmiScannerService.instance.startScan();
+    SunmiScannerService.instance.rearmScan();
     focusNodeKeyboard.requestFocus();
   }
 }

@@ -49,13 +49,13 @@ class _MakeOrderRetailInitState extends State<MakeOrderRetailInit> {
       }
     });
     // Auto-start scanner engine when retail init view is active
-    SunmiScannerService.instance.startScan();
+    SunmiScannerService.instance.startScan('MakeOrderRetailInit');
   }
 
   @override
   void dispose() {
     _scannerSubscription?.cancel();
-    SunmiScannerService.instance.stopScan();
+    SunmiScannerService.instance.stopScan(clientId: 'MakeOrderRetailInit');
     focusNodeKeyboard.dispose();
     super.dispose();
   }

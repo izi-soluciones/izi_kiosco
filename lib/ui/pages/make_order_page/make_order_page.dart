@@ -51,13 +51,13 @@ class _MakeOrderPageState extends State<MakeOrderPage> {
         _processBarcode(code);
       }
     });
-    SunmiScannerService.instance.startScan();
+    SunmiScannerService.instance.startScan('MakeOrderPage');
   }
 
   @override
   void dispose() {
     _scannerSubscription?.cancel();
-    SunmiScannerService.instance.stopScan();
+    SunmiScannerService.instance.stopScan(clientId: 'MakeOrderPage');
     FocusManager.instance.removeListener(_recoverFocusKeyboard);
     focusNodeKeyboard.dispose();
     super.dispose();
@@ -181,7 +181,7 @@ class _MakeOrderPageState extends State<MakeOrderPage> {
       context.read<MakeOrderBloc>().addItem(item: itemAdd);
       context.read<PageUtilsBloc>().updateScreenActive();
       // Re-arm scanner so the customer can scan the next product
-      SunmiScannerService.instance.startScan();
+      SunmiScannerService.instance.rearmScan();
     } else {
       context.read<PageUtilsBloc>().showSnackBar(
         snackBar: SnackBarInfo(
@@ -190,7 +190,7 @@ class _MakeOrderPageState extends State<MakeOrderPage> {
         ),
       );
       // Re-arm scanner to try again
-      SunmiScannerService.instance.startScan();
+      SunmiScannerService.instance.rearmScan();
     }
     if (mounted) {
       focusNodeKeyboard.requestFocus();

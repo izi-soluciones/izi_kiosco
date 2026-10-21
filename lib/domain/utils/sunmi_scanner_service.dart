@@ -32,12 +32,15 @@ class SunmiScannerService {
   /// scanning of duplicate retail items.
   Duration debounceDuration = const Duration(milliseconds: 400);
 
-  /// Active client reference counter for managing the scanner lifecycle across
-  /// concurrent or transitioning views (e.g. PageView children).
-  int _activeClients = 0;
+  /// Active clients registered for the scanner lifecycle (e.g. PageView children).
+  /// Uses a Set of client tokens/identifiers to make client tracking idempotent
+  /// and completely immune to counter drift or accidental multiple calls.
+  final Set<String> _activeClients = <String>{};
 
   @visibleForTesting
-  int get activeClients => _activeClients;
+  int get activeClients => _activeClients.length;
+
+  Set<String> get activeClientIds => Set.unmodifiable(_activeClients);
 
   bool _initialized = false;
   bool? _isSunmiCached;
@@ -56,7 +59,7 @@ class SunmiScannerService {
   void reinitForTesting() {
     _initialized = false;
     _isSunmiCached = null;
-    _activeClients = 0;
+    _activeClients.clear();
     resetDebounce();
     _initChannel();
   }
@@ -91,7 +94,7 @@ class SunmiScannerService {
                 name: 'SunmiScannerService');
             break;
           case 'onResumeScanner':
-            if (_activeClients > 0) {
+            if (_activeClients.isNotEmpty) {
               log('App resumed with active scanner clients ($_activeClients). Re-arming scanner.',
                   name: 'SunmiScannerService');
               rearmScan();
@@ -154,10 +157,10 @@ class SunmiScannerService {
   }
 
   /// Registers a view as an active scanner client and triggers the scanner engine.
-  /// Increments the active client reference count.
+  /// Uses [clientId] to make client registration idempotent and prevent duplicate counts.
   /// Safe to call on any platform; does nothing if not Sunmi Android.
-  Future<bool> startScan() async {
-    _activeClients++;
+  Future<bool> startScan([String clientId = 'default']) async {
+    _activeClients.add(clientId);
     if (!_isAndroid) return false;
     try {
       final result = await _channel.invokeMethod<bool>('startScan');
@@ -169,7 +172,7 @@ class SunmiScannerService {
   }
 
   /// Re-arms the scanner for subsequent items within an already active view
-  /// without changing the active client reference count.
+  /// without changing active client registrations.
   Future<bool> rearmScan() async {
     if (!_isAndroid) return false;
     try {
@@ -181,21 +184,27 @@ class SunmiScannerService {
     }
   }
 
-  /// Releases a scanner client. Decrements the active client count.
-  /// The native hardware scanner is ONLY turned off when no active clients remain
-  /// (_activeClients == 0) or if [force] is true. This prevents transition races
-  /// (e.g. PageView dispose running after new page initState).
+  /// Releases a scanner client. The native hardware scanner is ONLY turned off
+  /// when no active clients remain (_activeClients.isEmpty) or if [force] is true.
+  /// If [clientId] is supplied, removes only that client.
   /// Safe to call on any platform; does nothing if not Sunmi Android.
-  Future<bool> stopScan({bool force = false}) async {
-    if (_activeClients > 0) {
-      _activeClients--;
+  Future<bool> stopScan({String? clientId, bool force = false}) async {
+    if (force) {
+      _activeClients.clear();
+    } else {
+      if (clientId != null) {
+        _activeClients.remove(clientId);
+      } else if (_activeClients.isNotEmpty) {
+        _activeClients.remove(_activeClients.first);
+      }
     }
-    if (_activeClients > 0 && !force) {
-      log('stopScan deferred: $_activeClients active client(s) still listening',
+
+    if (_activeClients.isNotEmpty && !force) {
+      log('stopScan deferred: ${_activeClients.length} active client(s) still listening ($_activeClients)',
           name: 'SunmiScannerService');
       return false;
     }
-    _activeClients = 0;
+    _activeClients.clear();
     if (!_isAndroid) return false;
     try {
       final result = await _channel.invokeMethod<bool>('stopScan');

@@ -114,7 +114,7 @@ void main() {
       await sub.cancel();
     });
 
-    test('Reference counting manages active scanner views without race conditions', () async {
+    test('Token-based client tracking manages active scanner views idempotently', () async {
       final List<String> channelCalls = [];
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockMethodCallHandler(channel, (MethodCall call) async {
@@ -125,18 +125,22 @@ void main() {
       expect(SunmiScannerService.instance.activeClients, equals(0));
 
       // First view mounts (e.g. MakeOrderRetailInit)
-      await SunmiScannerService.instance.startScan();
+      await SunmiScannerService.instance.startScan('MakeOrderRetailInit');
       expect(SunmiScannerService.instance.activeClients, equals(1));
       expect(channelCalls.last, equals('startScan'));
 
+      // Multiple startScan calls from the same client are idempotent
+      await SunmiScannerService.instance.startScan('MakeOrderRetailInit');
+      expect(SunmiScannerService.instance.activeClients, equals(1));
+
       // Second view mounts in PageView (e.g. MakeOrderRetailScan)
-      await SunmiScannerService.instance.startScan();
+      await SunmiScannerService.instance.startScan('MakeOrderRetailScan');
       expect(SunmiScannerService.instance.activeClients, equals(2));
 
       // First view disposes after transition
       channelCalls.clear();
-      final stopped1 = await SunmiScannerService.instance.stopScan();
-      expect(stopped1, isFalse); // Deferred stop because 1 client remains
+      final stopped1 = await SunmiScannerService.instance.stopScan(clientId: 'MakeOrderRetailInit');
+      expect(stopped1, isFalse); // Deferred stop because MakeOrderRetailScan remains
       expect(SunmiScannerService.instance.activeClients, equals(1));
       expect(channelCalls, isEmpty); // Native stop was NOT invoked
 
@@ -147,7 +151,7 @@ void main() {
 
       // Second view disposes on exit
       channelCalls.clear();
-      final stopped2 = await SunmiScannerService.instance.stopScan();
+      final stopped2 = await SunmiScannerService.instance.stopScan(clientId: 'MakeOrderRetailScan');
       expect(stopped2, isTrue);
       expect(SunmiScannerService.instance.activeClients, equals(0));
       expect(channelCalls.last, equals('stopScan'));
@@ -161,8 +165,8 @@ void main() {
         return true;
       });
 
-      await SunmiScannerService.instance.startScan();
-      await SunmiScannerService.instance.startScan();
+      await SunmiScannerService.instance.startScan('clientA');
+      await SunmiScannerService.instance.startScan('clientB');
       expect(SunmiScannerService.instance.activeClients, equals(2));
 
       final forcedStop = await SunmiScannerService.instance.stopScan(force: true);
