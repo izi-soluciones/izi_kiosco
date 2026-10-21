@@ -537,6 +537,15 @@ static List<IziPrintItem> invoice80Co(
           size: IziPrintSize.sm,
           align: IziPrintAlign.center,
           bold: true));
+      if (invoice.customFactura["moneda"] is Map &&
+          invoice.customFactura["exRate"] != 1) {
+        items.add(IziPrintText(
+            text:
+                "MONEDA (TIPO DE CAMBIO): ${invoice.customFactura["moneda"]["simbolo"]} (${invoice.customFactura["exRate"]})",
+            size: IziPrintSize.sm,
+            align: IziPrintAlign.center,
+            bold: true));
+      }
 
       if (listCE.isNotEmpty) {
         items.add(IziPrintSeparator());

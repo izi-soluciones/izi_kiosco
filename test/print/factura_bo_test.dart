@@ -111,4 +111,18 @@ void main() {
 
     expect(textos, contains('IMPORTE Bs: 1252.8'));
   });
+
+  test('factura en dolares: linea MONEDA (TIPO DE CAMBIO)', () async {
+    final textos = _textos(await ticket(facturaDolares()));
+
+    expect(textos, contains('MONEDA (TIPO DE CAMBIO): USD (6.96)'));
+  });
+
+  test('factura en bolivianos: sin linea MONEDA', () async {
+    final json = facturaDolares();
+    (json['customFactura'] as Map)['exRate'] = 1;
+    final textos = _textos(await ticket(json));
+
+    expect(textos.where((t) => t.startsWith('MONEDA')), isEmpty);
+  });
 }
