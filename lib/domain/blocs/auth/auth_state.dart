@@ -19,6 +19,7 @@ class AuthState extends Equatable{
 
   final Catalog? catalog;
   final TaxesStrategy taxesStrategy;
+  final List<CamposExtra> camposExtraDispositivos;
 
   const AuthState({
     required this.currencies,
@@ -32,7 +33,8 @@ class AuthState extends Equatable{
     this.currentDevice,
     this.catalog,
     required this.video,
-    required this.taxesStrategy
+    required this.taxesStrategy,
+    this.camposExtraDispositivos = const [],
   });
   factory AuthState.init()=>
       AuthState(
@@ -41,7 +43,8 @@ class AuthState extends Equatable{
         terminalInit: false,
         currencies: const [],
         video: null,
-        taxesStrategy: TaxesStrategyDefault()
+        taxesStrategy: TaxesStrategyDefault(),
+        camposExtraDispositivos: const []
       );
 
   AuthState copyWith({
@@ -58,7 +61,8 @@ class AuthState extends Equatable{
     Device? currentDevice,
     File? video,
     Catalog? catalog,
-    TaxesStrategy? taxesStrategy
+    TaxesStrategy? taxesStrategy,
+    List<CamposExtra>? camposExtraDispositivos,
   }){
     return AuthState(
         currentContribuyente: currentContribuyente??this.currentContribuyente,
@@ -72,7 +76,8 @@ class AuthState extends Equatable{
       currentDevice: currentDevice ?? this.currentDevice,
       video: video ?? this.video,
       catalog: catalog ?? this.catalog,
-      taxesStrategy: taxesStrategy ?? this.taxesStrategy
+      taxesStrategy: taxesStrategy ?? this.taxesStrategy,
+      camposExtraDispositivos: camposExtraDispositivos ?? this.camposExtraDispositivos
     );
   }
   AuthState resetState(){
@@ -88,10 +93,11 @@ class AuthState extends Equatable{
       currentDevice: null,
       video: null,
       catalog: null,
-      taxesStrategy: TaxesStrategyDefault()
+      taxesStrategy: TaxesStrategyDefault(),
+      camposExtraDispositivos: const []
     );
   }
   @override
-  List<Object?> get props => [video,currentDevice,catalog,terminalInit,currentContribuyente,status,currentSucursal,invoiceSubscription,currentPos,loadingContribuyente,currencies];
+  List<Object?> get props => [video,currentDevice,catalog,terminalInit,currentContribuyente,status,currentSucursal,invoiceSubscription,currentPos,loadingContribuyente,currencies,camposExtraDispositivos];
 
 }

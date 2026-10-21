@@ -7,6 +7,7 @@ import 'package:izi_kiosco/data/local/local_storage_first_configuration.dart';
 import 'package:izi_kiosco/data/utils/business_utils.dart';
 import 'package:izi_kiosco/data/utils/token_utils.dart';
 import 'package:izi_kiosco/data/utils/user_utils.dart';
+import 'package:izi_kiosco/domain/models/campos_extra.dart';
 import 'package:izi_kiosco/domain/models/catalog.dart';
 import 'package:izi_kiosco/domain/models/contribuyente.dart';
 import 'package:izi_kiosco/domain/models/currency.dart';
@@ -22,7 +23,6 @@ import 'package:izi_kiosco/domain/strategies/taxes/impl/taxes_strategy_default.d
 import 'package:izi_kiosco/domain/strategies/taxes/taxes_strategy.dart';
 import 'package:izi_kiosco/domain/strategies/taxes/taxes_strategy_factory.dart';
 import 'package:izi_kiosco/domain/utils/download_utils.dart';
-import 'package:izi_kiosco/domain/utils/print_utils.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
 
 part 'auth_state.dart';
@@ -124,6 +124,37 @@ class AuthBloc extends Cubit<AuthState> {
         List<Currency> currencies = await _businessRepository.getCurrencies(
             contribuyenteId: contribuyente.id ?? 0);
 
+        List<CamposExtra> camposExtraDisp = (contribuyente.camposExtra ?? [])
+            .where((c) => c.tipoModulo == 'dispositivos')
+            .map((c) => c.copyWith())
+            .toList();
+
+        final queryParams = Uri.base.queryParameters;
+        for (int i = 0; i < camposExtraDisp.length; i++) {
+          var c = camposExtraDisp[i];
+          if (c.tipoCampo == 'fijo') continue;
+          String fieldNameClean = c.nombre.trim().toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
+          String? matchedValue;
+          for (var entry in queryParams.entries) {
+            String keyClean = entry.key.trim().toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
+            if (keyClean == fieldNameClean && entry.value.trim().isNotEmpty) {
+              matchedValue = entry.value.trim();
+              break;
+            }
+          }
+          if (matchedValue == null && (fieldNameClean.contains('mesa') || fieldNameClean.contains('table'))) {
+            matchedValue = queryParams['mesa'] ??
+                queryParams['table'] ??
+                queryParams['numero_de_mesa'] ??
+                queryParams['numeroMesa'] ??
+                queryParams['nro_mesa'] ??
+                queryParams['num_mesa'];
+            if (matchedValue != null) matchedValue = matchedValue.trim();
+          }
+          if (matchedValue != null && matchedValue.isNotEmpty) {
+            camposExtraDisp[i] = c.copyWith(valor: matchedValue);
+          }
+        }
 
         emit(state.copyWith(
             status: AuthStatus.okAuth,
@@ -133,7 +164,8 @@ class AuthBloc extends Cubit<AuthState> {
             catalog: catalog,
             currentSucursal: sucursal,
             video: video,
-            currentContribuyente: contribuyente));
+            currentContribuyente: contribuyente,
+            camposExtraDispositivos: camposExtraDisp));
         await LocalStorageFirstConfiguration.saveFirstConfiguration(true);
       
     } catch (error) {

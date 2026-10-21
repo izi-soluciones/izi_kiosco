@@ -6,6 +6,7 @@ import 'package:izi_kiosco/app/values/app_constants.dart';
 import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
 import 'package:izi_kiosco/domain/dto/new_order_dto.dart';
 import 'package:izi_kiosco/domain/dto/new_sale_link_dto.dart';
+import 'package:izi_kiosco/domain/models/campos_extra.dart';
 import 'package:izi_kiosco/domain/models/cash_register.dart';
 import 'package:izi_kiosco/domain/models/catalog.dart';
 import 'package:izi_kiosco/domain/models/category_order.dart';
@@ -161,6 +162,10 @@ class MakeOrderBloc extends Cubit<MakeOrderState> {
       }
 
       if(!isClosed){
+        List<CamposExtra> camposExtra = authState.camposExtraDispositivos
+            .map((e) => e.copyWith())
+            .toList();
+
         emit(state.copyWith(
             status: MakeOrderStatus.successGet,
             categories: list,
@@ -168,7 +173,8 @@ class MakeOrderBloc extends Cubit<MakeOrderState> {
             takeAway: takeAway,
             itemsFeatured: itemsFeatured,
             cashRegisters: cashRegisters,
-            currentCurrency: currentCurrency));
+            currentCurrency: currentCurrency,
+            camposExtra: camposExtra));
       }
     } catch (e) {
 
@@ -347,19 +353,43 @@ class MakeOrderBloc extends Cubit<MakeOrderState> {
       for(var c in state.itemsSelected){
         items.addAll(c.items);
       }
+      String mesaVal = table?.id ?? "";
+      String? nombreMesaVal = table?.nombre;
+
+      for (var c in state.camposExtra) {
+        final name = c.nombre.trim().toLowerCase();
+        if ((name.contains('mesa') || name.contains('table')) &&
+            c.valor != null &&
+            c.valor!.trim().isNotEmpty) {
+          if (nombreMesaVal == null || nombreMesaVal.isEmpty) {
+            nombreMesaVal = c.valor!.trim();
+          }
+          if (mesaVal.isEmpty) {
+            mesaVal = c.valor!.trim();
+          }
+        }
+      }
+
+      NewOrderDtoCustom custom = NewOrderDtoCustom(
+        deviceId: authState.currentDevice?.id,
+        nombreMesa: nombreMesaVal,
+        camposExtras: state.camposExtra,
+      );
+
       NewOrderDto newOrderDto = NewOrderDto(
           caja: cashRegister?.id,
           cantidadComensales: state.numberDiners,
-          nombreMesa: table?.nombre,
+          nombreMesa: nombreMesaVal,
           descuentos: state.discountAmount,
           emisor: authState.currentContribuyente?.nit??"",
           fecha: DateTime.now(),
           listaItems: items,
-          mesa: table?.id??"",
+          mesa: mesaVal,
           anulada: true,
           deviceId: authState.currentDevice?.id??0,
           paraLlevar: state.takeAway,
           tipoComanda: AppConstants.restaurantEnv,
+          custom: custom,
           sucursal: authState.currentSucursal?.id??0);
       Comanda comanda;
       if(state.order?.id!=null){
@@ -393,6 +423,49 @@ class MakeOrderBloc extends Cubit<MakeOrderState> {
       emit(state.copyWith(status: MakeOrderStatus.successGet));
       return null;
     }
+  }
+
+  void updateCampoExtra(int id, String? value) {
+    final updated = state.camposExtra.map((c) {
+      if (c.id == id) {
+        return c.copyWith(valor: value);
+      }
+      return c;
+    }).toList();
+    emit(state.copyWith(camposExtra: updated));
+  }
+
+  String? validateCamposExtra() {
+    for (var c in state.camposExtra) {
+      if (c.tipoCampo == 'fijo') continue;
+      final val = c.valor?.trim() ?? "";
+      if (c.isObligatorio && val.isEmpty) {
+        return 'El campo "${c.nombre}" es obligatorio';
+      }
+      if (val.isNotEmpty && c.tipoCampo == 'number') {
+        final numVal = num.tryParse(val);
+        if (numVal == null) {
+          return 'El campo "${c.nombre}" debe ser un número válido';
+        }
+      }
+      if (val.isNotEmpty && c.tipoCampo == 'select' && c.values != null && c.values!.isNotEmpty) {
+        if (!c.values!.contains(val)) {
+          return 'Seleccione una opción válida para "${c.nombre}"';
+        }
+      }
+    }
+    return null;
+  }
+
+  bool hasMissingRequiredCamposExtra() {
+    for (var c in state.camposExtra) {
+      if (c.tipoCampo == 'fijo') continue;
+      final val = c.valor?.trim() ?? "";
+      if (c.isObligatorio && val.isEmpty) {
+        return true;
+      }
+    }
+    return false;
   }
 
   resetOrder(){
