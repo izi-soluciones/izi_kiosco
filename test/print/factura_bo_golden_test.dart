@@ -41,6 +41,7 @@ void main() {
     'factura-bo-por-fuera-compacta': ('facturaPorFuera', true),
     'factura-bo-por-fuera-dolares': ('facturaPorFueraDolares', false),
     'prefactura-bo-por-fuera': ('prefacturaPorFuera', false),
+    'factura-bo-por-fuera-ice': ('facturaIcePorFuera', false),
   };
 
   for (final caso in casos.entries) {
@@ -83,6 +84,18 @@ void main() {
       expect(await etiquetasDelPie(de(30)), ['SUBTOTAL', 'TOTAL PRECIO NETO', 'IVA', 'MONTO A PAGAR']);
       expect(await etiquetasDelPie(de(6, ice: true)),
           ['SUBTOTAL', 'TOTAL ICE PORCENTUAL', 'TOTAL ICE ESPECÍFICO', 'TOTAL PRECIO NETO', 'DESCUENTO', 'IVA', 'MONTO A PAGAR']);
+    });
+
+    test('la factura ICE lleva su ICE en el subtotal de la línea y en el del pie, como el XML; la línea sin ICE queda en su neto', () async {
+      // Los montos del ejemplo del anexo v0.1: línea 47,58 + 11,13 + 0,48 = 59,19 y pie 162,60 + 33,39 + 1,63 = 197,62.
+      final json = copia('facturaPorFuera')..['tipoFactura'] = 6;
+      (json['listaItems'] as List).first.addAll(<String, dynamic>{'subTotalNeto': 47.58, 'montoIceEspecifico': 11.13, 'montoIcePorcentual': 0.48});
+      (json['customFactura']['totalesPorFuera'] as Map)
+          .addAll(<String, dynamic>{'subTotalNeto': 162.6, 'montoIceEspecifico': 33.39, 'montoIcePorcentual': 1.63});
+      final items = await ticket(Invoice.fromJson(json));
+      final subtotales = items.whereType<IziPrintRow>().where((r) => r.values.length == 5).map((r) => r.values[4].text).skip(1).toList();
+      expect(subtotales, ['59.19', '22.34']);
+      expect((await pie(json)).take(3), ['SUBTOTAL 197.62', 'TOTAL ICE PORCENTUAL 1.63', 'TOTAL ICE ESPECÍFICO 33.39']);
     });
 
     test('el recibo sin facturación y la factura vuelta al incluido con los totales viejos siguen con el pie de siempre', () async {

@@ -20,7 +20,8 @@
       "facturas": {
         "facturaPorFuera": "compra y venta en bolivianos, modo final, 5,25 de descuento adicional y 10 de gift card",
         "facturaPorFueraDolares": "compra y venta en dólares a 6,96",
-        "prefacturaPorFuera": "prefactura en modo neto"
+        "prefacturaPorFuera": "prefactura en modo neto",
+        "facturaIcePorFuera": "alcanzada por el ICE (6) en bolivianos, modo final: una cerveza con ICE y descuento de línea y un vaso sin ICE, con 5,25 de descuento adicional (T-112, capturada el 2026-10-21)"
       }
     }
   },
@@ -7116,5 +7117,772 @@
     "actividadEconomicaCod": null,
     "qr": null,
     "codigoMetodoPago": 1
+  },
+  "facturaIcePorFuera": {
+    "trx": null,
+    "isIzi": 1,
+    "uuid": "4549b88d-cd47-420d-b200-db3038e7d867",
+    "numero": 1,
+    "tipoFactura": 6,
+    "isApi": 0,
+    "isFromKhipu": 0,
+    "isFromCobro": 0,
+    "contribuyenteApi": null,
+    "cobroBnb": null,
+    "cobroKhipu": null,
+    "contribuyente": 1,
+    "emisor": "1023456078",
+    "razonSocialEmisor": "FIXTURE ICE POR FUERA S.R.L.",
+    "comprador": "4567891019",
+    "razonSocial": "COMERCIAL ANDINA",
+    "correoElectronicoComprador": "compras@example.com",
+    "caja": null,
+    "sinCredito": 0,
+    "descuentos": 5.25,
+    "giftCards": 0,
+    "tipoCompra": 1,
+    "terminosPago": "Efectivo",
+    "prefactura": 0,
+    "contingencia": 0,
+    "anulada": 0,
+    "notaInterna": null,
+    "isCuentaCobro": false,
+    "clienteId": null,
+    "fechaPago": null,
+    "fecha": "2026-10-21T17:11:56.000Z",
+    "usuarioCreacion": "65f0c0ffee00000000000001",
+    "usuarioCreacionNombre": "Cajero Regresion",
+    "isPruebas": false,
+    "metodoPago": 1,
+    "actividadEconomica": null,
+    "sucursal": 1,
+    "sucursalDireccion": "Av. Arce 2020",
+    "customFactura": {
+      "siat": {
+        "cuf": "460717C73879B3ECA108072FAF46E2B13BB1B286A6CC0001",
+        "xml": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n<facturaElectronicaAlcanzadaIce xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"facturaElectronicaAlcanzadaIce.xsd\">\n  <cabecera>\n    <nitEmisor>1023456078</nitEmisor>\n    <razonSocialEmisor>FIXTURE ICE POR FUERA S.R.L.</razonSocialEmisor>\n    <municipio>La Paz</municipio>\n    <telefono>22123456</telefono>\n    <numeroFactura>1</numeroFactura>\n    <cuf>460717C73879B3ECA108072FAF46E2B13BB1B286A6CC0001</cuf>\n    <cufd>CUFD-1023456078-1</cufd>\n    <codigoSucursal>0</codigoSucursal>\n    <direccion>Av. Arce 2020</direccion>\n    <codigoPuntoVenta>0</codigoPuntoVenta>\n    <fechaEmision>2026-10-21T13:11:56.000</fechaEmision>\n    <nombreRazonSocial>COMERCIAL ANDINA</nombreRazonSocial>\n    <codigoTipoDocumentoIdentidad>5</codigoTipoDocumentoIdentidad>\n    <numeroDocumento>4567891019</numeroDocumento>\n    <complemento>0</complemento>\n    <codigoCliente>4567891019</codigoCliente>\n    <codigoMetodoPago>1</codigoMetodoPago>\n    <numeroTarjeta xsi:nil=\"true\"/>\n    <subTotalNeto>150.92</subTotalNeto>\n    <totalPrecioNeto>127.49</totalPrecioNeto>\n    <iva>16.58</iva>\n    <montoaPagar>162.85</montoaPagar>\n    <totalIceEspecifico>17.55</totalIceEspecifico>\n    <totalIcePorcentual>1.23</totalIcePorcentual>\n    <codigoMoneda>1</codigoMoneda>\n    <tipoCambio>1.00</tipoCambio>\n    <montoTotalMoneda>162.85</montoTotalMoneda>\n    <descuentoAdicional>4.65</descuentoAdicional>\n    <codigoExcepcion>0</codigoExcepcion>\n    <leyenda>Ley N° 453: El proveedor deberá entregar el producto en las modalidades y términos ofertados o convenidos.</leyenda>\n    <usuario>65f0c0ffee00000000000001</usuario>\n    <codigoInterno>CI0001</codigoInterno>\n    <codigoDocumentoSector>14</codigoDocumentoSector>\n  </cabecera>\n  <detalle>\n    <actividadEconomica>620000</actividadEconomica>\n    <codigoProductoSin>83141</codigoProductoSin>\n    <codigoProducto>CER-1</codigoProducto>\n    <descripcion>Cerveza 750</descripcion>\n    <cantidad>6.00000</cantidad>\n    <unidadMedida>58</unidadMedida>\n    <precioNetoUnitario>20.76834</precioNetoUnitario>\n    <montoDescuento>1.32004</montoDescuento>\n    <subTotal>142.07000</subTotal>\n    <marcaIce>1</marcaIce>\n    <precioNetoVentaIce>123.29000</precioNetoVentaIce>\n    <alicuotaEspecifica>3.90000</alicuotaEspecifica>\n    <alicuotaPorcentual>0.01000</alicuotaPorcentual>\n    <montoIceEspecifico>17.55000</montoIceEspecifico>\n    <montoIcePorcentual>1.23000</montoIcePorcentual>\n    <cantidadIce>4.50000</cantidadIce>\n  </detalle>\n  <detalle>\n    <actividadEconomica>620000</actividadEconomica>\n    <codigoProductoSin>83141</codigoProductoSin>\n    <codigoProducto>VAS-1</codigoProducto>\n    <descripcion>Vaso</descripcion>\n    <cantidad>2.00000</cantidad>\n    <unidadMedida>58</unidadMedida>\n    <precioNetoUnitario>4.42500</precioNetoUnitario>\n    <montoDescuento>0.00000</montoDescuento>\n    <subTotal>8.85000</subTotal>\n    <marcaIce>2</marcaIce>\n    <precioNetoVentaIce xsi:nil=\"true\"/>\n    <alicuotaEspecifica xsi:nil=\"true\"/>\n    <alicuotaPorcentual xsi:nil=\"true\"/>\n    <montoIceEspecifico xsi:nil=\"true\"/>\n    <montoIcePorcentual xsi:nil=\"true\"/>\n    <cantidadIce xsi:nil=\"true\"/>\n  </detalle>\n<ds:Signature xmlns:ds=\"http://www.w3.org/2000/09/xmldsig#\"><ds:SignatureValue>firma-regresion</ds:SignatureValue></ds:Signature></facturaElectronicaAlcanzadaIce>",
+        "cafc": null,
+        "cufd": "CUFD-1023456078-1",
+        "factura": {
+          "calculo": {
+            "lineas": [
+              {
+                "litraje": 4.5,
+                "cantidad": 6,
+                "descuento": 1.5,
+                "alicuotaIva": 16.0277,
+                "precioTotal": 158.1,
+                "subTotalNeto": 123.29,
+                "montoDescuento": 1.32004,
+                "precioUnitario": 26.6,
+                "descuentoImpuesto": 1.5,
+                "alicuotaEspecifica": 3.9,
+                "alicuotaPorcentual": 1,
+                "montoIceEspecifico": 17.55,
+                "montoIcePorcentual": 1.23,
+                "precioNetoUnitario": 20.76834,
+                "precioNetoVentaIce": 123.29,
+                "precioTotalImpuesto": 158.1,
+                "precioUnitarioImpuesto": 26.6,
+                "alicuotaPorcentualCalculda": 0.01
+              },
+              {
+                "cantidad": 2,
+                "descuento": 0,
+                "precioTotal": 10,
+                "subTotalNeto": 8.85,
+                "montoDescuento": 0,
+                "precioUnitario": 5,
+                "descuentoImpuesto": 0,
+                "precioNetoUnitario": 4.425,
+                "precioTotalImpuesto": 10,
+                "precioUnitarioImpuesto": 5
+              }
+            ],
+            "totales": {
+              "iva": 16.58,
+              "montoaPagar": 162.85,
+              "subTotalNeto": 132.14,
+              "montoGiftCard": 0,
+              "totalPrecioNeto": 127.49,
+              "montoTotalMoneda": 162.85,
+              "descuentoAdicional": 4.65,
+              "montoIceEspecifico": 17.55,
+              "montoIcePorcentual": 1.23,
+              "noSujetoCreditoFiscal": 0
+            },
+            "tipoFactura": 6
+          },
+          "detalle": [
+            {
+              "marcaIce": 1,
+              "descripcion": "Cerveza 750",
+              "unidadMedida": 58,
+              "codigoProducto": "CER-1",
+              "codigoProductoSin": "83141",
+              "actividadEconomica": "620000"
+            },
+            {
+              "marcaIce": 2,
+              "descripcion": "Vaso",
+              "unidadMedida": 58,
+              "codigoProducto": "VAS-1",
+              "codigoProductoSin": "83141",
+              "actividadEconomica": "620000"
+            }
+          ],
+          "cabecera": {
+            "cuf": "460717C73879B3ECA108072FAF46E2B13BB1B286A6CC0001",
+            "cafc": null,
+            "cufd": "CUFD-1023456078-1",
+            "leyenda": "Ley N° 453: El proveedor deberá entregar el producto en las modalidades y términos ofertados o convenidos.",
+            "usuario": "65f0c0ffee00000000000001",
+            "telefono": "22123456",
+            "direccion": "Av. Arce 2020",
+            "municipio": "La Paz",
+            "nitEmisor": "1023456078",
+            "tipoCambio": 1,
+            "complemento": {
+              "$": {
+                "xsi:nil": "true"
+              }
+            },
+            "codigoMoneda": 1,
+            "fechaEmision": "2026-10-21T13:11:56.000",
+            "codigoCliente": "4567891019",
+            "codigoInterno": "CI0001",
+            "numeroFactura": 1,
+            "numeroTarjeta": {
+              "$": {
+                "xsi:nil": "true"
+              }
+            },
+            "codigoSucursal": 0,
+            "codigoExcepcion": 0,
+            "numeroDocumento": "4567891019",
+            "codigoMetodoPago": 1,
+            "codigoPuntoVenta": 0,
+            "nombreRazonSocial": "COMERCIAL ANDINA",
+            "razonSocialEmisor": "FIXTURE ICE POR FUERA S.R.L.",
+            "codigoDocumentoSector": 14,
+            "codigoTipoDocumentoIdentidad": 5
+          }
+        },
+        "leyenda": "Ley N° 453: El proveedor deberá entregar el producto en las modalidades y términos ofertados o convenidos.",
+        "transaccion": true,
+        "codigoEstado": 908,
+        "codigoEmision": 1,
+        "isContingencia": 0,
+        "codigoRecepcion": "d40da6f0-9183-4eef-ab23-dfb6f1730c87",
+        "codigoDescripcion": "VALIDADA",
+        "linkFacturaImpuestos": "https://siat.impuestos.gob.bo/consulta/QR?nit=1023456078&cuf=460717C73879B3ECA108072FAF46E2B13BB1B286A6CC0001&numero=1&t=2",
+        "tipoFacturaDocumento": 1,
+        "codigoDocumentoSector": 14,
+        "tipoDocumentoIdentidad": {
+          "descripcion": "NIT - NUMERO DE IDENTIFICACION TRIBUTARIA",
+          "codigoClasificador": 5
+        }
+      },
+      "exRate": 1,
+      "moneda": {
+        "id": 150,
+        "exRate": 1,
+        "moneda": 150,
+        "nombre": "Boliviano",
+        "simbolo": "Bs",
+        "customData": {
+          "siat": {
+            "codigo": 1
+          }
+        },
+        "autoActualiza": 0,
+        "contribuyente": 1,
+        "exRatePrincipal": 1,
+        "monedaReferencia": 150,
+        "denominacionesMonedas": null,
+        "monedaContribuyenteId": 1,
+        "denominacionesBilletes": null
+      },
+      "iceTotal": 18.78,
+      "saldoNdc": [
+        {
+          "itemId": null,
+          "disponible": 6,
+          "codigoInventario": "CER-1"
+        },
+        {
+          "itemId": null,
+          "disponible": 2,
+          "codigoInventario": "VAS-1"
+        }
+      ],
+      "modoPrecio": "final",
+      "regimenIva": "porFuera",
+      "codigoSistema": "5D2E0F1A9B3C4D5E6F7A8E6",
+      "tokenDesasociar": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuaXQiOiI0NTY3ODkxMDE5IiwiY29ycmVvIjoiY29tcHJhc0BleGFtcGxlLmNvbSIsInBhaXMiOiJCTyIsInRpbWVzdGFtcCI6MTc5MjYwMjcxNjE2MywiaWF0IjoxNzkyNjAyNzE2fQ.4KJku8coxS4BRKd9cyzcIGqGTXd-_6DU02513aU0ZQE",
+      "totalesPorFuera": {
+        "iva": 16.58,
+        "montoaPagar": 162.85,
+        "subTotalNeto": 132.14,
+        "montoGiftCard": 0,
+        "totalPrecioNeto": 127.49,
+        "montoTotalMoneda": 162.85,
+        "descuentoAdicional": 4.65,
+        "montoIceEspecifico": 17.55,
+        "montoIcePorcentual": 1.23,
+        "noSujetoCreditoFiscal": 0
+      },
+      "saldoNdcPorLinea": true,
+      "tipoFacturaNombre": "Factura Regular",
+      "montoIceEspecifico": 17.55,
+      "montoIcePorcentual": 1.23,
+      "montoTotalSujetoIva": 127.49,
+      "printItems": [
+        {
+          "type": "image",
+          "data": "e30=",
+          "size": 70,
+          "align": "center"
+        },
+        {
+          "type": "lineWrap",
+          "lines": 4
+        },
+        {
+          "type": "text",
+          "text": "FIXTURE ICE POR FUERA S.R.L.",
+          "size": "md",
+          "bold": true,
+          "align": "center"
+        },
+        {
+          "type": "text",
+          "text": "Casa Matriz",
+          "size": "sm",
+          "bold": true,
+          "align": "center"
+        },
+        {
+          "type": "text",
+          "text": "No. Punto de Venta 0",
+          "size": "sm",
+          "bold": false,
+          "align": "center"
+        },
+        {
+          "type": "text",
+          "text": "ZONA: ",
+          "size": "sm",
+          "bold": false,
+          "align": "center"
+        },
+        {
+          "type": "text",
+          "text": "Av. Arce 2020",
+          "size": "sm",
+          "bold": false,
+          "align": "center"
+        },
+        {
+          "type": "text",
+          "text": "TELF: 22123456",
+          "size": "sm",
+          "bold": false,
+          "align": "center"
+        },
+        {
+          "type": "text",
+          "text": "La Paz, Bolivia",
+          "size": "sm",
+          "bold": false,
+          "align": "center"
+        },
+        {
+          "type": "lineWrap",
+          "lines": 3
+        },
+        {
+          "type": "text",
+          "text": "FACTURA",
+          "size": "xl",
+          "bold": false,
+          "align": "center"
+        },
+        {
+          "type": "text",
+          "text": "Con derecho a crédito fiscal",
+          "size": "sm",
+          "bold": false,
+          "align": "center"
+        },
+        {
+          "type": "text",
+          "text": "NIT EMISOR: 1023456078",
+          "size": "sm",
+          "bold": false,
+          "align": "center"
+        },
+        {
+          "type": "text",
+          "text": "FACTURA No: 00001",
+          "size": "sm",
+          "bold": false,
+          "align": "center"
+        },
+        {
+          "type": "text",
+          "text": "CÓD. AUTORIZACIÓN:  460717C73879B3ECA108072FAF46E2B13BB1B286A6CC0001",
+          "size": "sm",
+          "bold": false,
+          "align": "center"
+        },
+        {
+          "type": "separator",
+          "dotted": false
+        },
+        {
+          "type": "text",
+          "text": "NOMBRE/RAZÓN SOCIAL: COMERCIAL ANDINA",
+          "size": "sm",
+          "bold": true,
+          "align": "center"
+        },
+        {
+          "type": "text",
+          "text": "NIT/CI/CEX: 4567891019",
+          "size": "sm",
+          "bold": true,
+          "align": "center"
+        },
+        {
+          "type": "text",
+          "text": "COD. CLIENTE: 4567891019",
+          "size": "sm",
+          "bold": true,
+          "align": "center"
+        },
+        {
+          "type": "text",
+          "text": "FECHA: 21/10/2026 13:11",
+          "size": "sm",
+          "bold": true,
+          "align": "center"
+        },
+        {
+          "type": "separator",
+          "dotted": false
+        },
+        {
+          "type": "row",
+          "size": "sm",
+          "bold": true,
+          "cols": [
+            {
+              "text": "Cant.",
+              "width": 10,
+              "align": "left"
+            },
+            {
+              "text": "Detalle",
+              "width": 30,
+              "align": "left"
+            },
+            {
+              "text": "P. Neto",
+              "width": 20,
+              "align": "right"
+            },
+            {
+              "text": "Desc U",
+              "width": 20,
+              "align": "right"
+            },
+            {
+              "text": "Subtotal",
+              "width": 20,
+              "align": "right"
+            }
+          ]
+        },
+        {
+          "type": "separator",
+          "dotted": false
+        },
+        {
+          "type": "row",
+          "size": "sm",
+          "bold": true,
+          "cols": [
+            {
+              "text": "6",
+              "width": 10,
+              "align": "left"
+            },
+            {
+              "text": "Cerveza 750",
+              "width": 30,
+              "align": "left"
+            },
+            {
+              "text": "20.77",
+              "width": 20,
+              "align": "right"
+            },
+            {
+              "text": "1.32",
+              "width": 20,
+              "align": "right"
+            },
+            {
+              "text": "123.29",
+              "width": 20,
+              "align": "right"
+            }
+          ]
+        },
+        {
+          "type": "lineWrap",
+          "lines": 1
+        },
+        {
+          "type": "row",
+          "size": "sm",
+          "bold": true,
+          "cols": [
+            {
+              "text": "2",
+              "width": 10,
+              "align": "left"
+            },
+            {
+              "text": "Vaso",
+              "width": 30,
+              "align": "left"
+            },
+            {
+              "text": "4.43",
+              "width": 20,
+              "align": "right"
+            },
+            {
+              "text": "0.00",
+              "width": 20,
+              "align": "right"
+            },
+            {
+              "text": "8.85",
+              "width": 20,
+              "align": "right"
+            }
+          ]
+        },
+        {
+          "type": "lineWrap",
+          "lines": 1
+        },
+        {
+          "type": "separator",
+          "dotted": true
+        },
+        {
+          "type": "row",
+          "size": "sm",
+          "bold": true,
+          "cols": [
+            {
+              "text": "SUBTOTAL",
+              "width": 70,
+              "align": "right"
+            },
+            {
+              "text": "132.14",
+              "width": 30,
+              "align": "right"
+            }
+          ]
+        },
+        {
+          "type": "row",
+          "size": "sm",
+          "bold": true,
+          "cols": [
+            {
+              "text": "TOTAL ICE PORCENTUAL",
+              "width": 70,
+              "align": "right"
+            },
+            {
+              "text": "1.23",
+              "width": 30,
+              "align": "right"
+            }
+          ]
+        },
+        {
+          "type": "row",
+          "size": "sm",
+          "bold": true,
+          "cols": [
+            {
+              "text": "TOTAL ICE ESPECÍFICO",
+              "width": 70,
+              "align": "right"
+            },
+            {
+              "text": "17.55",
+              "width": 30,
+              "align": "right"
+            }
+          ]
+        },
+        {
+          "type": "row",
+          "size": "sm",
+          "bold": true,
+          "cols": [
+            {
+              "text": "TOTAL PRECIO NETO",
+              "width": 70,
+              "align": "right"
+            },
+            {
+              "text": "127.49",
+              "width": 30,
+              "align": "right"
+            }
+          ]
+        },
+        {
+          "type": "row",
+          "size": "sm",
+          "bold": true,
+          "cols": [
+            {
+              "text": "DESCUENTO",
+              "width": 70,
+              "align": "right"
+            },
+            {
+              "text": "4.65",
+              "width": 30,
+              "align": "right"
+            }
+          ]
+        },
+        {
+          "type": "row",
+          "size": "sm",
+          "bold": true,
+          "cols": [
+            {
+              "text": "IVA",
+              "width": 70,
+              "align": "right"
+            },
+            {
+              "text": "16.58",
+              "width": 30,
+              "align": "right"
+            }
+          ]
+        },
+        {
+          "type": "row",
+          "size": "sm",
+          "bold": true,
+          "cols": [
+            {
+              "text": "MONTO A PAGAR",
+              "width": 70,
+              "align": "right"
+            },
+            {
+              "text": "162.85",
+              "width": 30,
+              "align": "right"
+            }
+          ]
+        },
+        {
+          "type": "separator",
+          "dotted": true
+        },
+        {
+          "type": "text",
+          "text": "SON:  Ciento sesenta y dos 85/100 Bolivianos",
+          "size": "sm",
+          "bold": false,
+          "align": "left"
+        },
+        {
+          "type": "separator",
+          "dotted": false
+        },
+        {
+          "type": "qr",
+          "content": "https://siat.impuestos.gob.bo/consulta/QR?nit=1023456078&cuf=460717C73879B3ECA108072FAF46E2B13BB1B286A6CC0001&numero=1&t=2",
+          "size": 3,
+          "align": "center"
+        },
+        {
+          "type": "lineWrap",
+          "lines": 1
+        },
+        {
+          "type": "text",
+          "text": "ESTA FACTURA CONTRIBUYE AL DESARROLLO DEL PAÍS, EL USO ILÍCITO DE ÉSTA SERÁ SANCIONADO PENALMENTE DE ACUERDO A LEY",
+          "size": "sm",
+          "bold": false,
+          "align": "center"
+        },
+        {
+          "type": "lineWrap",
+          "lines": 1
+        },
+        {
+          "type": "text",
+          "text": "Ley N° 453: El proveedor deberá entregar el producto en las modalidades y términos ofertados o convenidos.",
+          "size": "sm",
+          "bold": false,
+          "align": "center"
+        },
+        {
+          "type": "lineWrap",
+          "lines": 1
+        },
+        {
+          "type": "text",
+          "text": "\"Este documento es la Representación Gráfica de un Documento Fiscal Digital emitido en una modalidad de facturación en línea\"",
+          "size": "sm",
+          "bold": false,
+          "align": "center"
+        },
+        {
+          "type": "separator",
+          "dotted": false
+        },
+        {
+          "type": "text",
+          "text": "Generada a través de iZi",
+          "size": "sm",
+          "bold": true,
+          "align": "center"
+        },
+        {
+          "type": "lineWrap",
+          "lines": 2
+        },
+        {
+          "type": "cut"
+        }
+      ],
+      "printItemsFormat": "full"
+    },
+    "searchstr": "6 1023456078 fixture ice por fuera s.r.l. 4567891019 comercial andina compras@example.com  620000 1 undefined Cerveza 750 CER-1 Vaso VAS-1",
+    "listaItems": [
+      {
+        "casoICE": 1,
+        "litraje": 4.5,
+        "articulo": "Cerveza 750",
+        "cantidad": 6,
+        "descuento": 1.5,
+        "customItem": {
+          "siat": {
+            "unidadMedida": 58,
+            "codigoProductoSin": "83141",
+            "actividadEconomica": "620000"
+          }
+        },
+        "alicuotaIva": 16.0277,
+        "precioTotal": 158.1,
+        "litrosUnidad": 0.75,
+        "subTotalNeto": 123.29,
+        "montoDescuento": 1.32004,
+        "precioUnitario": 26.6,
+        "codigoInventario": "CER-1",
+        "unidadMedidaSiat": 58,
+        "descuentoImpuesto": 1.5,
+        "alicuotaEspecifica": 3.9,
+        "alicuotaPorcentual": 1,
+        "montoIceEspecifico": 17.55,
+        "montoIcePorcentual": 1.23,
+        "precioNetoUnitario": 20.76834,
+        "precioNetoVentaIce": 123.29,
+        "precioTotalImpuesto": 158.1,
+        "precioUnitarioImpuesto": 26.6,
+        "alicuotaPorcentualCalculda": 0.01
+      },
+      {
+        "casoICE": null,
+        "articulo": "Vaso",
+        "cantidad": 2,
+        "descuento": 0,
+        "customItem": {
+          "siat": {
+            "unidadMedida": 58,
+            "codigoProductoSin": "83141",
+            "actividadEconomica": "620000"
+          }
+        },
+        "precioTotal": 10,
+        "subTotalNeto": 8.85,
+        "montoDescuento": 0,
+        "precioUnitario": 5,
+        "codigoInventario": "VAS-1",
+        "unidadMedidaSiat": 58,
+        "descuentoImpuesto": 0,
+        "precioNetoUnitario": 4.425,
+        "precioTotalImpuesto": 10,
+        "precioUnitarioImpuesto": 5
+      }
+    ],
+    "monto": 168.1,
+    "montoImpuesto": 168.1,
+    "descuentosImpuesto": 5.25,
+    "montoTotal": 162.85,
+    "montoTotalImpuesto": 162.85,
+    "giftCardsImpuesto": 0,
+    "sinCreditoImpuesto": 0,
+    "montoNeto": 127.49,
+    "iva": 16.58,
+    "montoNetoImpuesto": 127.49,
+    "ivaImpuesto": 16.58,
+    "validadorUnico": "1023456078#1#2026#6##1##vn",
+    "pdfCarta": "https://izi-bol-temp.s3.us-east-005.backblazeb2.com/facturas/Fixture_Ice_Por_Fuera_factura-4549b88d-cd47-420d-b200-db3038e7d867.pdf",
+    "pdfRollo": "https://izi-bol-temp.s3.us-east-005.backblazeb2.com/facturas/Fixture_Ice_Por_Fuera_facturaR80-4549b88d-cd47-420d-b200-db3038e7d867.pdf",
+    "id": 1,
+    "autorizacion": "460717C73879B3ECA108072FAF46E2B13BB1B286A6CC0001",
+    "numeroPrefactura": null,
+    "iceVariable": null,
+    "iceFijo": null,
+    "control": null,
+    "concepto": null,
+    "pagada": 0,
+    "sucursalCompra": null,
+    "estadoEmision": "aprobado",
+    "customCasosEspeciales": null,
+    "creado": "2026-10-21T17:11:56.000Z",
+    "almacen": null,
+    "pagos": null,
+    "usuarioPreCreacion": null,
+    "usuarioAnulacion": null,
+    "usuarioModificacion": null,
+    "usuarioCobro": null,
+    "usuarioPago": null,
+    "usuarioPreCreacionNombre": null,
+    "usuarioAnulacionNombre": null,
+    "usuarioModificacionNombre": null,
+    "usuarioCobroNombre": null,
+    "usuarioPagoNombre": null,
+    "pdfCartaPrefactura": null,
+    "pdfRolloPrefactura": null,
+    "actividadEconomicaId": 620000,
+    "actividadEconomicaCod": null,
+    "qr": null,
+    "codigoMetodoPago": 1,
+    "tipoDocumentoIdentidad": {
+      "codigoClasificador": 5,
+      "descripcion": "NIT - NUMERO DE IDENTIFICACION TRIBUTARIA"
+    }
   }
 }

@@ -246,6 +246,9 @@ class Items {
   num? precioNetoUnitario;
   num? montoDescuento;
   num? subTotalNeto;
+  // El ICE de la línea de la factura ICE, que el XML suma a su subtotal.
+  num? montoIceEspecifico;
+  num? montoIcePorcentual;
   dynamic codigoInventario;
   dynamic codigo;
   
@@ -267,6 +270,8 @@ class Items {
     this.precioNetoUnitario,
     this.montoDescuento,
     this.subTotalNeto,
+    this.montoIceEspecifico,
+    this.montoIcePorcentual,
     this.codigoInventario,
     this.codigo,
         this.parametrosFacturacion
@@ -307,6 +312,8 @@ class Items {
       precioNetoUnitario: json["precioNetoUnitario"],
       montoDescuento: json["montoDescuento"],
       subTotalNeto: json["subTotalNeto"],
+      montoIceEspecifico: json["montoIceEspecifico"],
+      montoIcePorcentual: json["montoIcePorcentual"],
       codigo: json["codigo"],
       codigoInventario: json["codigoInventario"],
       parametrosFacturacion: json["parametrosFacturacion"] is Map?ParametrosFacturacionItem.fromJson(json["parametrosFacturacion"]) : null,

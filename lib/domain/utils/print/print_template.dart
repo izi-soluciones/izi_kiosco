@@ -589,7 +589,9 @@ static List<IziPrintItem> invoice80Co(
         if (porFuera != null) {
           precioUnitario = Calc.roundConservador(item.precioNetoUnitario ?? 0, 2);
           descuento = Calc.roundConservador(item.montoDescuento ?? 0, 2);
-          precioTotal = Calc.roundConservador(item.subTotalNeto ?? 0, 2);
+          precioTotal = item.montoIceEspecifico == null
+              ? Calc.roundConservador(item.subTotalNeto ?? 0, 2)
+              : _conIce(item.subTotalNeto ?? 0, item.montoIceEspecifico!, item.montoIcePorcentual ?? 0);
         }
         var codInve = (item.codigoInventario == null && item.codigo == null)
             ? ' '
@@ -1047,10 +1049,20 @@ static Future<List<IziPrintItem>> invoiceCompactCo(
 
   static num _num(dynamic valor) => valor is num ? valor : 0;
 
+  // En la factura ICE el subtotal de la línea y el del pie llevan el ICE específico y el porcentual, como el XML (conIce de
+  // izi-facturacion, DL-30): TOTAL PRECIO NETO los vuelve a restar. Suma en Decimal, como la librería.
+  static double _conIce(num neto, num especifico, num porcentual) =>
+      Calc.roundConservador(Calc.add(Calc.add(neto, especifico), porcentual), 2);
+
   // Las filas del pie que tiene el XML del sector: el ICE lleva sus dos totales en lugar de la gift card (se reconoce por la
   // clave); el alquiler y el boleto aéreo no tienen gift card, y el boleto tampoco descuento adicional.
   static List<(String, num)> _filasPiePorFuera(Map totales, int? tipoFactura) => [
-        ('SUBTOTAL', _num(totales["subTotalNeto"])),
+        (
+          'SUBTOTAL',
+          totales.containsKey("montoIceEspecifico")
+              ? _conIce(_num(totales["subTotalNeto"]), _num(totales["montoIceEspecifico"]), _num(totales["montoIcePorcentual"]))
+              : _num(totales["subTotalNeto"])
+        ),
         if (totales.containsKey("montoIceEspecifico")) ...[
           ('TOTAL ICE PORCENTUAL', _num(totales["montoIcePorcentual"])),
           ('TOTAL ICE ESPECÍFICO', _num(totales["montoIceEspecifico"])),
