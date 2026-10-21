@@ -556,7 +556,7 @@ static List<IziPrintItem> invoice80Co(
         IziPrintColumn(text: "Detalle", width: 30, align: IziPrintAlign.left),
         IziPrintColumn(
             text: "Precio U.", width: 20, align: IziPrintAlign.right),
-        IziPrintColumn(text: "Desc U", width: 20, align: IziPrintAlign.right),
+        IziPrintColumn(text: "Desc.", width: 20, align: IziPrintAlign.right),
         IziPrintColumn(text: "Subtotal", width: 20, align: IziPrintAlign.right),
       ], size: IziPrintSize.sm, bold: true));
       items.add(IziPrintSeparator());
