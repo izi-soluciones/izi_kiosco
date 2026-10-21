@@ -108,7 +108,7 @@ class PaymentBloc extends Cubit<PaymentState> {
         currentCurrency = authState.currencies.elementAtOrNull(indexCurrency);
       }
       String? economicActivity;
-      if(authState.currentDevice?.config.isRetail==true){
+      if(authState.currentDevice?.config.isRetail==true || authState.currentDevice?.config.isRetailBarcode==true){
         economicActivity = authState.currentDevice?.config.actividadEconomica;
       }
       else{
@@ -348,7 +348,7 @@ class PaymentBloc extends Cubit<PaymentState> {
         );
         return;
       }
-      if(authState.currentContribuyente?.tieneModulo(Modulo.facturacion)==true || authState.currentDevice?.config.isRetail!=true){
+      if (!_skipInvoiceForm(authState)) {
         emit(state.copyWith(
             paymentType: paymentType,
             step: 2,
@@ -1215,11 +1215,10 @@ class PaymentBloc extends Cubit<PaymentState> {
   }
 
   cancelQR(AuthState authState){
-    if(authState.currentContribuyente?.tieneModulo(Modulo.facturacion)==true){
-      emit(state.copyWith(step: 2,qrLoading: false,qrCharge: ()=>null));
-    }
-    else{
-      emit(state.copyWith(step: 1,qrLoading: false,qrCharge: ()=>null));
+    if (authState.currentContribuyente?.tieneModulo(Modulo.facturacion) == true) {
+      emit(state.copyWith(step: 2, qrLoading: false, qrCharge: () => null));
+    } else {
+      emit(state.copyWith(step: 1, qrLoading: false, qrCharge: () => null));
     }
   }
 
