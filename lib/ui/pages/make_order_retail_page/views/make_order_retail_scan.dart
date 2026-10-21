@@ -52,6 +52,11 @@ class _MakeOrderRetailScanState extends State<MakeOrderRetailScan> {
     authState = context.read<AuthBloc>().state;
     super.initState();
     _initScanner();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        SunmiScannerService.instance.rearmScan();
+      }
+    });
   }
 
   void _initScanner() {
@@ -427,7 +432,7 @@ class _MakeOrderRetailScanState extends State<MakeOrderRetailScan> {
   }
 
   _emitPurchase(){
-    SunmiScannerService.instance.stopScan();
+    SunmiScannerService.instance.stopScan(force: true);
     context.read<PageUtilsBloc>().showLoading(LocaleKeys.makeOrderRetail_scan_waitingPurchase.tr());
     context.read<PageUtilsBloc>().closeScreenActive();
     context.read<MakeOrderRetailBloc>().emitOrder(authState).then((value) {
@@ -450,7 +455,7 @@ class _MakeOrderRetailScanState extends State<MakeOrderRetailScan> {
             extra: paymentObj, pathParameters: {"id": value.id.toString()});
       } else {
         context.read<PageUtilsBloc>().initScreenActive(authState);
-        SunmiScannerService.instance.startScan();
+        SunmiScannerService.instance.rearmScan();
         focusNodeKeyboard.requestFocus();
       }
     });
@@ -485,7 +490,7 @@ class _MakeOrderRetailScanState extends State<MakeOrderRetailScan> {
     if (item != null) {
       context.read<PageUtilsBloc>().updateScreenActive();
       // Re-arm scanner so the customer can scan the next product immediately without pressing any button
-      SunmiScannerService.instance.startScan();
+      SunmiScannerService.instance.rearmScan();
     } else {
       context.read<PageUtilsBloc>().showSnackBar(
         snackBar: SnackBarInfo(
@@ -494,7 +499,7 @@ class _MakeOrderRetailScanState extends State<MakeOrderRetailScan> {
         ),
       );
       // Re-arm scanner to try again
-      SunmiScannerService.instance.startScan();
+      SunmiScannerService.instance.rearmScan();
     }
     if (mounted) {
       focusNodeKeyboard.requestFocus();
@@ -507,7 +512,7 @@ class _MakeOrderRetailScanState extends State<MakeOrderRetailScan> {
           context: context,
           child: WarningModal(
               onAccept: ()async{
-                SunmiScannerService.instance.stopScan();
+                SunmiScannerService.instance.stopScan(force: true);
                 GoRouter.of(context).goNamed(RoutesKeys.home);
                 context.read<PageUtilsBloc>().closeScreenActive();
               },
@@ -515,14 +520,14 @@ class _MakeOrderRetailScanState extends State<MakeOrderRetailScan> {
           )
       ).then((value) {
         if(mounted){
-          SunmiScannerService.instance.startScan();
+          SunmiScannerService.instance.rearmScan();
           focusNodeKeyboard.requestFocus();
         }
       });
       return;
     }
 
-    SunmiScannerService.instance.stopScan();
+    SunmiScannerService.instance.stopScan(force: true);
     GoRouter.of(context).goNamed(RoutesKeys.home);
     context.read<PageUtilsBloc>().closeScreenActive();
   }

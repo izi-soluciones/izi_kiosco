@@ -166,7 +166,14 @@ public class SunmiScannerHelper {
         return MODEL_NONE;
     }
 
+    private volatile boolean isScanRequested = false;
+
+    public boolean isScanRequested() {
+        return isScanRequested;
+    }
+
     public void startScan() {
+        isScanRequested = true;
         if (!isSunmiDevice()) return;
         executor.execute(() -> {
             try {
@@ -194,6 +201,7 @@ public class SunmiScannerHelper {
     }
 
     public void stopScan() {
+        isScanRequested = false;
         if (!isSunmiDevice()) return;
         executor.execute(() -> {
             try {
@@ -205,6 +213,34 @@ public class SunmiScannerHelper {
                 Log.e(TAG, "Exception during stopScan()", e);
             }
         });
+    }
+
+    /**
+     * Pauses the hardware scanner (turns off light/decode) upon app going to background,
+     * but retains isScanRequested so it can resume automatically in onResume().
+     */
+    public void pauseScan() {
+        if (!isSunmiDevice()) return;
+        executor.execute(() -> {
+            try {
+                if (scanInterface != null) {
+                    scanInterface.stop();
+                    Log.d(TAG, "Sunmi pauseScan() invoked.");
+                }
+            } catch (Exception e) {
+                Log.e(TAG, "Exception during pauseScan()", e);
+            }
+        });
+    }
+
+    /**
+     * Resumes the hardware scanner if scanning was actively requested before being paused.
+     */
+    public void resumeScan() {
+        if (isScanRequested) {
+            Log.d(TAG, "Resuming Sunmi scanner since isScanRequested was true.");
+            startScan();
+        }
     }
 
     public void destroy() {

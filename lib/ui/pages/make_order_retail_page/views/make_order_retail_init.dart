@@ -44,7 +44,7 @@ class _MakeOrderRetailInitState extends State<MakeOrderRetailInit> {
   void _initScanner() {
     _scannerSubscription =
         SunmiScannerService.instance.onBarcodeScanned.listen((code) {
-      if (mounted && widget.state.status != MakeOrderRetailStatus.waitingGet) {
+      if (mounted) {
         _processBarcode(code);
       }
     });
@@ -198,6 +198,8 @@ class _MakeOrderRetailInitState extends State<MakeOrderRetailInit> {
   }
 
   void _processBarcode(String code) {
+    if (widget.state.status == MakeOrderRetailStatus.waitingGet) return;
+
     final trimmed = code.trim();
     if (trimmed.isEmpty) return;
 
@@ -213,7 +215,7 @@ class _MakeOrderRetailInitState extends State<MakeOrderRetailInit> {
         ),
       );
       // Re-trigger scanner so the customer can scan another product without manual intervention
-      SunmiScannerService.instance.startScan();
+      SunmiScannerService.instance.rearmScan();
     }
     if (mounted) {
       focusNodeKeyboard.requestFocus();

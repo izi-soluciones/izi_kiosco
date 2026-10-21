@@ -27,13 +27,17 @@ class SunmiScannerService {
   String? _lastScannedCode;
   DateTime? _lastScannedAt;
 
-  /// Minimum time required between duplicate scans of the same barcode.
-  Duration debounceDuration = const Duration(milliseconds: 1200);
+  /// Minimum time required between duplicate scans of the exact same barcode.
+  /// Set to 400ms to filter hardware sensor bounce while permitting rapid sequential
+  /// scanning of duplicate retail items.
+  Duration debounceDuration = const Duration(milliseconds: 400);
 
-  /// Processing lock to prevent concurrent or duplicate requests while an item
-  /// is being verified or added to an order.
-  bool _isProcessing = false;
-  bool get isProcessing => _isProcessing;
+  /// Active client reference counter for managing the scanner lifecycle across
+  /// concurrent or transitioning views (e.g. PageView children).
+  int _activeClients = 0;
+
+  @visibleForTesting
+  int get activeClients => _activeClients;
 
   bool _initialized = false;
   bool? _isSunmiCached;
@@ -52,6 +56,8 @@ class SunmiScannerService {
   void reinitForTesting() {
     _initialized = false;
     _isSunmiCached = null;
+    _activeClients = 0;
+    resetDebounce();
     _initChannel();
   }
 
@@ -84,6 +90,13 @@ class SunmiScannerService {
             log('Sunmi scanner error: ${call.arguments}',
                 name: 'SunmiScannerService');
             break;
+          case 'onResumeScanner':
+            if (_activeClients > 0) {
+              log('App resumed with active scanner clients ($_activeClients). Re-arming scanner.',
+                  name: 'SunmiScannerService');
+              rearmScan();
+            }
+            break;
           default:
             break;
         }
@@ -91,16 +104,10 @@ class SunmiScannerService {
     }
   }
 
-  /// Internal handler that filters duplicates and dispatches to stream
+  /// Internal handler that filters duplicate bursts and dispatches to stream
   void _handleIncomingBarcode(String rawCode) {
     final code = rawCode.trim();
     if (code.isEmpty) return;
-
-    if (_isProcessing) {
-      log('Ignored barcode scan "$code": currently processing previous request',
-          name: 'SunmiScannerService');
-      return;
-    }
 
     final now = DateTime.now();
     if (_lastScannedCode == code && _lastScannedAt != null) {
@@ -146,9 +153,11 @@ class SunmiScannerService {
     }
   }
 
-  /// Trigger scanner engine to start scanning (lights up scan head / laser).
+  /// Registers a view as an active scanner client and triggers the scanner engine.
+  /// Increments the active client reference count.
   /// Safe to call on any platform; does nothing if not Sunmi Android.
   Future<bool> startScan() async {
+    _activeClients++;
     if (!_isAndroid) return false;
     try {
       final result = await _channel.invokeMethod<bool>('startScan');
@@ -159,9 +168,34 @@ class SunmiScannerService {
     }
   }
 
-  /// Stop scanner engine reading / turns off scan head light.
+  /// Re-arms the scanner for subsequent items within an already active view
+  /// without changing the active client reference count.
+  Future<bool> rearmScan() async {
+    if (!_isAndroid) return false;
+    try {
+      final result = await _channel.invokeMethod<bool>('startScan');
+      return result ?? false;
+    } catch (e) {
+      log('Error calling rearmScan: $e', name: 'SunmiScannerService');
+      return false;
+    }
+  }
+
+  /// Releases a scanner client. Decrements the active client count.
+  /// The native hardware scanner is ONLY turned off when no active clients remain
+  /// (_activeClients == 0) or if [force] is true. This prevents transition races
+  /// (e.g. PageView dispose running after new page initState).
   /// Safe to call on any platform; does nothing if not Sunmi Android.
-  Future<bool> stopScan() async {
+  Future<bool> stopScan({bool force = false}) async {
+    if (_activeClients > 0) {
+      _activeClients--;
+    }
+    if (_activeClients > 0 && !force) {
+      log('stopScan deferred: $_activeClients active client(s) still listening',
+          name: 'SunmiScannerService');
+      return false;
+    }
+    _activeClients = 0;
     if (!_isAndroid) return false;
     try {
       final result = await _channel.invokeMethod<bool>('stopScan');
@@ -184,15 +218,9 @@ class SunmiScannerService {
     }
   }
 
-  /// Set the processing lock to prevent concurrent scan executions.
-  void setProcessing(bool value) {
-    _isProcessing = value;
-  }
-
   /// Manually reset debouncing cache if needed (e.g., when resetting an order).
   void resetDebounce() {
     _lastScannedCode = null;
     _lastScannedAt = null;
-    _isProcessing = false;
   }
 }

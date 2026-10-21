@@ -541,6 +541,10 @@ public class MainActivity extends FlutterActivity {
         super.onResume();
         if (sunmiScannerHelper != null) {
             sunmiScannerHelper.registerReceiver();
+            sunmiScannerHelper.resumeScan();
+            if (scannerChannel != null) {
+                scannerChannel.invokeMethod("onResumeScanner", null);
+            }
         }
     }
 
@@ -548,7 +552,7 @@ public class MainActivity extends FlutterActivity {
     protected void onPause() {
         super.onPause();
         if (sunmiScannerHelper != null) {
-            sunmiScannerHelper.stopScan();
+            sunmiScannerHelper.pauseScan();
         }
     }
 
