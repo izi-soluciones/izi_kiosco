@@ -175,6 +175,39 @@ void main() {
       expect(channelCalls.last, equals('stopScan'));
     });
 
+    test('Recovery after force stop re-registers clientId and restores lifecycle protection', () async {
+      final List<String> channelCalls = [];
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(channel, (MethodCall call) async {
+        channelCalls.add(call.method);
+        return true;
+      });
+
+      // View active
+      await SunmiScannerService.instance.startScan('MakeOrderRetailScan');
+      expect(SunmiScannerService.instance.activeClients, equals(1));
+
+      // emitPurchase executes force stop
+      await SunmiScannerService.instance.stopScan(force: true);
+      expect(SunmiScannerService.instance.activeClients, equals(0));
+
+      // Error recovery re-registers client
+      await SunmiScannerService.instance.startScan('MakeOrderRetailScan');
+      expect(SunmiScannerService.instance.activeClients, equals(1));
+      expect(SunmiScannerService.instance.activeClientIds, contains('MakeOrderRetailScan'));
+
+      // onResumeScanner now functions properly
+      channelCalls.clear();
+      final ByteData message =
+          const StandardMethodCodec().encodeMethodCall(
+        const MethodCall('onResumeScanner'),
+      );
+      await TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .handlePlatformMessage('com.izisoluciones.kiosco/sunmi_scanner', message, (ByteData? reply) {});
+
+      expect(channelCalls, contains('startScan'));
+    });
+
     test('onResumeScanner re-arms scanner when active clients exist', () async {
       final List<String> channelCalls = [];
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger

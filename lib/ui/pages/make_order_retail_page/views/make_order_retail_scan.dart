@@ -455,7 +455,7 @@ class _MakeOrderRetailScanState extends State<MakeOrderRetailScan> {
             extra: paymentObj, pathParameters: {"id": value.id.toString()});
       } else {
         context.read<PageUtilsBloc>().initScreenActive(authState);
-        SunmiScannerService.instance.rearmScan();
+        SunmiScannerService.instance.startScan('MakeOrderRetailScan');
         focusNodeKeyboard.requestFocus();
       }
     });
@@ -520,7 +520,7 @@ class _MakeOrderRetailScanState extends State<MakeOrderRetailScan> {
           )
       ).then((value) {
         if(mounted){
-          SunmiScannerService.instance.rearmScan();
+          SunmiScannerService.instance.startScan('MakeOrderRetailScan');
           focusNodeKeyboard.requestFocus();
         }
       });
@@ -539,14 +539,14 @@ class _MakeOrderRetailScanState extends State<MakeOrderRetailScan> {
               onAccept: ()async{
                 SunmiScannerService.instance.resetDebounce();
                 context.read<MakeOrderRetailBloc>().resetItems();
-                SunmiScannerService.instance.rearmScan();
+                SunmiScannerService.instance.startScan('MakeOrderRetailScan');
                 focusNodeKeyboard.requestFocus();
               },
               title: LocaleKeys.makeOrderRetail_scan_areYouSureInitAgain.tr()
           )
       ).then((value) {
         if(mounted){
-          SunmiScannerService.instance.rearmScan();
+          SunmiScannerService.instance.startScan('MakeOrderRetailScan');
           focusNodeKeyboard.requestFocus();
         }
       });
@@ -554,7 +554,7 @@ class _MakeOrderRetailScanState extends State<MakeOrderRetailScan> {
     }
     SunmiScannerService.instance.resetDebounce();
     context.read<MakeOrderRetailBloc>().resetItems();
-    SunmiScannerService.instance.rearmScan();
+    SunmiScannerService.instance.startScan('MakeOrderRetailScan');
     focusNodeKeyboard.requestFocus();
   }
 }
