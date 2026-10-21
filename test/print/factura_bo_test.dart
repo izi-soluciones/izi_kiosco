@@ -91,6 +91,13 @@ void main() {
     ]);
   });
 
+  test('encabezado de la tabla dice Desc.', () async {
+    final filas = _filas(await ticket(facturaDolares()));
+
+    expect(filas, contains('Cant.|Detalle|Precio U.|Desc.|Subtotal'));
+    expect(filas.where((f) => f.contains('Desc U')), isEmpty);
+  });
+
   test('ticket compacto: IMPORTE Bs en bolivianos', () async {
     final compacta = Sucursal.fromJson({
       ...Map<String, dynamic>.from(fixture['sucursal'] as Map),
