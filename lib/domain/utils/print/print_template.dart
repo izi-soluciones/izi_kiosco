@@ -537,6 +537,15 @@ static List<IziPrintItem> invoice80Co(
           size: IziPrintSize.sm,
           align: IziPrintAlign.center,
           bold: true));
+      if (invoice.customFactura["moneda"] is Map &&
+          invoice.customFactura["exRate"] != 1) {
+        items.add(IziPrintText(
+            text:
+                "MONEDA (TIPO DE CAMBIO): ${invoice.customFactura["moneda"]["simbolo"]} (${invoice.customFactura["exRate"]})",
+            size: IziPrintSize.sm,
+            align: IziPrintAlign.center,
+            bold: true));
+      }
 
       if (listCE.isNotEmpty) {
         items.add(IziPrintSeparator());
@@ -556,7 +565,7 @@ static List<IziPrintItem> invoice80Co(
         IziPrintColumn(text: "Detalle", width: 30, align: IziPrintAlign.left),
         IziPrintColumn(
             text: "Precio U.", width: 20, align: IziPrintAlign.right),
-        IziPrintColumn(text: "Desc U", width: 20, align: IziPrintAlign.right),
+        IziPrintColumn(text: "Desc.", width: 20, align: IziPrintAlign.right),
         IziPrintColumn(text: "Subtotal", width: 20, align: IziPrintAlign.right),
       ], size: IziPrintSize.sm, bold: true));
       items.add(IziPrintSeparator());
@@ -642,29 +651,11 @@ static List<IziPrintItem> invoice80Co(
                       (invoice.giftCardsImpuesto ?? 0)
                   : (invoice.montoTotal ?? 0) - (invoice.giftCards ?? 0)),
           2);
-      var esUnMil = (invoice.prefactura == 1
-                  ? (invoice.monto ?? 0) - (invoice.giftCards ?? 0)
-                  : (invoice.montoImpuesto != null &&
-                          invoice.giftCardsImpuesto != null
-                      ? invoice.montoImpuesto! - invoice.giftCardsImpuesto!
-                      : (invoice.monto ?? 0) - (invoice.giftCards ?? 0))) ~/
-              1000 ==
-          1;
-      num auxCents = ((invoice.prefactura == 1
-              ? invoice.montoTotal ?? 0
-              : (invoice.montoTotalImpuesto ?? invoice.montoTotal ?? 0)) -
-          ((invoice.prefactura == 1
-                  ? invoice.montoTotal ?? 0
-                  : (invoice.montoTotalImpuesto ?? invoice.montoTotal ?? 0)))
-              .toInt());
+      var esUnMil = (importeBase ~/ 1000) == 1;
+      num auxCents = importeBase - importeBase.toInt();
       var totalCentavos = (auxCents * 100).round().toInt();
-      //var totalCentavosStr = totalCentavos.toString().padLeft(2,'0');
-      num auxWritten = (invoice.prefactura == 1
-          ? (invoice.montoTotal ?? 0) - (invoice.giftCards ?? 0)
-          : (invoice.montoTotalImpuesto != null &&
-                  invoice.giftCardsImpuesto != null
-              ? invoice.montoTotalImpuesto! - invoice.giftCardsImpuesto!
-              : (invoice.montoTotal ?? 0) - (invoice.giftCards ?? 0)));
+      var totalCentavosStr = totalCentavos.toString().padLeft(2, '0');
+      num auxWritten = importeBase;
 
       var writtenTotal =
           (esUnMil ? "un " : "") + _formatNumberToWord(auxWritten.toInt());
@@ -722,7 +713,7 @@ static List<IziPrintItem> invoice80Co(
 
       items.add(IziPrintText(
           text:
-              'SON:  ${(writtenTotal).capitalize()} $totalCentavos/100 Bolivianos',
+              'SON:  ${(writtenTotal).capitalize()} $totalCentavosStr/100 Bolivianos',
           size: IziPrintSize.sm,
           align: IziPrintAlign.left));
       items.add(IziPrintSeparator());
