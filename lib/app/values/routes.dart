@@ -70,8 +70,10 @@ class Routes {
               return NoTransitionPage(
                 child: BlocProvider(
                   create: (context) =>
-                      HomeBloc(BusinessRepositoryHttp())
-                        ..verifyServerPos(context.read<AuthBloc>().state),
+                      HomeBloc(BusinessRepositoryHttp(),
+                          comandaRepository: ComandaRepositoryHttp())
+                        ..verifyServerPos(context.read<AuthBloc>().state)
+                        ..resolveAtcPending(),
                   child: const HomePage(),
                 ),
               );

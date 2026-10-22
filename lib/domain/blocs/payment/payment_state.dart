@@ -29,6 +29,10 @@ enum PaymentStatus {
   processingOrder,
   setInputs,
   demoPayment,
+  cardVerifying,
+  cardUncertain,
+  cardBlocked,
+  cardPosBusy,
 }
 
 enum PaymentCountryTaxes { bolivia, colombia }
@@ -167,6 +171,8 @@ class PaymentState extends Equatable {
   final ParamsCo? paramsCo;
   final PaymentCountryTaxes? countryTaxes;
   final String? izifyPosIp;
+  final String? atcCode;
+  final bool atcBlocked;
 
   const PaymentState({
     this.errorDescription,
@@ -204,6 +210,8 @@ class PaymentState extends Equatable {
     this.izifyPosIp,
     required this.phonePrefix,
     this.qrPaymentKey,
+    this.atcCode,
+    this.atcBlocked = false,
   });
 
   factory PaymentState.init() => PaymentState(
@@ -272,6 +280,8 @@ class PaymentState extends Equatable {
     PaymentCountryTaxes? countryTaxes,
     String? izifyPosIp,
     PaymentObj? paymentObj,
+    String? atcCode,
+    bool? atcBlocked,
   }) {
     return PaymentState(
       casaMatriz: casaMatriz ?? this.casaMatriz,
@@ -314,6 +324,8 @@ class PaymentState extends Equatable {
       paymentObj: paymentObj ?? this.paymentObj,
       countryTaxes: countryTaxes ?? this.countryTaxes,
       izifyPosIp: izifyPosIp ?? this.izifyPosIp,
+      atcCode: atcCode ?? this.atcCode,
+      atcBlocked: atcBlocked ?? this.atcBlocked,
     );
   }
 
@@ -347,5 +359,7 @@ class PaymentState extends Equatable {
     qrPaymentKey,
     qrLoading,
     izifyPosIp,
+    atcCode,
+    atcBlocked,
   ];
 }

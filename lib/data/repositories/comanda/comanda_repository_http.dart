@@ -16,6 +16,8 @@ import 'package:izi_kiosco/domain/dto/new_sale_link_dto.dart';
 import 'package:izi_kiosco/domain/dto/paid_charge_dto.dart';
 import 'package:izi_kiosco/domain/dto/payment_attempt_dto.dart';
 import 'package:izi_kiosco/domain/dto/payment_dto.dart';
+import 'package:izi_kiosco/domain/models/atc_payment_error.dart';
+import 'package:izi_kiosco/domain/models/atc_payment_status.dart';
 import 'package:izi_kiosco/domain/models/card_payment.dart';
 import 'package:izi_kiosco/domain/models/category_order.dart';
 import 'package:izi_kiosco/domain/models/charge.dart';
@@ -650,7 +652,8 @@ class ComandaRepositoryHttp extends ComandaRepository {
       {required String amount,
       required String ip,
       required CancelToken cancelToken,
-      required bool contactless}) async {
+      required bool contactless,
+      String? ref}) async {
     try {
       String path;
       if (contactless) {
@@ -660,6 +663,7 @@ class ComandaRepositoryHttp extends ComandaRepository {
       }
       var response = await _dioClient.get(
           uri: path,
+          queryParameters: ref != null ? {"ref": ref} : null,
           cancelToken: cancelToken,
           baseUrl: dotenv.env[EnvKeys.atcServerPOS],
           options: Options(
@@ -669,25 +673,77 @@ class ComandaRepositoryHttp extends ComandaRepository {
       if (response.statusCode == 200) {
         var res = {};
         if (response.data is String) {
-           res = jsonDecode(response.data);
+          // Texto sin status del POS (p. ej. "El IP no existe..."): queda como incierto
+          try {
+            res = jsonDecode(response.data);
+          } catch (_) {}
         }
         if(response.data is Map){
           res = response.data;
         }
-        if (res["status"] == true && res["data"] != null) {
+        // status true sin cod_respuesta "00" no es una aprobada: queda incierto y decide GET /v2/pago/:ref
+        if (res["status"] == true && res["data"] is Map && res["data"]["cod_respuesta"] == "00") {
           return CardPayment.fromJsonATC(res["data"]);
         }
-        throw response.data;
+        throw AtcPaymentError.fromResponse(res.isNotEmpty ? res : response.data);
       } else {
+        throw AtcPaymentError(AtcPaymentErrorType.uncertain, response.data);
+      }
+    } on DioException catch (e) {
+      // Timeout, red o cancelación del cliente: el POS pudo haber cobrado
+      throw AtcPaymentError(AtcPaymentErrorType.uncertain,
+          e.response?.data ?? e.error ?? "Network Error");
+    } catch (error) {
+      if (error is AtcPaymentError) {
+        rethrow;
+      }
+      throw AtcPaymentError(AtcPaymentErrorType.uncertain, error.toString());
+    }
+  }
+
+  @override
+  Future<AtcPaymentStatus> getPaymentStatusATC(String ref) async {
+    try {
+      var response = await _dioClient
+          .get(
+              uri: "/v2/pago/$ref",
+              baseUrl: dotenv.env[EnvKeys.atcServerPOS],
+              options: Options(
+                  responseType: ResponseType.json,
+                  receiveTimeout: const Duration(seconds: 5),
+                  sendTimeout: const Duration(seconds: 5)))
+          .timeout(const Duration(seconds: 5));
+      var res = response.data is String ? jsonDecode(response.data) : response.data;
+      if (response.statusCode == 200 && res is Map && res["estado"] is String) {
+        return AtcPaymentStatus.fromJson(res);
+      }
+      throw res ?? "Network Error";
+    } on DioException catch (e) {
+      var res = e.response?.data;
+      if (res is Map && res["estado"] is String) {
+        return AtcPaymentStatus.fromJson(res);
+      }
+      throw res ?? e.error ?? "Network Error";
+    }
+  }
+
+  @override
+  Future<void> confirmPaymentATC(String ref) async {
+    try {
+      var response = await _dioClient
+          .post(
+              uri: "/v2/pago/$ref/confirmar",
+              baseUrl: dotenv.env[EnvKeys.atcServerPOS],
+              options: Options(
+                  responseType: ResponseType.json,
+                  receiveTimeout: const Duration(seconds: 5),
+                  sendTimeout: const Duration(seconds: 5)))
+          .timeout(const Duration(seconds: 5));
+      if (response.statusCode != 200) {
         throw response.data;
       }
     } on DioException catch (e) {
-      if (e.response?.data is String) {
-        throw e.response?.data;
-      }
-      throw e.error ?? "Network Error";
-    } catch (error) {
-      throw error.toString();
+      throw e.response?.data ?? e.error ?? "Network Error";
     }
   }
   @override
