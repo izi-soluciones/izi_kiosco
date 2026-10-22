@@ -128,8 +128,7 @@ class _MakeOrderTypeState extends State<MakeOrderType> {
               await context.read<MakeOrderBloc>().init(authState, takeAway);
               if (!mounted) return;
               final makeOrderBloc = context.read<MakeOrderBloc>();
-              final isRetail = authState.currentDevice?.config.isRetail == true;
-              if (!isRetail && makeOrderBloc.hasMissingRequiredCamposExtra()) {
+              if (makeOrderBloc.hasMissingRequiredCamposExtra()) {
                 final result = await CustomAlerts.defaultAlert(
                   context: context,
                   dismissible: false,

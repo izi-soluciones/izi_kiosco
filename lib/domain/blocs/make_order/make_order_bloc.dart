@@ -434,8 +434,7 @@ class MakeOrderBloc extends Cubit<MakeOrderState> {
     emit(state.copyWith(camposExtra: updated));
   }
 
-  String? validateCamposExtra({bool isRetail = false}) {
-    if (isRetail) return null;
+  String? validateCamposExtra() {
     for (var c in state.camposExtra) {
       if (c.tipoCampo == 'fijo') continue;
       final val = c.valor?.trim() ?? "";
@@ -457,8 +456,7 @@ class MakeOrderBloc extends Cubit<MakeOrderState> {
     return null;
   }
 
-  bool hasMissingRequiredCamposExtra({bool isRetail = false}) {
-    if (isRetail) return false;
+  bool hasMissingRequiredCamposExtra() {
     for (var c in state.camposExtra) {
       if (c.tipoCampo == 'fijo') continue;
       final val = c.valor?.trim() ?? "";

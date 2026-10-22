@@ -153,24 +153,11 @@ void main() {
       expect(bloc.state.camposExtra.first.valor, null);
     });
 
-    test('validateCamposExtra and hasMissingRequiredCamposExtra should be ignored when isRetail is true', () {
-      final campo = CamposExtra(
-        id: 1,
-        contribuyente: 1,
-        nombre: "Número de mesa",
-        tipoCampo: "text",
-        visibleFactura: false,
-        visibleReporte: false,
-        isObligatorio: true,
-        creado: DateTime.now(),
-        tipoModulo: "dispositivos",
-        valor: "",
-      );
+    test('validateCamposExtra and hasMissingRequiredCamposExtra should return null and false when camposExtra is empty', () {
+      bloc.emit(bloc.state.copyWith(camposExtra: []));
 
-      bloc.emit(bloc.state.copyWith(camposExtra: [campo]));
-
-      expect(bloc.hasMissingRequiredCamposExtra(isRetail: true), false);
-      expect(bloc.validateCamposExtra(isRetail: true), null);
+      expect(bloc.hasMissingRequiredCamposExtra(), false);
+      expect(bloc.validateCamposExtra(), null);
     });
   });
 }
