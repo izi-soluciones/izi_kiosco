@@ -548,7 +548,11 @@
       "finishPurchase": "Finalizar la compra y pagar",
       "finish": "Finalizar",
       "waitingScan": "Acerca los códigos de barras de tus productos al lector para poder escanearlos",
-      "waitingPurchase": "Procesando compra"
+      "waitingPurchase": "Procesando compra",
+      "codeNotFound": "Producto no encontrado para el código: {}",
+      "invalidCode": "Código de barras inválido o no legible",
+      "duplicateScan": "Lectura duplicada omitida",
+      "scannerError": "No se pudo iniciar el lector de códigos de barras"
     }
   },
   "helpModal": {
