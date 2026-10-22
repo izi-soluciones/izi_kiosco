@@ -1,3 +1,4 @@
+import 'package:izi_kiosco/domain/models/campos_extra.dart';
 import 'package:izi_kiosco/domain/models/modulos.dart';
 
 class Contribuyente {
@@ -83,7 +84,7 @@ class Contribuyente {
   dynamic autorizadosAPI;
   Llaves? llaves;
   dynamic tiposFactura;
-  dynamic camposExtra;
+  List<CamposExtra>? camposExtra;
   dynamic autorizaciones;
   List<Usuarios>? usuarios;
 
@@ -120,7 +121,9 @@ class Contribuyente {
     autorizadosAPI :  json["autorizadosAPI"] ?? [],
     llaves : null,
     tiposFactura : [],
-    camposExtra : [],
+    camposExtra : json["camposExtra"] is List
+        ? List<CamposExtra>.from((json["camposExtra"] as List).map((e) => CamposExtra.fromJson(e)))
+        : [],
     autorizaciones : json["autorizaciones"],
     usuarios : []
   );
@@ -165,7 +168,9 @@ class Contribuyente {
       autorizadosAPI : [],
       llaves : null,
       tiposFactura : [],
-      camposExtra : [],
+      camposExtra : json["camposExtra"] is List
+          ? List<CamposExtra>.from((json["camposExtra"] as List).map((e) => CamposExtra.fromJson(e)))
+          : [],
       logoUrl : isValidUrl(json["logoUrl"]??"")?json["logoUrl"]:null,
       autorizaciones : json["autorizaciones"],
       usuarios : List.from(json["usuarios"] is Iterable?json["usuarios"]:[]).map((e) => Usuarios.fromJson(e)).toList()

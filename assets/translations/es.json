@@ -619,6 +619,16 @@
       "table": {
         "label": "Nombre de Mesa",
         "placeholder": "Seleccione una mesa"
+      },
+      "camposExtra": {
+        "title": "Información adicional",
+        "orderInfo": "Información del pedido",
+        "selectPlaceholder": "Seleccione una opción",
+        "inputPlaceholder": "Ingrese {}",
+        "required": "*",
+        "optional": "(opcional)",
+        "requiredError": "El campo \"{}\" es obligatorio",
+        "numberError": "El campo \"{}\" debe ser un número válido"
       }
     },
     "labels": {

@@ -13,6 +13,8 @@ import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/make_order/make_order_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/page_utils/page_utils_bloc.dart';
 import 'package:izi_kiosco/ui/general/izi_header_kiosk.dart';
+import 'package:izi_kiosco/ui/pages/make_order_page/modals/order_campos_extra_modal.dart';
+import 'package:izi_kiosco/ui/utils/custom_alerts.dart';
 import 'package:izi_kiosco/ui/utils/dynamic_list.dart';
 import 'package:izi_kiosco/ui/utils/responsive_utils.dart';
 
@@ -121,10 +123,23 @@ class _MakeOrderTypeState extends State<MakeOrderType> {
         Expanded(
           child: IziCard(
             padding: const EdgeInsets.all(16),
-            onPressed: (){
-              context.read<MakeOrderBloc>().init(context.read<AuthBloc>().state,takeAway);
-              context.read<MakeOrderBloc>().changeStepStatus(1);
-              
+            onPressed: () async {
+              final authState = context.read<AuthBloc>().state;
+              await context.read<MakeOrderBloc>().init(authState, takeAway);
+              if (!mounted) return;
+              final makeOrderBloc = context.read<MakeOrderBloc>();
+              if (makeOrderBloc.hasMissingRequiredCamposExtra()) {
+                final result = await CustomAlerts.defaultAlert(
+                  context: context,
+                  dismissible: false,
+                  child: const OrderCamposExtraModal(),
+                );
+                if (result == true) {
+                  makeOrderBloc.changeStepStatus(1);
+                }
+              } else {
+                makeOrderBloc.changeStepStatus(1);
+              }
             },
             child: FractionallySizedBox(
               widthFactor: 0.6,
