@@ -619,6 +619,16 @@
       "table": {
         "label": "Table name",
         "placeholder": "Select a table"
+      },
+      "camposExtra": {
+        "title": "Additional Information",
+        "orderInfo": "Order Information",
+        "selectPlaceholder": "Select an option",
+        "inputPlaceholder": "Enter {}",
+        "required": "*",
+        "optional": "(optional)",
+        "requiredError": "The field \"{}\" is required",
+        "numberError": "The field \"{}\" must be a valid number"
       }
     },
     "labels": {
