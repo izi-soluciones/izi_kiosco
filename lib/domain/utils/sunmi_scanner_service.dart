@@ -171,12 +171,9 @@ class SunmiScannerService {
     }
   }
 
-  /// Re-arms the scanner for subsequent items within an already active view.
-  /// If [clientId] is provided, ensures that [clientId] is registered in [activeClients].
-  Future<bool> rearmScan([String? clientId]) async {
-    if (clientId != null) {
-      _activeClients.add(clientId);
-    }
+  /// Re-arms the scanner for subsequent items within an already active view
+  /// without changing active client registrations.
+  Future<bool> rearmScan() async {
     if (!_isAndroid) return false;
     try {
       final result = await _channel.invokeMethod<bool>('startScan');
