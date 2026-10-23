@@ -30,7 +30,7 @@ Torres del Poeta, piso 3, oficina 302B,
         COD. CLIENTE: 4567891019        
              FECHA: <fecha>             
 ----------------------------------------
-CantDetalle      P. Neto  Desc USubtotal
+CantDetalle      P. Neto   Desc.Subtotal
 ----------------------------------------
 6   CER-1-Cervez   20.77    1.32  142.07
 

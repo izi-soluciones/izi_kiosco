@@ -31,7 +31,7 @@ Torres del Poeta, piso 3, oficina 302B,
              FECHA: <fecha>             
   MONEDA (TIPO DE CAMBIO): USD (6.96)   
 ----------------------------------------
-CantDetalle      P. Neto  Desc USubtotal
+CantDetalle      P. Neto   Desc.Subtotal
 ----------------------------------------
 2   DEV-1-Desarr  311.05    6.16  615.94
 

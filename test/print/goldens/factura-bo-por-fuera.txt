@@ -30,7 +30,7 @@ Torres del Poeta, piso 3, oficina 302B,
         COD. CLIENTE: 4567891019        
              FECHA: <fecha>             
 ----------------------------------------
-CantDetalle      P. Neto  Desc USubtotal
+CantDetalle      P. Neto   Desc.Subtotal
 ----------------------------------------
 2   DEV-1-Desarr   44.69    0.88   88.50
 
@@ -44,7 +44,7 @@ CantDetalle      P. Neto  Desc USubtotal
                          IVA       13.81
                MONTO A PAGAR      120.00
 ........................................
-SON:  Ciento veinte 0/100 Bolivianos    
+SON:  Ciento veinte 00/100 Bolivianos   
 ----------------------------------------
 [QR 3] https://pilotosiat.impuestos.gob.bo/consulta/QR?nit=1023456077&cuf=460717C6129A0EF396B44592C9129DD366239E06A1CC0001&numero=1&t=2
 

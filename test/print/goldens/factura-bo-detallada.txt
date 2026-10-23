@@ -30,7 +30,7 @@ Torres del Poeta, piso 3, oficina 302B,
           COD. CLIENTE: 12289           
              FECHA: <fecha>             
 ----------------------------------------
-CantDetalle     Precio U  Desc USubtotal
+CantDetalle     Precio U   Desc.Subtotal
 ----------------------------------------
 1   HAM01-.HAMB    70.00    0.00   70.00
 
@@ -54,7 +54,7 @@ CantDetalle     Precio U  Desc USubtotal
 IMPORTE BASE DE CREDITO FISC      294.00
                TOTAL A PAGAR      294.00
 ........................................
-SON:  Doscientos noventa y cuatro 0/100 
+SON:  Doscientos noventa y cuatro 00/100
 Bolivianos                              
 ----------------------------------------
 [QR 3] https://pilotosiat.impuestos.gob.bo/consulta/QR?nit=358658021&cuf=188A56309A310787088218FD5BF646D74D016255637411E6177751673&numero=1002335&t=2

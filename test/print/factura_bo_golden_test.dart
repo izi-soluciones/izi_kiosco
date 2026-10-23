@@ -108,14 +108,14 @@ void main() {
       }
     });
 
-    test('las líneas van en HALF-UP como el XML y el «un» de 1000 a 1999 sale con el monto a pagar', () async {
+    test('las líneas van en HALF-UP como el XML y el «un» de 1000 a 1999 y los centavos salen del monto a pagar', () async {
       final json = copia('prefacturaPorFuera');
       json['prefactura'] = 0;
       (json['listaItems'] as List).first['precioNetoUnitario'] = 2.675;
-      json['customFactura']['totalesPorFuera']['montoaPagar'] = 1500;
+      json['customFactura']['totalesPorFuera']['montoaPagar'] = 1500.05;
       final items = await ticket(Invoice.fromJson(json));
       expect(items.whereType<IziPrintRow>().where((r) => r.values.length == 5).map((r) => r.values[2].text), contains('2.68'));
-      expect(items.whereType<IziPrintText>().map((t) => t.text), contains('SON:  Un mil quinientos 0/100 Bolivianos'));
+      expect(items.whereType<IziPrintText>().map((t) => t.text), contains('SON:  Un mil quinientos 05/100 Bolivianos'));
     });
 
     test('el compacto muestra la gift card solo si la hubo', () async {
