@@ -512,7 +512,9 @@ class PaymentBloc extends Cubit<PaymentState> {
               ? "S/N"
               : state.businessName.value,
           telefonoComprador: state.phoneNumber.value.isNotEmpty?"${state.phonePrefix}${state.phoneNumber.value}":null,
-          correoElectronico: state.email.value.isNotEmpty?state.email.value:null
+          correoElectronico: state.email.value.isNotEmpty?state.email.value:null,
+          wantsInvoice: state.wantsInvoice,
+          prefactura: !state.wantsInvoice
           );
 
       countryConfig?.setParamsPayment(newPayment);    
@@ -733,7 +735,9 @@ class PaymentBloc extends Cubit<PaymentState> {
               ? "S/N"
               : state.businessName.value,
           telefonoComprador: state.phoneNumber.value.isNotEmpty?"${state.phonePrefix}${state.phoneNumber.value}":null,
-          correoElectronico: state.email.value.isNotEmpty?state.email.value:null);
+          correoElectronico: state.email.value.isNotEmpty?state.email.value:null,
+          wantsInvoice: state.wantsInvoice,
+          prefactura: !state.wantsInvoice);
       countryConfig?.setParamsPayment(newPayment);
 
       Charge charge =
@@ -758,7 +762,9 @@ class PaymentBloc extends Cubit<PaymentState> {
         razonSocial:
             state.businessName.value.isEmpty ? "S/N" : state.businessName.value,
         telefonoComprador: state.phoneNumber.value.isNotEmpty?"${state.phonePrefix}${state.phoneNumber.value}":null,
-          correoElectronico: state.email.value.isNotEmpty?state.email.value:null);
+          correoElectronico: state.email.value.isNotEmpty?state.email.value:null,
+          wantsInvoice: state.wantsInvoice,
+          prefactura: !state.wantsInvoice);
     countryConfig?.setParamsPayment(newPayment);
 
     Charge charge = await _comandaRepository.generatePaymentAttempt(newPayment);
@@ -842,7 +848,9 @@ class PaymentBloc extends Cubit<PaymentState> {
               ? "S/N"
               : state.businessName.value,
            telefonoComprador: state.phoneNumber.value,
-          correoElectronico: state.email.value.isNotEmpty?state.email.value:null);
+          correoElectronico: state.email.value.isNotEmpty?state.email.value:null,
+          wantsInvoice: state.wantsInvoice,
+          prefactura: !state.wantsInvoice);
       countryConfig?.setParamsPayment(newPayment);
 
       Charge charge =
@@ -867,7 +875,9 @@ class PaymentBloc extends Cubit<PaymentState> {
         razonSocial:
             state.businessName.value.isEmpty ? "S/N" : state.businessName.value,
         telefonoComprador: state.phoneNumber.value,
-          correoElectronico: state.email.value.isNotEmpty?state.email.value:null);
+          correoElectronico: state.email.value.isNotEmpty?state.email.value:null,
+          wantsInvoice: state.wantsInvoice,
+          prefactura: !state.wantsInvoice);
     countryConfig?.setParamsPayment(newPayment);
 
     Charge charge = await _comandaRepository.generatePaymentAttempt(newPayment);
@@ -1369,7 +1379,9 @@ class PaymentBloc extends Cubit<PaymentState> {
             ? state.customerName.value.trim()
             : null,
         telefonoComprador: state.phoneNumber.value.isNotEmpty?"${state.phonePrefix}${state.phoneNumber.value}":null,
-        correoElectronico: state.email.value
+        correoElectronico: state.email.value,
+        wantsInvoice: state.wantsInvoice,
+        prefactura: !state.wantsInvoice
         );
       countryConfig?.setParamsOrderPayment(ventaData);
       PaymentDto newPayment = PaymentDto(
