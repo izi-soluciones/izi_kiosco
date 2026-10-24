@@ -76,9 +76,12 @@ class _PaymentPageDemoState extends State<PaymentPageDemo> {
                 buttonType: ButtonType.primary,
                 buttonSize: ButtonSize.large,
                 loading: _loading,
-                buttonOnPressed: () {
+                buttonOnPressed: () async {
                   setState(() => _loading = true);
-                  context.read<PaymentBloc>().confirmDemoPayment();
+                  await context.read<PaymentBloc>().confirmDemoPayment();
+                  if (mounted) {
+                    setState(() => _loading = false);
+                  }
                 },
               ),
             ],

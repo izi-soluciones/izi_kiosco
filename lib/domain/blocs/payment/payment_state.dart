@@ -136,6 +136,7 @@ class PaymentState extends Equatable {
   final InputObj phoneNumber;
   final InputObj email;
   final bool wantsInvoice;
+  final bool invoiceSelectorShown;
 
   //VARIABLES
   final num? qrAmount;
@@ -187,6 +188,7 @@ class PaymentState extends Equatable {
     required this.businessName,
     required this.customerName,
     this.wantsInvoice = false,
+    this.invoiceSelectorShown = false,
     required this.email,
     required this.complement,
     required this.documentNumber,
@@ -221,6 +223,7 @@ class PaymentState extends Equatable {
     businessName: PaymentInputs.businessNameInput(),
     customerName: PaymentInputs.customerNameInput(),
     wantsInvoice: false,
+    invoiceSelectorShown: false,
     complement: PaymentInputs.complementInput(),
     documentNumber: PaymentInputs.documentNumberInput(),
     withException: false,
@@ -253,6 +256,7 @@ class PaymentState extends Equatable {
     InputObj? businessName,
     InputObj? customerName,
     bool? wantsInvoice,
+    bool? invoiceSelectorShown,
     InputObj? email,
     int? orderNumber,
     int? customOrderNumber,
@@ -291,6 +295,7 @@ class PaymentState extends Equatable {
       businessName: businessName ?? this.businessName,
       customerName: customerName ?? this.customerName,
       wantsInvoice: wantsInvoice ?? this.wantsInvoice,
+      invoiceSelectorShown: invoiceSelectorShown ?? this.invoiceSelectorShown,
       orderNumber: orderNumber == -1 ? null : orderNumber ?? this.orderNumber,
       customOrderNumber: customOrderNumber == -1
           ? null
@@ -332,6 +337,7 @@ class PaymentState extends Equatable {
     businessName,
     customerName,
     wantsInvoice,
+    invoiceSelectorShown,
     orderNumber,
     customOrderNumber,
     email,

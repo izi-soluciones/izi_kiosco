@@ -128,7 +128,7 @@ class _MakeOrderTypeState extends State<MakeOrderType> {
               await context.read<MakeOrderBloc>().init(authState, takeAway);
               if (!mounted) return;
               final makeOrderBloc = context.read<MakeOrderBloc>();
-              if (makeOrderBloc.hasMissingRequiredCamposExtra()) {
+              if (!takeAway && makeOrderBloc.hasMissingRequiredCamposExtra()) {
                 final result = await CustomAlerts.defaultAlert(
                   context: context,
                   dismissible: false,

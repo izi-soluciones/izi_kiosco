@@ -8,6 +8,7 @@ class SaleLink{
   num monto;
   String uuid;
   List<Item> items;
+  dynamic custom;
 
   SaleLink({
     required this.contribuyente,
@@ -15,7 +16,8 @@ class SaleLink{
     required this.id,
     required this.uuid,
     required this.monedaId,
-    required this.items
+    required this.items,
+    this.custom,
 });
   factory SaleLink.fromJson(Map json)=>
       SaleLink(
@@ -24,6 +26,7 @@ class SaleLink{
           id: json["id"],
           items: json["ventaData"] is Map && json["ventaData"]["listaItems"] is List?List.from(json["ventaData"]["listaItems"]).map((e) => Item.fromJson(e)).toList():[],
           uuid: json["uuid"] ?? "",
-          monedaId: json["monedaId"]?? AppConstants.defaultCurrencyId
+          monedaId: json["monedaId"]?? AppConstants.defaultCurrencyId,
+          custom: json["custom"],
       );
 }
