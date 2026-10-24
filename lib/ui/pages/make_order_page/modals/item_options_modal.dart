@@ -13,6 +13,8 @@ import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/make_order/make_order_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/page_utils/page_utils_bloc.dart';
 import 'package:izi_kiosco/domain/models/item.dart';
+import 'package:izi_kiosco/domain/utils/variable_particionada.dart';
+import 'package:izi_kiosco/ui/pages/make_order_page/widgets/grilla_sabores.dart';
 import 'package:izi_kiosco/ui/general/headers/back_modal_header.dart';
 import 'package:izi_kiosco/ui/general/izi_scroll.dart';
 import 'package:izi_kiosco/ui/utils/money_formatter.dart';
@@ -38,6 +40,11 @@ class _ItemOptionsModalState extends State<ItemOptionsModal> {
     itemEdit = widget.item.copyWith();
     for(Modifier m in itemEdit?.modificadores??[]){
       titleKeys.add(GlobalKey());
+      // Variable particionada: sin sabores por defecto; la selección se numera por orden.
+      if(m.isParticionada){
+        m.normalizarSeleccion();
+        continue;
+      }
       var existList = m.caracteristicas.where((element) => element.check);
 
       if(existList.isEmpty){
@@ -59,6 +66,12 @@ class _ItemOptionsModalState extends State<ItemOptionsModal> {
         if(itemEdit?.modificadores[i].isObligatorio == false || car.check){
           ver =true;
         }
+      }
+      // Variable particionada: de 1 sabor hasta tantos como partes.
+      final variable = itemEdit!.modificadores[i];
+      if(variable.isParticionada){
+        final elegidos = variable.seleccionOrdenada.length;
+        ver = elegidos >= 1 && elegidos <= (variable.partes ?? 0);
       }
       if(!ver){
         setState(() {
@@ -109,6 +122,21 @@ class _ItemOptionsModalState extends State<ItemOptionsModal> {
                           mainAxisSize: MainAxisSize.min,
                           children:(itemEdit?.modificadores??[]).asMap().entries.map((entry) {
                             var e1 = entry.value;
+                            if (e1.isParticionada) {
+                              return Container(
+                                key: titleKeys[entry.key],
+                                decoration: BoxDecoration(
+                                    border: Border(bottom: BorderSide(color: context.iziColors.grey25, width: 1))),
+                                child: GrillaSabores(
+                                  variable: e1,
+                                  conError: entry.key == indexRequired,
+                                  onCambio: () {
+                                    context.read<PageUtilsBloc>().updateScreenActive();
+                                    setState(() {});
+                                  },
+                                ),
+                              );
+                            }
                             return Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               mainAxisSize: MainAxisSize.min,
