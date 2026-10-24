@@ -151,6 +151,7 @@ class PaymentBloc extends Cubit<PaymentState> {
           orderNumber: -1,
           customOrderNumber: -1,
           wantsInvoice: false,
+          invoiceSelectorShown: false,
           customerName: PaymentInputs.customerNameInput(),
           economicActivity: economicActivity,
           currentCurrency: currentCurrency,
@@ -280,6 +281,7 @@ class PaymentBloc extends Cubit<PaymentState> {
       emit(state.copyWith(
           status: PaymentStatus.setInputs,
           wantsInvoice: true,
+          invoiceSelectorShown: true,
           businessName: state.businessName.value.trim().isEmpty
               ? state.businessName.changeValue(state.customerName.value.trim())
               : state.businessName,
@@ -291,6 +293,7 @@ class PaymentBloc extends Cubit<PaymentState> {
       emit(state.copyWith(
           status: PaymentStatus.setInputs,
           wantsInvoice: false,
+          invoiceSelectorShown: true,
           paramsCo: _defaultParamsCo,
           businessName: PaymentInputs.businessNameInput(),
           documentNumber: PaymentInputs.documentNumberInput(),
@@ -352,6 +355,7 @@ class PaymentBloc extends Cubit<PaymentState> {
         emit(state.copyWith(
             paymentType: paymentType,
             step: 2,
+            invoiceSelectorShown: true,
             qrWait: false,
             qrLoading: false,
             qrCharge: () => null));
@@ -366,6 +370,8 @@ class PaymentBloc extends Cubit<PaymentState> {
   markPaidQr() {
     emit(state.copyWith(step: 3, paymentType: PaymentType.qr));
   }
+
+  bool get _isPrefactura => !state.wantsInvoice && state.invoiceSelectorShown;
 
   // El retail sin facturacion va del selector de metodo al cobro sin pasar por el
   // formulario, asi que sus campos quedan vacios y exigirlos deja el cobro mudo.
@@ -514,7 +520,7 @@ class PaymentBloc extends Cubit<PaymentState> {
           telefonoComprador: state.phoneNumber.value.isNotEmpty?"${state.phonePrefix}${state.phoneNumber.value}":null,
           correoElectronico: state.email.value.isNotEmpty?state.email.value:null,
           wantsInvoice: state.wantsInvoice,
-          prefactura: !state.wantsInvoice
+          prefactura: _isPrefactura
           );
 
       countryConfig?.setParamsPayment(newPayment);    
@@ -737,7 +743,7 @@ class PaymentBloc extends Cubit<PaymentState> {
           telefonoComprador: state.phoneNumber.value.isNotEmpty?"${state.phonePrefix}${state.phoneNumber.value}":null,
           correoElectronico: state.email.value.isNotEmpty?state.email.value:null,
           wantsInvoice: state.wantsInvoice,
-          prefactura: !state.wantsInvoice);
+          prefactura: _isPrefactura);
       countryConfig?.setParamsPayment(newPayment);
 
       Charge charge =
@@ -764,7 +770,7 @@ class PaymentBloc extends Cubit<PaymentState> {
         telefonoComprador: state.phoneNumber.value.isNotEmpty?"${state.phonePrefix}${state.phoneNumber.value}":null,
           correoElectronico: state.email.value.isNotEmpty?state.email.value:null,
           wantsInvoice: state.wantsInvoice,
-          prefactura: !state.wantsInvoice);
+          prefactura: _isPrefactura);
     countryConfig?.setParamsPayment(newPayment);
 
     Charge charge = await _comandaRepository.generatePaymentAttempt(newPayment);
@@ -850,7 +856,7 @@ class PaymentBloc extends Cubit<PaymentState> {
            telefonoComprador: state.phoneNumber.value,
           correoElectronico: state.email.value.isNotEmpty?state.email.value:null,
           wantsInvoice: state.wantsInvoice,
-          prefactura: !state.wantsInvoice);
+          prefactura: _isPrefactura);
       countryConfig?.setParamsPayment(newPayment);
 
       Charge charge =
@@ -877,7 +883,7 @@ class PaymentBloc extends Cubit<PaymentState> {
         telefonoComprador: state.phoneNumber.value,
           correoElectronico: state.email.value.isNotEmpty?state.email.value:null,
           wantsInvoice: state.wantsInvoice,
-          prefactura: !state.wantsInvoice);
+          prefactura: _isPrefactura);
     countryConfig?.setParamsPayment(newPayment);
 
     Charge charge = await _comandaRepository.generatePaymentAttempt(newPayment);
@@ -1381,7 +1387,7 @@ class PaymentBloc extends Cubit<PaymentState> {
         telefonoComprador: state.phoneNumber.value.isNotEmpty?"${state.phonePrefix}${state.phoneNumber.value}":null,
         correoElectronico: state.email.value,
         wantsInvoice: state.wantsInvoice,
-        prefactura: !state.wantsInvoice
+        prefactura: _isPrefactura
         );
       countryConfig?.setParamsOrderPayment(ventaData);
       PaymentDto newPayment = PaymentDto(
@@ -1669,6 +1675,21 @@ class PaymentBloc extends Cubit<PaymentState> {
        } else {
          await _comandaRepository.confirmDemoPaymentRetail(
              id: state.qrCharge?.id ?? 0);
+       }
+       if (state.status != PaymentStatus.paymentProcessed) {
+         if (qrStream != null) {
+           _socketRepository.closeQrListening();
+           qrStream?.cancel();
+         }
+         timerManual?.cancel();
+         timerQR?.cancel();
+         emit(state.copyWith(step: 5, status: PaymentStatus.paymentProcessed));
+         timerSuccess = Timer(
+           const Duration(seconds: 10),
+           () async {
+             emit(state.copyWith(status: PaymentStatus.successInvoice));
+           },
+         );
        }
      } catch (e) {
        log(e.toString());

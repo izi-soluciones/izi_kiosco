@@ -162,11 +162,9 @@ class MakeOrderBloc extends Cubit<MakeOrderState> {
       }
 
       if(!isClosed){
-        List<CamposExtra> camposExtra = authState.currentDevice?.config.isRetail == true
-            ? const []
-            : authState.camposExtraDispositivos
-                .map((e) => e.copyWith())
-                .toList();
+        List<CamposExtra> camposExtra = authState.camposExtraDispositivos
+            .map((e) => e.copyWith())
+            .toList();
 
         emit(state.copyWith(
             status: MakeOrderStatus.successGet,
@@ -517,13 +515,21 @@ class MakeOrderBloc extends Cubit<MakeOrderState> {
       }
       var newSaleLinkDto = NewSaleLinkDto(
           listaItems: itemsSelected,
-          dispositivo: authState.currentDevice?.id ?? 0
+          dispositivo: authState.currentDevice?.id ?? 0,
+          camposExtra: state.camposExtra,
       );
       SaleLink saleLink = await _comandaRepository.createSaleLink(newSaleLinkDto);
       var paymentObj = PaymentObj(
               id: saleLink.id,
               uuid: saleLink.uuid,
-              custom: {},
+              custom: (saleLink.custom is Map && (saleLink.custom as Map).isNotEmpty)
+                  ? saleLink.custom
+                  : {
+                      "camposExtra": state.camposExtra
+                          .where((c) => c.valor != null && c.valor!.isNotEmpty)
+                          .map((e) => e.toJson())
+                          .toList(),
+                    },
               amount: saleLink.monto,
               isComanda: false,
               items: itemsSelected.map((e) => ItemPaymentObj(
