@@ -316,6 +316,12 @@ class PaymentBloc extends Cubit<PaymentState> {
     _socketRepository.closeQrListening();
     qrStream?.cancel();
     qrStream = null;
+    timerManual?.cancel();
+    timerQR?.cancel();
+    timerDemoFallback?.cancel();
+    timerSuccess?.cancel();
+    isProcessing = false;
+    activeProcessTimer = false;
     emit(state.copyWith(
         step: 0,
         paymentType: PaymentType.others,
@@ -326,6 +332,8 @@ class PaymentBloc extends Cubit<PaymentState> {
   }
 
   selectPayment(PaymentType paymentType, AuthState authState) async {
+    isProcessing = false;
+    activeProcessTimer = false;
     try {
       if (paymentType == PaymentType.cashRegister) {
         emit(state.copyWith(status: PaymentStatus.processingOrder));
@@ -434,6 +442,9 @@ class PaymentBloc extends Cubit<PaymentState> {
     _socketRepository.closeQrListening();
     qrStream?.cancel();
     qrStream = null;
+    timerManual?.cancel();
+    timerQR?.cancel();
+    timerDemoFallback?.cancel();
     timerSuccess?.cancel();
     return super.close();
   }
@@ -968,6 +979,8 @@ class PaymentBloc extends Cubit<PaymentState> {
     if (isClosed) {
       return false;
     }
+    isProcessing = false;
+    activeProcessTimer = false;
     if (qrStream != null) {
       _socketRepository.closeQrListening();
       qrStream?.cancel();
@@ -996,13 +1009,19 @@ class PaymentBloc extends Cubit<PaymentState> {
             _socketRepository.closeQrListening();
             qrStream?.cancel();
           }
-          emit(state.copyWith(step: 5, status: PaymentStatus.paymentProcessed));
-          timerSuccess = Timer(
-            const Duration(seconds: 10),
-            () async {
-              emit(state.copyWith(status: PaymentStatus.successInvoice));
-            },
-          );
+          if (!isClosed) {
+            emit(state.copyWith(step: 5, status: PaymentStatus.paymentProcessed));
+            timerSuccess?.cancel();
+            timerSuccess = Timer(
+              const Duration(seconds: 10),
+              () async {
+                if (!isClosed) {
+                  isProcessing = false;
+                  emit(state.copyWith(status: PaymentStatus.successInvoice));
+                }
+              },
+            );
+          }
         } else {
           timer = Timer(
             const Duration(seconds: 60),
@@ -1023,6 +1042,7 @@ class PaymentBloc extends Cubit<PaymentState> {
   }
   Timer? timerManual;
   Timer? timerQR;
+  Timer? timerDemoFallback;
 
   bool isProcessing =false;
   bool activeProcessTimer =false;
@@ -1030,6 +1050,8 @@ class PaymentBloc extends Cubit<PaymentState> {
     if (isClosed) {
       return false;
     }
+    isProcessing = false;
+    activeProcessTimer = false;
     if (qrStream != null) {
       _socketRepository.closeQrListening();
       qrStream?.cancel();
@@ -1696,23 +1718,40 @@ class PaymentBloc extends Cubit<PaymentState> {
          await _comandaRepository.confirmDemoPaymentRetail(
              id: state.qrCharge?.id ?? 0);
        }
-       if (qrStream == null && state.status != PaymentStatus.paymentProcessed) {
-         timerManual?.cancel();
-         timerQR?.cancel();
-         emit(state.copyWith(step: 5, status: PaymentStatus.paymentProcessed));
-         timerSuccess = Timer(
-           const Duration(seconds: 10),
-           () async {
-             emit(state.copyWith(status: PaymentStatus.successInvoice));
-           },
-         );
-       } else if (qrStream != null && authState != null) {
-         Timer(const Duration(seconds: 5), () async {
+
+       if (authState == null || qrStream == null) {
+         if (state.status != PaymentStatus.paymentProcessed) {
+           if (qrStream != null) {
+             _socketRepository.closeQrListening();
+             qrStream?.cancel();
+             qrStream = null;
+           }
+           timerManual?.cancel();
+           timerQR?.cancel();
+           timerDemoFallback?.cancel();
+           if (!isClosed) {
+             emit(state.copyWith(step: 5, status: PaymentStatus.paymentProcessed));
+             timerSuccess?.cancel();
+             timerSuccess = Timer(
+               const Duration(seconds: 10),
+               () async {
+                 if (!isClosed) {
+                   isProcessing = false;
+                   emit(state.copyWith(status: PaymentStatus.successInvoice));
+                 }
+               },
+             );
+           }
+         }
+       } else {
+         timerDemoFallback?.cancel();
+         timerDemoFallback = Timer(const Duration(seconds: 5), () async {
            if (!isProcessing && state.status != PaymentStatus.paymentProcessed && !isClosed) {
              isProcessing = true;
              if (qrStream != null) {
                _socketRepository.closeQrListening();
                qrStream?.cancel();
+               qrStream = null;
              }
              timerManual?.cancel();
              timerQR?.cancel();
@@ -1736,21 +1775,29 @@ class PaymentBloc extends Cubit<PaymentState> {
                  }
                }
              } catch (_) {}
-             emit(state.copyWith(step: 5, status: PaymentStatus.paymentProcessed));
-             timerSuccess = Timer(
-               const Duration(seconds: 10),
-               () async {
-                 emit(state.copyWith(status: PaymentStatus.successInvoice));
-               },
-             );
+             if (!isClosed) {
+               emit(state.copyWith(step: 5, status: PaymentStatus.paymentProcessed));
+               timerSuccess?.cancel();
+               timerSuccess = Timer(
+                 const Duration(seconds: 10),
+                 () async {
+                   if (!isClosed) {
+                     isProcessing = false;
+                     emit(state.copyWith(status: PaymentStatus.successInvoice));
+                   }
+                 },
+               );
+             }
            }
          });
        }
      } catch (e) {
        log(e.toString());
-       emit(state.copyWith(
-           status: PaymentStatus.errorGet, errorDescription: e.toString()));
-       emit(state.copyWith(status: PaymentStatus.waitingGet));
+       if (!isClosed) {
+         emit(state.copyWith(
+             status: PaymentStatus.errorGet, errorDescription: e.toString()));
+         emit(state.copyWith(status: PaymentStatus.waitingGet));
+       }
      }
   }
 }
