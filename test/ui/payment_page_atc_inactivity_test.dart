@@ -12,6 +12,7 @@ import 'package:izi_kiosco/domain/models/card_payment.dart';
 import 'package:izi_kiosco/domain/models/charge.dart';
 import 'package:izi_kiosco/domain/models/contribuyente.dart';
 import 'package:izi_kiosco/domain/models/device.dart';
+import 'package:izi_kiosco/domain/models/modulos.dart';
 import 'package:izi_kiosco/domain/models/payment_obj.dart';
 import 'package:izi_kiosco/domain/repositories/auth_repository.dart';
 import 'package:izi_kiosco/domain/repositories/business_repository.dart';
@@ -93,7 +94,7 @@ class _TestAuthBloc extends AuthBloc {
 
 AuthState _authState({required bool facturacion}) => AuthState.init().copyWith(
     currentContribuyente:
-        Contribuyente.fromJson({"habilitadoFacturacion": facturacion}),
+        Contribuyente.fromJson({"modulos": {"facturacion": {"enabled": facturacion}}}),
     currentDevice: Device.fromJson({
       "id": 1,
       "sucursal": 1,
@@ -128,7 +129,7 @@ class _Harness {
     ));
     await tester.pump();
     bloc.seed(bloc.state.copyWith(
-        step: authState.currentContribuyente?.tieneFacturacion == true ? 2 : 1,
+        step: authState.currentContribuyente?.tieneModulo(Modulo.facturacion) == true ? 2 : 1,
         status: PaymentStatus.successGet,
         phoneNumber: bloc.state.phoneNumber.copyWith(value: '71234567'),
         paymentObj: PaymentObj(

@@ -184,7 +184,7 @@ final _rejectedResult = {
 AuthState _authState() {
   return AuthState.init().copyWith(
       currentContribuyente:
-          Contribuyente.fromJson({"habilitadoFacturacion": false}),
+          Contribuyente.fromJson({"modulos": {"facturacion": {"enabled": false}}}),
       currentDevice: Device.fromJson({
         "id": 1,
         "sucursal": 1,

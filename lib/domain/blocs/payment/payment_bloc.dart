@@ -1808,7 +1808,7 @@ class PaymentBloc extends Cubit<PaymentState> {
   void _emitCardFailure(AuthState authState, PaymentStatus status) {
     emit(state.copyWith(
         status: status,
-        step: authState.currentContribuyente?.tieneFacturacion == true ? 2 : 1));
+        step: authState.currentContribuyente?.tieneModulo(Modulo.facturacion) == true ? 2 : 1));
     emit(state.copyWith(status: PaymentStatus.successGet));
   }
 
