@@ -127,15 +127,16 @@ class AuthBloc extends Cubit<AuthState> {
         bool isRetail = device.config.isRetail == true;
         List<CamposExtra> camposExtraDisp = (contribuyente.camposExtra ?? [])
             .where((c) {
+              if (c.tipoModulo != 'dispositivos') {
+                return false;
+              }
               if (isRetail) {
                 final nombre = c.nombre.trim().toLowerCase();
                 if (nombre.contains('mesa') || nombre.contains('table')) {
                   return false;
                 }
-                return c.tipoModulo == 'dispositivos' || c.tipoModulo == 'venta' || c.tipoModulo == null || c.tipoModulo == '';
-              } else {
-                return c.tipoModulo == 'dispositivos' || c.tipoModulo == 'comanda' || c.tipoModulo == null || c.tipoModulo == '';
               }
+              return true;
             })
             .map((c) => c.copyWith())
             .toList();

@@ -37,25 +37,25 @@ class PrintTemplate {
   }
 
   static void _addInvoiceCamposExtra(List<IziPrintItem> items, Invoice invoice, {bool center = true}) {
-    List listCE = invoice.customFactura["camposExtra"] is List
-        ? invoice.customFactura["camposExtra"]
-        : [];
+    List listCE = [];
+    if (invoice.customFactura != null && invoice.customFactura["camposExtra"] is List) {
+      listCE = invoice.customFactura["camposExtra"] as List;
+    }
     final campos = listCE.where((ce) =>
         ce is Map &&
         (ce['visibleFactura'] == true ||
-            ce['tipoModulo'] == 'dispositivos' ||
-            ce['tipoModulo'] == 'venta')).toList();
-    if (campos.isNotEmpty) {
-      items.add(IziPrintSeparator(dotted: true));
-      for (var ce in campos) {
-        final titulo = ce["titulo"] ?? ce["nombre"] ?? "";
-        final valor = ce["valor"] ?? "";
-        if (valor.toString().trim().isNotEmpty) {
-          items.add(IziPrintText(
-              text: "$titulo: $valor",
-              size: IziPrintSize.sm,
-              align: center ? IziPrintAlign.center : IziPrintAlign.left));
-        }
+            (ce['visibleFactura'] != false && ce['tipoModulo'] == 'venta'))).toList();
+    for (var ce in campos) {
+      final titulo = (ce["titulo"] ?? ce["nombre"] ?? "").toString().trim();
+      final valor = (ce["valor"] ?? "").toString().trim();
+      if (valor.isNotEmpty) {
+        final boldPrefix = titulo.isNotEmpty ? "$titulo: " : null;
+        final text = titulo.isNotEmpty ? "$titulo: $valor" : valor;
+        items.add(IziPrintText(
+            text: text,
+            size: IziPrintSize.sm,
+            boldPrefix: boldPrefix,
+            align: center ? IziPrintAlign.center : IziPrintAlign.left));
       }
     }
   }
@@ -372,10 +372,10 @@ static List<IziPrintItem> invoice80Co(
             ? paymentObj?.custom["pagadorData"]["razonSocial"]
             : null;
     if (nombreCliente != null && nombreCliente.isNotEmpty) {
-      items.add(IziPrintSeparator(dotted: true));
       items.add(IziPrintText(
         text: "Cliente: $nombreCliente",
         size: IziPrintSize.md,
+        bold: true,
         align: IziPrintAlign.center,
       ));
     }
@@ -385,24 +385,26 @@ static List<IziPrintItem> invoice80Co(
         ? paymentObj?.custom["camposExtra"] as List
         : [];
     if (camposExtra.isNotEmpty) {
-      items.add(IziPrintSeparator(dotted: true));
       for (var ce in camposExtra) {
         if (ce is Map) {
-          final titulo = ce["titulo"] ?? ce["nombre"] ?? "";
-          final valor = ce["valor"] ?? "";
-          final tipoCampo = ce["tipoCampo"] ?? "";
-          if (valor.toString().trim().isNotEmpty) {
+          final titulo = (ce["titulo"] ?? ce["nombre"] ?? "").toString().trim();
+          final valor = (ce["valor"] ?? "").toString().trim();
+          final tipoCampo = (ce["tipoCampo"] ?? "").toString();
+          if (valor.isNotEmpty) {
             if (tipoCampo == "fijo") {
               items.add(IziPrintText(
-                text: valor.toString(),
+                text: valor,
                 size: IziPrintSize.sm,
                 align: IziPrintAlign.center,
               ));
             } else {
+              final boldPrefix = titulo.isNotEmpty ? "$titulo: " : null;
+              final text = titulo.isNotEmpty ? "$titulo: $valor" : valor;
               items.add(IziPrintText(
-                text: "$titulo: $valor",
+                text: text,
                 size: IziPrintSize.sm,
-                align: IziPrintAlign.left,
+                boldPrefix: boldPrefix,
+                align: IziPrintAlign.center,
               ));
             }
           }

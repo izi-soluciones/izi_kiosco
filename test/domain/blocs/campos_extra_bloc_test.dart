@@ -313,44 +313,76 @@ void main() {
         creado: DateTime.now(),
         tipoModulo: 'dispositivos',
       ),
+      CamposExtra(
+        id: 4,
+        contribuyente: 28,
+        nombre: 'Mesa exterior',
+        tipoCampo: 'text',
+        visibleFactura: true,
+        visibleReporte: true,
+        isObligatorio: false,
+        creado: DateTime.now(),
+        tipoModulo: 'dispositivos',
+      ),
     ];
 
     List<CamposExtra> filterForDevice(List<CamposExtra> list, bool isRetail) {
       return list.where((c) {
+        if (c.tipoModulo != 'dispositivos') {
+          return false;
+        }
         if (isRetail) {
           final nombre = c.nombre.trim().toLowerCase();
           if (nombre.contains('mesa') || nombre.contains('table')) {
             return false;
           }
-          return c.tipoModulo == 'dispositivos' ||
-              c.tipoModulo == 'venta' ||
-              c.tipoModulo == null ||
-              c.tipoModulo == '';
-        } else {
-          return c.tipoModulo == 'dispositivos' ||
-              c.tipoModulo == 'comanda' ||
-              c.tipoModulo == null ||
-              c.tipoModulo == '';
         }
+        return true;
       }).toList();
     }
 
-    test('Retail kiosk includes dispositivos and venta, excludes mesa / comanda', () {
-      final result = filterForDevice(campos, true);
+    test('Retail kiosk only includes dispositivos module and excludes mesa / table', () {
+      final legacyField = CamposExtra(
+        id: 5,
+        contribuyente: 28,
+        nombre: 'Nota interna legado',
+        tipoCampo: 'text',
+        visibleFactura: false,
+        visibleReporte: false,
+        isObligatorio: false,
+        creado: DateTime.now(),
+        tipoModulo: '',
+      );
+      final result = filterForDevice([...campos, legacyField], true);
       final names = result.map((c) => c.nombre).toList();
 
-      expect(names.contains('Turno de venta'), true);
-      expect(names.contains('Dirección de entrega'), true);
-      expect(names.contains('Número de mesa'), false);
-    });
-
-    test('Restaurant kiosk includes dispositivos and comanda, excludes venta', () {
-      final result = filterForDevice(campos, false);
-      final names = result.map((c) => c.nombre).toList();
-
-      expect(names.contains('Número de mesa'), true);
       expect(names.contains('Dirección de entrega'), true);
       expect(names.contains('Turno de venta'), false);
+      expect(names.contains('Número de mesa'), false);
+      expect(names.contains('Mesa exterior'), false);
+      expect(names.contains('Nota interna legado'), false);
+    });
+
+    test('Restaurant kiosk only includes dispositivos module (including mesa in dispositivos)', () {
+      final legacyField = CamposExtra(
+        id: 5,
+        contribuyente: 28,
+        nombre: 'Nota interna legado',
+        tipoCampo: 'text',
+        visibleFactura: false,
+        visibleReporte: false,
+        isObligatorio: false,
+        creado: DateTime.now(),
+        tipoModulo: '',
+      );
+      final result = filterForDevice([...campos, legacyField], false);
+      final names = result.map((c) => c.nombre).toList();
+
+      expect(names.contains('Dirección de entrega'), true);
+      expect(names.contains('Mesa exterior'), true);
+      expect(names.contains('Número de mesa'), false); // 'comanda' module is excluded
+      expect(names.contains('Turno de venta'), false); // 'venta' module is excluded
+      expect(names.contains('Nota interna legado'), false);
     });
   });
 }
