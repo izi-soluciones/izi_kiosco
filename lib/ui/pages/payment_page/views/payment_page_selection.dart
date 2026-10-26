@@ -12,6 +12,7 @@ import 'package:izi_kiosco/app/values/routes_keys.dart';
 import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/page_utils/page_utils_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/payment/payment_bloc.dart';
+import 'package:izi_kiosco/domain/models/modulos.dart';
 import 'package:izi_kiosco/ui/general/izi_header_kiosk.dart';
 import 'package:izi_kiosco/ui/modals/warning_modal.dart';
 import 'package:izi_kiosco/ui/pages/payment_page/modals/card_type_atc_modal.dart';
@@ -134,7 +135,7 @@ class PaymentPageSelection extends StatelessWidget {
 
 
   _selectPayment(PaymentType paymentType,BuildContext context, AuthState authState){
-    if(authState.currentContribuyente?.tieneFacturacion==true || (authState.currentDevice?.config.isRetail!=true && authState.currentDevice?.config.isRetailBarcode!=true)){
+    if(authState.currentContribuyente?.tieneModulo(Modulo.facturacion)==true || (authState.currentDevice?.config.isRetail!=true && authState.currentDevice?.config.isRetailBarcode!=true)){
       context.read<PaymentBloc>().selectPayment(paymentType,authState);
     }
     else{
