@@ -124,8 +124,19 @@ class AuthBloc extends Cubit<AuthState> {
         List<Currency> currencies = await _businessRepository.getCurrencies(
             contribuyenteId: contribuyente.id ?? 0);
 
+        bool isRetail = device.config.isRetail == true;
         List<CamposExtra> camposExtraDisp = (contribuyente.camposExtra ?? [])
-            .where((c) => c.tipoModulo == 'dispositivos')
+            .where((c) {
+              if (isRetail) {
+                final nombre = c.nombre.trim().toLowerCase();
+                if (nombre.contains('mesa') || nombre.contains('table')) {
+                  return false;
+                }
+                return c.tipoModulo == 'dispositivos' || c.tipoModulo == 'venta' || c.tipoModulo == null || c.tipoModulo == '';
+              } else {
+                return c.tipoModulo == 'dispositivos' || c.tipoModulo == 'comanda' || c.tipoModulo == null || c.tipoModulo == '';
+              }
+            })
             .map((c) => c.copyWith())
             .toList();
 
@@ -142,7 +153,7 @@ class AuthBloc extends Cubit<AuthState> {
               break;
             }
           }
-          if (matchedValue == null && (fieldNameClean.contains('mesa') || fieldNameClean.contains('table'))) {
+          if (matchedValue == null && !isRetail && (fieldNameClean.contains('mesa') || fieldNameClean.contains('table'))) {
             matchedValue = queryParams['mesa'] ??
                 queryParams['table'] ??
                 queryParams['numero_de_mesa'] ??

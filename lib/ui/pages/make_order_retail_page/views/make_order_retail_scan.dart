@@ -24,6 +24,7 @@ import 'package:izi_kiosco/domain/models/payment_obj.dart';
 import 'package:izi_kiosco/domain/models/sale_link.dart';
 import 'package:izi_kiosco/ui/modals/help_modal.dart';
 import 'package:izi_kiosco/ui/modals/warning_modal.dart';
+import 'package:izi_kiosco/ui/pages/make_order_page/modals/order_campos_extra_modal.dart';
 import 'package:izi_kiosco/ui/utils/custom_alerts.dart';
 import 'package:izi_kiosco/ui/utils/dynamic_list.dart';
 import 'package:izi_kiosco/ui/utils/money_formatter.dart';
@@ -390,6 +391,20 @@ class _MakeOrderRetailScanState extends State<MakeOrderRetailScan> {
                     buttonText: LocaleKeys.makeOrderRetail_scan_finishPurchase.tr(),
                     buttonSize: (ru.gtSm())?ButtonSize.large:ButtonSize.medium,
                     buttonOnPressed: widget.state.itemsSelected.isEmpty?null:() async {
+                      if (widget.state.camposExtra.isNotEmpty) {
+                        final result = await CustomAlerts.defaultAlert(
+                          context: context,
+                          dismissible: true,
+                          child: BlocProvider.value(
+                            value: context.read<MakeOrderRetailBloc>(),
+                            child: const OrderCamposExtraModal(isRetailScan: true),
+                          ),
+                        );
+                        if (result != true) {
+                          focusNodeKeyboard.requestFocus();
+                          return;
+                        }
+                      }
                       _emitPurchase();
                     },
                   )
@@ -410,7 +425,14 @@ class _MakeOrderRetailScanState extends State<MakeOrderRetailScan> {
       if(value is SaleLink){
         var paymentObj = PaymentObj(
             id: value.id,
-            custom: {},
+            custom: (value.custom is Map && (value.custom as Map).isNotEmpty)
+                ? value.custom
+                : {
+                    "camposExtra": widget.state.camposExtra
+                        .where((c) => c.valor != null && c.valor!.isNotEmpty)
+                        .map((e) => e.toJson())
+                        .toList(),
+                  },
             amount: value.monto,
             isComanda: false,
             uuid: value.uuid,

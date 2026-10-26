@@ -139,4 +139,47 @@ class MakeOrderRetailBloc extends Cubit<MakeOrderRetailState> {
     list.removeWhere((element) => element.id == item.id);
     emit(state.copyWith(itemsSelected: list));
   }
+
+  void updateCampoExtra(int id, String? value) {
+    final updated = state.camposExtra.map((c) {
+      if (c.id == id) {
+        return c.copyWith(valor: () => value);
+      }
+      return c;
+    }).toList();
+    emit(state.copyWith(camposExtra: updated));
+  }
+
+  String? validateCamposExtra() {
+    for (var c in state.camposExtra) {
+      if (c.tipoCampo == 'fijo') continue;
+      final val = c.valor?.trim() ?? "";
+      if (c.isObligatorio && val.isEmpty) {
+        return 'El campo "${c.nombre}" es obligatorio';
+      }
+      if (val.isNotEmpty && c.tipoCampo == 'number') {
+        final numVal = num.tryParse(val);
+        if (numVal == null) {
+          return 'El campo "${c.nombre}" debe ser un número válido';
+        }
+      }
+      if (val.isNotEmpty && c.tipoCampo == 'select' && c.values != null && c.values!.isNotEmpty) {
+        if (!c.values!.contains(val)) {
+          return 'Seleccione una opción válida para "${c.nombre}"';
+        }
+      }
+    }
+    return null;
+  }
+
+  bool hasMissingRequiredCamposExtra() {
+    for (var c in state.camposExtra) {
+      if (c.tipoCampo == 'fijo') continue;
+      final val = c.valor?.trim() ?? "";
+      if (c.isObligatorio && val.isEmpty) {
+        return true;
+      }
+    }
+    return false;
+  }
 }

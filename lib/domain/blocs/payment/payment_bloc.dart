@@ -1083,13 +1083,21 @@ class PaymentBloc extends Cubit<PaymentState> {
                   }
                   timerQR?.cancel();
                   timeoutTimer.cancel();
-                  num? numero = comanda.numero;
-                  if (comanda.custom is Map && (comanda.custom["numeroCustom"] != null)) {
-                    numero = comanda.custom["numeroCustom"];
+                  Map<String, dynamic> customMap = {};
+                  if (comanda.custom is Map) {
+                    customMap = Map<String, dynamic>.from(comanda.custom);
+                  } else if (comanda.custom is String && (comanda.custom as String).isNotEmpty) {
+                    try {
+                      final decoded = jsonDecode(comanda.custom);
+                      if (decoded is Map) {
+                        customMap = Map<String, dynamic>.from(decoded);
+                      }
+                    } catch (_) {}
                   }
-                  if(comanda.custom is Map && comanda.custom["facturaUuid"] is String){
+                  num? numero = customMap["numeroCustom"] ?? comanda.numero;
+                  if (customMap["facturaUuid"] is String) {
                     await _printRollo(authState,
-                        idInvoice: comanda.custom["facturaUuid"],
+                        idInvoice: customMap["facturaUuid"],
                         orderNumber: comanda.numero?.toInt() ?? 0,
                         customOrderNumber: numero?.toInt());
                   } else {
@@ -1123,19 +1131,31 @@ class PaymentBloc extends Cubit<PaymentState> {
               timerQR?.cancel();
               timeoutTimer.cancel();
               try {
-                if (event["uuidFactura"] is String && event["numeroOrden"] is int) {
-                  await _printRollo(authState,
-                      idInvoice: event["uuidFactura"],
-                      orderNumber: event["numeroOrden"],
-                      customOrderNumber: event["numeroCustom"] is int
-                          ? event["numeroCustom"]
-                          : null);
-                } else if (event["numeroOrden"] is int) {
+                final orderNum = event["numeroOrden"] is num
+                    ? (event["numeroOrden"] as num).toInt()
+                    : int.tryParse(event["numeroOrden"]?.toString() ?? "");
+                final customOrderNum = event["numeroCustom"] is num
+                    ? (event["numeroCustom"] as num).toInt()
+                    : int.tryParse(event["numeroCustom"]?.toString() ?? "");
+                final uuidFactura = event["uuidFactura"] is String ? event["uuidFactura"] as String : null;
+
+                if (uuidFactura != null) {
+                  try {
+                    await _printRollo(authState,
+                        idInvoice: uuidFactura,
+                        orderNumber: orderNum,
+                        customOrderNumber: customOrderNum);
+                  } catch (e) {
+                    if (orderNum != null) {
+                      await _printRolloOrder(authState,
+                          orderNumber: orderNum,
+                          customOrderNumber: customOrderNum);
+                    }
+                  }
+                } else if (orderNum != null) {
                   await _printRolloOrder(authState,
-                      orderNumber: event["numeroOrden"],
-                      customOrderNumber: event["numeroCustom"] is int
-                          ? event["numeroCustom"]
-                          : null);
+                      orderNumber: orderNum,
+                      customOrderNumber: customOrderNum);
                 }
               } catch (_) {}
               if (qrStream != null) {
