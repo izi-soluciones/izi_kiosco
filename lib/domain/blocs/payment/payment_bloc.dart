@@ -1687,7 +1687,7 @@ class PaymentBloc extends Cubit<PaymentState> {
       log(e.toString());
     }
   }
-  Future<void> confirmDemoPayment() async {
+  Future<void> confirmDemoPayment([AuthState? authState]) async {
      try {
        if (state.paymentObj?.isComanda == true) {
          await _comandaRepository.confirmDemoPaymentOrder(
@@ -1696,11 +1696,7 @@ class PaymentBloc extends Cubit<PaymentState> {
          await _comandaRepository.confirmDemoPaymentRetail(
              id: state.qrCharge?.id ?? 0);
        }
-       if (state.status != PaymentStatus.paymentProcessed) {
-         if (qrStream != null) {
-           _socketRepository.closeQrListening();
-           qrStream?.cancel();
-         }
+       if (qrStream == null && state.status != PaymentStatus.paymentProcessed) {
          timerManual?.cancel();
          timerQR?.cancel();
          emit(state.copyWith(step: 5, status: PaymentStatus.paymentProcessed));
@@ -1710,6 +1706,45 @@ class PaymentBloc extends Cubit<PaymentState> {
              emit(state.copyWith(status: PaymentStatus.successInvoice));
            },
          );
+       } else if (qrStream != null && authState != null) {
+         Timer(const Duration(seconds: 5), () async {
+           if (!isProcessing && state.status != PaymentStatus.paymentProcessed && !isClosed) {
+             isProcessing = true;
+             if (qrStream != null) {
+               _socketRepository.closeQrListening();
+               qrStream?.cancel();
+             }
+             timerManual?.cancel();
+             timerQR?.cancel();
+             try {
+               if (state.paymentObj?.isComanda == true && state.paymentObj?.uuid != null) {
+                 var comanda = await _comandaRepository.getComanda(orderUuid: state.paymentObj!.uuid!);
+                 Map<String, dynamic> customMap = {};
+                 if (comanda.custom is Map) {
+                   customMap = Map<String, dynamic>.from(comanda.custom);
+                 }
+                 num? numero = customMap["numeroCustom"] ?? comanda.numero;
+                 if (customMap["facturaUuid"] is String) {
+                   await _printRollo(authState,
+                       idInvoice: customMap["facturaUuid"] as String,
+                       orderNumber: comanda.numero?.toInt() ?? 0,
+                       customOrderNumber: numero?.toInt());
+                 } else if (comanda.numero != null) {
+                   await _printRolloOrder(authState,
+                       orderNumber: comanda.numero!.toInt(),
+                       customOrderNumber: numero?.toInt());
+                 }
+               }
+             } catch (_) {}
+             emit(state.copyWith(step: 5, status: PaymentStatus.paymentProcessed));
+             timerSuccess = Timer(
+               const Duration(seconds: 10),
+               () async {
+                 emit(state.copyWith(status: PaymentStatus.successInvoice));
+               },
+             );
+           }
+         });
        }
      } catch (e) {
        log(e.toString());
