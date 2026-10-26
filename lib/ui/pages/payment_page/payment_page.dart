@@ -61,6 +61,19 @@ class PaymentPage extends StatelessWidget {
                   text: LocaleKeys.payment_messages_errorCard.tr(),
                   snackBarType: SnackBarType.error));
         }
+        if(state.status== PaymentStatus.cardPosBusy){
+          context.read<PageUtilsBloc>().closeLoading();
+          context.read<PageUtilsBloc>().initScreenActiveInvoiced(context.read<AuthBloc>().state);
+          context.read<PageUtilsBloc>().showSnackBar(
+              snackBar: SnackBarInfo(
+                  text: LocaleKeys.payment_messages_posBusy.tr(),
+                  snackBarType: SnackBarType.warning));
+        }
+        // La pantalla de origen ya no está montada cuando el cobro termina acá: sin esto el kiosko no vuelve solo a inicio
+        if(state.status== PaymentStatus.cardUncertain || state.status== PaymentStatus.cardBlocked){
+          context.read<PageUtilsBloc>().closeLoading();
+          context.read<PageUtilsBloc>().initScreenActiveInvoiced(context.read<AuthBloc>().state);
+        }
         if (state.status == PaymentStatus.brebError) {
           context.read<PageUtilsBloc>().closeLoading();
           context.read<PageUtilsBloc>().showSnackBar(

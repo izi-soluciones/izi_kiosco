@@ -6,6 +6,7 @@ import 'package:izi_kiosco/domain/dto/new_sale_link_dto.dart';
 import 'package:izi_kiosco/domain/dto/paid_charge_dto.dart';
 import 'package:izi_kiosco/domain/dto/payment_attempt_dto.dart';
 import 'package:izi_kiosco/domain/dto/payment_dto.dart';
+import 'package:izi_kiosco/domain/models/atc_payment_status.dart';
 import 'package:izi_kiosco/domain/models/card_payment.dart';
 import 'package:izi_kiosco/domain/models/category_order.dart';
 import 'package:izi_kiosco/domain/models/charge.dart';
@@ -51,7 +52,9 @@ abstract class ComandaRepository {
   Future<CardPayment> callCardPayment(
       {required int amount, required String ip});
   Future<CardPayment> callCardPaymentATC(
-      {required String amount, required String ip, required CancelToken cancelToken,required bool contactless});
+      {required String amount, required String ip, required CancelToken cancelToken,required bool contactless, String? ref});
+  Future<AtcPaymentStatus> getPaymentStatusATC(String ref);
+  Future<void> confirmPaymentATC(String ref);
   Future<CardPayment> callCardPaymentIzify(
       {required String amount, required String ipPort, required String token, required String currency, required String cardType});
 
