@@ -9,10 +9,14 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:izi_kiosco/app/values/app_constants.dart';
+import 'package:izi_kiosco/data/local/local_storage_atc_pending.dart';
 import 'package:izi_kiosco/data/local/local_storage_card_errors.dart';
 import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
 import 'package:izi_kiosco/domain/dto/payment_attempt_dto.dart';
 import 'package:izi_kiosco/domain/dto/payment_dto.dart';
+import 'package:izi_kiosco/domain/models/atc_payment_error.dart';
+import 'package:izi_kiosco/domain/models/atc_payment_status.dart';
+import 'package:izi_kiosco/domain/models/atc_pending_payment.dart';
 import 'package:izi_kiosco/domain/models/card_payment.dart';
 import 'package:izi_kiosco/domain/models/cash_register.dart';
 import 'package:izi_kiosco/domain/models/charge.dart';
@@ -34,6 +38,7 @@ import 'package:izi_kiosco/domain/repositories/business_repository.dart';
 import 'package:izi_kiosco/domain/repositories/comanda_repository.dart';
 import 'package:izi_kiosco/data/utils/token_utils.dart';
 import 'package:izi_kiosco/domain/repositories/socket_repository.dart';
+import 'package:izi_kiosco/domain/utils/atc_pending_resolver.dart';
 import 'package:izi_kiosco/domain/utils/crash_report.dart';
 import 'package:izi_kiosco/domain/utils/input_obj.dart';
 import 'package:izi_kiosco/domain/utils/print/print_template.dart';
@@ -64,9 +69,15 @@ class PaymentBloc extends Cubit<PaymentState> {
   bool _paramsFromCustomer = false;
   String? _matchedNit;
   CancelToken cancelToken = CancelToken();
+  // Cada cuánto y hasta cuándo se consulta GET /v2/pago/:ref cuando no se sabe si el POS cobró
+  final Duration atcPollInterval;
+  final Duration atcVerifyTimeout;
+  AtcPendingPayment? _atcUncertainPending;
 
   PaymentBloc(
-      this._comandaRepository, this._businessRepository, this._socketRepository)
+      this._comandaRepository, this._businessRepository, this._socketRepository,
+      {this.atcPollInterval = const Duration(seconds: 3),
+      this.atcVerifyTimeout = const Duration(seconds: 60)})
       : super(PaymentState.init());
 
   initOrder(
@@ -496,6 +507,12 @@ class PaymentBloc extends Cubit<PaymentState> {
       {bool atc = false, bool linkser = false, bool izify = false, bool contactless = true, String cardType = "DEBITO"}) async {
     try {
       emit(state.copyWith(step: 4));
+      final atcPrevious = izify || linkser ? null : await _previousAtcAttempt();
+      if (atcPrevious != null && atcPrevious.inProgress) {
+        _emitCardFailure(authState, PaymentStatus.cardPosBusy);
+        return false;
+      }
+      final previousPending = atcPrevious?.pending;
 
       PaymentAttemptDto newPayment = PaymentAttemptDto(
           uuid: state.paymentObj?.uuid ?? "",
@@ -517,14 +534,16 @@ class PaymentBloc extends Cubit<PaymentState> {
 
       countryConfig?.setParamsPayment(newPayment);    
 
-      Charge charge =
-          await _comandaRepository.generatePaymentAttempt(newPayment);
+      Charge charge = previousPending != null
+          ? _atcCharge(previousPending)
+          : await _comandaRepository.generatePaymentAttempt(newPayment);
       await _listenPaymentRetail(authState, charge);
       if (authState.currentDevice?.config.demo == true) {
         emit(state.copyWith(step: 8, status: PaymentStatus.demoPayment, qrCharge: () => charge));
         return true;
       }
       CardPayment cardPayment;
+      AtcPendingPayment? atcPending;
       if (izify) {
         final isSocketAlive = await _verifyIzifySocket();
         if (!isSocketAlive) {
@@ -547,15 +566,21 @@ class PaymentBloc extends Cubit<PaymentState> {
                 _roundToNDecimals(state.paymentObj?.amount ?? 0, 2)),
             ip: authState.currentDevice!.config.ipLinkser!);
       } else {
-        try {
-          cardPayment = await _comandaRepository.callCardPaymentATC(
-              amount: (state.paymentObj?.amount ?? 0).moneyFormat(digitsTaxes: authState.taxesStrategy.decimals),
-              ip: authState.currentDevice!.config.ipAtc!,
-              cancelToken: cancelToken,
-              contactless: contactless);
-        } catch (e) {
-            rethrow;
+        atcPending = previousPending ?? AtcPendingPayment(
+            ref: _atcRef("${state.paymentObj?.uuid ?? ""}-${charge.intentoPago ?? ""}"),
+            uuid: state.paymentObj?.uuid ?? "",
+            intentoPago: charge.intentoPago,
+            kind: AtcPaymentKind.retail,
+            amount: (state.paymentObj?.amount ?? 0).moneyFormat(digitsTaxes: authState.taxesStrategy.decimals),
+            createdAt: DateTime.now(),
+            orderUuid: state.paymentObj?.uuid);
+        CardPayment? atcPayment = atcPrevious?.cardPayment ?? await _callCardPaymentATC(authState, atcPending,
+            ip: authState.currentDevice!.config.ipAtc!,
+            contactless: contactless);
+        if (atcPayment == null) {
+          return false;
         }
+        cardPayment = atcPayment;
       }
       var success = false;
       bool isTerminalApproved = true;
@@ -581,6 +606,8 @@ class PaymentBloc extends Cubit<PaymentState> {
         CrashReport.report("Error complete payment POS", cardPayment.toJson().toString());
         await LocalStorageCardErrors.saveCardErrors(
             jsonEncode(cardPayment.toJson()));
+        // Sin confirmar: la página de contingencia lo sigue mostrando "Aprobado sin confirmar" para caja
+        await _settleAtcPending(atcPending, confirm: false);
         emit(state.copyWith(step: 6, status: PaymentStatus.paymentProcessed));
         timerSuccess = Timer(
           const Duration(seconds: 30),
@@ -590,6 +617,7 @@ class PaymentBloc extends Cubit<PaymentState> {
         );
         return false;
       } else {
+        await _settleAtcPending(atcPending);
         return true;
       }
     } catch (e) {
@@ -609,10 +637,18 @@ class PaymentBloc extends Cubit<PaymentState> {
       {bool atc = false, bool linkser = false, bool izify = false, bool contactless = true, String cardType = "DEBITO"}) async {
     try {
       emit(state.copyWith(step: 4));
+      final atcPrevious = izify || linkser ? null : await _previousAtcAttempt();
+      if (atcPrevious != null && atcPrevious.inProgress) {
+        _emitCardFailure(authState, PaymentStatus.cardPosBusy);
+        return false;
+      }
+      final previousPending = atcPrevious?.pending;
 
       PaymentDto newPayment = _buildPaymentDto(AppConstants.idPaymentMethodPOS);
 
-      Charge charge = await _comandaRepository.generatePayment(
+      Charge charge = previousPending != null
+          ? _atcCharge(previousPending)
+          : await _comandaRepository.generatePayment(
           contribuyenteId: authState.currentContribuyente?.id ?? 0,
           payment: newPayment);
       await _saveAndListenPaymentOrder(authState, charge);
@@ -621,6 +657,7 @@ class PaymentBloc extends Cubit<PaymentState> {
         return true;
       }
       CardPayment cardPayment;
+      AtcPendingPayment? atcPending;
       if (izify) {
         final isSocketAlive = await _verifyIzifySocket();
         if (!isSocketAlive) {
@@ -643,15 +680,21 @@ class PaymentBloc extends Cubit<PaymentState> {
                 _roundToNDecimals(state.paymentObj?.amount ?? 0, 2)),
             ip: authState.currentDevice!.config.ipLinkser!);
       } else {
-        try {
-          cardPayment = await _comandaRepository.callCardPaymentATC(
-              amount: (state.paymentObj?.amount ?? 0).moneyFormat(digitsTaxes: authState.taxesStrategy.decimals),
-              cancelToken: cancelToken,
-              ip: authState.currentDevice!.config.ipAtc!,
-              contactless: contactless);
-        } catch (e) {
-            rethrow;
+        atcPending = previousPending ?? AtcPendingPayment(
+            ref: _atcRef(charge.uuid),
+            uuid: charge.uuid,
+            intentoPago: null,
+            kind: AtcPaymentKind.comanda,
+            amount: (state.paymentObj?.amount ?? 0).moneyFormat(digitsTaxes: authState.taxesStrategy.decimals),
+            createdAt: DateTime.now(),
+            orderUuid: state.paymentObj?.uuid);
+        CardPayment? atcPayment = atcPrevious?.cardPayment ?? await _callCardPaymentATC(authState, atcPending,
+            ip: authState.currentDevice!.config.ipAtc!,
+            contactless: contactless);
+        if (atcPayment == null) {
+          return false;
         }
+        cardPayment = atcPayment;
       }
       var success = false;
       bool isTerminalApproved = true;
@@ -676,6 +719,8 @@ class PaymentBloc extends Cubit<PaymentState> {
         CrashReport.report("Error complete payment POS", cardPayment.toJson().toString());
         await LocalStorageCardErrors.saveCardErrors(
             jsonEncode(cardPayment.toJson()));
+        // Sin confirmar: la página de contingencia lo sigue mostrando "Aprobado sin confirmar" para caja
+        await _settleAtcPending(atcPending, confirm: false);
         emit(state.copyWith(step: 6, status: PaymentStatus.paymentProcessed));
         timerSuccess = Timer(
           const Duration(seconds: 30),
@@ -685,6 +730,7 @@ class PaymentBloc extends Cubit<PaymentState> {
         );
         return false;
       } else {
+        await _settleAtcPending(atcPending);
         return true;
       }
     } catch (e) {
@@ -704,6 +750,10 @@ class PaymentBloc extends Cubit<PaymentState> {
       {bool atc = false, bool linkser = false, bool izify = false, bool contactless = true, String cardType = "DEBITO"}) async {
     if (!(_skipInvoiceForm(authState) || _validateInputs()) ||
         !(atc || linkser || izify)) {
+      return false;
+    }
+    // El cliente dijo que el POS imprimió voucher: esta orden no se vuelve a cobrar con tarjeta
+    if (state.atcBlocked) {
       return false;
     }
     if (state.paymentObj?.isComanda == true) {
@@ -1609,6 +1659,156 @@ class PaymentBloc extends Cubit<PaymentState> {
   cancelPaymentCard(){
     cancelToken.cancel();
     cancelToken = CancelToken();
+  }
+
+  // Respuesta a "¿El POS imprimió un voucher?" cuando no se pudo confirmar el pago.
+  // Con "No" el intento local queda pendiente para resolverse al volver a inicio.
+  Future<void> answerAtcVoucher(AuthState authState, bool hasVoucher) async {
+    if (state.status != PaymentStatus.cardUncertain) {
+      return;
+    }
+    if (hasVoucher) {
+      emit(state.copyWith(status: PaymentStatus.cardBlocked, atcBlocked: true));
+      // Lo resuelve caja con la página de contingencia: sale de la resolución automática, sin confirmar
+      await _settleAtcPending(_atcUncertainPending, confirm: false);
+      return;
+    }
+    _emitCardFailure(authState, PaymentStatus.cardError);
+  }
+
+  // Ref único por intento ([A-Za-z0-9_-], máx. 64): la base identifica el cobro y el sufijo
+  // (milisegundos en base 36) lo hace único aunque el backend repita el cobro en un reintento.
+  // Sus últimos 6 caracteres son el código corto que el cliente lleva a caja.
+  String _atcRef(String base) {
+    var ref = "$base-${DateTime.now().millisecondsSinceEpoch.toRadixString(36)}"
+        .replaceAll(RegExp(r'[^A-Za-z0-9_-]'), '');
+    return ref.length > 64 ? ref.substring(ref.length - 64) : ref;
+  }
+
+  // null: el flujo terminó con un estado propio (POS ocupado o pago incierto)
+  Future<CardPayment?> _callCardPaymentATC(
+      AuthState authState, AtcPendingPayment atcPending,
+      {required String ip, required bool contactless}) async {
+    await LocalStorageAtcPending.savePending(atcPending);
+    try {
+      return await _comandaRepository.callCardPaymentATC(
+          amount: atcPending.amount,
+          ip: ip,
+          ref: atcPending.ref,
+          cancelToken: cancelToken,
+          contactless: contactless);
+    } on AtcPaymentError catch (e) {
+      log(e.toString());
+      if (e.type == AtcPaymentErrorType.rejected ||
+          e.type == AtcPaymentErrorType.notSent) {
+        // notSent: el servidor respondió sin contactar al POS, no hay resultado que confirmar
+        await _settleAtcPending(atcPending,
+            confirm: e.type == AtcPaymentErrorType.rejected);
+        rethrow;
+      }
+      if (e.type == AtcPaymentErrorType.paymentInProgress) {
+        // El servidor no le mandó nada al POS: no hay nada que confirmar
+        await _settleAtcPending(atcPending, confirm: false);
+        _emitCardFailure(authState, PaymentStatus.cardPosBusy);
+        return null;
+      }
+    } catch (e) {
+      log(e.toString());
+    }
+    return _verifyAtcPayment(authState, atcPending);
+  }
+
+  // Timeout, red o cancelación: consulta GET /v2/pago/:ref hasta atcVerifyTimeout
+  Future<CardPayment?> _verifyAtcPayment(
+      AuthState authState, AtcPendingPayment atcPending) async {
+    emit(state.copyWith(status: PaymentStatus.cardVerifying));
+    final elapsed = Stopwatch()..start();
+    while (!isClosed) {
+      AtcPaymentStatus? atcStatus;
+      try {
+        atcStatus = await _comandaRepository.getPaymentStatusATC(atcPending.ref);
+      } catch (e) {
+        log(e.toString());
+      }
+      if (atcStatus != null && atcStatus.isApproved) {
+        return atcStatus.cardPayment;
+      }
+      if (atcStatus != null && (atcStatus.isRejected || atcStatus.isNotFound)) {
+        await _settleAtcPending(atcPending, confirm: atcStatus.isRejected);
+        throw AtcPaymentError(AtcPaymentErrorType.rejected, atcStatus.estado);
+      }
+      if (elapsed.elapsed + atcPollInterval > atcVerifyTimeout) {
+        break;
+      }
+      await Future.delayed(atcPollInterval);
+    }
+    if (!isClosed) {
+      _atcUncertainPending = atcPending;
+      emit(state.copyWith(
+          status: PaymentStatus.cardUncertain, atcCode: atcPending.shortCode));
+    }
+    return null;
+  }
+
+  // Antes de cobrar con tarjeta ATC: los intentos locales de esta misma orden. Uno aprobado se
+  // completa en vez de cobrar de nuevo; uno en curso es "POS ocupado"; si no, se cobra normal.
+  Future<({AtcPendingPayment? pending, CardPayment? cardPayment, bool inProgress})>
+      _previousAtcAttempt() async {
+    var inProgress = false;
+    final orderUuid = state.paymentObj?.uuid ?? "";
+    List<AtcPendingPayment> pendingList = [];
+    try {
+      pendingList = await LocalStorageAtcPending.getPending();
+    } catch (e) {
+      log(e.toString());
+    }
+    for (var pending in pendingList) {
+      if (orderUuid.isEmpty || pending.orderUuid != orderUuid) {
+        continue;
+      }
+      AtcPaymentStatus atcStatus;
+      try {
+        atcStatus = await _comandaRepository.getPaymentStatusATC(pending.ref);
+      } catch (e) {
+        log(e.toString());
+        continue;
+      }
+      if (atcStatus.resuelto) {
+        continue;
+      }
+      if (atcStatus.isApproved) {
+        return (pending: pending, cardPayment: atcStatus.cardPayment, inProgress: false);
+      }
+      if (atcStatus.estado == AtcPaymentStatus.inProgress) {
+        inProgress = true;
+      }
+    }
+    return (pending: null, cardPayment: null, inProgress: inProgress);
+  }
+
+  // El cobro de un intento anterior, para escuchar y marcar ese en vez de generar otro
+  Charge _atcCharge(AtcPendingPayment pending) => Charge(
+      qrUrl: null,
+      uuid: pending.uuid,
+      id: pending.intentoPago ?? 0,
+      intentoPago: pending.intentoPago,
+      qrBase64: null,
+      token: null);
+
+  Future<void> _settleAtcPending(AtcPendingPayment? atcPending,
+      {bool confirm = true}) async {
+    if (atcPending == null) {
+      return;
+    }
+    await AtcPendingResolver.settle(_comandaRepository, atcPending,
+        confirm: confirm);
+  }
+
+  void _emitCardFailure(AuthState authState, PaymentStatus status) {
+    emit(state.copyWith(
+        status: status,
+        step: authState.currentContribuyente?.tieneModulo(Modulo.facturacion) == true ? 2 : 1));
+    emit(state.copyWith(status: PaymentStatus.successGet));
   }
 
   Future<void> downloadQrCode() async {

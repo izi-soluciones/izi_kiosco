@@ -63,10 +63,19 @@ class DioClient {
     Map<String, dynamic>? body,
     Map<String, dynamic>? queryParameters,
     Options? options,
+    String? baseUrl
   }) async {
     //error
+    Dio dio  = _dio;
+    if(baseUrl!=null){
+
+      dio = Dio();
+      dio.options = BaseOptions(
+          baseUrl: baseUrl);
+      dio.interceptors.add(AppInterceptor(dio));
+    }
     var response =
-    await _dio.post(uri, queryParameters: queryParameters, options: options,data: body);
+    await dio.post(uri, queryParameters: queryParameters, options: options,data: body);
     return response;
   }
   Future<Response> put({

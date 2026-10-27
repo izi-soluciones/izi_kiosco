@@ -313,7 +313,10 @@
       "chooseCardType": "Elige un tipo de tarjeta",
       "chooseCardPaymentType": "Elige un tipo de pago con tarjeta",
       "payWithBreB": "Paga a través de Bre-B",
-      "areYouSureStopTransaction": "¿Está seguro de parar la transacción?"
+      "areYouSureStopTransaction": "¿Está seguro de parar la transacción?",
+      "verifyingCardPayment": "Verificando tu pago…",
+      "cardPaymentUncertain": "No pudimos confirmar tu pago. ¿El POS imprimió un voucher?",
+      "cardPaymentBlocked": "No vuelvas a pagar. Acércate a caja con tu voucher"
     },
     "body": {
       "total": "Total",
@@ -329,7 +332,8 @@
       "havingTrouble": "¿Estás teniendo algún problema?",
       "documentFallback": "número",
       "doNotClose": "No cierres esta pantalla",
-      "orderNumber": "Orden #{}"
+      "orderNumber": "Orden #{}",
+      "cardPaymentCode": "Código: {}"
     },
     "buttons": {
       "qr": "QR",
@@ -350,7 +354,9 @@
       "invoiceNo": "No",
       "invoiceYes": "Sí",
       "changePaymentMethod": "Cambiar forma de pago",
-      "stopTransaction": "Detener la transacción"
+      "stopTransaction": "Detener la transacción",
+      "hasVoucherYes": "Sí, tengo voucher",
+      "hasVoucherNo": "No"
     },
     "inputs": {
       "complement": {
@@ -416,7 +422,8 @@
       "errorBreB": "Ocurrió un problema al generar el cobro por Bre-B",
       "processingOrder": "Procesando orden",
       "processingInvoice": "Procesando factura",
-      "processingInvoiceElectronic": "Procesando factura electrónica"
+      "processingInvoiceElectronic": "Procesando factura electrónica",
+      "posBusy": "El POS está terminando un pago anterior, espera un momento"
     },
     "links": {
       "addEmail": "+ Agregar correo electrónico",
