@@ -246,10 +246,22 @@ class PrintUtils {
   print(List<IziPrintItem> values, Device? device) async {
     if (device?.config.noPrintRollo == true) return;
     try {
+      final shouldFallbackPdf = device?.config.printFallbackPdf == true ||
+          device?.config.demo == true ||
+          kDebugMode;
+
       if (kIsWeb) {
-        await _pdfPrint(values);
+        if (shouldFallbackPdf) {
+          await _pdfPrint(values);
+        } else {
+          log("PrintUtils: Impresion PDF omitida en Web (printFallbackPdf=${device?.config.printFallbackPdf}, demo=${device?.config.demo}, kDebugMode=$kDebugMode)");
+        }
       } else if (!Platform.isAndroid) {
-        await _pdfPrint(values);
+        if (shouldFallbackPdf) {
+          await _pdfPrint(values);
+        } else {
+          log("PrintUtils: Impresion PDF omitida en no-Android (printFallbackPdf=${device?.config.printFallbackPdf}, demo=${device?.config.demo}, kDebugMode=$kDebugMode)");
+        }
       } else {
         if (device?.config.printSat == true) {
           try {
@@ -273,9 +285,6 @@ class PrintUtils {
           if (resBinding == true && status != PrinterStatus.ERROR) {
             await _sunmiPrint(values);
           } else {
-            final shouldFallbackPdf = device?.config.printFallbackPdf == true ||
-                device?.config.demo == true ||
-                kDebugMode;
             if (shouldFallbackPdf) {
               await _pdfPrint(values);
             } else {
