@@ -44,8 +44,8 @@ class PrintTemplate {
     final campos = listCE.where((ce) =>
         ce is Map &&
         (ce['visibleFactura'] == true ||
-            ce['tipoModulo'] == 'dispositivos' ||
-            (ce['visibleFactura'] != false && ce['tipoModulo'] == 'venta'))).toList();
+            (ce['visibleFactura'] != false &&
+                (ce['tipoModulo'] == 'venta' || ce['tipoModulo'] == 'dispositivos')))).toList();
     for (var ce in campos) {
       final titulo = (ce["titulo"] ?? ce["nombre"] ?? "").toString().trim();
       final valor = (ce["valor"] ?? "").toString().trim();

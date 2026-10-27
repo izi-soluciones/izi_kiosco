@@ -246,44 +246,41 @@ class PrintUtils {
   print(List<IziPrintItem> values, Device? device) async {
     if (device?.config.noPrintRollo == true) return;
     try {
-      final shouldFallbackPdf = device?.config.printFallbackPdf == true ||
-          device?.config.demo == true ||
-          kDebugMode;
-
       if (kIsWeb) {
-        if (shouldFallbackPdf) {
-          await _pdfPrint(values);
-        }
+        await _pdfPrint(values);
+      } else if (!Platform.isAndroid) {
+        await _pdfPrint(values);
       } else {
-        if (Platform.isAndroid) {
-          if (device?.config.printSat == true) {
-            try {
-              log("iZi Kiosco: Routing to _satPrint...");
-              await _satPrint(values);
-              log("iZi Kiosco: _satPrint finished resolving channel.");
-            } catch (e) {
-              log("SatPrint failed: $e");
-            }
-          } else if (device?.config.printAutoReply == true) {
-            try {
-              await _autoReplyPrint(values);
-            } catch (e) {
-              log("AutoReplyPrint failed: $e");
-            }
-          } else {
-            var resBinding = await SunmiPrinter.bindingPrinter();
-            await SunmiPrinter.initPrinter();
-            var status = await SunmiPrinter.getPrinterStatus();
-            log(status.toString());
-            if (resBinding == true && status != PrinterStatus.ERROR) {
-              await _sunmiPrint(values);
-            } else if (shouldFallbackPdf) {
-              await _pdfPrint(values);
-            }
+        if (device?.config.printSat == true) {
+          try {
+            log("iZi Kiosco: Routing to _satPrint...");
+            await _satPrint(values);
+            log("iZi Kiosco: _satPrint finished resolving channel.");
+          } catch (e) {
+            log("SatPrint failed: $e");
+          }
+        } else if (device?.config.printAutoReply == true) {
+          try {
+            await _autoReplyPrint(values);
+          } catch (e) {
+            log("AutoReplyPrint failed: $e");
           }
         } else {
-          if (shouldFallbackPdf) {
-            await _pdfPrint(values);
+          var resBinding = await SunmiPrinter.bindingPrinter();
+          await SunmiPrinter.initPrinter();
+          var status = await SunmiPrinter.getPrinterStatus();
+          log(status.toString());
+          if (resBinding == true && status != PrinterStatus.ERROR) {
+            await _sunmiPrint(values);
+          } else {
+            final shouldFallbackPdf = device?.config.printFallbackPdf == true ||
+                device?.config.demo == true ||
+                kDebugMode;
+            if (shouldFallbackPdf) {
+              await _pdfPrint(values);
+            } else {
+              log("PrintUtils: Fallback a PDF omitido en Android/Sunmi (printFallbackPdf=${device?.config.printFallbackPdf}, demo=${device?.config.demo}, kDebugMode=$kDebugMode)");
+            }
           }
         }
       }

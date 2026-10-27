@@ -319,6 +319,7 @@ class PaymentBloc extends Cubit<PaymentState> {
     timerManual?.cancel();
     timerQR?.cancel();
     timerDemoFallback?.cancel();
+    timerTimeout?.cancel();
     timerSuccess?.cancel();
     isProcessing = false;
     activeProcessTimer = false;
@@ -334,6 +335,7 @@ class PaymentBloc extends Cubit<PaymentState> {
   selectPayment(PaymentType paymentType, AuthState authState) async {
     isProcessing = false;
     activeProcessTimer = false;
+    timerTimeout?.cancel();
     try {
       if (paymentType == PaymentType.cashRegister) {
         emit(state.copyWith(status: PaymentStatus.processingOrder));
@@ -445,6 +447,7 @@ class PaymentBloc extends Cubit<PaymentState> {
     timerManual?.cancel();
     timerQR?.cancel();
     timerDemoFallback?.cancel();
+    timerTimeout?.cancel();
     timerSuccess?.cancel();
     return super.close();
   }
@@ -981,6 +984,7 @@ class PaymentBloc extends Cubit<PaymentState> {
     }
     isProcessing = false;
     activeProcessTimer = false;
+    timerTimeout?.cancel();
     if (qrStream != null) {
       _socketRepository.closeQrListening();
       qrStream?.cancel();
@@ -1002,6 +1006,7 @@ class PaymentBloc extends Cubit<PaymentState> {
             if (event["uuidFactura"] is String && authState.currentDevice?.config.noPrintRollo!=true) {
               await _printRollo(authState, idInvoice: event["uuidFactura"]);
             }
+          timerTimeout?.cancel();
           if (timer != null) {
             timer!.cancel();
           }
@@ -1043,6 +1048,7 @@ class PaymentBloc extends Cubit<PaymentState> {
   Timer? timerManual;
   Timer? timerQR;
   Timer? timerDemoFallback;
+  Timer? timerTimeout;
 
   bool isProcessing =false;
   bool activeProcessTimer =false;
@@ -1058,7 +1064,8 @@ class PaymentBloc extends Cubit<PaymentState> {
     }
 
 
-    Timer? timeoutTimer = Timer(
+    timerTimeout?.cancel();
+    timerTimeout = Timer(
         const Duration(minutes: 5),
             () {
           if (!isProcessing && !isClosed) {
@@ -1067,10 +1074,17 @@ class PaymentBloc extends Cubit<PaymentState> {
             qrStream?.cancel();
             timerManual?.cancel();
             timerQR?.cancel();
+            timerTimeout?.cancel();
             emit(state.copyWith(step: 6, status: PaymentStatus.paymentProcessed));
+            timerSuccess?.cancel();
             timerSuccess = Timer(
                 const Duration(seconds: 10),
-                    () => emit(state.copyWith(status: PaymentStatus.successInvoice))
+                () {
+                  if (!isClosed) {
+                    isProcessing = false;
+                    emit(state.copyWith(status: PaymentStatus.successInvoice));
+                  }
+                },
             );
           }
         }
@@ -1104,7 +1118,7 @@ class PaymentBloc extends Cubit<PaymentState> {
                     qrStream?.cancel();
                   }
                   timerQR?.cancel();
-                  timeoutTimer.cancel();
+                  timerTimeout?.cancel();
                   Map<String, dynamic> customMap = {};
                   if (comanda.custom is Map) {
                     customMap = Map<String, dynamic>.from(comanda.custom);
@@ -1151,7 +1165,7 @@ class PaymentBloc extends Cubit<PaymentState> {
               isProcessing=true;
               timerManual?.cancel();
               timerQR?.cancel();
-              timeoutTimer.cancel();
+              timerTimeout?.cancel();
               try {
                 final orderNum = event["numeroOrden"] is num
                     ? (event["numeroOrden"] as num).toInt()
@@ -1729,6 +1743,7 @@ class PaymentBloc extends Cubit<PaymentState> {
            timerManual?.cancel();
            timerQR?.cancel();
            timerDemoFallback?.cancel();
+           timerTimeout?.cancel();
            if (!isClosed) {
              emit(state.copyWith(step: 5, status: PaymentStatus.paymentProcessed));
              timerSuccess?.cancel();
@@ -1755,6 +1770,7 @@ class PaymentBloc extends Cubit<PaymentState> {
              }
              timerManual?.cancel();
              timerQR?.cancel();
+             timerTimeout?.cancel();
              try {
                if (state.paymentObj?.isComanda == true && state.paymentObj?.uuid != null) {
                  var comanda = await _comandaRepository.getComanda(orderUuid: state.paymentObj!.uuid!);

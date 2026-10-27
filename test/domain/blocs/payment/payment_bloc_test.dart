@@ -394,5 +394,19 @@ void main() {
       expect(bloc.state.step, 5);
       expect(bloc.state.status, PaymentStatus.paymentProcessed);
     });
+
+    test('timerTimeout se cancela en backReset y close', () async {
+      bloc.timerTimeout = Timer(const Duration(minutes: 5), () {});
+      expect(bloc.timerTimeout?.isActive, isTrue);
+
+      bloc.backReset();
+      expect(bloc.timerTimeout?.isActive, isFalse);
+
+      bloc.timerTimeout = Timer(const Duration(minutes: 5), () {});
+      expect(bloc.timerTimeout?.isActive, isTrue);
+
+      await bloc.close();
+      expect(bloc.timerTimeout?.isActive, isFalse);
+    });
   });
 }
