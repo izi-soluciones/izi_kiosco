@@ -115,14 +115,12 @@ class Routes {
               String? tableId;
               int? numberDiners;
               bool fromTables = false;
-              bool isRetail =
-                  context
-                      .read<AuthBloc>()
-                      .state
-                      .currentDevice
-                      ?.config
-                      .isRetail ==
-                  true;
+              final deviceConfig =
+                  context.read<AuthBloc>().state.currentDevice?.config;
+              bool isRetail = deviceConfig?.isRetail == true;
+              bool isSoloLlevar = !isRetail && deviceConfig?.isSoloLlevar == true;
+              bool isSoloLocal = !isRetail && deviceConfig?.isSoloLocal == true;
+              bool directOrder = isRetail || isSoloLlevar || isSoloLocal;
               if (state.extra is Map) {
                 tableId = (state.extra as Map)["tableId"];
                 numberDiners = (state.extra as Map)["numberDiners"];
@@ -131,14 +129,15 @@ class Routes {
               return NoTransitionPage(
                 child: BlocProvider(
                   create: (context) {
-                    if (isRetail) {
+                    if (directOrder) {
+                      final bool takeAway = !isSoloLocal;
                       return MakeOrderBloc(
                           ComandaRepositoryHttp(),
                           BusinessRepositoryHttp(),
                           numberDiners: numberDiners,
                           tableId: tableId,
                         )
-                        ..init(context.read<AuthBloc>().state, true)
+                        ..init(context.read<AuthBloc>().state, takeAway)
                         ..changeStepStatus(1);
                     }
                     return MakeOrderBloc(
@@ -151,6 +150,7 @@ class Routes {
                   child: MakeOrderPage(
                     fromTables: fromTables,
                     isRetail: isRetail,
+                    skipOrderType: isSoloLlevar || isSoloLocal,
                   ),
                 ),
               );

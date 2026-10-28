@@ -36,6 +36,9 @@ class _MakeOrderTypeState extends State<MakeOrderType> {
   @override
   Widget build(BuildContext context) {
     final ru= ResponsiveUtils(context);
+    final config = context.read<AuthBloc>().state.currentDevice?.config;
+    final bool isSoloLlevar = config?.isSoloLlevar == true;
+    final bool isSoloLocal = config?.isSoloLocal == true;
     return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -86,13 +89,16 @@ class _MakeOrderTypeState extends State<MakeOrderType> {
                                     direction: ru.isXs()?DynamicListDirection.column:DynamicListDirection.row,
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      Expanded(
-                                          child: _buttonSelect(IziIcons.hereOrder, LocaleKeys.makeOrder_body_eatHere.tr(), false,ru)
-                                      ),
-                                      const SizedBox(width: 24,height: 24,),
-                                      Expanded(
-                                          child: _buttonSelect(IziIcons.takeAwayOrder, LocaleKeys.makeOrder_body_takeAway.tr(), true,ru)
-                                      )
+                                      if (!isSoloLlevar)
+                                        Expanded(
+                                            child: _buttonSelect(IziIcons.hereOrder, LocaleKeys.makeOrder_body_eatHere.tr(), false,ru)
+                                        ),
+                                      if (!isSoloLlevar && !isSoloLocal)
+                                        const SizedBox(width: 24,height: 24,),
+                                      if (!isSoloLocal)
+                                        Expanded(
+                                            child: _buttonSelect(IziIcons.takeAwayOrder, LocaleKeys.makeOrder_body_takeAway.tr(), true,ru)
+                                        )
                                     ],
                                   ),
                                 ),
