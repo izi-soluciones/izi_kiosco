@@ -39,6 +39,39 @@ class Device {
   }
 }
 
+abstract class TipoConsumoValues {
+  static const String ambos = 'ambos';
+  static const String soloLlevar = 'solo_llevar';
+  static const String soloLocal = 'solo_local';
+
+  static const Set<String> variantesLlevar = {
+    'solo_llevar',
+    'solo para llevar',
+    'solollevar',
+    'llevar',
+  };
+
+  static const Set<String> variantesLocal = {
+    'solo_local',
+    'solo para consumo en local',
+    'sololocal',
+    'consumo_local',
+    'local',
+  };
+
+  static String normalize(String? value) {
+    if (value == null) return ambos;
+    final cleaned = value.trim().toLowerCase();
+    if (variantesLlevar.contains(cleaned)) {
+      return soloLlevar;
+    }
+    if (variantesLocal.contains(cleaned)) {
+      return soloLocal;
+    }
+    return ambos;
+  }
+}
+
 class ConfigDevice {
   final String? ipAtc;
   final String? ipLinkser;
@@ -74,13 +107,9 @@ class ConfigDevice {
   final String tipoConsumo;
 
   bool get isSoloLlevar =>
-      tipoConsumo == 'solo_llevar' ||
-      tipoConsumo == 'solo para llevar' ||
-      tipoConsumo == 'llevar';
+      TipoConsumoValues.normalize(tipoConsumo) == TipoConsumoValues.soloLlevar;
   bool get isSoloLocal =>
-      tipoConsumo == 'solo_local' ||
-      tipoConsumo == 'solo para consumo en local' ||
-      tipoConsumo == 'local';
+      TipoConsumoValues.normalize(tipoConsumo) == TipoConsumoValues.soloLocal;
   bool get isAmbos => !isSoloLlevar && !isSoloLocal;
 
   const ConfigDevice(
@@ -115,7 +144,7 @@ class ConfigDevice {
       required this.idiomaDefecto,
       required this.permiteCambioIdioma,
       required this.sortByPriority,
-      this.tipoConsumo = 'ambos'});
+      this.tipoConsumo = TipoConsumoValues.ambos});
 
   factory ConfigDevice.fromJson(dynamic json) {
     Map? jsonObj = json is Map ? json : null;
@@ -162,9 +191,8 @@ class ConfigDevice {
       kioskColors: KioskColors.fromJson(jsonObj?["kioskColors"]),
       idiomaDefecto: jsonObj?["idiomaDefecto"] is String ? jsonObj!["idiomaDefecto"] : null,
       permiteCambioIdioma: jsonObj?["permiteCambioIdioma"] is bool ? jsonObj!["permiteCambioIdioma"] : false,
-      tipoConsumo: (jsonObj?["tipoConsumo"] is String && (jsonObj!["tipoConsumo"] as String).isNotEmpty)
-          ? jsonObj!["tipoConsumo"]
-          : 'ambos',
+      tipoConsumo: TipoConsumoValues.normalize(
+          jsonObj?["tipoConsumo"] is String ? jsonObj!["tipoConsumo"] : null),
     );
     return config;
   }

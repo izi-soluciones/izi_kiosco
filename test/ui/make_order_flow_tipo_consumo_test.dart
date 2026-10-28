@@ -1,7 +1,10 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:izi_design_system/tokens/izi_icons.dart';
 import 'package:izi_design_system/tokens/theme.dart';
+import 'package:izi_kiosco/app/values/locale_keys.g.dart';
 import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/make_order/make_order_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/page_utils/page_utils_bloc.dart';
@@ -38,6 +41,11 @@ Device _deviceWithTipoConsumo(String tipoConsumo) {
     catalogo: null,
     activo: true,
   );
+}
+
+Finder findKioskOption(String key) {
+  return find.byWidgetPredicate((w) =>
+      w is Text && (w.data?.replaceAll('\u200B', '') == key.tr()));
 }
 
 void main() {
@@ -135,7 +143,7 @@ void main() {
   });
 
   group('MakeOrderType opciones activas', () {
-    testWidgets('si está configurado solo_llevar no muestra la opción comer aquí', (tester) async {
+    testWidgets('si está configurado solo_llevar no muestra la opción comer aquí y muestra llevar', (tester) async {
       tester.view.physicalSize = const Size(1080, 1920);
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.reset);
@@ -170,7 +178,94 @@ void main() {
       ));
       await tester.pump();
 
-      expect(find.byType(MakeOrderType), findsOneWidget);
+      expect(findKioskOption(LocaleKeys.makeOrder_body_eatHere), findsNothing);
+      expect(find.byIcon(IziIcons.hereOrder), findsNothing);
+      expect(findKioskOption(LocaleKeys.makeOrder_body_takeAway), findsOneWidget);
+      expect(find.byIcon(IziIcons.takeAwayOrder), findsOneWidget);
+      FlutterError.onError = onError;
+    });
+
+    testWidgets('si está configurado solo_local no muestra la opción para llevar y muestra comer aquí', (tester) async {
+      tester.view.physicalSize = const Size(1080, 1920);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      final onError = FlutterError.onError;
+      FlutterError.onError = (details) {
+        if (!details.exceptionAsString().contains('overflowed')) {
+          onError?.call(details);
+        }
+      };
+
+      final authBloc = AuthBloc(_FakeAuthRepository(), _FakeBusinessRepository());
+      addTearDown(authBloc.close);
+      authBloc.emit(authBloc.state.copyWith(
+        currentDevice: _deviceWithTipoConsumo('solo_local'),
+      ));
+
+      final makeOrderBloc = _TestMakeOrderBloc();
+      addTearDown(makeOrderBloc.close);
+
+      await tester.pumpWidget(MultiBlocProvider(
+        providers: [
+          BlocProvider<AuthBloc>.value(value: authBloc),
+          BlocProvider<MakeOrderBloc>.value(value: makeOrderBloc),
+          BlocProvider(create: (_) => PageUtilsBloc(_FakeBusinessRepository())),
+        ],
+        child: MaterialApp(
+          theme: iziThemeData(),
+          home: Scaffold(
+            body: MakeOrderType(state: makeOrderBloc.state),
+          ),
+        ),
+      ));
+      await tester.pump();
+
+      expect(findKioskOption(LocaleKeys.makeOrder_body_takeAway), findsNothing);
+      expect(find.byIcon(IziIcons.takeAwayOrder), findsNothing);
+      expect(findKioskOption(LocaleKeys.makeOrder_body_eatHere), findsOneWidget);
+      expect(find.byIcon(IziIcons.hereOrder), findsOneWidget);
+      FlutterError.onError = onError;
+    });
+
+    testWidgets('si está configurado ambos muestra comer aquí y para llevar', (tester) async {
+      tester.view.physicalSize = const Size(1080, 1920);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      final onError = FlutterError.onError;
+      FlutterError.onError = (details) {
+        if (!details.exceptionAsString().contains('overflowed')) {
+          onError?.call(details);
+        }
+      };
+
+      final authBloc = AuthBloc(_FakeAuthRepository(), _FakeBusinessRepository());
+      addTearDown(authBloc.close);
+      authBloc.emit(authBloc.state.copyWith(
+        currentDevice: _deviceWithTipoConsumo('ambos'),
+      ));
+
+      final makeOrderBloc = _TestMakeOrderBloc();
+      addTearDown(makeOrderBloc.close);
+
+      await tester.pumpWidget(MultiBlocProvider(
+        providers: [
+          BlocProvider<AuthBloc>.value(value: authBloc),
+          BlocProvider<MakeOrderBloc>.value(value: makeOrderBloc),
+          BlocProvider(create: (_) => PageUtilsBloc(_FakeBusinessRepository())),
+        ],
+        child: MaterialApp(
+          theme: iziThemeData(),
+          home: Scaffold(
+            body: MakeOrderType(state: makeOrderBloc.state),
+          ),
+        ),
+      ));
+      await tester.pump();
+
+      expect(findKioskOption(LocaleKeys.makeOrder_body_eatHere), findsOneWidget);
+      expect(find.byIcon(IziIcons.hereOrder), findsOneWidget);
+      expect(findKioskOption(LocaleKeys.makeOrder_body_takeAway), findsOneWidget);
+      expect(find.byIcon(IziIcons.takeAwayOrder), findsOneWidget);
       FlutterError.onError = onError;
     });
   });
