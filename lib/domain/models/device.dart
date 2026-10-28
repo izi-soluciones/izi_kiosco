@@ -71,6 +71,17 @@ class ConfigDevice {
   final KioskColors kioskColors;
   final String? idiomaDefecto;
   final bool permiteCambioIdioma;
+  final String tipoConsumo;
+
+  bool get isSoloLlevar =>
+      tipoConsumo == 'solo_llevar' ||
+      tipoConsumo == 'solo para llevar' ||
+      tipoConsumo == 'llevar';
+  bool get isSoloLocal =>
+      tipoConsumo == 'solo_local' ||
+      tipoConsumo == 'solo para consumo en local' ||
+      tipoConsumo == 'local';
+  bool get isAmbos => !isSoloLlevar && !isSoloLocal;
 
   const ConfigDevice(
       {this.ipAtc,
@@ -103,7 +114,8 @@ class ConfigDevice {
       required this.kioskColors,
       required this.idiomaDefecto,
       required this.permiteCambioIdioma,
-      required this.sortByPriority});
+      required this.sortByPriority,
+      this.tipoConsumo = 'ambos'});
 
   factory ConfigDevice.fromJson(dynamic json) {
     Map? jsonObj = json is Map ? json : null;
@@ -150,6 +162,9 @@ class ConfigDevice {
       kioskColors: KioskColors.fromJson(jsonObj?["kioskColors"]),
       idiomaDefecto: jsonObj?["idiomaDefecto"] is String ? jsonObj!["idiomaDefecto"] : null,
       permiteCambioIdioma: jsonObj?["permiteCambioIdioma"] is bool ? jsonObj!["permiteCambioIdioma"] : false,
+      tipoConsumo: (jsonObj?["tipoConsumo"] is String && (jsonObj!["tipoConsumo"] as String).isNotEmpty)
+          ? jsonObj!["tipoConsumo"]
+          : 'ambos',
     );
     return config;
   }
