@@ -19,12 +19,14 @@ class IziPrintText extends IziPrintItem {
   IziPrintSize size;
   bool bold;
   IziPrintAlign align;
+  String? boldPrefix;
 
   IziPrintText(
       {required this.text,
       required this.size,
       this.bold = false,
-      this.align = IziPrintAlign.left});
+      this.align = IziPrintAlign.left,
+      this.boldPrefix});
 }
 
 class IziPrintImage extends IziPrintItem {
@@ -243,10 +245,18 @@ class PrintUtils {
 
   print(List<IziPrintItem> values, Device? device) async {
     if (device?.config.noPrintRollo == true) return;
-    if (kIsWeb) {
-      await _pdfPrint(values);
-    } else {
-      if (Platform.isAndroid) {
+    try {
+      final shouldFallbackPdf = device?.config.printFallbackPdf == true ||
+          device?.config.demo == true ||
+          kDebugMode;
+
+      if (kIsWeb || !Platform.isAndroid) {
+        if (shouldFallbackPdf) {
+          await _pdfPrint(values);
+        } else {
+          log("PrintUtils: Impresion PDF omitida en Web/no-Android (printFallbackPdf=${device?.config.printFallbackPdf}, demo=${device?.config.demo}, kDebugMode=$kDebugMode)");
+        }
+      } else {
         if (device?.config.printSat == true) {
           try {
             log("iZi Kiosco: Routing to _satPrint...");
@@ -269,12 +279,16 @@ class PrintUtils {
           if (resBinding == true && status != PrinterStatus.ERROR) {
             await _sunmiPrint(values);
           } else {
-            //await _pdfPrint(values);
+            if (shouldFallbackPdf) {
+              await _pdfPrint(values);
+            } else {
+              log("PrintUtils: Fallback a PDF omitido en Android/Sunmi (printFallbackPdf=${device?.config.printFallbackPdf}, demo=${device?.config.demo}, kDebugMode=$kDebugMode)");
+            }
           }
         }
-      } else {
-        //await _pdfPrint(values);
       }
+    } catch (e) {
+      log("Error en impresion kiosco: $e");
     }
   }
 
@@ -563,16 +577,56 @@ class PrintUtils {
       } else if (i is IziPrintSeparator) {
         items.add(pw.Divider(borderStyle: i.dotted?pw.BorderStyle.dashed:pw.BorderStyle.solid));
       } else if (i is IziPrintText) {
-        items.add(pw.Text(i.text,
-            textAlign: i.align == IziPrintAlign.left
-                ? pw.TextAlign.left
-                : i.align == IziPrintAlign.right
-                    ? pw.TextAlign.right
-                    : pw.TextAlign.center,
-            style: pw.TextStyle(
-                fontSize: selectFontSize(i.size),
-                fontWeight:
-                    i.bold ? pw.FontWeight.bold : pw.FontWeight.normal)));
+        pw.Widget textWidget;
+        if (i.boldPrefix != null && i.text.startsWith(i.boldPrefix!)) {
+          final prefix = i.boldPrefix!;
+          final remainder = i.text.substring(prefix.length);
+          textWidget = pw.RichText(
+              textAlign: i.align == IziPrintAlign.left
+                  ? pw.TextAlign.left
+                  : i.align == IziPrintAlign.right
+                      ? pw.TextAlign.right
+                      : pw.TextAlign.center,
+              text: pw.TextSpan(
+                  style: pw.TextStyle(fontSize: selectFontSize(i.size)),
+                  children: [
+                    pw.TextSpan(
+                        text: prefix,
+                        style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                    pw.TextSpan(
+                        text: remainder,
+                        style: pw.TextStyle(
+                            fontWeight: i.bold
+                                ? pw.FontWeight.bold
+                                : pw.FontWeight.normal)),
+                  ]));
+        } else {
+          textWidget = pw.Text(i.text,
+              textAlign: i.align == IziPrintAlign.left
+                  ? pw.TextAlign.left
+                  : i.align == IziPrintAlign.right
+                      ? pw.TextAlign.right
+                      : pw.TextAlign.center,
+              style: pw.TextStyle(
+                  fontSize: selectFontSize(i.size),
+                  fontWeight:
+                      i.bold ? pw.FontWeight.bold : pw.FontWeight.normal));
+        }
+        pw.Widget wrapped;
+        switch (i.align) {
+          case IziPrintAlign.center:
+            wrapped = pw.Center(child: textWidget);
+            break;
+          case IziPrintAlign.right:
+            wrapped = pw.Align(
+                alignment: pw.Alignment.centerRight, child: textWidget);
+            break;
+          case IziPrintAlign.left:
+            wrapped = pw.Align(
+                alignment: pw.Alignment.centerLeft, child: textWidget);
+            break;
+        }
+        items.add(wrapped);
       } else if (i is IziPrintLineWrap) {
         items.add(pw.SizedBox(height: i.lines*xs));
       } else if (i is IziPrintQR) {

@@ -9,6 +9,8 @@ class PaymentAttemptDto {
   String? correoElectronico;
   Map? tipoDocumento;
   String? complemento;
+  bool? wantsInvoice;
+  bool? prefactura;
   PaymentDtoVentaDataCo? co;
 
   PaymentAttemptDto(
@@ -20,7 +22,9 @@ class PaymentAttemptDto {
         required this.telefonoComprador,
         this.correoElectronico,
         this.tipoDocumento,
-        this.complemento
+        this.complemento,
+        this.wantsInvoice,
+        this.prefactura,
       });
 
   Map<String,dynamic> toJson()=>{
@@ -30,6 +34,8 @@ class PaymentAttemptDto {
     "ventaData": {
       "nit": nit,
       "razonSocial": razonSocial,
+      if(wantsInvoice != null) "wantsInvoice": wantsInvoice,
+      if(prefactura != null) "prefactura": prefactura,
       if(telefonoComprador?.isNotEmpty == true) "telefonoComprador": telefonoComprador,
       if(complemento!=null)"complemento": complemento,
       if(tipoDocumento!=null)"tipoDocumento": tipoDocumento,

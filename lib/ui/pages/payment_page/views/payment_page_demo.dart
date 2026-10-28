@@ -11,6 +11,7 @@ import 'package:izi_design_system/tokens/types.dart';
 import 'package:izi_kiosco/app/values/app_constants.dart';
 import 'package:izi_kiosco/app/values/assets_keys.dart';
 import 'package:izi_kiosco/app/values/locale_keys.g.dart';
+import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/payment/payment_bloc.dart';
 import 'package:izi_kiosco/ui/general/izi_header_kiosk.dart';
 import 'package:izi_kiosco/ui/utils/money_formatter.dart';
@@ -76,9 +77,12 @@ class _PaymentPageDemoState extends State<PaymentPageDemo> {
                 buttonType: ButtonType.primary,
                 buttonSize: ButtonSize.large,
                 loading: _loading,
-                buttonOnPressed: () {
+                buttonOnPressed: () async {
                   setState(() => _loading = true);
-                  context.read<PaymentBloc>().confirmDemoPayment();
+                  await context.read<PaymentBloc>().confirmDemoPayment(context.read<AuthBloc>().state);
+                  if (mounted) {
+                    setState(() => _loading = false);
+                  }
                 },
               ),
             ],

@@ -12,6 +12,7 @@ import 'package:izi_kiosco/domain/models/modulos.dart';
 import 'package:izi_kiosco/domain/models/sale_link.dart';
 import 'package:izi_kiosco/domain/repositories/business_repository.dart';
 import 'package:izi_kiosco/domain/repositories/comanda_repository.dart';
+import 'package:izi_kiosco/domain/models/campos_extra.dart';
 part 'make_order_retail_state.dart';
 
 class MakeOrderRetailBloc extends Cubit<MakeOrderRetailState> {
@@ -71,10 +72,14 @@ class MakeOrderRetailBloc extends Cubit<MakeOrderRetailState> {
         return;
       }
       if (!isClosed) {
+        List<CamposExtra> camposExtra = authState.camposExtraDispositivos
+            .map((e) => e.copyWith())
+            .toList();
         emit(state.copyWith(
             status: MakeOrderRetailStatus.successGet,
             items: list,
-            currentCurrency: currentCurrency));
+            currentCurrency: currentCurrency,
+            camposExtra: camposExtra));
       }
     } catch (e) {
       log(e.toString());
@@ -120,7 +125,8 @@ class MakeOrderRetailBloc extends Cubit<MakeOrderRetailState> {
     try {
       var newSaleLinkDto = NewSaleLinkDto(
           listaItems: state.itemsSelected,
-          dispositivo: authState.currentDevice?.id ?? 0
+          dispositivo: authState.currentDevice?.id ?? 0,
+          camposExtra: state.camposExtra,
       );
       SaleLink saleLink = await _comandaRepository.createSaleLink(newSaleLinkDto);
       return saleLink;
@@ -136,5 +142,48 @@ class MakeOrderRetailBloc extends Cubit<MakeOrderRetailState> {
     List<Item> list = List.of(state.itemsSelected);
     list.removeWhere((element) => element.id == item.id);
     emit(state.copyWith(itemsSelected: list));
+  }
+
+  void updateCampoExtra(int id, String? value) {
+    final updated = state.camposExtra.map((c) {
+      if (c.id == id) {
+        return c.copyWith(valor: () => value);
+      }
+      return c;
+    }).toList();
+    emit(state.copyWith(camposExtra: updated));
+  }
+
+  String? validateCamposExtra() {
+    for (var c in state.camposExtra) {
+      if (c.tipoCampo == 'fijo') continue;
+      final val = c.valor?.trim() ?? "";
+      if (c.isObligatorio && val.isEmpty) {
+        return 'El campo "${c.nombre}" es obligatorio';
+      }
+      if (val.isNotEmpty && c.tipoCampo == 'number') {
+        final numVal = num.tryParse(val);
+        if (numVal == null) {
+          return 'El campo "${c.nombre}" debe ser un número válido';
+        }
+      }
+      if (val.isNotEmpty && c.tipoCampo == 'select' && c.values != null && c.values!.isNotEmpty) {
+        if (!c.values!.contains(val)) {
+          return 'Seleccione una opción válida para "${c.nombre}"';
+        }
+      }
+    }
+    return null;
+  }
+
+  bool hasMissingRequiredCamposExtra() {
+    for (var c in state.camposExtra) {
+      if (c.tipoCampo == 'fijo') continue;
+      final val = c.valor?.trim() ?? "";
+      if (c.isObligatorio && val.isEmpty) {
+        return true;
+      }
+    }
+    return false;
   }
 }

@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:developer';
 import 'package:collection/collection.dart';
 import 'package:equatable/equatable.dart';
@@ -162,11 +163,9 @@ class MakeOrderBloc extends Cubit<MakeOrderState> {
       }
 
       if(!isClosed){
-        List<CamposExtra> camposExtra = authState.currentDevice?.config.isRetail == true
-            ? const []
-            : authState.camposExtraDispositivos
-                .map((e) => e.copyWith())
-                .toList();
+        List<CamposExtra> camposExtra = authState.camposExtraDispositivos
+            .map((e) => e.copyWith())
+            .toList();
 
         emit(state.copyWith(
             status: MakeOrderStatus.successGet,
@@ -402,10 +401,37 @@ class MakeOrderBloc extends Cubit<MakeOrderState> {
         emit(state.copyWith(status: MakeOrderStatus.successEmit));
         emit(state.copyWith(status: MakeOrderStatus.successGet));
       }
+      Map<String, dynamic> customMap = {};
+      if (comanda.custom is Map) {
+        customMap = Map<String, dynamic>.from(comanda.custom);
+      } else if (comanda.custom is String && (comanda.custom as String).isNotEmpty) {
+        try {
+          final decoded = jsonDecode(comanda.custom);
+          if (decoded is Map) {
+            customMap = Map<String, dynamic>.from(decoded);
+          }
+        } catch (_) {}
+      }
+      if (!customMap.containsKey('camposExtra') || customMap['camposExtra'] == null) {
+        final camposExtra = state.camposExtra
+            .where((c) => c.valor != null && c.valor!.trim().isNotEmpty)
+            .map((c) => {
+                  'id': c.id,
+                  'nombre': c.nombre,
+                  'titulo': c.nombre,
+                  'valor': c.valor,
+                  'tipoCampo': c.tipoCampo,
+                  'tipoModulo': c.tipoModulo,
+                })
+            .toList();
+        if (camposExtra.isNotEmpty) {
+          customMap['camposExtra'] = camposExtra;
+        }
+      }
       var paymentObj = PaymentObj(
               id: comanda.id,
               uuid: comanda.uuid,
-              custom: comanda.custom is Map? comanda.custom : {},
+              custom: customMap,
               amount: comanda.montoTotal??0,
               isComanda: true,
               items: comanda.listaItems.map((e) => ItemPaymentObj(
@@ -517,13 +543,21 @@ class MakeOrderBloc extends Cubit<MakeOrderState> {
       }
       var newSaleLinkDto = NewSaleLinkDto(
           listaItems: itemsSelected,
-          dispositivo: authState.currentDevice?.id ?? 0
+          dispositivo: authState.currentDevice?.id ?? 0,
+          camposExtra: state.camposExtra,
       );
       SaleLink saleLink = await _comandaRepository.createSaleLink(newSaleLinkDto);
       var paymentObj = PaymentObj(
               id: saleLink.id,
               uuid: saleLink.uuid,
-              custom: {},
+              custom: (saleLink.custom is Map && (saleLink.custom as Map).isNotEmpty)
+                  ? saleLink.custom
+                  : {
+                      "camposExtra": state.camposExtra
+                          .where((c) => c.valor != null && c.valor!.isNotEmpty)
+                          .map((e) => e.toJson())
+                          .toList(),
+                    },
               amount: saleLink.monto,
               isComanda: false,
               items: itemsSelected.map((e) => ItemPaymentObj(
