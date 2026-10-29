@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:izi_kiosco/domain/models/campos_extra.dart';
 import 'package:izi_kiosco/domain/models/modulos.dart';
 
@@ -359,6 +361,23 @@ class Sucursal {
         ? json['config']['almacenVenta']
         : null;
   }
+  bool get ordenEnFactura {
+    if (config is Map) {
+      final val = config['ordenEnFactura'];
+      return val == true || val == 1 || val == 'true';
+    }
+    if (config is String) {
+      try {
+        final decoded = jsonDecode(config as String);
+        if (decoded is Map) {
+          final val = decoded['ordenEnFactura'];
+          return val == true || val == 1 || val == 'true';
+        }
+      } catch (_) {}
+    }
+    return false;
+  }
+
   factory Sucursal.init()=>Sucursal(
     ciudad: "La Paz",
     direccion: "La Paz",

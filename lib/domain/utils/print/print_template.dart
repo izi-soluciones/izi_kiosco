@@ -29,18 +29,18 @@ class PrintTemplate {
   static Future<List<IziPrintItem>>  printInvoice(
   Contribuyente contribuyente,
   Sucursal sucursal,
-  Invoice factura,{required TaxesStrategy taxesStrategy})async {
+  Invoice factura,{int? orderNumber, int? customOrderNumber, required TaxesStrategy taxesStrategy})async {
     if(contribuyente.config["paisId"]=="CO"){
-      return invoice80Co(contribuyente,sucursal,factura,taxesStrategy: taxesStrategy);
+      return invoice80Co(contribuyente,sucursal,factura, orderNumber: orderNumber, customOrderNumber: customOrderNumber, taxesStrategy: taxesStrategy);
     }
-    return await invoice80(contribuyente,sucursal,factura,taxesStrategy: taxesStrategy);
+    return await invoice80(contribuyente,sucursal,factura, orderNumber: orderNumber, customOrderNumber: customOrderNumber, taxesStrategy: taxesStrategy);
   }
 
 static List<IziPrintItem> invoice80Co(
   Contribuyente contribuyente,
   Sucursal sucursal,
   Invoice invoice,
-  {required TaxesStrategy taxesStrategy}
+  {int? orderNumber, int? customOrderNumber, required TaxesStrategy taxesStrategy}
 ) {
   final List<IziPrintItem> items = [];
 
@@ -92,6 +92,26 @@ static List<IziPrintItem> invoice80Co(
     size: IziPrintSize.sm,
     align: IziPrintAlign.center,
   ));
+
+  final showOrder = sucursal.ordenEnFactura;
+  final resolvedOrderNumber = orderNumber ??
+      (invoice.customFactura["comanda"] is Map
+          ? invoice.customFactura["comanda"]["numero"]
+          : null);
+  final resolvedCustomOrderNumber = customOrderNumber ??
+      (invoice.customFactura["comanda"] is Map
+          ? invoice.customFactura["comanda"]["numeroCustom"]
+          : null);
+
+  if (showOrder && resolvedOrderNumber != null) {
+    items.add(IziPrintLineWrap(lines: 1));
+    items.add(IziPrintText(
+      text: resolvedCustomOrderNumber != null ? "Orden: $resolvedCustomOrderNumber" : "Orden: $resolvedOrderNumber",
+      size: IziPrintSize.sm,
+      bold: true,
+      align: IziPrintAlign.center,
+    ));
+  }
 
   items.add(IziPrintSeparator());
 
@@ -365,6 +385,8 @@ static List<IziPrintItem> invoice80Co(
 
   static Future<List<IziPrintItem>> invoice80(Contribuyente contribuyente, Sucursal sucursal,
       Invoice invoice, {
+        int? orderNumber,
+        int? customOrderNumber,
         required TaxesStrategy taxesStrategy
       }) async {
     List<IziPrintItem> items = [];
@@ -429,6 +451,23 @@ static List<IziPrintItem> invoice80Co(
         text: "${sucursal.ciudad}, Bolivia",
         size: IziPrintSize.sm,
         align: IziPrintAlign.center));
+
+    final showOrder = sucursal.ordenEnFactura;
+    final resolvedOrderNumber = orderNumber ??
+        (invoice.customFactura["comanda"] is Map
+            ? invoice.customFactura["comanda"]["numero"]
+            : null);
+    final resolvedCustomOrderNumber = customOrderNumber ??
+        (invoice.customFactura["comanda"] is Map
+            ? invoice.customFactura["comanda"]["numeroCustom"]
+            : null);
+
+    if (showOrder && resolvedOrderNumber != null) {
+      items.add(IziPrintText(
+          text: resolvedCustomOrderNumber != null ? "Orden: $resolvedCustomOrderNumber" : "Orden: $resolvedOrderNumber",
+          size: IziPrintSize.sm,
+          align: IziPrintAlign.center));
+    }
 
     items.add(IziPrintLineWrap(lines: 3));
     if (invoice.isPruebas == true) {
@@ -808,12 +847,22 @@ static Future<List<IziPrintItem>> invoiceCompact(
     items.add(IziPrintText(text: contribuyente.nit??"", size: IziPrintSize.sm,bold: false,align: IziPrintAlign.center));
     items.add(IziPrintText(text: sucursal.nombre??"", size: IziPrintSize.sm,bold: true,align: IziPrintAlign.center));
 
-    if (orderNumber != null) {
+    final showOrder = sucursal.ordenEnFactura;
+    final resolvedOrderNumber = orderNumber ??
+        (invoice.customFactura["comanda"] is Map
+            ? invoice.customFactura["comanda"]["numero"]
+            : null);
+    final resolvedCustomOrderNumber = customOrderNumber ??
+        (invoice.customFactura["comanda"] is Map
+            ? invoice.customFactura["comanda"]["numeroCustom"]
+            : null);
+
+    if (showOrder && resolvedOrderNumber != null) {
       items.add(IziPrintSeparator(dotted: true));
       items.add(IziPrintText(
-          text: customOrderNumber != null
-              ? "Orden #$customOrderNumber"
-              : "Orden #$orderNumber",
+          text: resolvedCustomOrderNumber != null
+              ? "Orden #$resolvedCustomOrderNumber"
+              : "Orden #$resolvedOrderNumber",
           size: IziPrintSize.md,
           align: IziPrintAlign.center,
           bold: true));
@@ -873,12 +922,22 @@ static Future<List<IziPrintItem>> invoiceCompactCo(
     items.add(IziPrintText(text: contribuyente.nit??"", size: IziPrintSize.sm,bold: false,align: IziPrintAlign.center));
     items.add(IziPrintText(text: sucursal.nombre??"", size: IziPrintSize.sm,bold: true,align: IziPrintAlign.center));
 
-    if (orderNumber != null) {
+    final showOrder = sucursal.ordenEnFactura;
+    final resolvedOrderNumber = orderNumber ??
+        (invoice.customFactura["comanda"] is Map
+            ? invoice.customFactura["comanda"]["numero"]
+            : null);
+    final resolvedCustomOrderNumber = customOrderNumber ??
+        (invoice.customFactura["comanda"] is Map
+            ? invoice.customFactura["comanda"]["numeroCustom"]
+            : null);
+
+    if (showOrder && resolvedOrderNumber != null) {
       items.add(IziPrintSeparator(dotted: true));
       items.add(IziPrintText(
-          text: customOrderNumber != null
-              ? "Orden #$customOrderNumber"
-              : "Orden #$orderNumber",
+          text: resolvedCustomOrderNumber != null
+              ? "Orden #$resolvedCustomOrderNumber"
+              : "Orden #$resolvedOrderNumber",
           size: IziPrintSize.md,
           align: IziPrintAlign.center,
           bold: true));
