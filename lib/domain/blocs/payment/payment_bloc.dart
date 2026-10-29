@@ -1338,10 +1338,30 @@ class PaymentBloc extends Cubit<PaymentState> {
 
       final backendItems = invoice.customFactura["printItems"];
       final backendFormat = invoice.customFactura["printItemsFormat"];
+      final effectiveOrderNumber = orderNumber ??
+          (invoice.customFactura["comanda"] is Map &&
+                  invoice.customFactura["comanda"]["numero"] is num
+              ? (invoice.customFactura["comanda"]["numero"] as num).toInt()
+              : null);
+      final effectiveCustomOrderNumber = customOrderNumber ??
+          (invoice.customFactura["comanda"] is Map &&
+                  invoice.customFactura["comanda"]["numeroCustom"] is num
+              ? (invoice.customFactura["comanda"]["numeroCustom"] as num).toInt()
+              : null);
       List<IziPrintItem>? backendTicket;
       if (backendItems is List && backendItems.isNotEmpty) {
         backendTicket = IziPrintItem.listFromJson(backendItems);
-        if (backendTicket.isEmpty) backendTicket = null;
+        if (backendTicket.isEmpty) {
+          backendTicket = null;
+        } else if (authState.currentSucursal != null) {
+          backendTicket = _applyOrderConfigToBackendTicket(
+            backendTicket,
+            sucursal: authState.currentSucursal!,
+            orderNumber: effectiveOrderNumber,
+            customOrderNumber: effectiveCustomOrderNumber,
+            isCompact: backendFormat == 'compacto',
+          );
+        }
       }
 
       final backendCompacto = backendTicket != null && backendFormat == 'compacto';
@@ -1358,16 +1378,16 @@ class PaymentBloc extends Cubit<PaymentState> {
             authState.currentContribuyente!,
             authState.currentSucursal!,
             invoice,
-            orderNumber: orderNumber,
-            customOrderNumber: customOrderNumber,
-                taxesStrategy: authState.taxesStrategy
+            orderNumber: effectiveOrderNumber,
+            customOrderNumber: effectiveCustomOrderNumber,
+            taxesStrategy: authState.taxesStrategy,
           );
         }
       }
       else{
         log("iZi Kiosco: [DEBUG] Full mode: appending invoice payload after order");
         tmp.add(IziPrintLineWrap(lines: 2));
-        if (orderNumber != null) {
+        if (effectiveOrderNumber != null) {
           tmp.add(IziPrintCut());
         }
         if (backendTicket != null) {
@@ -1379,13 +1399,20 @@ class PaymentBloc extends Cubit<PaymentState> {
             authState.currentContribuyente!,
             authState.currentSucursal!,
             invoice,
-              taxesStrategy: authState.taxesStrategy
+            orderNumber: effectiveOrderNumber,
+            customOrderNumber: effectiveCustomOrderNumber,
+            taxesStrategy: authState.taxesStrategy,
           ));
         }
         else{
-        tmp.addAll(await PrintTemplate.printInvoice(
-            authState.currentContribuyente!, authState.currentSucursal!,invoice,
-              taxesStrategy: authState.taxesStrategy));
+          tmp.addAll(await PrintTemplate.printInvoice(
+            authState.currentContribuyente!,
+            authState.currentSucursal!,
+            invoice,
+            orderNumber: effectiveOrderNumber,
+            customOrderNumber: effectiveCustomOrderNumber,
+            taxesStrategy: authState.taxesStrategy,
+          ));
         }
       }
 
@@ -1396,6 +1423,73 @@ class PaymentBloc extends Cubit<PaymentState> {
     catch(e, stacktrace){
       log("iZi Kiosco: [DEBUG ERROR] _printRollo failure -> ${e.toString()} \nStacktrace: $stacktrace");
     }
+  }
+
+  List<IziPrintItem> _applyOrderConfigToBackendTicket(
+    List<IziPrintItem> ticket, {
+    required Sucursal sucursal,
+    int? orderNumber,
+    int? customOrderNumber,
+    required bool isCompact,
+  }) {
+    final list = List<IziPrintItem>.from(ticket);
+    final showOrder = sucursal.ordenEnFactura;
+    final hasOrder = list.any((item) =>
+        item is IziPrintText &&
+        (item.text.toLowerCase().startsWith('orden') ||
+            item.text.toLowerCase().startsWith('orden:')));
+
+    if (showOrder && !hasOrder && orderNumber != null) {
+      if (isCompact) {
+        int insertIdx = list.indexWhere((item) =>
+            item is IziPrintText && item.text == sucursal.nombre);
+        if (insertIdx != -1) {
+          insertIdx += 1;
+        } else {
+          insertIdx = list.length > 4 ? 4 : list.length;
+        }
+        list.insertAll(insertIdx, [
+          IziPrintSeparator(dotted: true),
+          IziPrintText(
+              text: customOrderNumber != null
+                  ? "Orden #$customOrderNumber"
+                  : "Orden #$orderNumber",
+              size: IziPrintSize.md,
+              align: IziPrintAlign.center,
+              bold: true),
+          IziPrintSeparator(dotted: true),
+        ]);
+      } else {
+        int insertIdx = list.indexWhere((item) =>
+            item is IziPrintText && item.text.contains('Bolivia'));
+        if (insertIdx != -1) {
+          insertIdx += 1;
+        } else {
+          insertIdx = list.indexWhere((item) =>
+              item is IziPrintText && item.text.startsWith('Fecha:'));
+          if (insertIdx != -1) {
+            insertIdx += 1;
+          } else {
+            insertIdx = list.length > 7 ? 7 : list.length;
+          }
+        }
+        list.insert(
+          insertIdx,
+          IziPrintText(
+              text: customOrderNumber != null
+                  ? "Orden: $customOrderNumber"
+                  : "Orden: $orderNumber",
+              size: IziPrintSize.sm,
+              align: IziPrintAlign.center),
+        );
+      }
+    } else if (!showOrder && hasOrder) {
+      list.removeWhere((item) =>
+          item is IziPrintText &&
+          (item.text.toLowerCase().startsWith('orden') ||
+              item.text.toLowerCase().startsWith('orden:')));
+    }
+    return list;
   }
 
   double _roundToNDecimals(num num, int n) {
