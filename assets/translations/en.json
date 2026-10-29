@@ -555,7 +555,11 @@
       "finishPurchase": "Finish the purchase and pay",
       "finish": "Finish",
       "waitingScan": "Hold your products' barcodes up to the scanner",
-      "waitingPurchase": "Processing purchase"
+      "waitingPurchase": "Processing purchase",
+      "codeNotFound": "Product not found for barcode: {}",
+      "invalidCode": "Invalid or unreadable barcode",
+      "duplicateScan": "Duplicate scan ignored",
+      "scannerError": "Could not initialize barcode scanner"
     }
   },
   "helpModal": {
@@ -626,6 +630,16 @@
       "table": {
         "label": "Table name",
         "placeholder": "Select a table"
+      },
+      "camposExtra": {
+        "title": "Additional Information",
+        "orderInfo": "Order Information",
+        "selectPlaceholder": "Select an option",
+        "inputPlaceholder": "Enter {}",
+        "required": "*",
+        "optional": "(optional)",
+        "requiredError": "The field \"{}\" is required",
+        "numberError": "The field \"{}\" must be a valid number"
       }
     },
     "labels": {

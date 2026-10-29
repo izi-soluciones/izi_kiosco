@@ -1,3 +1,4 @@
+import 'package:izi_kiosco/domain/models/campos_extra.dart';
 import 'package:izi_kiosco/domain/models/document_type.dart';
 import 'package:izi_kiosco/domain/models/item.dart';
 import 'package:izi_kiosco/domain/utils/date_formatter.dart';
@@ -6,16 +7,26 @@ import 'package:izi_kiosco/domain/utils/date_formatter.dart';
 class NewOrderDtoCustom {
   NewOrderDtoCustomPagadorData? pagadorData;
   int? deviceId;
+  String? nombreMesa;
+  List<CamposExtra>? camposExtras;
 
   NewOrderDtoCustom({
     this.pagadorData,
     this.deviceId,
+    this.nombreMesa,
+    this.camposExtras,
   });
 
   Map<String, dynamic> toJson() {
     return {
-      'pagadorData': pagadorData?.toJson(),
-      'deviceId': deviceId,
+      if (pagadorData != null) 'pagadorData': pagadorData?.toJson(),
+      if (deviceId != null) 'deviceId': deviceId,
+      if (nombreMesa != null && nombreMesa!.isNotEmpty) "nombreMesa": nombreMesa,
+      if (camposExtras != null && camposExtras!.isNotEmpty)
+        "camposExtra": camposExtras!
+            .where((e) => e.valor != null && e.valor!.isNotEmpty)
+            .map((e) => e.toJson())
+            .toList(),
     };
   }
 }
@@ -103,12 +114,13 @@ class NewOrderDto {
       required this.listaItems,
       required this.mesa,
       this.notaInterna,
-      this.anulada=false,
+      this.anulada = false,
       required this.paraLlevar,
       required this.tipoComanda,
-      this.total=0,
-        required this.deviceId,
-        this.clienteNombre,
+      this.total = 0,
+      required this.deviceId,
+      this.clienteNombre,
+      this.custom,
       required this.sucursal});
 
   Map<String, dynamic> toJson() => {
@@ -118,6 +130,9 @@ class NewOrderDto {
           },
         ).toList(),
         "paraLlevar": paraLlevar,
+        if (mesa.isNotEmpty) "mesa": mesa,
+        if (nombreMesa != null && nombreMesa!.isNotEmpty) "nombreMesa": nombreMesa,
+        if (custom != null) "custom": custom!.toJson(),
       };
   Map<String, dynamic> toJsonEdit() => {
     "custom": custom?.toJson(),
