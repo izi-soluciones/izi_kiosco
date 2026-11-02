@@ -71,7 +71,7 @@ class Contribuyente {
   bool? usaSiat;
 
   bool tieneModulo(Modulo m) {
-    if (modulos != null) return modulos!.isEnabled(m.name);
+    if (modulos != null) return modulos!.isEnabled(m.clave);
     return false;
   }
   bool? configTerminada;

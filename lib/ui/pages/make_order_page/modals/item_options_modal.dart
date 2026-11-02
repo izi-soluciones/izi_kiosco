@@ -13,6 +13,7 @@ import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/make_order/make_order_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/page_utils/page_utils_bloc.dart';
 import 'package:izi_kiosco/domain/models/item.dart';
+import 'package:izi_kiosco/domain/models/modulos.dart';
 import 'package:izi_kiosco/domain/utils/variable_particionada.dart';
 import 'package:izi_kiosco/ui/pages/make_order_page/widgets/grilla_sabores.dart';
 import 'package:izi_kiosco/ui/general/headers/back_modal_header.dart';
@@ -37,7 +38,9 @@ class _ItemOptionsModalState extends State<ItemOptionsModal> {
   List<GlobalKey> titleKeys = [];
   @override
   void initState() {
-    itemEdit = widget.item.copyWith();
+    // Sin el módulo inventarios_advanced el ítem se elige como en beta: sin grilla de sabores.
+    final inventariosAvanzados = context.read<AuthBloc>().state.currentContribuyente?.tieneModulo(Modulo.inventariosAdvanced) == true;
+    itemEdit = inventariosAvanzados ? widget.item.copyWith() : widget.item.sinInventariosAvanzados();
     for(Modifier m in itemEdit?.modificadores??[]){
       titleKeys.add(GlobalKey());
       // Variable particionada: sin sabores por defecto; la selección se numera por orden.

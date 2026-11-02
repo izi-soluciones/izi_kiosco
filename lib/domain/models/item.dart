@@ -1,6 +1,20 @@
 import 'package:izi_kiosco/domain/utils/variable_particionada.dart';
 
 class Item {
+  /// Copia sin lo del módulo inventarios_advanced (Elis): sin variable particionada ni fotos por opción.
+  Item sinInventariosAvanzados() {
+    final copia = copyWith();
+    for (final m in copia.modificadores) {
+      m.tipo = null;
+      m.partes = null;
+      for (final c in m.caracteristicas) {
+        c.imagen = null;
+        c.orden = null;
+      }
+    }
+    return copia;
+  }
+
   bool activo;
   num cantidad;
   String? categoria;
