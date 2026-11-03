@@ -85,10 +85,14 @@ void main() {
     test('getTotalItem is quantity * price', () {
       expect(strategy.getTotalItem(_params(impuestos: []), 2, 25), 50);
     });
-    test('verifyParameters requires an economic activity', () {
-      expect(strategy.verifyParameters(null, null, null, null),
+    test('verifyParameters requires an economic activity only with facturación', () {
+      final conFacturacion = _contribuyente(habilitadoFacturacion: true);
+      expect(strategy.verifyParameters(conFacturacion, null, null, null),
           PaymentStatus.errorActivity);
-      expect(strategy.verifyParameters(null, null, null, '620100'), isNull);
+      expect(strategy.verifyParameters(conFacturacion, null, null, '620100'),
+          isNull);
+      // Sin el módulo facturación (retail sin facturación) no se exige.
+      expect(strategy.verifyParameters(null, null, null, null), isNull);
     });
     test('metadata', () {
       expect(strategy.countryCode, 'BO');

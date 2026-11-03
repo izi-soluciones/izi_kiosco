@@ -6,6 +6,7 @@ import 'package:izi_kiosco/domain/dto/new_sale_link_dto.dart';
 import 'package:izi_kiosco/domain/dto/paid_charge_dto.dart';
 import 'package:izi_kiosco/domain/dto/payment_attempt_dto.dart';
 import 'package:izi_kiosco/domain/dto/payment_dto.dart';
+import 'package:izi_kiosco/domain/models/atc_payment_status.dart';
 import 'package:izi_kiosco/domain/models/card_payment.dart';
 import 'package:izi_kiosco/domain/models/pos_payment_result.dart';
 import 'package:izi_kiosco/domain/models/category_order.dart';
@@ -52,7 +53,9 @@ abstract class ComandaRepository {
   Future<CardPayment> callCardPayment(
       {required int amount, required String ip});
   Future<CardPayment> callCardPaymentATC(
-      {required String amount, required String ip, required CancelToken cancelToken,required bool contactless});
+      {required String amount, required String ip, required CancelToken cancelToken,required bool contactless, String? ref});
+  Future<AtcPaymentStatus> getPaymentStatusATC(String ref);
+  Future<void> confirmPaymentATC(String ref);
 
   /// Polling fallback for the `/payment-updates` WebSocket. Calls
   /// `GET /payment-status/{reference}` on the Izify POS. Returns the parsed

@@ -315,7 +315,10 @@
       "payWithBreB": "Paga a través de Bre-B",
       "areYouSureStopTransaction": "¿Está seguro de parar la transacción?",
       "chargedNotRegistered": "Tu pago se realizó correctamente",
-      "chargedNotRegisteredDetail": "No pudimos registrar el pedido. Acércate a caja y muestra este comprobante: no vuelvas a pagar."
+      "chargedNotRegisteredDetail": "No pudimos registrar el pedido. Acércate a caja y muestra este comprobante: no vuelvas a pagar.",
+      "verifyingCardPayment": "Verificando tu pago…",
+      "cardPaymentUncertain": "No pudimos confirmar tu pago. ¿El POS imprimió un voucher?",
+      "cardPaymentBlocked": "No vuelvas a pagar. Acércate a caja con tu voucher"
     },
     "body": {
       "total": "Total",
@@ -333,7 +336,8 @@
       "doNotClose": "No cierres esta pantalla",
       "orderNumber": "Orden #{}",
       "chargeInProgress": "El cobro ya está en el datáfono. Espera la respuesta; si no puedes continuar, cancélalo en el datáfono o pide ayuda.",
-      "instalments": "Número de cuotas"
+      "instalments": "Número de cuotas",
+      "cardPaymentCode": "Código: {}"
     },
     "buttons": {
       "qr": "QR",
@@ -356,7 +360,9 @@
       "changePaymentMethod": "Cambiar forma de pago",
       "stopTransaction": "Detener la transacción",
       "back": "Volver",
-      "continueAction": "Continuar"
+      "continueAction": "Continuar",
+      "hasVoucherYes": "Sí, tengo voucher",
+      "hasVoucherNo": "No"
     },
     "inputs": {
       "complement": {
@@ -423,7 +429,8 @@
       "errorBreB": "Ocurrió un problema al generar el cobro por Bre-B",
       "processingOrder": "Procesando orden",
       "processingInvoice": "Procesando factura",
-      "processingInvoiceElectronic": "Procesando factura electrónica"
+      "processingInvoiceElectronic": "Procesando factura electrónica",
+      "posBusy": "El POS está terminando un pago anterior, espera un momento"
     },
     "links": {
       "addEmail": "+ Agregar correo electrónico",
@@ -563,7 +570,11 @@
       "finishPurchase": "Finalizar la compra y pagar",
       "finish": "Finalizar",
       "waitingScan": "Acerca los códigos de barras de tus productos al lector para poder escanearlos",
-      "waitingPurchase": "Procesando compra"
+      "waitingPurchase": "Procesando compra",
+      "codeNotFound": "Producto no encontrado para el código: {}",
+      "invalidCode": "Código de barras inválido o no legible",
+      "duplicateScan": "Lectura duplicada omitida",
+      "scannerError": "No se pudo iniciar el lector de códigos de barras"
     }
   },
   "helpModal": {
@@ -634,6 +645,16 @@
       "table": {
         "label": "Nombre de Mesa",
         "placeholder": "Seleccione una mesa"
+      },
+      "camposExtra": {
+        "title": "Información adicional",
+        "orderInfo": "Información del pedido",
+        "selectPlaceholder": "Seleccione una opción",
+        "inputPlaceholder": "Ingrese {}",
+        "required": "*",
+        "optional": "(opcional)",
+        "requiredError": "El campo \"{}\" es obligatorio",
+        "numberError": "El campo \"{}\" debe ser un número válido"
       }
     },
     "labels": {

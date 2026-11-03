@@ -96,6 +96,10 @@ void main() {
       await _scan(tester, "123");
       expect(_selectedCount(bloc), 1);
 
+      // El escaneo avisa actividad a PageUtilsBloc, que se crea recién ahí con
+      // el Timer de 1 s de su estado inicial: hay que dejarlo vencer.
+      await tester.pump(const Duration(seconds: 1));
+
       FlutterError.onError = onError;
     });
   }

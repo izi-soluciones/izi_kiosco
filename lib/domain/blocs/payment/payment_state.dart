@@ -33,6 +33,10 @@ enum PaymentStatus {
   processingOrder,
   setInputs,
   demoPayment,
+  cardVerifying,
+  cardUncertain,
+  cardBlocked,
+  cardPosBusy,
 }
 
 enum PaymentCountryTaxes { bolivia, colombia }
@@ -171,6 +175,8 @@ class PaymentState extends Equatable {
   final ParamsCo? paramsCo;
   final PaymentCountryTaxes? countryTaxes;
   final String? izifyPosIp;
+  final String? atcCode;
+  final bool atcBlocked;
 
   /// What identifies a charge the terminal made, shown to a customer whose card
   /// was charged but whose order could not be registered, so staff can find it.
@@ -213,6 +219,8 @@ class PaymentState extends Equatable {
     this.chargeProof,
     required this.phonePrefix,
     this.qrPaymentKey,
+    this.atcCode,
+    this.atcBlocked = false,
   });
 
   /// Dial code the phone field starts with: the account's country, so a
@@ -301,6 +309,8 @@ class PaymentState extends Equatable {
     String? izifyPosIp,
     String? chargeProof,
     PaymentObj? paymentObj,
+    String? atcCode,
+    bool? atcBlocked,
   }) {
     return PaymentState(
       casaMatriz: casaMatriz ?? this.casaMatriz,
@@ -344,6 +354,8 @@ class PaymentState extends Equatable {
       countryTaxes: countryTaxes ?? this.countryTaxes,
       izifyPosIp: izifyPosIp ?? this.izifyPosIp,
       chargeProof: chargeProof ?? this.chargeProof,
+      atcCode: atcCode ?? this.atcCode,
+      atcBlocked: atcBlocked ?? this.atcBlocked,
     );
   }
 
@@ -378,5 +390,7 @@ class PaymentState extends Equatable {
     qrLoading,
     izifyPosIp,
     chargeProof,
+    atcCode,
+    atcBlocked,
   ];
 }

@@ -1,9 +1,11 @@
+import 'dart:async';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:izi_design_system/atoms/izi_card.dart';
+import 'package:izi_design_system/molecules/izi_snack_bar.dart';
 import 'package:izi_design_system/tokens/colors.dart';
 import 'package:izi_design_system/tokens/izi_icons.dart';
 import 'package:izi_kiosco/app/values/assets_keys.dart';
@@ -13,6 +15,7 @@ import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/make_order_retail/make_order_retail_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/page_utils/page_utils_bloc.dart';
 import 'package:izi_kiosco/domain/models/modulos.dart';
+import 'package:izi_kiosco/domain/utils/sunmi_scanner_service.dart';
 import 'package:izi_kiosco/ui/general/izi_header_kiosk.dart';
 import 'package:izi_kiosco/ui/utils/dynamic_list.dart';
 import 'package:izi_kiosco/ui/utils/responsive_utils.dart';
@@ -30,6 +33,32 @@ class MakeOrderRetailInit extends StatefulWidget {
 class _MakeOrderRetailInitState extends State<MakeOrderRetailInit> {
   FocusNode focusNodeKeyboard = FocusNode();
   String barCode = "";
+  StreamSubscription<String>? _scannerSubscription;
+
+  @override
+  void initState() {
+    super.initState();
+    _initScanner();
+  }
+
+  void _initScanner() {
+    _scannerSubscription =
+        SunmiScannerService.instance.onBarcodeScanned.listen((code) {
+      if (mounted) {
+        _processBarcode(code);
+      }
+    });
+    // Auto-start scanner engine when retail init view is active
+    SunmiScannerService.instance.startScan('MakeOrderRetailInit');
+  }
+
+  @override
+  void dispose() {
+    _scannerSubscription?.cancel();
+    SunmiScannerService.instance.stopScan(clientId: 'MakeOrderRetailInit');
+    focusNodeKeyboard.dispose();
+    super.dispose();
+  }
   @override
   Widget build(BuildContext context) {
     final ru = ResponsiveUtils(context);
@@ -156,9 +185,10 @@ class _MakeOrderRetailInitState extends State<MakeOrderRetailInit> {
     if (value is KeyDownEvent) {
       if (value.logicalKey.keyLabel == 'Enter' ||
           value.logicalKey.keyId == 4294967309) {
-        _verifyBarCode(context, null);
-      }
-      if (value.character != null) {
+        final code = barCode;
+        barCode = "";
+        _processBarcode(code);
+      } else if (value.character != null) {
         RegExp regex = RegExp(r'^[a-zA-Z0-9 ]+$');
         if (regex.hasMatch(value.character!)) {
           barCode += value.character ?? "";
@@ -167,11 +197,29 @@ class _MakeOrderRetailInitState extends State<MakeOrderRetailInit> {
     }
   }
 
-  _verifyBarCode(BuildContext context, String? value) {
-    context.read<MakeOrderRetailBloc>().changeStepStatus(1);
-    context.read<MakeOrderRetailBloc>().addItem(barCode: barCode);
-    focusNodeKeyboard.requestFocus();
-    barCode = "";
+  void _processBarcode(String code) {
+    if (widget.state.status == MakeOrderRetailStatus.waitingGet) return;
+
+    final trimmed = code.trim();
+    if (trimmed.isEmpty) return;
+
+    final bloc = context.read<MakeOrderRetailBloc>();
+    final addedItem = bloc.addItem(barCode: trimmed);
+    if (addedItem != null) {
+      bloc.changeStepStatus(1);
+    } else {
+      context.read<PageUtilsBloc>().showSnackBar(
+        snackBar: SnackBarInfo(
+          text: LocaleKeys.makeOrderRetail_scan_codeNotFound.tr(args: [trimmed]),
+          snackBarType: SnackBarType.warning,
+        ),
+      );
+      // Re-trigger scanner so the customer can scan another product without manual intervention
+      SunmiScannerService.instance.rearmScan();
+    }
+    if (mounted) {
+      focusNodeKeyboard.requestFocus();
+    }
   }
   _shimmer(ResponsiveUtils ru){
     double size = 30;

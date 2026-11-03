@@ -315,7 +315,10 @@
       "payWithBreB": "Pay with Bre-B",
       "areYouSureStopTransaction": "Are you sure you want to stop the transaction?",
       "chargedNotRegistered": "Your payment went through",
-      "chargedNotRegisteredDetail": "We could not register the order. Please go to the counter and show this receipt: do not pay again."
+      "chargedNotRegisteredDetail": "We could not register the order. Please go to the counter and show this receipt: do not pay again.",
+      "verifyingCardPayment": "Verifying your payment…",
+      "cardPaymentUncertain": "We couldn't confirm your payment. Did the POS print a receipt?",
+      "cardPaymentBlocked": "Don't pay again. Go to the cashier with your receipt"
     },
     "body": {
       "total": "Total",
@@ -333,7 +336,8 @@
       "doNotClose": "Do not close this screen",
       "orderNumber": "Order #{}",
       "chargeInProgress": "The charge is already on the card reader. Wait for its answer; if you cannot continue, cancel it there or ask for help.",
-      "instalments": "Number of instalments"
+      "instalments": "Number of instalments",
+      "cardPaymentCode": "Code: {}"
     },
     "buttons": {
       "qr": "QR",
@@ -356,7 +360,9 @@
       "changePaymentMethod": "Change payment method",
       "stopTransaction": "Stop the transaction",
       "back": "Back",
-      "continueAction": "Continue"
+      "continueAction": "Continue",
+      "hasVoucherYes": "Yes, I have a receipt",
+      "hasVoucherNo": "No"
     },
     "inputs": {
       "complement": {
@@ -423,7 +429,8 @@
       "processingOrder": "Processing order",
       "processingInvoice": "Processing invoice",
       "processingInvoiceElectronic": "Processing electronic invoice",
-      "pendingCard": "Payment not confirmed — verify before retrying"
+      "pendingCard": "Payment not confirmed — verify before retrying",
+      "posBusy": "The POS is finishing a previous payment, please wait a moment"
     },
     "links": {
       "addEmail": "+ Add email",
@@ -563,7 +570,11 @@
       "finishPurchase": "Finish the purchase and pay",
       "finish": "Finish",
       "waitingScan": "Hold your products' barcodes up to the scanner",
-      "waitingPurchase": "Processing purchase"
+      "waitingPurchase": "Processing purchase",
+      "codeNotFound": "Product not found for barcode: {}",
+      "invalidCode": "Invalid or unreadable barcode",
+      "duplicateScan": "Duplicate scan ignored",
+      "scannerError": "Could not initialize barcode scanner"
     }
   },
   "helpModal": {
@@ -634,6 +645,16 @@
       "table": {
         "label": "Table name",
         "placeholder": "Select a table"
+      },
+      "camposExtra": {
+        "title": "Additional Information",
+        "orderInfo": "Order Information",
+        "selectPlaceholder": "Select an option",
+        "inputPlaceholder": "Enter {}",
+        "required": "*",
+        "optional": "(optional)",
+        "requiredError": "The field \"{}\" is required",
+        "numberError": "The field \"{}\" must be a valid number"
       }
     },
     "labels": {

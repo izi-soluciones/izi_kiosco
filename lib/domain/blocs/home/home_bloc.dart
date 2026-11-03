@@ -6,13 +6,16 @@ import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
 import 'package:izi_kiosco/domain/repositories/business_repository.dart';
 import 'package:izi_kiosco/data/pos/izify_pos_client.dart';
 import 'package:izi_kiosco/data/telemetry/pos_telemetry.dart';
+import 'package:izi_kiosco/domain/repositories/comanda_repository.dart';
 import 'package:izi_kiosco/data/utils/token_utils.dart';
+import 'package:izi_kiosco/domain/utils/atc_pending_resolver.dart';
 import 'package:izi_kiosco/domain/utils/crash_report.dart';
 part 'home_state.dart';
 
 
 class HomeBloc extends Cubit<HomeState>{
   final BusinessRepository _businessRepository;
+  final ComandaRepository? _comandaRepository;
 
   Stream? futureVerifyPos;
   StreamSubscription? _subscription;
@@ -20,8 +23,10 @@ class HomeBloc extends Cubit<HomeState>{
   final IzifyPosClient _izifyPosClient;
   final PosLinkTracker _link = PosLinkTracker('home');
 
-  HomeBloc(this._businessRepository, {IzifyPosClient? izifyPosClient})
+  HomeBloc(this._businessRepository,
+      {IzifyPosClient? izifyPosClient, ComandaRepository? comandaRepository})
       : _izifyPosClient = izifyPosClient ?? IzifyPosClient(),
+        _comandaRepository = comandaRepository,
         super(HomeState.init());
 
   @override
@@ -29,6 +34,15 @@ class HomeBloc extends Cubit<HomeState>{
     _subscription?.cancel();
     _izifyPosClient.close();
     return super.close();
+  }
+
+  // Resuelve los cobros ATC que quedaron sin resultado (al arrancar la app y cada vez que se vuelve a inicio)
+  Future<void> resolveAtcPending() async {
+    final comandaRepository = _comandaRepository;
+    if (comandaRepository == null) {
+      return;
+    }
+    await AtcPendingResolver.resolve(comandaRepository);
   }
 
   verifyServerPos(AuthState authState)async{

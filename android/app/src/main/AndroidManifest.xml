@@ -1,4 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Package visibility declaration for Sunmi Scanner Service (Android 11+ / API 30+) -->
+    <queries>
+        <package android:name="com.sunmi.scanner" />
+    </queries>
     <application
         android:label="izi_kiosco"
         android:name="${applicationName}"

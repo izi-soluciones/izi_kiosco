@@ -252,6 +252,9 @@ abstract class  LocaleKeys {
   static const payment_subtitles_chooseCardPaymentType = 'payment.subtitles.chooseCardPaymentType';
   static const payment_subtitles_payWithBreB = 'payment.subtitles.payWithBreB';
   static const payment_subtitles_areYouSureStopTransaction = 'payment.subtitles.areYouSureStopTransaction';
+  static const payment_subtitles_verifyingCardPayment = 'payment.subtitles.verifyingCardPayment';
+  static const payment_subtitles_cardPaymentUncertain = 'payment.subtitles.cardPaymentUncertain';
+  static const payment_subtitles_cardPaymentBlocked = 'payment.subtitles.cardPaymentBlocked';
   static const payment_subtitles = 'payment.subtitles';
   static const payment_body_total = 'payment.body.total';
   static const payment_body_ifAlreadyPayment = 'payment.body.ifAlreadyPayment';
@@ -273,6 +276,7 @@ abstract class  LocaleKeys {
   static const payment_body_documentFallback = 'payment.body.documentFallback';
   static const payment_body_doNotClose = 'payment.body.doNotClose';
   static const payment_body_orderNumber = 'payment.body.orderNumber';
+  static const payment_body_cardPaymentCode = 'payment.body.cardPaymentCode';
   static const payment_body = 'payment.body';
   static const payment_buttons_qr = 'payment.buttons.qr';
   static const payment_buttons_breB = 'payment.buttons.breB';
@@ -293,6 +297,8 @@ abstract class  LocaleKeys {
   static const payment_buttons_invoiceYes = 'payment.buttons.invoiceYes';
   static const payment_buttons_changePaymentMethod = 'payment.buttons.changePaymentMethod';
   static const payment_buttons_stopTransaction = 'payment.buttons.stopTransaction';
+  static const payment_buttons_hasVoucherYes = 'payment.buttons.hasVoucherYes';
+  static const payment_buttons_hasVoucherNo = 'payment.buttons.hasVoucherNo';
   static const payment_buttons = 'payment.buttons';
   static const payment_inputs_complement_label = 'payment.inputs.complement.label';
   static const payment_inputs_complement = 'payment.inputs.complement';
@@ -345,6 +351,7 @@ abstract class  LocaleKeys {
   static const payment_messages_processingInvoice = 'payment.messages.processingInvoice';
   static const payment_messages_processingInvoiceElectronic = 'payment.messages.processingInvoiceElectronic';
   static const payment_messages_pendingCard = 'payment.messages.pendingCard';
+  static const payment_messages_posBusy = 'payment.messages.posBusy';
   static const payment_messages = 'payment.messages';
   static const payment_cardError_title = 'payment.cardError.title';
   static const payment_cardError_description = 'payment.cardError.description';
@@ -460,6 +467,10 @@ abstract class  LocaleKeys {
   static const makeOrderRetail_scan_finish = 'makeOrderRetail.scan.finish';
   static const makeOrderRetail_scan_waitingScan = 'makeOrderRetail.scan.waitingScan';
   static const makeOrderRetail_scan_waitingPurchase = 'makeOrderRetail.scan.waitingPurchase';
+  static const makeOrderRetail_scan_codeNotFound = 'makeOrderRetail.scan.codeNotFound';
+  static const makeOrderRetail_scan_invalidCode = 'makeOrderRetail.scan.invalidCode';
+  static const makeOrderRetail_scan_duplicateScan = 'makeOrderRetail.scan.duplicateScan';
+  static const makeOrderRetail_scan_scannerError = 'makeOrderRetail.scan.scannerError';
   static const makeOrderRetail_scan = 'makeOrderRetail.scan';
   static const makeOrderRetail = 'makeOrderRetail';
   static const helpModal_title = 'helpModal.title';
