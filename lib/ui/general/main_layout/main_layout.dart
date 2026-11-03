@@ -10,6 +10,7 @@ import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/make_order/make_order_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/page_utils/page_utils_bloc.dart';
 import 'package:izi_kiosco/domain/models/item.dart';
+import 'package:izi_kiosco/domain/models/modulos.dart';
 import 'package:izi_kiosco/ui/general/izi_screen_inactive.dart';
 import 'package:izi_kiosco/ui/pages/make_order_page/modals/item_options_modal.dart';
 import 'package:izi_kiosco/ui/utils/custom_alerts.dart';
@@ -82,7 +83,7 @@ class MainLayout extends StatelessWidget {
 
   List<IziSideNavItem> menu(BuildContext context,PageUtilsState pageUtilsState,AuthState authState){
     return [
-      if(authState.currentContribuyente?.habilitadoMesas==true && (authState.currentSucursal?.config?["restaurantPagoAdelantado"] ?? false)==false)
+      if(authState.currentContribuyente?.tieneModulo(Modulo.mesas)==true && (authState.currentSucursal?.config?["restaurantPagoAdelantado"] ?? false)==false)
       IziSideNavItem(
           name: LocaleKeys.tables_drawer.tr(),
           icon: IziIcons.restTable,
@@ -111,7 +112,7 @@ class MainLayout extends StatelessWidget {
             }
             GoRouter.of(context).goNamed(RoutesKeys.order);
           }),
-      if(authState.currentContribuyente?.habilitadoTerminal==true)
+      if(authState.currentContribuyente?.tieneModulo(Modulo.terminal)==true)
       IziSideNavItem(
           name: LocaleKeys.configuration_title.tr(),
           icon: IziIcons.settings,

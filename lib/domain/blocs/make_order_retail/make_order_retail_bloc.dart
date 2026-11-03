@@ -8,6 +8,7 @@ import 'package:izi_kiosco/domain/dto/new_sale_link_dto.dart';
 import 'package:izi_kiosco/domain/models/cash_register.dart';
 import 'package:izi_kiosco/domain/models/currency.dart';
 import 'package:izi_kiosco/domain/models/item.dart';
+import 'package:izi_kiosco/domain/models/modulos.dart';
 import 'package:izi_kiosco/domain/models/sale_link.dart';
 import 'package:izi_kiosco/domain/repositories/business_repository.dart';
 import 'package:izi_kiosco/domain/repositories/comanda_repository.dart';
@@ -64,7 +65,7 @@ class MakeOrderRetailBloc extends Cubit<MakeOrderRetailState> {
         return;
       }
 
-      if (authState.currentDevice?.config.actividadEconomica ==null && authState.currentContribuyente?.tieneFacturacion==true) {
+      if (authState.currentDevice?.config.actividadEconomica ==null && authState.currentContribuyente?.tieneModulo(Modulo.facturacion)==true) {
         emit(state.copyWith(status: MakeOrderRetailStatus.errorActivity));
         emit(state.copyWith(status: MakeOrderRetailStatus.waitingGet));
         return;
@@ -87,9 +88,11 @@ class MakeOrderRetailBloc extends Cubit<MakeOrderRetailState> {
     emit(state.copyWith(step: step));
   }
 
-  addItem({required String barCode}) {
+  Item? addItem({required String barCode}) {
+    final cleaned = barCode.trim().toLowerCase();
+    if (cleaned.isEmpty) return null;
     var item = state.items.firstWhereOrNull((element) =>
-        ((element.codigoBarras?.toLowerCase() == (barCode).toLowerCase())));
+        ((element.codigoBarras?.trim().toLowerCase() == cleaned)));
     if (item != null) {
       List<Item> list = List.of(state.itemsSelected);
       int? itemSaved =
@@ -97,14 +100,16 @@ class MakeOrderRetailBloc extends Cubit<MakeOrderRetailState> {
       if (itemSaved == -1) {
         var itemAdd = item.copyWith();
         itemAdd.cantidad = 1;
-        list.insert(0,itemAdd);
+        list.insert(0, itemAdd);
       } else {
-        var itemAdd =list[itemSaved].copyWith();
+        var itemAdd = list[itemSaved].copyWith();
         itemAdd.cantidad = itemAdd.cantidad + 1;
         list[itemSaved] = itemAdd;
       }
       emit(state.copyWith(itemsSelected: list));
+      return item;
     }
+    return null;
   }
 
   resetItems() {

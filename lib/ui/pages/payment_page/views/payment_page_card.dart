@@ -8,6 +8,7 @@ import 'package:izi_kiosco/app/values/assets_keys.dart';
 import 'package:izi_kiosco/app/values/locale_keys.g.dart';
 import 'package:izi_kiosco/domain/blocs/payment/payment_bloc.dart';
 import 'package:izi_kiosco/ui/general/izi_header_kiosk.dart';
+import 'package:izi_kiosco/ui/pages/payment_page/widgets/payment_card_atc_status.dart';
 import 'package:izi_kiosco/ui/modals/warning_modal.dart';
 import 'package:izi_kiosco/ui/utils/custom_alerts.dart';
 import 'package:izi_kiosco/ui/utils/money_formatter.dart';
@@ -53,6 +54,11 @@ class _PaymentPageCardState extends State<PaymentPageCard> {
   }
   @override
   Widget build(BuildContext context) {
+    if (widget.state.status == PaymentStatus.cardUncertain ||
+        widget.state.status == PaymentStatus.cardBlocked) {
+      return PaymentCardAtcStatus(state: widget.state);
+    }
+    final verifying = widget.state.status == PaymentStatus.cardVerifying;
     return Column(
       mainAxisSize: MainAxisSize.max,
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -87,6 +93,12 @@ class _PaymentPageCardState extends State<PaymentPageCard> {
                 color: context.iziColors.dark,
                 text: LocaleKeys.payment_subtitles_enterYourCard.tr(),
                 fontWeight: FontWeight.w500),
+            if(verifying)
+            IziText.titleSmall(
+                textAlign: TextAlign.center,
+                color: context.iziColors.dark,
+                text: LocaleKeys.payment_subtitles_verifyingCardPayment.tr(),
+                fontWeight: FontWeight.w500),
             const SizedBox(
               height: 32,
             ),
@@ -120,17 +132,17 @@ class _PaymentPageCardState extends State<PaymentPageCard> {
                 text:
                     "${LocaleKeys.payment_body_total.tr()}: ${(widget.state.paymentObj?.amount ?? 0).moneyFormat(currency: widget.state.currentCurrency?.simbolo, digitsTaxes: digitsTaxes)}",
                 fontWeight: FontWeight.w600),
-            if(showCancel)
+            if(showCancel && !verifying)
             const SizedBox(
               height: 32,
             ),
-            if(showCancel)
+            if(showCancel && !verifying)
             IziText.titleBig(
                 color: context.iziColors.primary,
                 textAlign: TextAlign.center,
                 text:LocaleKeys.payment_body_havingTrouble.tr(),
                 fontWeight: FontWeight.w400),
-            if(showCancel)
+            if(showCancel && !verifying)
             Padding(
               padding: const EdgeInsets.only(top: 16.0),
               child: InkWell(

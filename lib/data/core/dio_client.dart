@@ -63,10 +63,19 @@ class DioClient {
     Map<String, dynamic>? body,
     Map<String, dynamic>? queryParameters,
     Options? options,
+    String? baseUrl
   }) async {
     //error
+    Dio dio  = _dio;
+    if(baseUrl!=null){
+
+      dio = Dio();
+      dio.options = BaseOptions(
+          baseUrl: baseUrl);
+      dio.interceptors.add(AppInterceptor(dio));
+    }
     var response =
-    await _dio.post(uri, queryParameters: queryParameters, options: options,data: body);
+    await dio.post(uri, queryParameters: queryParameters, options: options,data: body);
     return response;
   }
   Future<Response> put({
@@ -121,6 +130,27 @@ class AppInterceptor extends InterceptorsWrapper {
     options.headers.addAll({"Connection": "Keep-Alive",});
     options.extra["retry_count"] = options.extra["retry_count"] ?? 0;
     return handler.next(options);
+  }
+
+  @override
+  Future onError(DioException err, ErrorInterceptorHandler handler) async {
+    // 403 por gating de modulos / limites: traducir a mensaje claro y no crashear.
+    if (err.response?.statusCode == 403 && err.response?.data is Map) {
+      final code = err.response?.data["code"];
+      if (code == "MODULO_NO_HABILITADO" || code == "LIMITE_ALCANZADO") {
+        final msg = err.response?.data["msg"] ??
+            (code == "LIMITE_ALCANZADO"
+                ? "Has alcanzado el límite permitido para este módulo."
+                : "Este módulo no está habilitado para tu plan.");
+        return handler.next(DioException(
+          requestOptions: err.requestOptions,
+          response: err.response,
+          type: err.type,
+          error: msg,
+        ));
+      }
+    }
+    return handler.next(err);
   }
 
 

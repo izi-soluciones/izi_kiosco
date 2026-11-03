@@ -7,6 +7,18 @@ import 'package:izi_kiosco/domain/strategies/taxes/taxes_strategy.dart';
 import 'package:izi_kiosco/domain/utils/calc_utils.dart';
 
 class TaxesStrategyCo implements TaxesStrategy{
+  // Las líneas cierran en pesos enteros; si se factura en otra moneda (USD), con 2 decimales, como el backbone (BKB-008).
+  final int decimalesMoneda;
+
+  TaxesStrategyCo({this.decimalesMoneda = 0});
+
+  static int decimalesMonedaDe(dynamic config) {
+    if (config is! Map) return 0;
+    final monedaFactura = config["monedaInventario"];
+    final monedaImpuesto = config["monedaImpuesto"];
+    return monedaFactura != null && monedaImpuesto != null && monedaFactura != monedaImpuesto ? 2 : 0;
+  }
+
   @override
   num getTotalItem(ParametrosFacturacionItem parametrosFacturacionItem, num cantidad, num precio){
         double totalImpuestos = 0;
@@ -14,7 +26,7 @@ class TaxesStrategyCo implements TaxesStrategy{
         if(parametrosFacturacionItem.co?.impuestos.isEmpty==true){
           return precioItem;
         }
-        precioItem = Calc.roundConservador(precioItem, 0);
+        precioItem = Calc.roundConservador(precioItem, decimalesMoneda);
         if (parametrosFacturacionItem.co?.impuestosIn==true) {
             double amount = 0;
             double rate = 0;
@@ -45,7 +57,7 @@ class TaxesStrategyCo implements TaxesStrategy{
 
             totalImpuestos = Calc.roundConservador(totalImpuestos);
         }
-        return Calc.roundConservador(Calc.add(precioItem, Calc.roundConservador(totalImpuestos)), 0);
+        return Calc.roundConservador(Calc.add(precioItem, Calc.roundConservador(totalImpuestos)), decimalesMoneda);
   }
 
   @override

@@ -3,13 +3,26 @@ import 'dart:async';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
 import 'package:izi_kiosco/domain/blocs/payment/payment_bloc.dart';
+import 'package:izi_kiosco/domain/models/charge.dart';
+import 'package:izi_kiosco/domain/models/contribuyente.dart';
 import 'package:izi_kiosco/domain/models/customer.dart';
+import 'package:izi_kiosco/domain/models/device.dart';
+import 'package:izi_kiosco/domain/models/payment_obj.dart';
 import 'package:izi_kiosco/domain/repositories/business_repository.dart';
 import 'package:izi_kiosco/domain/repositories/comanda_repository.dart';
 import 'package:izi_kiosco/domain/repositories/socket_repository.dart';
 import 'package:izi_kiosco/domain/utils/input_obj.dart';
 
 class _FakeComandaRepository implements ComandaRepository {
+  int intentosPago = 0;
+
+  @override
+  Future<Charge> generatePaymentAttempt(dynamic paymentAttemptDto) async {
+    intentosPago++;
+    return const Charge(
+        qrUrl: null, uuid: 'cobro-1', id: 1, qrBase64: null, token: null);
+  }
+
   @override
   dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
 }
@@ -31,10 +44,37 @@ class _FakeBusinessRepository implements BusinessRepository {
 
 class _FakeSocketRepository implements SocketRepository {
   @override
+  Stream<dynamic> listenPayment({required Charge charge}) =>
+      const Stream.empty();
+
+  @override
   closeQrListening() {}
 
   @override
   dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
+}
+
+class _TestPaymentBloc extends PaymentBloc {
+  _TestPaymentBloc(super.comandas, super.negocios, super.socket);
+
+  void seed(PaymentState state) => emit(state);
+}
+
+AuthState _authState({required bool facturacion, required bool retail, bool retailBarcode = false}) {
+  return AuthState.init().copyWith(
+      currentContribuyente:
+          Contribuyente.fromJson({
+            "modulos": {
+              "facturacion": {"enabled": facturacion}
+            }
+          }),
+      currentDevice: Device.fromJson({
+        "id": 1,
+        "sucursal": 1,
+        "nombre": "totem",
+        "caja": 1,
+        "config": {"isRetail": retail, "isRetailBarcode": retailBarcode}
+      }));
 }
 
 void main() {
@@ -248,5 +288,66 @@ void main() {
     expect(bloc.state.businessName.value, isEmpty);
     expect(bloc.state.email.value, isEmpty);
     expect(bloc.state.customerName.value, 'Camila');
+  });
+
+  group('cobro sin el formulario de factura', () {
+    late _FakeComandaRepository comandas;
+    late _TestPaymentBloc retailBloc;
+
+    setUp(() {
+      comandas = _FakeComandaRepository();
+      retailBloc = _TestPaymentBloc(
+          comandas, _FakeBusinessRepository(), _FakeSocketRepository());
+      retailBloc.seed(retailBloc.state.copyWith(
+          step: 1,
+          paymentObj: PaymentObj(
+              id: 1,
+              custom: {},
+              amount: 10,
+              isComanda: false,
+              uuid: 'venta-1',
+              items: [])));
+    });
+
+    tearDown(() => retailBloc.close());
+
+    test('retail sin facturacion genera el QR sin pedir telefono', () async {
+      await retailBloc.generateQR(_authState(facturacion: false, retail: true));
+
+      expect(comandas.intentosPago, 1);
+      expect(retailBloc.state.step, 3);
+    });
+
+    test('sin facturacion pero con formulario el QR sigue exigiendo telefono',
+        () async {
+      await retailBloc.generateQR(_authState(facturacion: false, retail: false));
+
+      expect(comandas.intentosPago, 0);
+      expect(retailBloc.state.phoneNumber.inputError, InputError.required);
+    });
+
+    test('retail sin facturacion no pasa al paso 2 en selectPayment', () {
+      retailBloc.selectPayment(
+          PaymentType.qr, _authState(facturacion: false, retail: true));
+      expect(retailBloc.state.step, 1);
+    });
+
+    test('retail barcode sin facturacion no pasa al paso 2 en selectPayment', () {
+      retailBloc.selectPayment(PaymentType.qr,
+          _authState(facturacion: false, retail: false, retailBarcode: true));
+      expect(retailBloc.state.step, 1);
+    });
+
+    test('retail sin facturacion cancelQR vuelve al paso 1', () {
+      retailBloc.seed(retailBloc.state.copyWith(step: 3));
+      retailBloc.cancelQR(_authState(facturacion: false, retail: true));
+      expect(retailBloc.state.step, 1);
+    });
+
+    test('retail sin facturacion cancelBREB vuelve al paso 1', () {
+      retailBloc.seed(retailBloc.state.copyWith(step: 7));
+      retailBloc.cancelBREB(_authState(facturacion: false, retail: true));
+      expect(retailBloc.state.step, 1);
+    });
   });
 }
