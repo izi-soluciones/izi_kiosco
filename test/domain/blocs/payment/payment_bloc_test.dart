@@ -60,7 +60,7 @@ class _TestPaymentBloc extends PaymentBloc {
   void seed(PaymentState state) => emit(state);
 }
 
-AuthState _authState({required bool facturacion, required bool retail}) {
+AuthState _authState({required bool facturacion, required bool retail, bool retailBarcode = false}) {
   return AuthState.init().copyWith(
       currentContribuyente:
           Contribuyente.fromJson({
@@ -73,7 +73,7 @@ AuthState _authState({required bool facturacion, required bool retail}) {
         "sucursal": 1,
         "nombre": "totem",
         "caja": 1,
-        "config": {"isRetail": retail}
+        "config": {"isRetail": retail, "isRetailBarcode": retailBarcode}
       }));
 }
 
@@ -324,6 +324,30 @@ void main() {
 
       expect(comandas.intentosPago, 0);
       expect(retailBloc.state.phoneNumber.inputError, InputError.required);
+    });
+
+    test('retail sin facturacion no pasa al paso 2 en selectPayment', () {
+      retailBloc.selectPayment(
+          PaymentType.qr, _authState(facturacion: false, retail: true));
+      expect(retailBloc.state.step, 1);
+    });
+
+    test('retail barcode sin facturacion no pasa al paso 2 en selectPayment', () {
+      retailBloc.selectPayment(PaymentType.qr,
+          _authState(facturacion: false, retail: false, retailBarcode: true));
+      expect(retailBloc.state.step, 1);
+    });
+
+    test('retail sin facturacion cancelQR vuelve al paso 1', () {
+      retailBloc.seed(retailBloc.state.copyWith(step: 3));
+      retailBloc.cancelQR(_authState(facturacion: false, retail: true));
+      expect(retailBloc.state.step, 1);
+    });
+
+    test('retail sin facturacion cancelBREB vuelve al paso 1', () {
+      retailBloc.seed(retailBloc.state.copyWith(step: 7));
+      retailBloc.cancelBREB(_authState(facturacion: false, retail: true));
+      expect(retailBloc.state.step, 1);
     });
   });
 }
