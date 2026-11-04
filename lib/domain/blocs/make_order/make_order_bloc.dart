@@ -241,6 +241,16 @@ class MakeOrderBloc extends Cubit<MakeOrderState> {
               same = false;
               break;
             }
+            if (item.modificadores[i].caracteristicas[m].check &&
+                item.modificadores[i].caracteristicas[m].orden !=
+                    categories[indexCat]
+                        .items[iOld]
+                        .modificadores[i]
+                        .caracteristicas[m]
+                        .orden) {
+              same = false;
+              break;
+            }
           }
         }
         if (same) {
