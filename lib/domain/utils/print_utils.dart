@@ -246,9 +246,7 @@ class PrintUtils {
   print(List<IziPrintItem> values, Device? device) async {
     if (device?.config.noPrintRollo == true) return;
     try {
-      if (kIsWeb) {
-        await _pdfPrint(values);
-      } else if (!Platform.isAndroid) {
+      if (kIsWeb || !Platform.isAndroid) {
         await _pdfPrint(values);
       } else {
         if (device?.config.printSat == true) {
