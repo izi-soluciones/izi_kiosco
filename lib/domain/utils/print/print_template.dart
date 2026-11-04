@@ -63,16 +63,7 @@ class PrintTemplate {
         parsedCustomOrderNumber ?? _parseInt(comandaMap?["numeroCustom"]);
 
     final configVal = sucursal.ordenEnFacturaConfig;
-    final bool showOrder;
-    if (configVal != null) {
-      showOrder = configVal;
-    } else if (isCompact && parsedOrderNumber != null) {
-      // Comportamiento histórico en formato compacto: si la clave no existe en config
-      // pero se pasa un orderNumber explícito, se preserva la impresión.
-      showOrder = true;
-    } else {
-      showOrder = false;
-    }
+    final bool showOrder = configVal ?? false;
 
     return ResolvedOrderInfo(
       orderNumber: resolvedOrderNumber,

@@ -94,7 +94,7 @@ void main() {
   });
 
   group('Comportamiento por defecto cuando ordenEnFactura no está en config', () {
-    test('Formato compacto con orderNumber explícito incluye número de orden por retrocompatibilidad', () async {
+    test('Formato compacto sin flag no incluye número de orden (consistente con restaurantes)', () async {
       final sucursalSinFlag = Sucursal.fromJson({
         ...sucursalRawBo,
         'config': {},
@@ -109,7 +109,7 @@ void main() {
       );
 
       final textos = items.whereType<IziPrintText>().map((e) => e.text).toList();
-      expect(textos, contains('Orden #88'));
+      expect(textos.where((t) => t.contains('Orden')), isEmpty);
     });
 
     test('Formato standard 80 sin flag no incluye número de orden (consistente con restaurantes)', () async {
@@ -127,7 +127,7 @@ void main() {
       );
 
       final textos = items.whereType<IziPrintText>().map((e) => e.text).toList();
-      expect(textos.where((t) => t.contains('Orden: 88')), isEmpty);
+      expect(textos.where((t) => t.contains('Orden')), isEmpty);
     });
   });
 

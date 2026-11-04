@@ -1337,16 +1337,19 @@ class PaymentBloc extends Cubit<PaymentState> {
 
       final backendItems = invoice.customFactura["printItems"];
       final backendFormat = invoice.customFactura["printItemsFormat"];
+      final bool isCompact = backendFormat == 'compacto' ||
+          (backendFormat == null &&
+              (authState.currentDevice?.config.facturaCompacto == true ||
+                  (authState.currentSucursal?.config is Map &&
+                      (authState.currentSucursal?.config as Map)["tipoFacturaVentas"] == "compacto")));
+
       final orderInfo = authState.currentSucursal != null
           ? PrintTemplate.resolveInvoiceOrder(
               sucursal: authState.currentSucursal!,
               invoice: invoice,
               orderNumber: orderNumber,
               customOrderNumber: customOrderNumber,
-              isCompact: backendFormat == 'compacto' ||
-                  authState.currentDevice?.config.facturaCompacto == true ||
-                  (authState.currentSucursal?.config is Map &&
-                      (authState.currentSucursal?.config as Map)["tipoFacturaVentas"] == "compacto"),
+              isCompact: isCompact,
             )
           : null;
       List<IziPrintItem>? backendTicket;
@@ -1359,17 +1362,12 @@ class PaymentBloc extends Cubit<PaymentState> {
             backendTicket,
             sucursal: authState.currentSucursal!,
             orderInfo: orderInfo,
-            isCompact: backendFormat == 'compacto',
+            isCompact: isCompact,
           );
         }
       }
 
-      final backendCompacto = backendTicket != null && backendFormat == 'compacto';
-      final useCompact = backendTicket != null
-          ? backendCompacto
-          : authState.currentDevice?.config.facturaCompacto == true;
-
-      if(useCompact){
+      if(isCompact){
         log("iZi Kiosco: [DEBUG] Compact mode (backend=${backendTicket != null}): replacing tmp");
         if (backendTicket != null) {
           tmp = backendTicket;
@@ -1448,17 +1446,19 @@ class PaymentBloc extends Cubit<PaymentState> {
           insertIdx = list.indexWhere((item) =>
               item is IziPrintText && item.text.startsWith('NOMBRE:'));
         }
-        if (insertIdx != -1) {
-          list.insertAll(insertIdx, [
-            IziPrintSeparator(dotted: true),
-            IziPrintText(
-                text: orderInfo.orderTextCompact,
-                size: IziPrintSize.md,
-                align: IziPrintAlign.center,
-                bold: true),
-            IziPrintSeparator(dotted: true),
-          ]);
+        if (insertIdx == -1) {
+          insertIdx = list.length > 4 ? 4 : list.length;
+          log("iZi Kiosco: [WARN] _applyOrderConfigToBackendTicket (compact) no encontró anclajes para sucursal.nombre ni NOMBRE:, aplicando fallback en índice $insertIdx");
         }
+        list.insertAll(insertIdx, [
+          IziPrintSeparator(dotted: true),
+          IziPrintText(
+              text: orderInfo.orderTextCompact,
+              size: IziPrintSize.md,
+              align: IziPrintAlign.center,
+              bold: true),
+          IziPrintSeparator(dotted: true),
+        ]);
       } else {
         int insertIdx = -1;
         final fechaIdx = list.indexWhere((item) =>
@@ -1488,15 +1488,22 @@ class PaymentBloc extends Cubit<PaymentState> {
             }
           }
         }
-        if (insertIdx != -1) {
-          list.insert(
-            insertIdx,
-            IziPrintText(
-                text: orderInfo.orderTextFull,
-                size: IziPrintSize.sm,
-                align: IziPrintAlign.center),
-          );
+        if (insertIdx == -1) {
+          final sepIdx = list.indexWhere((item) => item is IziPrintSeparator);
+          if (sepIdx != -1) {
+            insertIdx = sepIdx;
+          } else {
+            insertIdx = list.length > 6 ? 6 : list.length;
+          }
+          log("iZi Kiosco: [WARN] _applyOrderConfigToBackendTicket (full) no encontró anclajes estándar de cabecera, aplicando fallback en índice $insertIdx");
         }
+        list.insert(
+          insertIdx,
+          IziPrintText(
+              text: orderInfo.orderTextFull,
+              size: IziPrintSize.sm,
+              align: IziPrintAlign.center),
+        );
       }
     } else if (!orderInfo.showOrder && hasOrder) {
       list.removeWhere((item) =>
