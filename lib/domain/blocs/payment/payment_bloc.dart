@@ -1337,27 +1337,28 @@ class PaymentBloc extends Cubit<PaymentState> {
 
       final backendItems = invoice.customFactura["printItems"];
       final backendFormat = invoice.customFactura["printItemsFormat"];
-      final effectiveOrderNumber = orderNumber ??
-          (invoice.customFactura["comanda"] is Map &&
-                  invoice.customFactura["comanda"]["numero"] is num
-              ? (invoice.customFactura["comanda"]["numero"] as num).toInt()
-              : null);
-      final effectiveCustomOrderNumber = customOrderNumber ??
-          (invoice.customFactura["comanda"] is Map &&
-                  invoice.customFactura["comanda"]["numeroCustom"] is num
-              ? (invoice.customFactura["comanda"]["numeroCustom"] as num).toInt()
-              : null);
+      final orderInfo = authState.currentSucursal != null
+          ? PrintTemplate.resolveInvoiceOrder(
+              sucursal: authState.currentSucursal!,
+              invoice: invoice,
+              orderNumber: orderNumber,
+              customOrderNumber: customOrderNumber,
+              isCompact: backendFormat == 'compacto' ||
+                  authState.currentDevice?.config.facturaCompacto == true ||
+                  (authState.currentSucursal?.config is Map &&
+                      (authState.currentSucursal?.config as Map)["tipoFacturaVentas"] == "compacto"),
+            )
+          : null;
       List<IziPrintItem>? backendTicket;
       if (backendItems is List && backendItems.isNotEmpty) {
         backendTicket = IziPrintItem.listFromJson(backendItems);
         if (backendTicket.isEmpty) {
           backendTicket = null;
-        } else if (authState.currentSucursal != null) {
+        } else if (authState.currentSucursal != null && orderInfo != null) {
           backendTicket = _applyOrderConfigToBackendTicket(
             backendTicket,
             sucursal: authState.currentSucursal!,
-            orderNumber: effectiveOrderNumber,
-            customOrderNumber: effectiveCustomOrderNumber,
+            orderInfo: orderInfo,
             isCompact: backendFormat == 'compacto',
           );
         }
@@ -1377,8 +1378,8 @@ class PaymentBloc extends Cubit<PaymentState> {
             authState.currentContribuyente!,
             authState.currentSucursal!,
             invoice,
-            orderNumber: effectiveOrderNumber,
-            customOrderNumber: effectiveCustomOrderNumber,
+            orderNumber: orderNumber,
+            customOrderNumber: customOrderNumber,
             taxesStrategy: authState.taxesStrategy,
           );
         }
@@ -1386,7 +1387,7 @@ class PaymentBloc extends Cubit<PaymentState> {
       else{
         log("iZi Kiosco: [DEBUG] Full mode: appending invoice payload after order");
         tmp.add(IziPrintLineWrap(lines: 2));
-        if (effectiveOrderNumber != null) {
+        if (orderNumber != null) {
           tmp.add(IziPrintCut());
         }
         if (backendTicket != null) {
@@ -1398,8 +1399,8 @@ class PaymentBloc extends Cubit<PaymentState> {
             authState.currentContribuyente!,
             authState.currentSucursal!,
             invoice,
-            orderNumber: effectiveOrderNumber,
-            customOrderNumber: effectiveCustomOrderNumber,
+            orderNumber: orderNumber,
+            customOrderNumber: customOrderNumber,
             taxesStrategy: authState.taxesStrategy,
           ));
         }
@@ -1408,8 +1409,8 @@ class PaymentBloc extends Cubit<PaymentState> {
             authState.currentContribuyente!,
             authState.currentSucursal!,
             invoice,
-            orderNumber: effectiveOrderNumber,
-            customOrderNumber: effectiveCustomOrderNumber,
+            orderNumber: orderNumber,
+            customOrderNumber: customOrderNumber,
             taxesStrategy: authState.taxesStrategy,
           ));
         }
@@ -1424,69 +1425,82 @@ class PaymentBloc extends Cubit<PaymentState> {
     }
   }
 
+  static final RegExp _orderPattern =
+      RegExp(r'^orden\s*[#:]\s*\S+$', caseSensitive: false);
+
   List<IziPrintItem> _applyOrderConfigToBackendTicket(
     List<IziPrintItem> ticket, {
     required Sucursal sucursal,
-    int? orderNumber,
-    int? customOrderNumber,
+    required ResolvedOrderInfo orderInfo,
     required bool isCompact,
   }) {
     final list = List<IziPrintItem>.from(ticket);
-    final showOrder = sucursal.ordenEnFactura;
     final hasOrder = list.any((item) =>
-        item is IziPrintText &&
-        (item.text.toLowerCase().startsWith('orden') ||
-            item.text.toLowerCase().startsWith('orden:')));
+        item is IziPrintText && _orderPattern.hasMatch(item.text.trim()));
 
-    if (showOrder && !hasOrder && orderNumber != null) {
+    if (orderInfo.shouldPrint && !hasOrder) {
       if (isCompact) {
         int insertIdx = list.indexWhere((item) =>
             item is IziPrintText && item.text == sucursal.nombre);
         if (insertIdx != -1) {
           insertIdx += 1;
         } else {
-          insertIdx = list.length > 4 ? 4 : list.length;
-        }
-        list.insertAll(insertIdx, [
-          IziPrintSeparator(dotted: true),
-          IziPrintText(
-              text: customOrderNumber != null
-                  ? "Orden #$customOrderNumber"
-                  : "Orden #$orderNumber",
-              size: IziPrintSize.md,
-              align: IziPrintAlign.center,
-              bold: true),
-          IziPrintSeparator(dotted: true),
-        ]);
-      } else {
-        int insertIdx = list.indexWhere((item) =>
-            item is IziPrintText && item.text.contains('Bolivia'));
-        if (insertIdx != -1) {
-          insertIdx += 1;
-        } else {
           insertIdx = list.indexWhere((item) =>
-              item is IziPrintText && item.text.startsWith('Fecha:'));
-          if (insertIdx != -1) {
-            insertIdx += 1;
-          } else {
-            insertIdx = list.length > 7 ? 7 : list.length;
+              item is IziPrintText && item.text.startsWith('NOMBRE:'));
+        }
+        if (insertIdx != -1) {
+          list.insertAll(insertIdx, [
+            IziPrintSeparator(dotted: true),
+            IziPrintText(
+                text: orderInfo.orderTextCompact,
+                size: IziPrintSize.md,
+                align: IziPrintAlign.center,
+                bold: true),
+            IziPrintSeparator(dotted: true),
+          ]);
+        }
+      } else {
+        int insertIdx = -1;
+        final fechaIdx = list.indexWhere((item) =>
+            item is IziPrintText &&
+            item.text.toLowerCase().startsWith('fecha:'));
+        if (fechaIdx != -1) {
+          insertIdx = fechaIdx + 1;
+        } else {
+          if (sucursal.ciudad != null && sucursal.ciudad!.isNotEmpty) {
+            final ciudadIdx = list.indexWhere((item) =>
+                item is IziPrintText && item.text.contains(sucursal.ciudad!));
+            if (ciudadIdx != -1) {
+              insertIdx = ciudadIdx + 1;
+            }
+          }
+          if (insertIdx == -1) {
+            final titleIdx = list.indexWhere((item) =>
+                item is IziPrintText &&
+                item.size == IziPrintSize.xl &&
+                item.text.contains('FACTURA'));
+            if (titleIdx != -1) {
+              if (titleIdx > 0 && list[titleIdx - 1] is IziPrintLineWrap) {
+                insertIdx = titleIdx - 1;
+              } else {
+                insertIdx = titleIdx;
+              }
+            }
           }
         }
-        list.insert(
-          insertIdx,
-          IziPrintText(
-              text: customOrderNumber != null
-                  ? "Orden: $customOrderNumber"
-                  : "Orden: $orderNumber",
-              size: IziPrintSize.sm,
-              align: IziPrintAlign.center),
-        );
+        if (insertIdx != -1) {
+          list.insert(
+            insertIdx,
+            IziPrintText(
+                text: orderInfo.orderTextFull,
+                size: IziPrintSize.sm,
+                align: IziPrintAlign.center),
+          );
+        }
       }
-    } else if (!showOrder && hasOrder) {
+    } else if (!orderInfo.showOrder && hasOrder) {
       list.removeWhere((item) =>
-          item is IziPrintText &&
-          (item.text.toLowerCase().startsWith('orden') ||
-              item.text.toLowerCase().startsWith('orden:')));
+          item is IziPrintText && _orderPattern.hasMatch(item.text.trim()));
     }
     return list;
   }

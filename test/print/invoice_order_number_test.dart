@@ -84,6 +84,85 @@ void main() {
       expect(sucNull.ordenEnFactura, isFalse);
       expect(sucEmpty.ordenEnFactura, isFalse);
       expect(sucNoConfig.ordenEnFactura, isFalse);
+
+      expect(sucFalse.ordenEnFacturaConfig, isFalse);
+      expect(sucZero.ordenEnFacturaConfig, isFalse);
+      expect(sucNull.ordenEnFacturaConfig, isNull);
+      expect(sucEmpty.ordenEnFacturaConfig, isNull);
+      expect(sucNoConfig.ordenEnFacturaConfig, isNull);
+    });
+  });
+
+  group('Comportamiento por defecto cuando ordenEnFactura no está en config', () {
+    test('Formato compacto con orderNumber explícito incluye número de orden por retrocompatibilidad', () async {
+      final sucursalSinFlag = Sucursal.fromJson({
+        ...sucursalRawBo,
+        'config': {},
+      });
+
+      final items = await PrintTemplate.printInvoiceCompact(
+        contribuyenteBo,
+        sucursalSinFlag,
+        invoiceBo,
+        orderNumber: 88,
+        taxesStrategy: TaxesStrategyFactory.taxes(contribuyenteBo),
+      );
+
+      final textos = items.whereType<IziPrintText>().map((e) => e.text).toList();
+      expect(textos, contains('Orden #88'));
+    });
+
+    test('Formato standard 80 sin flag no incluye número de orden (consistente con restaurantes)', () async {
+      final sucursalSinFlag = Sucursal.fromJson({
+        ...sucursalRawBo,
+        'config': {},
+      });
+
+      final items = await PrintTemplate.printInvoice(
+        contribuyenteBo,
+        sucursalSinFlag,
+        invoiceBo,
+        orderNumber: 88,
+        taxesStrategy: TaxesStrategyFactory.taxes(contribuyenteBo),
+      );
+
+      final textos = items.whereType<IziPrintText>().map((e) => e.text).toList();
+      expect(textos.where((t) => t.contains('Orden: 88')), isEmpty);
+    });
+  });
+
+  group('PrintTemplate.resolveInvoiceOrder helper unificado', () {
+    test('parsea número y customOrderNumber cuando llegan como String o num', () {
+      final sucursal = Sucursal.fromJson({'config': {'ordenEnFactura': true}});
+      final invoice = Invoice.fromJson({
+        ...invoiceRawBo,
+        'customFactura': {
+          'comanda': {'numero': '55', 'numeroCustom': 12.0}
+        }
+      });
+
+      final info = PrintTemplate.resolveInvoiceOrder(
+        sucursal: sucursal,
+        invoice: invoice,
+      );
+
+      expect(info.orderNumber, equals(55));
+      expect(info.customOrderNumber, equals(12));
+      expect(info.showOrder, isTrue);
+      expect(info.shouldPrint, isTrue);
+      expect(info.orderTextFull, equals('Orden: 12'));
+      expect(info.orderTextCompact, equals('Orden #12'));
+    });
+
+    test('patrón exacto no confunde productos con orden', () {
+      final pattern = RegExp(r'^orden\s*[#:]\s*\S+$', caseSensitive: false);
+      expect(pattern.hasMatch('Orden: 12'), isTrue);
+      expect(pattern.hasMatch('ORDEN #42'), isTrue);
+      expect(pattern.hasMatch('Orden: A-1'), isTrue);
+
+      expect(pattern.hasMatch('Ordenador'), isFalse);
+      expect(pattern.hasMatch('Orden de compra: 123'), isFalse);
+      expect(pattern.hasMatch('Ordenanza municipal'), isFalse);
     });
   });
 

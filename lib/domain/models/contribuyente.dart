@@ -361,22 +361,25 @@ class Sucursal {
         ? json['config']['almacenVenta']
         : null;
   }
-  bool get ordenEnFactura {
+  bool? get ordenEnFacturaConfig {
+    Map? map;
     if (config is Map) {
-      final val = config['ordenEnFactura'];
-      return val == true || val == 1 || val == 'true';
-    }
-    if (config is String) {
+      map = config as Map;
+    } else if (config is String) {
       try {
         final decoded = jsonDecode(config as String);
-        if (decoded is Map) {
-          final val = decoded['ordenEnFactura'];
-          return val == true || val == 1 || val == 'true';
-        }
+        if (decoded is Map) map = decoded;
       } catch (_) {}
     }
-    return false;
+    if (map != null && map.containsKey('ordenEnFactura')) {
+      final val = map['ordenEnFactura'];
+      if (val == true || val == 1 || val == 'true') return true;
+      if (val == false || val == 0 || val == 'false') return false;
+    }
+    return null;
   }
+
+  bool get ordenEnFactura => ordenEnFacturaConfig == true;
 
   factory Sucursal.init()=>Sucursal(
     ciudad: "La Paz",
