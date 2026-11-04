@@ -16,6 +16,13 @@ enum Modulo {
   pedidos,
   reportes,
   dispositivos,
+  // Elis (variable particionada). En modulos va como inventarios_advanced.
+  inventariosAdvanced,
+}
+
+extension ModuloClave on Modulo {
+  /// Clave del módulo en modulos-contribuyente (izi-ms-auth).
+  String get clave => this == Modulo.inventariosAdvanced ? 'inventarios_advanced' : name;
 }
 
 class Modulos {
@@ -44,8 +51,8 @@ class Modulos {
   factory Modulos.fromJson(Map<String, dynamic> j) {
     final enabled = <String, bool>{};
     for (final m in Modulo.values) {
-      final v = j[m.name];
-      enabled[m.name] = v == null && _sinFlagAntes.contains(m)
+      final v = j[m.clave];
+      enabled[m.clave] = v == null && _sinFlagAntes.contains(m)
           ? true
           : v is Map && v['enabled'] == true;
     }
