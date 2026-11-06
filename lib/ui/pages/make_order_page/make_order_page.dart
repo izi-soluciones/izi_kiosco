@@ -24,7 +24,13 @@ import 'package:izi_kiosco/ui/utils/responsive_utils.dart';
 class MakeOrderPage extends StatefulWidget {
   final bool fromTables;
   final bool isRetail;
-  const MakeOrderPage({super.key,required this.fromTables, this.isRetail=false});
+  final bool skipOrderType;
+  const MakeOrderPage({
+    super.key,
+    required this.fromTables,
+    this.isRetail = false,
+    this.skipOrderType = false,
+  });
 
   @override
   State<MakeOrderPage> createState() => _MakeOrderPageState();
@@ -38,7 +44,8 @@ class _MakeOrderPageState extends State<MakeOrderPage> {
 
   @override
   void initState() {
-    pageController= PageController(initialPage: widget.isRetail?1:0);
+    pageController = PageController(
+        initialPage: (widget.isRetail || widget.skipOrderType) ? 1 : 0);
     FocusManager.instance.addListener(_recoverFocusKeyboard);
     _initScanner();
     super.initState();
