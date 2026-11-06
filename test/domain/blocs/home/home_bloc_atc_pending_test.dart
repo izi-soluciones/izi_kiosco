@@ -31,7 +31,8 @@ class _FakeComandaRepository implements ComandaRepository {
   }
 
   @override
-  Future<void> markPaymentATC(String chargeUuid, int? internalId) async {
+  Future<void> markPaymentATC(String chargeUuid, int? internalId,
+      {Map<String, dynamic>? transaccion, String? token}) async {
     if (markFails) {
       throw markError;
     }

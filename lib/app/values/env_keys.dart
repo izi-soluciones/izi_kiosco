@@ -10,4 +10,7 @@ class EnvKeys{
   static const String brandName = "BRAND_NAME";
   static const String appIcon = "APP_ICON";
 
+  /// DSN of the Sentry project. Empty: events stay on the device only.
+  static const String sentryDsn = "SENTRY_DSN";
+
 }

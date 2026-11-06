@@ -34,7 +34,8 @@ class _HangingComandaRepository implements ComandaRepository {
 
   // El backbone no contesta nunca
   @override
-  Future<void> markPaymentATC(String chargeUuid, int? internalId) =>
+  Future<void> markPaymentATC(String chargeUuid, int? internalId,
+      {Map<String, dynamic>? transaccion, String? token}) =>
       Completer<void>().future;
 
   @override

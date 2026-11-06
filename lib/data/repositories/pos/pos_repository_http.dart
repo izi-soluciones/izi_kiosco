@@ -4,7 +4,9 @@ import 'package:izi_kiosco/domain/models/pos.dart';
 import 'package:izi_kiosco/domain/repositories/pos_repository.dart';
 
 class PosRepositoryHttp extends PosRepository{
-  final DioClient _dioClient = DioClient();
+  final DioClient _dioClient;
+
+  PosRepositoryHttp({DioClient? dioClient}) : _dioClient = dioClient ?? DioClient();
   @override
   Future<Pos?> getPos({required int contribuyente, required int sucursal})async {
     try{
