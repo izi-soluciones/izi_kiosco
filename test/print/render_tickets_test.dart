@@ -199,10 +199,14 @@ Future<List<IziPrintItem>> _printRollo({
         (sucursal.config as Map)['tipoFacturaVentas'] == 'compacto') {
       tmp.addAll(await PrintTemplate.printInvoiceCompact(
           contribuyente, sucursal, invoice,
+          orderNumber: orderNumber,
+          customOrderNumber: customOrderNumber,
           taxesStrategy: taxes));
     } else {
       tmp.addAll(await PrintTemplate.printInvoice(
           contribuyente, sucursal, invoice,
+          orderNumber: orderNumber,
+          customOrderNumber: customOrderNumber,
           taxesStrategy: taxes));
     }
   }

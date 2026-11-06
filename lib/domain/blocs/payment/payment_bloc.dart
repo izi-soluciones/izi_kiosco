@@ -1337,18 +1337,37 @@ class PaymentBloc extends Cubit<PaymentState> {
 
       final backendItems = invoice.customFactura["printItems"];
       final backendFormat = invoice.customFactura["printItemsFormat"];
+      final bool isCompact = backendFormat == 'compacto' ||
+          (backendFormat == null &&
+              (authState.currentDevice?.config.facturaCompacto == true ||
+                  (authState.currentSucursal?.config is Map &&
+                      (authState.currentSucursal?.config as Map)["tipoFacturaVentas"] == "compacto")));
+
+      final orderInfo = authState.currentSucursal != null
+          ? PrintTemplate.resolveInvoiceOrder(
+              sucursal: authState.currentSucursal!,
+              invoice: invoice,
+              orderNumber: orderNumber,
+              customOrderNumber: customOrderNumber,
+              isCompact: isCompact,
+            )
+          : null;
       List<IziPrintItem>? backendTicket;
       if (backendItems is List && backendItems.isNotEmpty) {
         backendTicket = IziPrintItem.listFromJson(backendItems);
-        if (backendTicket.isEmpty) backendTicket = null;
+        if (backendTicket.isEmpty) {
+          backendTicket = null;
+        } else if (authState.currentSucursal != null && orderInfo != null) {
+          backendTicket = _applyOrderConfigToBackendTicket(
+            backendTicket,
+            sucursal: authState.currentSucursal!,
+            orderInfo: orderInfo,
+            isCompact: isCompact,
+          );
+        }
       }
 
-      final backendCompacto = backendTicket != null && backendFormat == 'compacto';
-      final useCompact = backendTicket != null
-          ? backendCompacto
-          : authState.currentDevice?.config.facturaCompacto == true;
-
-      if(useCompact){
+      if(isCompact){
         log("iZi Kiosco: [DEBUG] Compact mode (backend=${backendTicket != null}): replacing tmp");
         if (backendTicket != null) {
           tmp = backendTicket;
@@ -1359,7 +1378,7 @@ class PaymentBloc extends Cubit<PaymentState> {
             invoice,
             orderNumber: orderNumber,
             customOrderNumber: customOrderNumber,
-                taxesStrategy: authState.taxesStrategy
+            taxesStrategy: authState.taxesStrategy,
           );
         }
       }
@@ -1378,13 +1397,20 @@ class PaymentBloc extends Cubit<PaymentState> {
             authState.currentContribuyente!,
             authState.currentSucursal!,
             invoice,
-              taxesStrategy: authState.taxesStrategy
+            orderNumber: orderNumber,
+            customOrderNumber: customOrderNumber,
+            taxesStrategy: authState.taxesStrategy,
           ));
         }
         else{
-        tmp.addAll(await PrintTemplate.printInvoice(
-            authState.currentContribuyente!, authState.currentSucursal!,invoice,
-              taxesStrategy: authState.taxesStrategy));
+          tmp.addAll(await PrintTemplate.printInvoice(
+            authState.currentContribuyente!,
+            authState.currentSucursal!,
+            invoice,
+            orderNumber: orderNumber,
+            customOrderNumber: customOrderNumber,
+            taxesStrategy: authState.taxesStrategy,
+          ));
         }
       }
 
@@ -1395,6 +1421,95 @@ class PaymentBloc extends Cubit<PaymentState> {
     catch(e, stacktrace){
       log("iZi Kiosco: [DEBUG ERROR] _printRollo failure -> ${e.toString()} \nStacktrace: $stacktrace");
     }
+  }
+
+  static final RegExp _orderPattern =
+      RegExp(r'^orden\s*[#:]\s*\S+$', caseSensitive: false);
+
+  List<IziPrintItem> _applyOrderConfigToBackendTicket(
+    List<IziPrintItem> ticket, {
+    required Sucursal sucursal,
+    required ResolvedOrderInfo orderInfo,
+    required bool isCompact,
+  }) {
+    final list = List<IziPrintItem>.from(ticket);
+    final hasOrder = list.any((item) =>
+        item is IziPrintText && _orderPattern.hasMatch(item.text.trim()));
+
+    if (orderInfo.shouldPrint && !hasOrder) {
+      if (isCompact) {
+        int insertIdx = list.indexWhere((item) =>
+            item is IziPrintText && item.text == sucursal.nombre);
+        if (insertIdx != -1) {
+          insertIdx += 1;
+        } else {
+          insertIdx = list.indexWhere((item) =>
+              item is IziPrintText && item.text.startsWith('NOMBRE:'));
+        }
+        if (insertIdx == -1) {
+          insertIdx = list.length > 4 ? 4 : list.length;
+          log("iZi Kiosco: [WARN] _applyOrderConfigToBackendTicket (compact) no encontró anclajes para sucursal.nombre ni NOMBRE:, aplicando fallback en índice $insertIdx");
+        }
+        list.insertAll(insertIdx, [
+          IziPrintSeparator(dotted: true),
+          IziPrintText(
+              text: orderInfo.orderTextCompact,
+              size: IziPrintSize.md,
+              align: IziPrintAlign.center,
+              bold: true),
+          IziPrintSeparator(dotted: true),
+        ]);
+      } else {
+        int insertIdx = -1;
+        final fechaIdx = list.indexWhere((item) =>
+            item is IziPrintText &&
+            item.text.toLowerCase().startsWith('fecha:'));
+        if (fechaIdx != -1) {
+          insertIdx = fechaIdx + 1;
+        } else {
+          if (sucursal.ciudad != null && sucursal.ciudad!.isNotEmpty) {
+            final ciudadIdx = list.indexWhere((item) =>
+                item is IziPrintText && item.text.contains(sucursal.ciudad!));
+            if (ciudadIdx != -1) {
+              insertIdx = ciudadIdx + 1;
+            }
+          }
+          if (insertIdx == -1) {
+            final titleIdx = list.indexWhere((item) =>
+                item is IziPrintText &&
+                item.size == IziPrintSize.xl &&
+                item.text.contains('FACTURA'));
+            if (titleIdx != -1) {
+              if (titleIdx > 0 && list[titleIdx - 1] is IziPrintLineWrap) {
+                insertIdx = titleIdx - 1;
+              } else {
+                insertIdx = titleIdx;
+              }
+            }
+          }
+        }
+        if (insertIdx == -1) {
+          final sepIdx = list.indexWhere((item) => item is IziPrintSeparator);
+          if (sepIdx != -1) {
+            insertIdx = sepIdx;
+          } else {
+            insertIdx = list.length > 6 ? 6 : list.length;
+          }
+          log("iZi Kiosco: [WARN] _applyOrderConfigToBackendTicket (full) no encontró anclajes estándar de cabecera, aplicando fallback en índice $insertIdx");
+        }
+        list.insert(
+          insertIdx,
+          IziPrintText(
+              text: orderInfo.orderTextFull,
+              size: IziPrintSize.sm,
+              align: IziPrintAlign.center),
+        );
+      }
+    } else if (!orderInfo.showOrder && hasOrder) {
+      list.removeWhere((item) =>
+          item is IziPrintText && _orderPattern.hasMatch(item.text.trim()));
+    }
+    return list;
   }
 
   double _roundToNDecimals(num num, int n) {
