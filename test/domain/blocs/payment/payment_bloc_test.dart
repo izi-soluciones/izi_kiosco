@@ -15,6 +15,18 @@ import 'package:izi_kiosco/domain/utils/input_obj.dart';
 
 class _FakeComandaRepository implements ComandaRepository {
   int intentosPago = 0;
+  bool demoRetailConfirmado = false;
+  bool demoOrderConfirmado = false;
+
+  @override
+  Future<void> confirmDemoPaymentRetail({required int id}) async {
+    demoRetailConfirmado = true;
+  }
+
+  @override
+  Future<void> confirmDemoPaymentOrder({required int id}) async {
+    demoOrderConfirmado = true;
+  }
 
   @override
   Future<Charge> generatePaymentAttempt(dynamic paymentAttemptDto) async {
@@ -348,6 +360,77 @@ void main() {
       retailBloc.seed(retailBloc.state.copyWith(step: 7));
       retailBloc.cancelBREB(_authState(facturacion: false, retail: true));
       expect(retailBloc.state.step, 1);
+    });
+  });
+
+  group('confirmDemoPayment', () {
+    late _FakeComandaRepository comandas;
+    late _TestPaymentBloc bloc;
+
+    setUp(() {
+      comandas = _FakeComandaRepository();
+      bloc = _TestPaymentBloc(
+          comandas, _FakeBusinessRepository(), _FakeSocketRepository());
+    });
+
+    tearDown(() => bloc.close());
+
+    test('en retail avanza a step 5 y paymentProcessed al confirmar pago demo', () async {
+      bloc.seed(bloc.state.copyWith(
+        step: 8,
+        status: PaymentStatus.demoPayment,
+        qrCharge: () => const Charge(id: 1176, uuid: 'cobro-demo', qrUrl: null, qrBase64: null, token: null),
+        paymentObj: PaymentObj(
+          id: 12612,
+          custom: {},
+          amount: 50,
+          isComanda: false,
+          uuid: 'uuid-kiosko',
+          items: [],
+        ),
+      ));
+
+      await bloc.confirmDemoPayment();
+
+      expect(comandas.demoRetailConfirmado, isTrue);
+      expect(bloc.state.step, 5);
+      expect(bloc.state.status, PaymentStatus.paymentProcessed);
+    });
+
+    test('en comanda restaurante avanza a step 5 y paymentProcessed al confirmar pago demo', () async {
+      bloc.seed(bloc.state.copyWith(
+        step: 8,
+        status: PaymentStatus.demoPayment,
+        qrCharge: () => const Charge(id: 2200, uuid: 'cobro-order-demo', qrUrl: null, qrBase64: null, token: null),
+        paymentObj: PaymentObj(
+          id: 3400,
+          custom: {},
+          amount: 80,
+          isComanda: true,
+          uuid: 'uuid-comanda',
+          items: [],
+        ),
+      ));
+
+      await bloc.confirmDemoPayment();
+
+      expect(comandas.demoOrderConfirmado, isTrue);
+      expect(bloc.state.step, 5);
+      expect(bloc.state.status, PaymentStatus.paymentProcessed);
+    });
+
+    test('timerTimeout se cancela en backReset y close', () async {
+      bloc.timerTimeout = Timer(const Duration(minutes: 5), () {});
+      expect(bloc.timerTimeout?.isActive, isTrue);
+
+      bloc.backReset();
+      expect(bloc.timerTimeout?.isActive, isFalse);
+
+      bloc.timerTimeout = Timer(const Duration(minutes: 5), () {});
+      expect(bloc.timerTimeout?.isActive, isTrue);
+
+      await bloc.close();
+      expect(bloc.timerTimeout?.isActive, isFalse);
     });
   });
 }

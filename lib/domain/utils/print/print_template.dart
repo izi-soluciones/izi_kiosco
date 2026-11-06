@@ -36,6 +36,31 @@ class PrintTemplate {
     return await invoice80(contribuyente,sucursal,factura,taxesStrategy: taxesStrategy);
   }
 
+  static void _addInvoiceCamposExtra(List<IziPrintItem> items, Invoice invoice, {bool center = true}) {
+    List listCE = [];
+    if (invoice.customFactura != null && invoice.customFactura["camposExtra"] is List) {
+      listCE = invoice.customFactura["camposExtra"] as List;
+    }
+    final campos = listCE.where((ce) =>
+        ce is Map &&
+        (ce['visibleFactura'] == true ||
+            (ce['visibleFactura'] != false &&
+                (ce['tipoModulo'] == 'venta' || ce['tipoModulo'] == 'dispositivos')))).toList();
+    for (var ce in campos) {
+      final titulo = (ce["titulo"] ?? ce["nombre"] ?? "").toString().trim();
+      final valor = (ce["valor"] ?? "").toString().trim();
+      if (valor.isNotEmpty) {
+        final boldPrefix = titulo.isNotEmpty ? "$titulo: " : null;
+        final text = titulo.isNotEmpty ? "$titulo: $valor" : valor;
+        items.add(IziPrintText(
+            text: text,
+            size: IziPrintSize.sm,
+            boldPrefix: boldPrefix,
+            align: center ? IziPrintAlign.center : IziPrintAlign.left));
+      }
+    }
+  }
+
 static List<IziPrintItem> invoice80Co(
   Contribuyente contribuyente,
   Sucursal sucursal,
@@ -106,6 +131,7 @@ static List<IziPrintItem> invoice80Co(
     size: IziPrintSize.sm,
     align: IziPrintAlign.center,
   ));
+  _addInvoiceCamposExtra(items, invoice, center: true);
   items.add(IziPrintSeparator());
 
   // ======== DETALLE ITEMS (REESTRUCTURADO COMO TABLA) ========
@@ -347,12 +373,44 @@ static List<IziPrintItem> invoice80Co(
             ? paymentObj?.custom["pagadorData"]["razonSocial"]
             : null;
     if (nombreCliente != null && nombreCliente.isNotEmpty) {
-      items.add(IziPrintSeparator(dotted: true));
       items.add(IziPrintText(
         text: "Cliente: $nombreCliente",
         size: IziPrintSize.md,
+        bold: true,
         align: IziPrintAlign.center,
       ));
+    }
+
+    final camposExtra = paymentObj?.custom is Map &&
+            paymentObj?.custom["camposExtra"] is List
+        ? paymentObj?.custom["camposExtra"] as List
+        : [];
+    if (camposExtra.isNotEmpty) {
+      for (var ce in camposExtra) {
+        if (ce is Map) {
+          final titulo = (ce["titulo"] ?? ce["nombre"] ?? "").toString().trim();
+          final valor = (ce["valor"] ?? "").toString().trim();
+          final tipoCampo = (ce["tipoCampo"] ?? "").toString();
+          if (valor.isNotEmpty) {
+            if (tipoCampo == "fijo") {
+              items.add(IziPrintText(
+                text: valor,
+                size: IziPrintSize.sm,
+                align: IziPrintAlign.center,
+              ));
+            } else {
+              final boldPrefix = titulo.isNotEmpty ? "$titulo: " : null;
+              final text = titulo.isNotEmpty ? "$titulo: $valor" : valor;
+              items.add(IziPrintText(
+                text: text,
+                size: IziPrintSize.sm,
+                boldPrefix: boldPrefix,
+                align: IziPrintAlign.center,
+              ));
+            }
+          }
+        }
+      }
     }
     items.add(IziPrintSeparator());
     items.add(IziPrintText(
@@ -547,17 +605,7 @@ static List<IziPrintItem> invoice80Co(
             bold: true));
       }
 
-      if (listCE.isNotEmpty) {
-        items.add(IziPrintSeparator());
-        for (var ce in listCE) {
-          if (ce['visibleFactura'] == true) {
-            items.add(IziPrintText(
-                text: "${ce["titulo"]}: ${ce["valor"]}",
-                size: IziPrintSize.sm,
-                align: IziPrintAlign.center));
-          }
-        }
-      }
+      _addInvoiceCamposExtra(items, invoice, center: true);
       items.add(IziPrintSeparator());
 
       items.add(IziPrintRow([
@@ -825,6 +873,7 @@ static Future<List<IziPrintItem>> invoiceCompact(
     items.add(IziPrintText(text: "FACTURA N°: ${invoice.numero}", size: IziPrintSize.sm,align: IziPrintAlign.left));
     items.add(IziPrintText(text: "FECHA: ${DateTime.parse(invoice.fecha).toLocal().dateFormat(DateFormatterType.dateHour)}", size: IziPrintSize.sm,align: IziPrintAlign.left));
     items.add(IziPrintText(text: "IMPORTE Bs: ${invoice.montoTotalImpuesto}", size: IziPrintSize.sm,align: IziPrintAlign.left,bold: true));
+    _addInvoiceCamposExtra(items, invoice, center: false);
     items.add(IziPrintLineWrap(lines: 1));
 
         if (invoice.prefactura != 1 &&
@@ -890,6 +939,7 @@ static Future<List<IziPrintItem>> invoiceCompactCo(
     items.add(IziPrintText(text: "FACTURA N°: ${invoice.numero}", size: IziPrintSize.sm,align: IziPrintAlign.left));
     items.add(IziPrintText(text: "FECHA: ${DateTime.parse(invoice.fecha).toLocal().dateFormat(DateFormatterType.dateHour)}", size: IziPrintSize.sm,align: IziPrintAlign.left));
     items.add(IziPrintText(text: "IMPORTE : ${invoice.montoTotalImpuesto}", size: IziPrintSize.sm,align: IziPrintAlign.left,bold: true));
+    _addInvoiceCamposExtra(items, invoice, center: false);
     items.add(IziPrintLineWrap(lines: 1));
 
   final cufe = invoice.customFactura["CO"]?["factura"]?["cufe"];

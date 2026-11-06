@@ -11,11 +11,16 @@ class MakeOrderRetailState extends Equatable{
 
   final Currency? currentCurrency;
   final int step;
+  final List<CamposExtra> camposExtra;
 
-
-
-
-  const MakeOrderRetailState({required this.items,required this.step,required this.status,this.currentCurrency, required this.itemsSelected});
+  const MakeOrderRetailState({
+    required this.items,
+    required this.step,
+    required this.status,
+    this.currentCurrency,
+    required this.itemsSelected,
+    this.camposExtra = const [],
+  });
 
   factory MakeOrderRetailState.init(){
     return const MakeOrderRetailState(
@@ -23,6 +28,7 @@ class MakeOrderRetailState extends Equatable{
         status: MakeOrderRetailStatus.waitingGet,
         itemsSelected:[],
         step:0,
+        camposExtra: [],
     );
   }
 
@@ -32,18 +38,20 @@ class MakeOrderRetailState extends Equatable{
     List<Item>? items,
     Currency? currentCurrency,
     List<Item>? itemsFeatured,
-    int? step
+    int? step,
+    List<CamposExtra>? camposExtra,
 }){
     return MakeOrderRetailState(
-        status: status ?? this.status,
+      status: status ?? this.status,
       items: items ?? this.items,
       itemsSelected: itemsSelected ?? this.itemsSelected,
       currentCurrency: currentCurrency ?? this.currentCurrency,
       step: step ?? this.step,
+      camposExtra: camposExtra ?? this.camposExtra,
     );
   }
 
   @override
-  List<Object?> get props => [items,step,status,itemsSelected,currentCurrency];
+  List<Object?> get props => [items,step,status,itemsSelected,currentCurrency,camposExtra];
 
 }

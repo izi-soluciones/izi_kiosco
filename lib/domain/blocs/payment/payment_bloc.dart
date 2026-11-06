@@ -162,6 +162,7 @@ class PaymentBloc extends Cubit<PaymentState> {
           orderNumber: -1,
           customOrderNumber: -1,
           wantsInvoice: false,
+          invoiceSelectorShown: false,
           customerName: PaymentInputs.customerNameInput(),
           economicActivity: economicActivity,
           currentCurrency: currentCurrency,
@@ -291,6 +292,7 @@ class PaymentBloc extends Cubit<PaymentState> {
       emit(state.copyWith(
           status: PaymentStatus.setInputs,
           wantsInvoice: true,
+          invoiceSelectorShown: true,
           businessName: state.businessName.value.trim().isEmpty
               ? state.businessName.changeValue(state.customerName.value.trim())
               : state.businessName,
@@ -302,6 +304,7 @@ class PaymentBloc extends Cubit<PaymentState> {
       emit(state.copyWith(
           status: PaymentStatus.setInputs,
           wantsInvoice: false,
+          invoiceSelectorShown: true,
           paramsCo: _defaultParamsCo,
           businessName: PaymentInputs.businessNameInput(),
           documentNumber: PaymentInputs.documentNumberInput(),
@@ -324,6 +327,13 @@ class PaymentBloc extends Cubit<PaymentState> {
     _socketRepository.closeQrListening();
     qrStream?.cancel();
     qrStream = null;
+    timerManual?.cancel();
+    timerQR?.cancel();
+    timerDemoFallback?.cancel();
+    timerTimeout?.cancel();
+    timerSuccess?.cancel();
+    isProcessing = false;
+    activeProcessTimer = false;
     emit(state.copyWith(
         step: 0,
         paymentType: PaymentType.others,
@@ -334,6 +344,9 @@ class PaymentBloc extends Cubit<PaymentState> {
   }
 
   selectPayment(PaymentType paymentType, AuthState authState) async {
+    isProcessing = false;
+    activeProcessTimer = false;
+    timerTimeout?.cancel();
     try {
       if (paymentType == PaymentType.cashRegister) {
         emit(state.copyWith(status: PaymentStatus.processingOrder));
@@ -363,6 +376,7 @@ class PaymentBloc extends Cubit<PaymentState> {
         emit(state.copyWith(
             paymentType: paymentType,
             step: 2,
+            invoiceSelectorShown: true,
             qrWait: false,
             qrLoading: false,
             qrCharge: () => null));
@@ -377,6 +391,8 @@ class PaymentBloc extends Cubit<PaymentState> {
   markPaidQr() {
     emit(state.copyWith(step: 3, paymentType: PaymentType.qr));
   }
+
+  bool get _isPrefactura => !state.wantsInvoice && state.invoiceSelectorShown;
 
   // El retail sin facturacion va del selector de metodo al cobro sin pasar por el
   // formulario, asi que sus campos quedan vacios y exigirlos deja el cobro mudo.
@@ -439,6 +455,10 @@ class PaymentBloc extends Cubit<PaymentState> {
     _socketRepository.closeQrListening();
     qrStream?.cancel();
     qrStream = null;
+    timerManual?.cancel();
+    timerQR?.cancel();
+    timerDemoFallback?.cancel();
+    timerTimeout?.cancel();
     timerSuccess?.cancel();
     return super.close();
   }
@@ -529,7 +549,9 @@ class PaymentBloc extends Cubit<PaymentState> {
               ? "S/N"
               : state.businessName.value,
           telefonoComprador: state.phoneNumber.value.isNotEmpty?"${state.phonePrefix}${state.phoneNumber.value}":null,
-          correoElectronico: state.email.value.isNotEmpty?state.email.value:null
+          correoElectronico: state.email.value.isNotEmpty?state.email.value:null,
+          wantsInvoice: state.wantsInvoice,
+          prefactura: _isPrefactura
           );
 
       countryConfig?.setParamsPayment(newPayment);    
@@ -783,7 +805,9 @@ class PaymentBloc extends Cubit<PaymentState> {
               ? "S/N"
               : state.businessName.value,
           telefonoComprador: state.phoneNumber.value.isNotEmpty?"${state.phonePrefix}${state.phoneNumber.value}":null,
-          correoElectronico: state.email.value.isNotEmpty?state.email.value:null);
+          correoElectronico: state.email.value.isNotEmpty?state.email.value:null,
+          wantsInvoice: state.wantsInvoice,
+          prefactura: _isPrefactura);
       countryConfig?.setParamsPayment(newPayment);
 
       Charge charge =
@@ -808,7 +832,9 @@ class PaymentBloc extends Cubit<PaymentState> {
         razonSocial:
             state.businessName.value.isEmpty ? "S/N" : state.businessName.value,
         telefonoComprador: state.phoneNumber.value.isNotEmpty?"${state.phonePrefix}${state.phoneNumber.value}":null,
-          correoElectronico: state.email.value.isNotEmpty?state.email.value:null);
+          correoElectronico: state.email.value.isNotEmpty?state.email.value:null,
+          wantsInvoice: state.wantsInvoice,
+          prefactura: _isPrefactura);
     countryConfig?.setParamsPayment(newPayment);
 
     Charge charge = await _comandaRepository.generatePaymentAttempt(newPayment);
@@ -892,7 +918,9 @@ class PaymentBloc extends Cubit<PaymentState> {
               ? "S/N"
               : state.businessName.value,
            telefonoComprador: state.phoneNumber.value,
-          correoElectronico: state.email.value.isNotEmpty?state.email.value:null);
+          correoElectronico: state.email.value.isNotEmpty?state.email.value:null,
+          wantsInvoice: state.wantsInvoice,
+          prefactura: _isPrefactura);
       countryConfig?.setParamsPayment(newPayment);
 
       Charge charge =
@@ -917,7 +945,9 @@ class PaymentBloc extends Cubit<PaymentState> {
         razonSocial:
             state.businessName.value.isEmpty ? "S/N" : state.businessName.value,
         telefonoComprador: state.phoneNumber.value,
-          correoElectronico: state.email.value.isNotEmpty?state.email.value:null);
+          correoElectronico: state.email.value.isNotEmpty?state.email.value:null,
+          wantsInvoice: state.wantsInvoice,
+          prefactura: _isPrefactura);
     countryConfig?.setParamsPayment(newPayment);
 
     Charge charge = await _comandaRepository.generatePaymentAttempt(newPayment);
@@ -1002,6 +1032,9 @@ class PaymentBloc extends Cubit<PaymentState> {
     if (isClosed) {
       return false;
     }
+    isProcessing = false;
+    activeProcessTimer = false;
+    timerTimeout?.cancel();
     if (qrStream != null) {
       _socketRepository.closeQrListening();
       qrStream?.cancel();
@@ -1023,6 +1056,7 @@ class PaymentBloc extends Cubit<PaymentState> {
             if (event["uuidFactura"] is String && authState.currentDevice?.config.noPrintRollo!=true) {
               await _printRollo(authState, idInvoice: event["uuidFactura"]);
             }
+          timerTimeout?.cancel();
           if (timer != null) {
             timer!.cancel();
           }
@@ -1030,13 +1064,19 @@ class PaymentBloc extends Cubit<PaymentState> {
             _socketRepository.closeQrListening();
             qrStream?.cancel();
           }
-          emit(state.copyWith(step: 5, status: PaymentStatus.paymentProcessed));
-          timerSuccess = Timer(
-            const Duration(seconds: 10),
-            () async {
-              emit(state.copyWith(status: PaymentStatus.successInvoice));
-            },
-          );
+          if (!isClosed) {
+            emit(state.copyWith(step: 5, status: PaymentStatus.paymentProcessed));
+            timerSuccess?.cancel();
+            timerSuccess = Timer(
+              const Duration(seconds: 10),
+              () async {
+                if (!isClosed) {
+                  isProcessing = false;
+                  emit(state.copyWith(status: PaymentStatus.successInvoice));
+                }
+              },
+            );
+          }
         } else {
           timer = Timer(
             const Duration(seconds: 60),
@@ -1057,6 +1097,8 @@ class PaymentBloc extends Cubit<PaymentState> {
   }
   Timer? timerManual;
   Timer? timerQR;
+  Timer? timerDemoFallback;
+  Timer? timerTimeout;
 
   bool isProcessing =false;
   bool activeProcessTimer =false;
@@ -1064,13 +1106,16 @@ class PaymentBloc extends Cubit<PaymentState> {
     if (isClosed) {
       return false;
     }
+    isProcessing = false;
+    activeProcessTimer = false;
     if (qrStream != null) {
       _socketRepository.closeQrListening();
       qrStream?.cancel();
     }
 
 
-    Timer? timeoutTimer = Timer(
+    timerTimeout?.cancel();
+    timerTimeout = Timer(
         const Duration(minutes: 5),
             () {
           if (!isProcessing && !isClosed) {
@@ -1079,10 +1124,17 @@ class PaymentBloc extends Cubit<PaymentState> {
             qrStream?.cancel();
             timerManual?.cancel();
             timerQR?.cancel();
+            timerTimeout?.cancel();
             emit(state.copyWith(step: 6, status: PaymentStatus.paymentProcessed));
+            timerSuccess?.cancel();
             timerSuccess = Timer(
                 const Duration(seconds: 10),
-                    () => emit(state.copyWith(status: PaymentStatus.successInvoice))
+                () {
+                  if (!isClosed) {
+                    isProcessing = false;
+                    emit(state.copyWith(status: PaymentStatus.successInvoice));
+                  }
+                },
             );
           }
         }
@@ -1116,14 +1168,22 @@ class PaymentBloc extends Cubit<PaymentState> {
                     qrStream?.cancel();
                   }
                   timerQR?.cancel();
-                  timeoutTimer.cancel();
-                  num? numero = comanda.numero;
-                  if (comanda.custom is Map && (comanda.custom["numeroCustom"] != null)) {
-                    numero = comanda.custom["numeroCustom"];
+                  timerTimeout?.cancel();
+                  Map<String, dynamic> customMap = {};
+                  if (comanda.custom is Map) {
+                    customMap = Map<String, dynamic>.from(comanda.custom);
+                  } else if (comanda.custom is String && (comanda.custom as String).isNotEmpty) {
+                    try {
+                      final decoded = jsonDecode(comanda.custom);
+                      if (decoded is Map) {
+                        customMap = Map<String, dynamic>.from(decoded);
+                      }
+                    } catch (_) {}
                   }
-                  if(comanda.custom is Map && comanda.custom["facturaUuid"] is String){
+                  num? numero = customMap["numeroCustom"] ?? comanda.numero;
+                  if (customMap["facturaUuid"] is String) {
                     await _printRollo(authState,
-                        idInvoice: comanda.custom["facturaUuid"],
+                        idInvoice: customMap["facturaUuid"],
                         orderNumber: comanda.numero?.toInt() ?? 0,
                         customOrderNumber: numero?.toInt());
                   } else {
@@ -1155,21 +1215,33 @@ class PaymentBloc extends Cubit<PaymentState> {
               isProcessing=true;
               timerManual?.cancel();
               timerQR?.cancel();
-              timeoutTimer.cancel();
+              timerTimeout?.cancel();
               try {
-                if (event["uuidFactura"] is String && event["numeroOrden"] is int) {
-                  await _printRollo(authState,
-                      idInvoice: event["uuidFactura"],
-                      orderNumber: event["numeroOrden"],
-                      customOrderNumber: event["numeroCustom"] is int
-                          ? event["numeroCustom"]
-                          : null);
-                } else if (event["numeroOrden"] is int) {
+                final orderNum = event["numeroOrden"] is num
+                    ? (event["numeroOrden"] as num).toInt()
+                    : int.tryParse(event["numeroOrden"]?.toString() ?? "");
+                final customOrderNum = event["numeroCustom"] is num
+                    ? (event["numeroCustom"] as num).toInt()
+                    : int.tryParse(event["numeroCustom"]?.toString() ?? "");
+                final uuidFactura = event["uuidFactura"] is String ? event["uuidFactura"] as String : null;
+
+                if (uuidFactura != null) {
+                  try {
+                    await _printRollo(authState,
+                        idInvoice: uuidFactura,
+                        orderNumber: orderNum,
+                        customOrderNumber: customOrderNum);
+                  } catch (e) {
+                    if (orderNum != null) {
+                      await _printRolloOrder(authState,
+                          orderNumber: orderNum,
+                          customOrderNumber: customOrderNum);
+                    }
+                  }
+                } else if (orderNum != null) {
                   await _printRolloOrder(authState,
-                      orderNumber: event["numeroOrden"],
-                      customOrderNumber: event["numeroCustom"] is int
-                          ? event["numeroCustom"]
-                          : null);
+                      orderNumber: orderNum,
+                      customOrderNumber: customOrderNum);
                 }
               } catch (_) {}
               if (qrStream != null) {
@@ -1418,7 +1490,9 @@ class PaymentBloc extends Cubit<PaymentState> {
             ? state.customerName.value.trim()
             : null,
         telefonoComprador: state.phoneNumber.value.isNotEmpty?"${state.phonePrefix}${state.phoneNumber.value}":null,
-        correoElectronico: state.email.value
+        correoElectronico: state.email.value,
+        wantsInvoice: state.wantsInvoice,
+        prefactura: _isPrefactura
         );
       countryConfig?.setParamsOrderPayment(ventaData);
       PaymentDto newPayment = PaymentDto(
@@ -1848,7 +1922,7 @@ class PaymentBloc extends Cubit<PaymentState> {
       log(e.toString());
     }
   }
-  Future<void> confirmDemoPayment() async {
+  Future<void> confirmDemoPayment([AuthState? authState]) async {
      try {
        if (state.paymentObj?.isComanda == true) {
          await _comandaRepository.confirmDemoPaymentOrder(
@@ -1857,11 +1931,88 @@ class PaymentBloc extends Cubit<PaymentState> {
          await _comandaRepository.confirmDemoPaymentRetail(
              id: state.qrCharge?.id ?? 0);
        }
+
+       if (authState == null || qrStream == null) {
+         if (state.status != PaymentStatus.paymentProcessed) {
+           if (qrStream != null) {
+             _socketRepository.closeQrListening();
+             qrStream?.cancel();
+             qrStream = null;
+           }
+           timerManual?.cancel();
+           timerQR?.cancel();
+           timerDemoFallback?.cancel();
+           timerTimeout?.cancel();
+           if (!isClosed) {
+             emit(state.copyWith(step: 5, status: PaymentStatus.paymentProcessed));
+             timerSuccess?.cancel();
+             timerSuccess = Timer(
+               const Duration(seconds: 10),
+               () async {
+                 if (!isClosed) {
+                   isProcessing = false;
+                   emit(state.copyWith(status: PaymentStatus.successInvoice));
+                 }
+               },
+             );
+           }
+         }
+       } else {
+         timerDemoFallback?.cancel();
+         timerDemoFallback = Timer(const Duration(seconds: 5), () async {
+           if (!isProcessing && state.status != PaymentStatus.paymentProcessed && !isClosed) {
+             isProcessing = true;
+             if (qrStream != null) {
+               _socketRepository.closeQrListening();
+               qrStream?.cancel();
+               qrStream = null;
+             }
+             timerManual?.cancel();
+             timerQR?.cancel();
+             timerTimeout?.cancel();
+             try {
+               if (state.paymentObj?.isComanda == true && state.paymentObj?.uuid != null) {
+                 var comanda = await _comandaRepository.getComanda(orderUuid: state.paymentObj!.uuid!);
+                 Map<String, dynamic> customMap = {};
+                 if (comanda.custom is Map) {
+                   customMap = Map<String, dynamic>.from(comanda.custom);
+                 }
+                 num? numero = customMap["numeroCustom"] ?? comanda.numero;
+                 if (customMap["facturaUuid"] is String) {
+                   await _printRollo(authState,
+                       idInvoice: customMap["facturaUuid"] as String,
+                       orderNumber: comanda.numero?.toInt() ?? 0,
+                       customOrderNumber: numero?.toInt());
+                 } else if (comanda.numero != null) {
+                   await _printRolloOrder(authState,
+                       orderNumber: comanda.numero!.toInt(),
+                       customOrderNumber: numero?.toInt());
+                 }
+               }
+             } catch (_) {}
+             if (!isClosed) {
+               emit(state.copyWith(step: 5, status: PaymentStatus.paymentProcessed));
+               timerSuccess?.cancel();
+               timerSuccess = Timer(
+                 const Duration(seconds: 10),
+                 () async {
+                   if (!isClosed) {
+                     isProcessing = false;
+                     emit(state.copyWith(status: PaymentStatus.successInvoice));
+                   }
+                 },
+               );
+             }
+           }
+         });
+       }
      } catch (e) {
        log(e.toString());
-       emit(state.copyWith(
-           status: PaymentStatus.errorGet, errorDescription: e.toString()));
-       emit(state.copyWith(status: PaymentStatus.waitingGet));
+       if (!isClosed) {
+         emit(state.copyWith(
+             status: PaymentStatus.errorGet, errorDescription: e.toString()));
+         emit(state.copyWith(status: PaymentStatus.waitingGet));
+       }
      }
   }
 }

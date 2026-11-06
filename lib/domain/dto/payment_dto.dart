@@ -46,6 +46,8 @@ class PaymentDtoVentaData{
   String? clienteNombre;
   String? telefonoComprador;
   String? correoElectronico;
+  bool? wantsInvoice;
+  bool? prefactura;
   PaymentDtoVentaDataCo? co;
 
 
@@ -57,6 +59,8 @@ class PaymentDtoVentaData{
       required this.razonSocial,
       this.clienteNombre,
       this.co,
+      this.wantsInvoice,
+      this.prefactura,
       required this.telefonoComprador});
 
   Map toJson()=>{
@@ -67,6 +71,8 @@ class PaymentDtoVentaData{
     if(clienteNombre?.isNotEmpty==true)"clienteNombre": clienteNombre,
     if(telefonoComprador?.isNotEmpty==true)"telefonoComprador": telefonoComprador,
     if(correoElectronico?.isNotEmpty==true)"correoElectronico": correoElectronico,
+    if(wantsInvoice != null) "wantsInvoice": wantsInvoice,
+    if(prefactura != null) "prefactura": prefactura,
     if(co!=null)"CO": co
   };
 }

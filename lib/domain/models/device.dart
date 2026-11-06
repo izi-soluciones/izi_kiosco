@@ -71,6 +71,7 @@ class ConfigDevice {
   final KioskColors kioskColors;
   final String? idiomaDefecto;
   final bool permiteCambioIdioma;
+  final bool printFallbackPdf;
 
   const ConfigDevice(
       {this.ipAtc,
@@ -103,6 +104,7 @@ class ConfigDevice {
       required this.kioskColors,
       required this.idiomaDefecto,
       required this.permiteCambioIdioma,
+      this.printFallbackPdf = false,
       required this.sortByPriority});
 
   factory ConfigDevice.fromJson(dynamic json) {
@@ -150,6 +152,7 @@ class ConfigDevice {
       kioskColors: KioskColors.fromJson(jsonObj?["kioskColors"]),
       idiomaDefecto: jsonObj?["idiomaDefecto"] is String ? jsonObj!["idiomaDefecto"] : null,
       permiteCambioIdioma: jsonObj?["permiteCambioIdioma"] is bool ? jsonObj!["permiteCambioIdioma"] : false,
+      printFallbackPdf: jsonObj?["printFallbackPdf"] is bool ? jsonObj!["printFallbackPdf"] : false,
     );
     return config;
   }
