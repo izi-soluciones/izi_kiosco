@@ -119,7 +119,9 @@ class TransactionSummary {
           chargeId: cp.chargeId,
           reference: cp.reference,
           amount: num.tryParse(cp.amount ?? ''),
-          currency: cp.currency,
+          // The sale's money; the terminal's only for a charge stored before
+          // the kiosk kept it.
+          currency: cp.saleCurrency ?? cp.currency,
           comandaId: cp.comandaId,
           attempts: cp.attempts ?? (cp.reference != null ? 1 : 0),
           now: now);

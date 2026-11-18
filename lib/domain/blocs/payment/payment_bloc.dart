@@ -763,6 +763,9 @@ class PaymentBloc extends Cubit<PaymentState> {
       reference: reference,
       amount: amount,
       currency: currency,
+      // Stored with the charge, so the summaries of its later outcome (a
+      // pending one verified, the recovery after a reload) say the same.
+      saleCurrency: tx?.currency ?? _izifyCurrency(authState),
       cardType: cardType,
       quotas: quotas,
       chargeId: charge,
@@ -1383,7 +1386,7 @@ class PaymentBloc extends Cubit<PaymentState> {
     final tx = _beginTx(TxMethod.card, authState,
         chargeId: original.chargeId,
         amount: parsedAmount,
-        currency: currency,
+        currency: original.saleCurrency ?? _izifyCurrency(authState),
         comandaId: original.comandaId,
         attempts: original.attempts ?? (original.reference != null ? 1 : 0));
     var approved = false;
@@ -1470,8 +1473,10 @@ class PaymentBloc extends Cubit<PaymentState> {
         token: session.token, reference: reference);
     await _takeProof(cp, result);
     // A settled outcome replaces what the monitoring had for this charge
-    // (it was left without a verdict).
-    void reportVerified(String status) => TransactionSummary.reportPolled(cp, status);
+    // (it was left without a verdict). A charge stored before the kiosk kept
+    // the sale's money is summed up in the account's.
+    void reportVerified(String status) =>
+        TransactionSummary.reportPolled(cp..saleCurrency ??= _izifyCurrency(authState), status);
 
     Future<void> store(String status, String response) async {
       cp.status = status;

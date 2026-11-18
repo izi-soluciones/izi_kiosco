@@ -29,6 +29,10 @@ class CardPayment{
   String? amount;
   /// Currency sent to the POS (e.g. "COP"). Needed to retry.
   String? currency;
+  /// ISO 4217 of the sale as the account counts it, for the monitoring
+  /// (`tx.summary`): the terminal is asked in [currency], which may differ
+  /// (an Izify POS charges in COP whatever the account's country).
+  String? saleCurrency;
   /// Transaction id reported by the POS, when known. Opaque string.
   String? transactionId;
   /// Explicit status persisted at save time (SUCCESS/ERROR/CANCELLED/PENDING/
@@ -91,6 +95,7 @@ class CardPayment{
     this.reference,
     this.amount,
     this.currency,
+    this.saleCurrency,
     this.transactionId,
     this.status,
     this.markUuid,
@@ -128,6 +133,7 @@ class CardPayment{
       reference: json["referencia"],
       amount: json["monto"],
       currency: json["moneda"],
+      saleCurrency: json["monedaVenta"] is String ? json["monedaVenta"] : null,
       transactionId: json["transactionId"],
       status: json["estado"],
       markUuid: json["cobroUuid"],
@@ -152,6 +158,7 @@ class CardPayment{
     if (reference != null) "referencia": reference,
     if (amount != null) "monto": amount,
     if (currency != null) "moneda": currency,
+    if (saleCurrency != null) "monedaVenta": saleCurrency,
     if (transactionId != null) "transactionId": transactionId,
     if (status != null) "estado": status,
     if (markUuid != null) "cobroUuid": markUuid,
