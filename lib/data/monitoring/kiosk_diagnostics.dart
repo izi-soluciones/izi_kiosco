@@ -126,14 +126,7 @@ class KioskDiagnostics {
     }
   }
 
-  bool _isBusy() {
-    try {
-      return _busy();
-    } catch (_) {
-      // Unknown counts as busy: the terminal is never asked during a sale.
-      return true;
-    }
-  }
+  bool _isBusy() => KioskActivity.busyOrUnknown(_busy);
 
   static List<TelemetryEvent> _safeEvents() {
     try {

@@ -147,15 +147,7 @@ class KioskCommands {
     }
   }
 
-  bool _isBusy() {
-    try {
-      return _busy();
-    } catch (_) {
-      // Unknown counts as busy, as for the runner: a reload never risks a
-      // sale.
-      return true;
-    }
-  }
+  bool _isBusy() => KioskActivity.busyOrUnknown(_busy);
 
   Future<void> _wait(Duration delay) {
     final done = Completer<void>();

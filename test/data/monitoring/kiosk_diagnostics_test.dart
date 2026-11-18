@@ -2,6 +2,9 @@ import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:izi_kiosco/data/monitoring/kiosk_diagnostics.dart';
+import 'package:izi_kiosco/data/pos/izify_pos_client.dart';
+import 'package:izi_kiosco/data/pos/izify_pos_session.dart';
+import 'package:izi_kiosco/data/telemetry/telemetry.dart';
 import 'package:izi_kiosco/data/telemetry/telemetry_redactor.dart';
 
 void main() {
@@ -89,6 +92,22 @@ void main() {
     final bare = KioskDiagnostics.fit(report, limit: 400);
     expect(bare['extra'], KioskDiagnostics.tooLarge);
     expect(bare['schema'], 1);
+  });
+
+  test('the terminal is not asked while it cannot be told whether a customer is paying', () async {
+    Telemetry.install(Telemetry());
+    var clients = 0;
+    final report = await KioskDiagnostics(
+      collector: () => throw StateError('no collector'),
+      session: (_) async => const IzifyPosSession(IzifyPosAddress('192.168.1.50'), 'tok'),
+      client: () {
+        clients++;
+        return IzifyPosClient();
+      },
+      busy: () => throw StateError('no activity'),
+    ).build();
+    expect(report['terminal'], {'unavailable': 'busy'});
+    expect(clients, 0);
   });
 
   test('the redaction for a report keeps hundreds of events, and no secret', () {

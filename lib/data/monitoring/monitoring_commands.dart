@@ -197,14 +197,7 @@ class MonitoringCommandRunner implements MonitoringCommandQueue {
     }
   }
 
-  bool _isBusy() {
-    try {
-      return _busy();
-    } catch (_) {
-      // Unknown counts as busy: a command never risks a sale.
-      return true;
-    }
-  }
+  bool _isBusy() => KioskActivity.busyOrUnknown(_busy);
 
   Future<void> _finish(MonitoringCommand command, CommandOutcome outcome) async {
     try {
