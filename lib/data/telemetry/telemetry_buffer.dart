@@ -56,6 +56,10 @@ class TelemetryBuffer {
   Timer? _saveTimer;
   int _lastSeq = 0;
 
+  /// Where the newest increasing run of `seq` starts in [_events]: kept as
+  /// events come and go, so [pendingAfter] never walks the buffer.
+  int _runStart = 0;
+
   TelemetryBuffer(
       {TelemetryStore? store,
       this.capacity = 500,
@@ -79,6 +83,7 @@ class TelemetryBuffer {
       for (final e in saved) {
         if (e.seq > _lastSeq) _lastSeq = e.seq;
       }
+      _runStart = _findRunStart();
       _trim();
     } catch (_) {
       // A broken store must never stop the kiosk: start empty.
@@ -86,6 +91,7 @@ class TelemetryBuffer {
   }
 
   void add(TelemetryEvent event) {
+    if (_events.isNotEmpty && event.seq <= _events.last.seq) _runStart = _events.length;
     _events.add(event);
     if (event.seq > _lastSeq) _lastSeq = event.seq;
     _trim();
@@ -125,8 +131,38 @@ class TelemetryBuffer {
   /// reloads for as long as the stored events survive.
   int get lastSeq => _lastSeq;
 
+  /// How many events of the newest increasing run of `seq` are above
+  /// [seq]: the events the monitoring has not acknowledged yet when it
+  /// holds everything up to [seq] (`MonitoringTelemetrySink.pendingIn`).
+  /// Cheap enough to ask on every event recorded: a binary search over the
+  /// run, which is kept as events are added.
+  int pendingAfter(int seq) {
+    var low = _runStart;
+    var high = _events.length;
+    while (low < high) {
+      final mid = (low + high) >> 1;
+      if (_events[mid].seq <= seq) {
+        low = mid + 1;
+      } else {
+        high = mid;
+      }
+    }
+    return _events.length - low;
+  }
+
+  int _findRunStart() {
+    var start = _events.length;
+    for (var i = _events.length - 1; i >= 0; i--) {
+      if (start < _events.length && _events[i].seq >= _events[start].seq) break;
+      start = i;
+    }
+    return start == _events.length ? 0 : start;
+  }
+
   void _trim() {
     final extra = _events.length - capacity;
-    if (extra > 0) _events.removeRange(0, extra);
+    if (extra <= 0) return;
+    _events.removeRange(0, extra);
+    _runStart = _runStart > extra ? _runStart - extra : 0;
   }
 }

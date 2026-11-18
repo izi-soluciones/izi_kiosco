@@ -275,12 +275,13 @@ class MonitoringTelemetrySink implements TelemetrySink {
   EventStreamState? get state => _state;
 
   /// Events still to upload (`state.telemetryBacklog`); null until the
-  /// place is loaded.
+  /// place is loaded. Asked on every event recorded ([onEvent]): it counts
+  /// without walking the buffer ([TelemetryBuffer.pendingAfter]).
   int? backlog() {
     try {
       final state = _state;
       if (state == null) return null;
-      return pendingIn(_buffer().events, state.ackSeq).length;
+      return _buffer().pendingAfter(state.ackSeq);
     } catch (_) {
       return null;
     }
