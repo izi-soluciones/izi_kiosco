@@ -124,6 +124,18 @@ class TransactionSummary {
           attempts: cp.attempts ?? (cp.reference != null ? 1 : 0),
           now: now);
 
+  /// Records how a stored card charge ended, as its terminal answered when
+  /// asked ([TxVerdictVia.poll]): a pending charge verified, or one the
+  /// recovery settled after a reload. It replaces what the monitoring had
+  /// for the charge. Returns whether it did. Never throws.
+  static bool reportPolled(CardPayment cp, String status) {
+    try {
+      return (TransactionSummary.ofCardPayment(cp)..verdictVia = TxVerdictVia.poll).report(status);
+    } catch (_) {
+      return false;
+    }
+  }
+
   /// ISO 4217 of the money of [countryCode] (`BO`, `CO`), when known.
   static String? currencyOf(String? countryCode) => switch (countryCode?.toUpperCase()) {
         'BO' => 'BOB',

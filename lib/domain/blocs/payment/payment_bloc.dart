@@ -1464,12 +1464,7 @@ class PaymentBloc extends Cubit<PaymentState> {
     await _takeProof(cp, result);
     // A settled outcome replaces what the monitoring had for this charge
     // (it was left without a verdict).
-    void reportVerified(String status) {
-      try {
-        (TransactionSummary.ofCardPayment(cp)..verdictVia = TxVerdictVia.poll)
-            .report(status);
-      } catch (_) {}
-    }
+    void reportVerified(String status) => TransactionSummary.reportPolled(cp, status);
 
     Future<void> store(String status, String response) async {
       cp.status = status;

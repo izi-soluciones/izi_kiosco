@@ -253,6 +253,21 @@ void main() {
       expect(old.attempts, isNull);
       expect(old.comandaId, isNull);
     });
+
+    test('settled by asking its terminal: reported as polled, over what the monitoring had', () {
+      final cp = CardPayment(
+          response: 'Sin confirmar (timeout)', cardNumber: '****', date: '2026-10-12', hour: '14:00',
+          reference: 'KOS-9', amount: '15000.00', currency: 'COP', chargeId: 'CHG-9', attempts: 1);
+
+      expect(TransactionSummary.reportPolled(cp, TxStatus.approved), isTrue);
+      expect(TransactionSummary.reportPolled(cp, TxStatus.unregistered), isTrue,
+          reason: 'each call is a new outcome of the same charge');
+
+      final txs = summaries();
+      expect([for (final e in txs) e.data['status']], ['approved', 'unregistered']);
+      expect([for (final e in txs) e.data['verdictVia']], ['poll', 'poll']);
+      expect(txs.every((e) => e.chargeId == 'CHG-9'), isTrue);
+    });
   });
 
   test('currency of the country', () {
