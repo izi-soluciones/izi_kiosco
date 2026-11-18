@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -10,27 +9,6 @@ import 'package:izi_kiosco/domain/models/monitoring_heartbeat_response.dart';
 import 'package:izi_kiosco/domain/repositories/monitoring_repository.dart';
 
 import '../../helpers/mocks.dart';
-
-/// The gateway, answering what the test sets, and remembering each request.
-class _Gateway implements HttpClientAdapter {
-  final List<RequestOptions> requests = [];
-  int status = 200;
-  Object? body = const {'ok': true};
-  Object? error;
-
-  @override
-  Future<ResponseBody> fetch(
-      RequestOptions options, Stream<Uint8List>? requestStream, Future<void>? cancelFuture) async {
-    requests.add(options);
-    if (error != null) throw error!;
-    return ResponseBody.fromString(jsonEncode(body), status, headers: {
-      Headers.contentTypeHeader: [Headers.jsonContentType],
-    });
-  }
-
-  @override
-  void close({bool force = false}) {}
-}
 
 final _dto = MonitoringHeartbeatDto(
   installationId: '0b7c2a8e-4d1f-4a9b-8c3e-5f6a7b8c9d0e',
@@ -43,13 +21,12 @@ final _dto = MonitoringHeartbeatDto(
 );
 
 void main() {
-  late _Gateway gateway;
+  late FakeGateway gateway;
   late MonitoringRepositoryHttp repository;
 
   setUp(() {
-    gateway = _Gateway();
-    final ingest = Dio(BaseOptions(baseUrl: 'http://gateway.test'))..httpClientAdapter = gateway;
-    repository = MonitoringRepositoryHttp(dioClient: MockDioClient(), ingestDio: ingest);
+    gateway = FakeGateway();
+    repository = MonitoringRepositoryHttp(dioClient: MockDioClient(), ingestDio: gateway.client);
   });
 
   Future<MonitoringException> failure() async {

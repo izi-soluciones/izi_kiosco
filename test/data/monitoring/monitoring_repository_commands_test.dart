@@ -1,6 +1,3 @@
-import 'dart:convert';
-import 'dart:typed_data';
-
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:izi_kiosco/data/monitoring/monitoring_repository_http.dart';
@@ -10,37 +7,17 @@ import 'package:mocktail/mocktail.dart';
 
 import '../../helpers/mocks.dart';
 
-/// The gateway's ingest routes, answering what the test sets.
-class _Gateway implements HttpClientAdapter {
-  final List<RequestOptions> requests = [];
-  int status = 200;
-  Object? body = const {'ok': true};
-
-  @override
-  Future<ResponseBody> fetch(
-      RequestOptions options, Stream<Uint8List>? requestStream, Future<void>? cancelFuture) async {
-    requests.add(options);
-    return ResponseBody.fromString(jsonEncode(body), status, headers: {
-      Headers.contentTypeHeader: [Headers.jsonContentType],
-    });
-  }
-
-  @override
-  void close({bool force = false}) {}
-}
-
 void main() {
   setUpAll(registerDioFallbacks);
 
-  late _Gateway gateway;
+  late FakeGateway gateway;
   late MockDioClient dio;
   late MonitoringRepositoryHttp repository;
 
   setUp(() {
-    gateway = _Gateway();
+    gateway = FakeGateway();
     dio = MockDioClient();
-    final ingest = Dio(BaseOptions(baseUrl: 'http://gateway.test'))..httpClientAdapter = gateway;
-    repository = MonitoringRepositoryHttp(dioClient: dio, ingestDio: ingest);
+    repository = MonitoringRepositoryHttp(dioClient: dio, ingestDio: gateway.client);
   });
 
   group('enrollment codes', () {
