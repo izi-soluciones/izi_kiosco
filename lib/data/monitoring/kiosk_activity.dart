@@ -45,6 +45,16 @@ class KioskActivity {
   /// its way.
   bool get busy => chargeInProgress || mode == KioskMode.paying;
 
+  /// What [busy] (or a stand-in for it) says, and busy when it cannot say:
+  /// nothing the monitoring does on its own may risk a sale.
+  static bool busyOrUnknown(bool Function() busy) {
+    try {
+      return busy();
+    } catch (_) {
+      return true;
+    }
+  }
+
   /// `idle|ordering|paying|config|login|error` for [screen].
   static String modeOf(
       {required String? screen, bool authError = false, bool chargeInProgress = false}) {

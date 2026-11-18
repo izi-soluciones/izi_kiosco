@@ -2,6 +2,9 @@ import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:izi_kiosco/data/monitoring/kiosk_diagnostics.dart';
+import 'package:izi_kiosco/data/pos/izify_pos_client.dart';
+import 'package:izi_kiosco/data/pos/izify_pos_session.dart';
+import 'package:izi_kiosco/data/telemetry/telemetry.dart';
 import 'package:izi_kiosco/data/telemetry/telemetry_redactor.dart';
 
 void main() {
@@ -41,8 +44,70 @@ void main() {
       'terminal': {'dump': 'z' * 5000},
     };
     final fitted = KioskDiagnostics.fit(report, limit: 1000);
+    expect(size(fitted), lessThanOrEqualTo(1000));
     expect((fitted['kiosk'] as Map)['events'], isEmpty);
     expect(fitted['terminal'], {'unavailable': 'too_large'});
+  });
+
+  test('a section too big on its own is left out, the largest first, and the rest is kept', () {
+    final report = {
+      'schema': 1,
+      'kind': 'kiosk',
+      'generated': '2026-10-12T14:00:00.000Z',
+      'kiosk': {
+        'context': {'kioskId': 'K-7'},
+        'state': {'blob': 'y' * 5000},
+        'monitoring': {'heartbeat': {'running': true}, 'note': 'm' * 600},
+        'events': [for (var i = 0; i < 20; i++) event(i)],
+      },
+      'terminal': {'unavailable': 'not_paired'},
+    };
+    final fitted = KioskDiagnostics.fit(report, limit: 1000);
+    expect(size(fitted), lessThanOrEqualTo(1000));
+    final kiosk = fitted['kiosk'] as Map;
+    expect(kiosk['state'], KioskDiagnostics.tooLarge);
+    expect(kiosk['monitoring'], isA<Map>().having((m) => m['note'], 'note', 'm' * 600),
+        reason: 'only what it takes to fit goes');
+    expect(kiosk['context'], {'kioskId': 'K-7'});
+    expect([fitted['schema'], fitted['kind'], fitted['generated']], [1, 'kiosk', '2026-10-12T14:00:00.000Z']);
+  });
+
+  test('whatever part of the report is too big, the report always fits the cap', () {
+    final report = {
+      'schema': 1,
+      'kind': 'kiosk',
+      'generated': '2026-10-12T14:00:00.000Z',
+      'kiosk': {
+        'context': {'c': 'c' * 3000},
+        'state': {'blob': 'y' * 4000},
+        'monitoring': {'m': 'm' * 2000},
+        'events': [for (var i = 0; i < 50; i++) event(i)],
+      },
+      'terminal': {'dump': 'z' * 5000, 'events': [for (var i = 0; i < 50; i++) event(i)]},
+      'extra': 'x' * 3000,
+    };
+    for (final limit in [400, 1000, 4000, 9000, 20000]) {
+      expect(size(KioskDiagnostics.fit(report, limit: limit)), lessThanOrEqualTo(limit), reason: 'limit $limit');
+    }
+    final bare = KioskDiagnostics.fit(report, limit: 400);
+    expect(bare['extra'], KioskDiagnostics.tooLarge);
+    expect(bare['schema'], 1);
+  });
+
+  test('the terminal is not asked while it cannot be told whether a customer is paying', () async {
+    Telemetry.install(Telemetry());
+    var clients = 0;
+    final report = await KioskDiagnostics(
+      collector: () => throw StateError('no collector'),
+      session: (_) async => const IzifyPosSession(IzifyPosAddress('192.168.1.50'), 'tok'),
+      client: () {
+        clients++;
+        return IzifyPosClient();
+      },
+      busy: () => throw StateError('no activity'),
+    ).build();
+    expect(report['terminal'], {'unavailable': 'busy'});
+    expect(clients, 0);
   });
 
   test('the redaction for a report keeps hundreds of events, and no secret', () {

@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -11,27 +10,6 @@ import 'package:izi_kiosco/domain/models/monitoring_events_response.dart';
 import 'package:izi_kiosco/domain/repositories/monitoring_repository.dart';
 
 import '../../helpers/mocks.dart';
-
-/// The gateway, answering what the test sets, and remembering each request.
-class _Gateway implements HttpClientAdapter {
-  final List<RequestOptions> requests = [];
-  int status = 200;
-  Object? body;
-  Object? error;
-
-  @override
-  Future<ResponseBody> fetch(
-      RequestOptions options, Stream<Uint8List>? requestStream, Future<void>? cancelFuture) async {
-    requests.add(options);
-    if (error != null) throw error!;
-    return ResponseBody.fromString(jsonEncode(body), status, headers: {
-      Headers.contentTypeHeader: [Headers.jsonContentType],
-    });
-  }
-
-  @override
-  void close({bool force = false}) {}
-}
 
 TelemetryEvent _event(int seq,
         {TelemetryLevel level = TelemetryLevel.info, Map<String, Object?> data = const {}}) =>
@@ -96,15 +74,14 @@ void main() {
   });
 
   group('MonitoringRepositoryHttp.uploadEvents', () {
-    late _Gateway gateway;
+    late FakeGateway gateway;
     late MonitoringRepositoryHttp repository;
     final dto = MonitoringEventsDto(
         installationId: '0b7c2a8e-4d1f-4a9b-8c3e-5f6a7b8c9d0e', stream: _stream, events: [_event(7)]);
 
     setUp(() {
-      gateway = _Gateway();
-      final ingest = Dio(BaseOptions(baseUrl: 'http://gateway.test'))..httpClientAdapter = gateway;
-      repository = MonitoringRepositoryHttp(dioClient: MockDioClient(), ingestDio: ingest);
+      gateway = FakeGateway();
+      repository = MonitoringRepositoryHttp(dioClient: MockDioClient(), ingestDio: gateway.client);
     });
 
     Future<MonitoringException> failure() async {

@@ -359,13 +359,7 @@ class TerminalEnrollment {
       lastCheckAt: _lastCheckAt,
       nextAt: next == null ? null : _now().add(next));
 
-  bool _isBusy() {
-    try {
-      return _busy();
-    } catch (_) {
-      return true;
-    }
-  }
+  bool _isBusy() => KioskActivity.busyOrUnknown(_busy);
 
   void _schedule(Duration delay) {
     _cancel();

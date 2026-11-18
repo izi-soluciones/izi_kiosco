@@ -1,46 +1,26 @@
-import 'dart:convert';
-import 'dart:typed_data';
-
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:izi_kiosco/data/monitoring/monitoring_repository_http.dart';
 import 'package:izi_kiosco/domain/dto/monitoring_command_result_dto.dart';
+import 'package:izi_kiosco/domain/dto/monitoring_enrollment_dto.dart';
+import 'package:izi_kiosco/domain/dto/monitoring_events_dto.dart';
+import 'package:izi_kiosco/domain/dto/monitoring_heartbeat_dto.dart';
 import 'package:izi_kiosco/domain/repositories/monitoring_repository.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../../helpers/mocks.dart';
 
-/// The gateway's ingest routes, answering what the test sets.
-class _Gateway implements HttpClientAdapter {
-  final List<RequestOptions> requests = [];
-  int status = 200;
-  Object? body = const {'ok': true};
-
-  @override
-  Future<ResponseBody> fetch(
-      RequestOptions options, Stream<Uint8List>? requestStream, Future<void>? cancelFuture) async {
-    requests.add(options);
-    return ResponseBody.fromString(jsonEncode(body), status, headers: {
-      Headers.contentTypeHeader: [Headers.jsonContentType],
-    });
-  }
-
-  @override
-  void close({bool force = false}) {}
-}
-
 void main() {
   setUpAll(registerDioFallbacks);
 
-  late _Gateway gateway;
+  late FakeGateway gateway;
   late MockDioClient dio;
   late MonitoringRepositoryHttp repository;
 
   setUp(() {
-    gateway = _Gateway();
+    gateway = FakeGateway();
     dio = MockDioClient();
-    final ingest = Dio(BaseOptions(baseUrl: 'http://gateway.test'))..httpClientAdapter = gateway;
-    repository = MonitoringRepositoryHttp(dioClient: dio, ingestDio: ingest);
+    repository = MonitoringRepositoryHttp(dioClient: dio, ingestDio: gateway.client);
   });
 
   group('enrollment codes', () {
@@ -124,6 +104,85 @@ void main() {
       expect(request.path, '/monitoreo/ingesta/diagnosticos');
       expect(request.headers['X-Device-Token'], 'izd_tok');
       expect(request.data, {'kiosk': {'a': 1}, 'commandId': 'cmd1'});
+    });
+  });
+
+  group('every call fails the same way', () {
+    const app = MonitoringApp(version: '2.3.1+45', flavor: 'izify', platform: 'web');
+    final calls = <String, Future<Object?> Function()>{
+      'enroll': () => repository.enroll(const MonitoringEnrollmentDto(
+          installationId: '0b7c2a8e-4d1f-4a9b-8c3e-5f6a7b8c9d0e', app: app, deviceName: 'KIOSKO-01')),
+      'heartbeat': () => repository.heartbeat(
+          MonitoringHeartbeatDto(
+              installationId: '0b7c2a8e-4d1f-4a9b-8c3e-5f6a7b8c9d0e',
+              sentAt: DateTime.utc(2026, 10, 12, 14),
+              bootId: '6e1f8a3c-9b2d-4c7e-a5f0-1d2e3f4a5b6c',
+              uptimeSec: 1,
+              app: app,
+              state: const {},
+              counters: const {}),
+          deviceToken: 'izd_tok'),
+      'uploadEvents': () => repository.uploadEvents(
+          const MonitoringEventsDto(
+              installationId: '0b7c2a8e-4d1f-4a9b-8c3e-5f6a7b8c9d0e',
+              stream: '3f0c2a8e-4d1f-4a9b-8c3e-5f6a7b8c9d0e',
+              events: []),
+          deviceToken: 'izd_tok'),
+      'requestEnrollmentCode': () => repository.requestEnrollmentCode('agent', deviceToken: 'izd_tok'),
+      'reportCommandResult': () => repository.reportCommandResult(
+          MonitoringCommandResultDto(
+              commandId: 'cmd1',
+              type: 'reload_app',
+              status: MonitoringCommandStatus.succeeded,
+              recordedAt: DateTime.utc(2026, 10, 12, 14)),
+          deviceToken: 'izd_tok'),
+      'uploadDiagnostics': () => repository.uploadDiagnostics(const {}, deviceToken: 'izd_tok'),
+    };
+
+    void kioskRouteAnswers(Future<Response<dynamic>> Function() answer) => when(() => dio.post(
+          uri: any(named: 'uri'),
+          body: any(named: 'body'),
+          queryParameters: any(named: 'queryParameters'),
+          options: any(named: 'options'),
+        )).thenAnswer((_) => answer());
+
+    Future<MonitoringException> failure(String name) async {
+      try {
+        await calls[name]!();
+      } on MonitoringException catch (e) {
+        return e;
+      }
+      throw TestFailure('$name did not fail');
+    }
+
+    test('an answer other than 2xx: its status and the service\'s error code', () async {
+      gateway
+        ..status = 503
+        ..body = {'error': 'upstream_unavailable'};
+      kioskRouteAnswers(() async => dioResponse({'error': 'upstream_unavailable'}, statusCode: 503));
+      for (final name in calls.keys) {
+        final e = await failure(name);
+        expect((e.cause, e.statusCode, e.code), ('http_503', 503, 'upstream_unavailable'), reason: name);
+      }
+    });
+
+    test('no network: unreachable', () async {
+      final down = DioException(
+          requestOptions: RequestOptions(), type: DioExceptionType.connectionError);
+      gateway.error = down;
+      kioskRouteAnswers(() async => throw down);
+      for (final name in calls.keys) {
+        expect((await failure(name)).cause, 'unreachable', reason: name);
+      }
+    });
+
+    test('a 2xx that is not what the contract says: an invalid response', () async {
+      gateway.body = 'not json';
+      kioskRouteAnswers(() async => dioResponse('not json'));
+      for (final name in ['enroll', 'uploadEvents', 'requestEnrollmentCode']) {
+        final e = await failure(name);
+        expect((e.cause, e.statusCode), ('invalid_response', 200), reason: name);
+      }
     });
   });
 

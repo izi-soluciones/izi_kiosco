@@ -82,7 +82,7 @@ void main() {
     // Never fired: the heartbeat only hands commands over.
     commands = MonitoringCommandRunner(
         outbox: CommandResultOutbox(
-            enrollment: enrollment, repository: repository, store: MemoryCommandResultStore()),
+            enrollment: enrollment, repository: repository, store: MemoryCommandResultStore(), now: () => now),
         timer: FakeTimers().call,
         now: () => now);
     collector = KioskHealthCollector(

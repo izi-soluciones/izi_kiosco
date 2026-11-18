@@ -47,4 +47,10 @@ void main() {
     activity.screenChanged('/payment/:id');
     expect(activity.screen, '/payment/:id');
   });
+
+  test('busy when it cannot be told: nothing the monitoring does risks a sale', () {
+    expect(KioskActivity.busyOrUnknown(() => false), isFalse);
+    expect(KioskActivity.busyOrUnknown(() => true), isTrue);
+    expect(KioskActivity.busyOrUnknown(() => throw StateError('no activity')), isTrue);
+  });
 }

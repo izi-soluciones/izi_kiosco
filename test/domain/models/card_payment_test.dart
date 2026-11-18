@@ -49,6 +49,22 @@ void main() {
       expect(json.containsKey('estado'), isFalse);
       expect(json['respuesta'], 'x');
     });
+
+    test("keeps the sale's money apart from the terminal's, and iZi gets the terminal's", () {
+      final cp = CardPayment.fromJsonStorage({
+        'respuesta': 'En curso',
+        'tarjeta': '****',
+        'fecha': '2026-11-18',
+        'hora': '10:00',
+        'moneda': 'COP',
+        'monedaVenta': 'BOB',
+      });
+      expect(cp.currency, 'COP');
+      expect(cp.saleCurrency, 'BOB');
+      expect(cp.toJson()['monedaVenta'], 'BOB');
+      expect(cp.terminalData('APROBADA')['moneda'], 'COP');
+      expect(cp.terminalData('APROBADA').containsKey('monedaVenta'), isFalse);
+    });
   });
 
   group('CardPayment.retryStatus (explicit status wins)', () {

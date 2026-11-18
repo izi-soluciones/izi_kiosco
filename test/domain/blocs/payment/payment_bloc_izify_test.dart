@@ -14,6 +14,7 @@ import 'package:izi_kiosco/domain/models/device.dart';
 import 'package:izi_kiosco/domain/repositories/business_repository.dart';
 import 'package:izi_kiosco/domain/repositories/comanda_repository.dart';
 import 'package:izi_kiosco/domain/repositories/socket_repository.dart';
+import 'package:izi_kiosco/domain/strategies/taxes/impl/taxes_strategy_bo.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../helpers/fake_izify_pos.dart';
@@ -604,6 +605,66 @@ void main() {
 
       await bloc.verifyCardPayment(auth, cp);
       expect(summaries(), isEmpty);
+    });
+
+    group("a Bolivian account's charge, which the terminal charges in pesos", () {
+      late AuthState bolivia;
+
+      setUp(() => bolivia = auth.copyWith(taxesStrategy: TaxesStrategyBo()));
+
+      /// A charge the terminal left pending, as the live flow stored it.
+      Future<CardPayment> leftPending() async {
+        pos.outcome = 'PENDING';
+        expect(await bloc.retryCardPayment(bolivia, declined()), isFalse);
+        final row = (await rows()).single;
+        expect(row.currency, 'COP', reason: 'what the terminal was asked to charge');
+        expect(row.saleCurrency, 'BOB');
+        return row;
+      }
+
+      test('verified later: its outcome keeps the account\'s money', () async {
+        final row = await leftPending();
+        pos.settle(row.reference!, 'SUCCESS');
+
+        // From a page that does not know the country: the stored charge says.
+        await bloc.verifyCardPayment(auth, row);
+
+        final txs = summaries();
+        expect([for (final tx in txs) tx['status']], ['timeout', 'approved']);
+        expect([for (final tx in txs) tx['currency']], ['BOB', 'BOB']);
+        expect(pos.charges.single['currency'], 'COP');
+        expect(comandas.proofs.single!['moneda'], 'COP', reason: 'iZi is told what the terminal charged');
+      });
+
+      test('cut off by a reload: the recovery reports it in the account\'s money', () async {
+        final row = await leftPending();
+        // As a reload leaves it: sent, and the page gone before the verdict.
+        await LocalStorageCardErrors.updateByReference(
+            row.reference!, jsonEncode((row..status = 'IN_PROGRESS').toJson()));
+        pos.settle(row.reference!, 'SUCCESS');
+        Telemetry.install(Telemetry());
+
+        await CardChargeRecovery(repository: comandas).run(auth.currentDevice);
+
+        final tx = summaries().single;
+        expect(tx['status'], 'approved');
+        expect(tx['verdictVia'], 'poll');
+        expect(tx['currency'], 'BOB');
+        expect(comandas.proofs.single!['moneda'], 'COP');
+      });
+
+      test('a pending charge stored before the kiosk kept its money: the account\'s', () async {
+        await bloc.retryCardPayment(bolivia, original(reference: 'SETUP'));
+        Telemetry.install(Telemetry());
+        final cp = original(status: 'PENDING', reference: 'KOS-PEND-BO');
+        await LocalStorageCardErrors.saveCardErrors(jsonEncode(cp.toJson()));
+        pos.accepted.add('KOS-PEND-BO');
+        pos.settle('KOS-PEND-BO', 'SUCCESS');
+
+        await bloc.verifyCardPayment(bolivia, cp);
+
+        expect(summaries().single['currency'], 'BOB');
+      });
     });
 
     group('the recovery after a reload', () {

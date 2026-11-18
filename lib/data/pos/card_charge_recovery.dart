@@ -131,7 +131,7 @@ class CardChargeRecovery {
             chargeId: cp.chargeId,
             reference: cp.reference,
             data: {'status': cp.status});
-        _reportSummary(cp, cancelled ? TxStatus.cancelled : TxStatus.declined);
+        TransactionSummary.reportPolled(cp, cancelled ? TxStatus.cancelled : TxStatus.declined);
         return true;
       case PosPaymentStatus.notFound:
         // The terminal has no record of it: it may have been reinstalled or
@@ -145,7 +145,7 @@ class CardChargeRecovery {
             chargeId: cp.chargeId,
             reference: cp.reference,
             data: const {'status': 'not_found'});
-        _reportSummary(cp, TxStatus.timeout);
+        TransactionSummary.reportPolled(cp, TxStatus.timeout);
         return true;
       case PosPaymentStatus.pending:
       case PosPaymentStatus.processing:
@@ -193,18 +193,12 @@ class CardChargeRecovery {
         });
     // A charge still not registered on a later pass changes nothing.
     if (registered || recovered) {
-      _reportSummary(cp, registered ? TxStatus.approved : TxStatus.unregistered);
+      // How the charge ended replaces what the monitoring had for it:
+      // nothing, when a reload cut the page off; an unregistered charge,
+      // when it is registered now.
+      TransactionSummary.reportPolled(cp, registered ? TxStatus.approved : TxStatus.unregistered);
     }
     return registered;
-  }
-
-  /// How the charge ended, for the monitoring: it replaces what it had for
-  /// this charge (nothing, when a reload cut the page off; an unregistered
-  /// charge, when it is registered now). Never throws.
-  void _reportSummary(CardPayment cp, String status) {
-    try {
-      (TransactionSummary.ofCardPayment(cp)..verdictVia = TxVerdictVia.poll).report(status);
-    } catch (_) {}
   }
 
   /// iZi signs each charge's token for two days: past that, asking again

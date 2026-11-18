@@ -18,6 +18,7 @@ import 'package:izi_kiosco/domain/models/payment_obj.dart';
 import 'package:izi_kiosco/domain/repositories/business_repository.dart';
 import 'package:izi_kiosco/domain/repositories/comanda_repository.dart';
 import 'package:izi_kiosco/domain/repositories/socket_repository.dart';
+import 'package:izi_kiosco/domain/strategies/taxes/impl/taxes_strategy_bo.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../helpers/fake_izify_pos.dart';
@@ -425,6 +426,23 @@ void main() {
       expect(tx['msToVerdict'], isA<int>());
       expect(tx['attempts'], 1);
       expect(tx['facturaId'], 'factura-4');
+    });
+
+    test("in the account's money, Colombian pesos when it does not say", () async {
+      expect(await bloc.makeCardPayment(izify.copyWith(taxesStrategy: TaxesStrategyBo()), izify: true),
+          isTrue);
+      await paid();
+      bloc.seed(order(isComanda: true));
+      expect(await bloc.makeCardPayment(izify.copyWith(taxesStrategy: TaxesStrategyBo()), izify: true),
+          isTrue);
+      await paid();
+      bloc.seed(order());
+      expect(await bloc.makeCardPayment(izify, izify: true), isTrue, reason: 'no country');
+      await paid();
+
+      expect([for (final tx in summaries()) tx['currency']], ['BOB', 'BOB', 'COP']);
+      expect([for (final c in pos.charges) c['currency']], ['COP', 'COP', 'COP'],
+          reason: 'what the terminal is asked to charge does not change');
     });
 
     test('declined by the acquirer', () async {

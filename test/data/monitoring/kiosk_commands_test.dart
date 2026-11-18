@@ -150,7 +150,7 @@ void main() {
       repository.resultReplies.add(() async => order.add('result'));
       final runner = MonitoringCommandRunner(
           outbox: CommandResultOutbox(
-              enrollment: enrollment, repository: repository, store: MemoryCommandResultStore()),
+              enrollment: enrollment, repository: repository, store: MemoryCommandResultStore(), now: () => now),
           handlers: commands.handlers,
           busy: () => false,
           timer: FakeTimers().call,
@@ -196,7 +196,7 @@ void main() {
         repository.resultReplies.add(() async => busy = true);
         final runner = MonitoringCommandRunner(
             outbox: CommandResultOutbox(
-                enrollment: enrollment, repository: repository, store: MemoryCommandResultStore()),
+                enrollment: enrollment, repository: repository, store: MemoryCommandResultStore(), now: () => now),
             handlers: commands.handlers,
             busy: () => busy,
             timer: FakeTimers().call,
@@ -445,7 +445,7 @@ void main() {
       repository.acceptResult();
       final runner = MonitoringCommandRunner(
           outbox: CommandResultOutbox(
-              enrollment: enrollment, repository: repository, store: MemoryCommandResultStore()),
+              enrollment: enrollment, repository: repository, store: MemoryCommandResultStore(), now: () => now),
           handlers: commands.handlers,
           busy: () => false,
           timer: FakeTimers().call,

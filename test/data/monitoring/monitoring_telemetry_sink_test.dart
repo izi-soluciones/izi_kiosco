@@ -651,6 +651,47 @@ void main() {
       expect(MonitoringTelemetrySink.baseFor([e(16), e(17)]), 15);
       expect(MonitoringTelemetrySink.baseFor(const []), 0);
     });
+
+    test('the buffer counts them as it goes, as pendingIn does: seq starting over, overflow, restore', () async {
+      final store = MemoryTelemetryStore()
+        ..saved = [for (final s in [7, 8, 9, 3, 4]) '{"seq":$s,"ts":"2026-10-12T14:00:00.000Z","type":"e","level":"info"}'];
+      final buffer = TelemetryBuffer(store: store, capacity: 12, saveDelay: const Duration(days: 1));
+      buffer.add(e(10));
+      await buffer.restore();
+      expect(buffer.events.map((x) => x.seq), [7, 8, 9, 3, 4, 10]);
+
+      void same(String why) {
+        for (var ack = -1; ack <= 40; ack++) {
+          expect(buffer.pendingAfter(ack), MonitoringTelemetrySink.pendingIn(buffer.events, ack).length,
+              reason: '$why, acknowledged up to $ack');
+        }
+      }
+
+      same('restored before this session');
+      for (var s = 11; s <= 30; s++) {
+        buffer.add(e(s));
+        same('seq $s, past the capacity');
+      }
+      for (final s in [2, 3, 3, 0, 5, 1, 31, 32]) {
+        buffer.add(e(s));
+        same('seq $s, starting over');
+      }
+      expect(TelemetryBuffer().pendingAfter(0), 0);
+    });
+
+    test('the backlog is counted without walking the buffer on every event', () {
+      final big = TelemetryBuffer(capacity: 500, saveDelay: const Duration(days: 1));
+      for (var s = 1; s <= 500; s++) {
+        big.add(e(s));
+      }
+      final watch = Stopwatch()..start();
+      for (var i = 0; i < 100000; i++) {
+        big.pendingAfter(i % 500);
+      }
+      // 100k full walks of 500 events with a sublist each take seconds.
+      expect(watch.elapsedMilliseconds, lessThan(1000));
+      expect(big.pendingAfter(120), 380);
+    });
   });
 
   group('EventStreamState', () {
