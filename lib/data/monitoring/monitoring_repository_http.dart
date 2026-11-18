@@ -68,123 +68,69 @@ class MonitoringRepositoryHttp extends MonitoringRepository {
         _givenIngestDio = ingestDio;
 
   @override
-  Future<MonitoringEnrollment> enroll(MonitoringEnrollmentDto dto) async {
-    try {
-      final response = await _dioClient.post(
+  Future<MonitoringEnrollment> enroll(MonitoringEnrollmentDto dto) => _send(
+      () => _dioClient.post(
           uri: enrollmentPath,
           body: dto.toJson(),
           options: Options(
-              responseType: ResponseType.json,
-              sendTimeout: timeout,
-              receiveTimeout: timeout));
-      final status = response.statusCode ?? 0;
-      if (status < 200 || status >= 300) {
-        throw MonitoringException('http_$status',
-            statusCode: status, code: errorCodeOf(response.data));
-      }
-      final enrollment = MonitoringEnrollment.tryParse(response.data);
-      if (enrollment == null) {
-        throw MonitoringException('invalid_response', statusCode: status);
-      }
-      return enrollment;
-    } on MonitoringException {
-      rethrow;
-    } on DioException catch (e) {
-      throw fromDio(e);
-    } catch (_) {
-      throw const MonitoringException('error');
-    }
-  }
+              responseType: ResponseType.json, sendTimeout: timeout, receiveTimeout: timeout)),
+      (response) => MonitoringEnrollment.tryParse(response.data) ?? _invalid(response));
 
   @override
   Future<MonitoringHeartbeatResponse> heartbeat(MonitoringHeartbeatDto dto,
-      {required String deviceToken}) async {
-    try {
-      final response = await _ingestDio.post(heartbeatPath,
-          data: dto.toJson(),
-          options: Options(headers: {deviceTokenHeader: deviceToken}));
-      final status = response.statusCode ?? 0;
-      if (status < 200 || status >= 300) {
-        throw MonitoringException('http_$status',
-            statusCode: status, code: errorCodeOf(response.data));
-      }
-      return MonitoringHeartbeatResponse.parse(response.data);
-    } on MonitoringException {
-      rethrow;
-    } on DioException catch (e) {
-      throw fromDio(e);
-    } catch (_) {
-      throw const MonitoringException('error');
-    }
-  }
+          {required String deviceToken}) =>
+      _send(
+          () => _ingestDio.post(heartbeatPath,
+              data: dto.toJson(), options: Options(headers: {deviceTokenHeader: deviceToken})),
+          (response) => MonitoringHeartbeatResponse.parse(response.data));
 
   @override
   Future<MonitoringEventsResponse> uploadEvents(MonitoringEventsDto dto,
-      {required String deviceToken}) async {
-    try {
-      final response = await _ingestDio.post(eventsPath,
-          data: dto.toJson(),
-          options: Options(headers: {deviceTokenHeader: deviceToken}));
-      final status = response.statusCode ?? 0;
-      if (status < 200 || status >= 300) {
-        throw MonitoringException('http_$status',
-            statusCode: status, code: errorCodeOf(response.data));
-      }
-      final answer = MonitoringEventsResponse.tryParse(response.data);
-      if (answer == null) {
-        throw MonitoringException('invalid_response', statusCode: status);
-      }
-      return answer;
-    } on MonitoringException {
-      rethrow;
-    } on DioException catch (e) {
-      throw fromDio(e);
-    } catch (_) {
-      throw const MonitoringException('error');
-    }
-  }
+          {required String deviceToken}) =>
+      _send(
+          () => _ingestDio.post(eventsPath,
+              data: dto.toJson(), options: Options(headers: {deviceTokenHeader: deviceToken})),
+          (response) => MonitoringEventsResponse.tryParse(response.data) ?? _invalid(response));
 
   @override
   Future<MonitoringEnrollmentCode> requestEnrollmentCode(String forKind,
-      {required String deviceToken}) async {
-    final response = await _send(() => _dioClient.post(
-        uri: codesPath,
-        body: {'for': forKind},
-        options: Options(
-            responseType: ResponseType.json,
-            sendTimeout: timeout,
-            receiveTimeout: timeout,
-            headers: {deviceTokenHeader: deviceToken})));
-    final code = MonitoringEnrollmentCode.tryParse(response.data);
-    if (code == null) {
-      throw MonitoringException('invalid_response', statusCode: response.statusCode);
-    }
-    return code;
-  }
+          {required String deviceToken}) =>
+      _send(
+          () => _dioClient.post(
+              uri: codesPath,
+              body: {'for': forKind},
+              options: Options(
+                  responseType: ResponseType.json,
+                  sendTimeout: timeout,
+                  receiveTimeout: timeout,
+                  headers: {deviceTokenHeader: deviceToken})),
+          (response) => MonitoringEnrollmentCode.tryParse(response.data) ?? _invalid(response));
 
   @override
   Future<void> reportCommandResult(MonitoringCommandResultDto result,
-      {required String deviceToken}) async {
-    await _send(() => _ingestDio.post(commandResultPath(result.commandId),
-        data: result.toJson(),
-        options: Options(headers: {deviceTokenHeader: deviceToken})));
-  }
+          {required String deviceToken}) =>
+      _send(
+          () => _ingestDio.post(commandResultPath(result.commandId),
+              data: result.toJson(), options: Options(headers: {deviceTokenHeader: deviceToken})),
+          (_) {});
 
   @override
   Future<MonitoringDiagnosticReceipt> uploadDiagnostics(Map<String, Object?> report,
-      {String? commandId, required String deviceToken}) async {
-    final response = await _send(() => _ingestDio.post(diagnosticsPath,
-        data: {...report, if (commandId != null) 'commandId': commandId},
-        options: Options(
-            headers: {deviceTokenHeader: deviceToken},
-            sendTimeout: diagnosticsTimeout,
-            receiveTimeout: timeout)));
-    return MonitoringDiagnosticReceipt.parse(response.data);
-  }
+          {String? commandId, required String deviceToken}) =>
+      _send(
+          () => _ingestDio.post(diagnosticsPath,
+              data: {...report, if (commandId != null) 'commandId': commandId},
+              options: Options(
+                  headers: {deviceTokenHeader: deviceToken},
+                  sendTimeout: diagnosticsTimeout,
+                  receiveTimeout: timeout)),
+          (response) => MonitoringDiagnosticReceipt.parse(response.data));
 
-  /// Runs [request] and hands back its answer when it is a 2xx; anything
-  /// else becomes a [MonitoringException].
-  static Future<Response> _send(Future<Response> Function() request) async {
+  /// Runs [request] and, when it answers a 2xx, [read]s the answer.
+  /// Anything else, [read] failing included, becomes a
+  /// [MonitoringException]: the only thing these calls throw.
+  static Future<T> _send<T>(
+      Future<Response> Function() request, T Function(Response response) read) async {
     try {
       final response = await request();
       final status = response.statusCode ?? 0;
@@ -192,7 +138,7 @@ class MonitoringRepositoryHttp extends MonitoringRepository {
         throw MonitoringException('http_$status',
             statusCode: status, code: errorCodeOf(response.data));
       }
-      return response;
+      return read(response);
     } on MonitoringException {
       rethrow;
     } on DioException catch (e) {
@@ -201,6 +147,10 @@ class MonitoringRepositoryHttp extends MonitoringRepository {
       throw const MonitoringException('error');
     }
   }
+
+  /// A 2xx whose body is not what the contract says.
+  static Never _invalid(Response response) =>
+      throw MonitoringException('invalid_response', statusCode: response.statusCode);
 
   static MonitoringException fromDio(DioException e) {
     final status = e.response?.statusCode;
