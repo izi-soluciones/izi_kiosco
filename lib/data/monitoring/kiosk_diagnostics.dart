@@ -88,8 +88,8 @@ class KioskDiagnostics {
       };
 
   /// The report for the monitoring service: redacted, and trimmed to
-  /// [maxBytes] dropping the oldest events first. Never throws: what cannot
-  /// be read is reported as such.
+  /// [maxBytes] ([fit]: the oldest events first, the largest sections
+  /// last). Never throws: what cannot be read is reported as such.
   Future<Map<String, Object?>> build({Device? device}) async {
     KioskHealthSnapshot? health;
     try {
@@ -143,23 +143,75 @@ class KioskDiagnostics {
     }
   }
 
+  /// What stands in for a part of the report left out for its size.
+  static const Map<String, Object?> tooLarge = {'unavailable': 'too_large'};
+
+  /// The parts of the report that say which report it is: never left out.
+  static const Set<String> _identity = {'schema', 'kind', 'generated'};
+
   /// [report] as is when it fits in [limit] bytes of JSON; otherwise with
   /// the older half of the kiosk's and the terminal's events dropped, again
-  /// and again, and with neither as a last resort.
+  /// and again; then with neither, and the terminal left out ([tooLarge]);
+  /// then with the largest of what is left (a section of the kiosk's, or of
+  /// the report's) left out, one at a time, until it fits. The result fits
+  /// whenever [limit] holds the report with every part left out (a few
+  /// hundred bytes): the service's cap ([maxBytes]) always does.
   static Map<String, Object?> fit(Map<String, Object?> report, {int limit = maxBytes}) {
-    int size(Map<String, Object?> r) => utf8.encode(jsonEncode(r)).length;
     var current = report;
-    for (var i = 0; i < 12 && size(current) > limit; i++) {
+    for (var i = 0; i < 12 && _size(current) > limit; i++) {
       current = _halveEvents(current);
     }
-    if (size(current) > limit) {
+    if (_size(current) > limit) {
       current = {
         ...current,
         'kiosk': {...?_asMap(current['kiosk']), 'events': const []},
-        'terminal': {'unavailable': 'too_large'},
+        'terminal': tooLarge,
       };
     }
+    while (_size(current) > limit) {
+      final smaller = _withoutLargest(current);
+      if (smaller == null) break;
+      current = smaller;
+    }
     return current;
+  }
+
+  static int _size(Object? value) => utf8.encode(jsonEncode(value)).length;
+
+  /// [report] with its largest part left out: a section of the kiosk's or
+  /// one of the report's own, whichever weighs more, as long as leaving it
+  /// out makes the report smaller. Null when nothing is left to leave out.
+  static Map<String, Object?>? _withoutLargest(Map<String, Object?> report) {
+    final placeholder = _size(tooLarge);
+    final kiosk = _asMap(report['kiosk']);
+    String? kioskKey;
+    String? reportKey;
+    var largest = placeholder;
+    void consider(Object? value, {String? inKiosk, String? inReport}) {
+      final size = _size(value);
+      if (size <= largest) return;
+      largest = size;
+      kioskKey = inKiosk;
+      reportKey = inReport;
+    }
+
+    if (kiosk != null) {
+      for (final entry in kiosk.entries) {
+        consider(entry.value, inKiosk: entry.key);
+      }
+    }
+    for (final entry in report.entries) {
+      if (_identity.contains(entry.key) || (entry.key == 'kiosk' && kiosk != null)) continue;
+      consider(entry.value, inReport: entry.key);
+    }
+    if (kioskKey != null) {
+      return {
+        ...report,
+        'kiosk': {...kiosk!, kioskKey!: tooLarge}
+      };
+    }
+    if (reportKey != null) return {...report, reportKey!: tooLarge};
+    return null;
   }
 
   static Map<String, Object?> _halveEvents(Map<String, Object?> report) {
