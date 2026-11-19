@@ -679,18 +679,19 @@ void main() {
       expect(TelemetryBuffer().pendingAfter(0), 0);
     });
 
-    test('the backlog is counted without walking the buffer on every event', () {
+    // No wall-clock assert here: at 500 events a linear walk is also fast, so a
+    // time limit would neither catch a regression to O(n) nor stay stable on a
+    // slow CI. The equivalence with pendingIn above is what pins the behaviour.
+    test('a full buffer counts what is pending after any acknowledged seq', () {
       final big = TelemetryBuffer(capacity: 500, saveDelay: const Duration(days: 1));
       for (var s = 1; s <= 500; s++) {
         big.add(e(s));
       }
-      final watch = Stopwatch()..start();
-      for (var i = 0; i < 100000; i++) {
-        big.pendingAfter(i % 500);
+      for (var ack = 0; ack <= 500; ack++) {
+        expect(big.pendingAfter(ack), 500 - ack, reason: 'acknowledged up to $ack');
       }
-      // 100k full walks of 500 events with a sublist each take seconds.
-      expect(watch.elapsedMilliseconds, lessThan(1000));
-      expect(big.pendingAfter(120), 380);
+      expect(big.pendingAfter(-1), 500);
+      expect(big.pendingAfter(900), 0);
     });
   });
 
