@@ -243,6 +243,16 @@ void main() {
       expect(data['amount'], isNull);
     });
 
+    test('in the money the terminal was asked for, also for rows of older builds', () {
+      Map<String, Object?> of(Map<String, dynamic> row) => TransactionSummary.ofCardPayment(
+              CardPayment.fromJsonStorage({'respuesta': 'x', 'fecha': 'd', 'hora': 'h', ...row}))
+          .finish(TxStatus.approved)!;
+      expect(of({'referencia': 'KOS-1', 'moneda': 'COP', 'monedaVenta': 'BOB'})['currency'], 'COP',
+          reason: "an older build stored the account's money too: it is not what was charged");
+      expect(of({'referencia': 'KOS-1'})['currency'], 'COP', reason: 'an Izify row from before it kept its money');
+      expect(of({})['currency'], isNull, reason: 'nothing says what it was charged in');
+    });
+
     test('the attempts and the order survive the row being stored', () {
       final cp = CardPayment(
           response: 'x', cardNumber: '****', date: 'd', hour: 'h', attempts: 3, comandaId: 'c-1');
@@ -268,12 +278,5 @@ void main() {
       expect([for (final e in txs) e.data['verdictVia']], ['poll', 'poll']);
       expect(txs.every((e) => e.chargeId == 'CHG-9'), isTrue);
     });
-  });
-
-  test('currency of the country', () {
-    expect(TransactionSummary.currencyOf('BO'), 'BOB');
-    expect(TransactionSummary.currencyOf('co'), 'COP');
-    expect(TransactionSummary.currencyOf('PE'), isNull);
-    expect(TransactionSummary.currencyOf(null), isNull);
   });
 }

@@ -18,6 +18,7 @@ import 'package:izi_kiosco/domain/dto/payment_dto.dart';
 import 'package:izi_kiosco/domain/models/card_payment.dart';
 import 'package:izi_kiosco/domain/models/category_order.dart';
 import 'package:izi_kiosco/domain/models/charge.dart';
+import 'package:izi_kiosco/domain/models/charged_currency.dart';
 import 'package:izi_kiosco/domain/models/comanda.dart';
 import 'package:izi_kiosco/domain/models/invoice.dart';
 import 'package:izi_kiosco/domain/models/item.dart';
@@ -545,7 +546,7 @@ class ComandaRepositoryHttp extends ComandaRepository {
       var response = await _dioClient.get(
           uri: path,
           baseUrl: "http://$ip:8000",
-          queryParameters: {"monto": amount.toString(), "cod_moneda": "068"},
+          queryParameters: {"monto": amount.toString(), "cod_moneda": ChargedCurrency.linkserCode},
           options: Options(
               responseType: ResponseType.json,
               receiveTimeout: const Duration(seconds: 60),

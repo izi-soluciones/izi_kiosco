@@ -25,6 +25,7 @@ import 'package:izi_kiosco/domain/models/card_payment.dart';
 import 'package:izi_kiosco/domain/models/pos_payment_result.dart';
 import 'package:izi_kiosco/domain/models/cash_register.dart';
 import 'package:izi_kiosco/domain/models/charge.dart';
+import 'package:izi_kiosco/domain/models/charged_currency.dart';
 import 'package:izi_kiosco/domain/models/comanda.dart';
 import 'package:izi_kiosco/domain/models/contribuyente.dart';
 import 'package:izi_kiosco/domain/models/currency.dart';
@@ -551,15 +552,11 @@ class PaymentBloc extends Cubit<PaymentState> {
   /// §5.1). The sale only writes to it: nothing it does depends on it.
   TransactionSummary? _tx;
 
-  /// The money of an Izify POS charge, for its summary: the account's, and
-  /// Colombian pesos when the account does not say (the terminal's own).
-  static String _izifyCurrency(AuthState authState) =>
-      TransactionSummary.currencyOf(authState.taxesStrategy.countryCode) ?? 'COP';
-
-
-  /// Starts the summary of a transaction paid by [method]. One still open
-  /// ends first: as it settled, or cancelled (the customer left the QR for
-  /// the card). None on a demo kiosk, which charges nothing.
+  /// Starts the summary of a transaction paid by [method], charged in
+  /// [currency]: what its payment rail is asked for ([ChargedCurrency]),
+  /// none when the request names none. One still open ends first: as it
+  /// settled, or cancelled (the customer left the QR for the card). None on
+  /// a demo kiosk, which charges nothing.
   TransactionSummary? _beginTx(String method, AuthState authState,
       {String? chargeId, num? amount, String? currency, String? comandaId, int attempts = 0}) {
     try {
@@ -569,7 +566,7 @@ class PaymentBloc extends Cubit<PaymentState> {
         method: method,
         chargeId: chargeId ?? IzifyPosClient.newChargeId(),
         amount: amount ?? state.paymentObj?.amount,
-        currency: currency ?? TransactionSummary.currencyOf(authState.taxesStrategy.countryCode),
+        currency: currency,
         comandaId: comandaId ?? state.paymentObj?.uuid,
         attempts: attempts,
       );
@@ -736,8 +733,8 @@ class PaymentBloc extends Cubit<PaymentState> {
     final charge = chargeId ?? IzifyPosClient.newChargeId();
     final tx = _tx;
     tx?.chargeId = charge;
-    // The summary keeps the money of the sale it started with.
-    tx?.currency ??= currency;
+    // Summed up in the money the terminal is asked for, whatever it began with.
+    tx?.currency = currency;
     IzifyPosSession session;
     try {
       session = await _readyIzifySession(authState);
@@ -762,10 +759,10 @@ class PaymentBloc extends Cubit<PaymentState> {
       hour: now.split('T').last.substring(0, 5),
       reference: reference,
       amount: amount,
+      // Stored with the charge: a retry sends it again, and the summaries of
+      // its later outcome (a pending one verified, the recovery after a
+      // reload) say it was charged in it.
       currency: currency,
-      // Stored with the charge, so the summaries of its later outcome (a
-      // pending one verified, the recovery after a reload) say the same.
-      saleCurrency: tx?.currency ?? _izifyCurrency(authState),
       cardType: cardType,
       quotas: quotas,
       chargeId: charge,
@@ -1018,7 +1015,7 @@ class PaymentBloc extends Cubit<PaymentState> {
     if (izify) {
       return _startIzifyCharge(
         authState,
-        currency: "COP",
+        currency: ChargedCurrency.izify,
         cardType: cardType,
         quotas: quotas,
         amount: (state.paymentObj?.amount ?? 0).toStringAsFixed(2),
@@ -1369,7 +1366,8 @@ class PaymentBloc extends Cubit<PaymentState> {
     }
 
     final amount = original.amount;
-    final currency = original.currency ?? "COP";
+    // Sent again in the money of the attempt retried, and summed up in it.
+    final currency = ChargedCurrency.ofStoredIzify(original.currency);
     final parsedAmount = double.tryParse(amount ?? "");
     if (parsedAmount == null || parsedAmount <= 0) {
       emit(state.copyWith(
@@ -1386,7 +1384,7 @@ class PaymentBloc extends Cubit<PaymentState> {
     final tx = _beginTx(TxMethod.card, authState,
         chargeId: original.chargeId,
         amount: parsedAmount,
-        currency: original.saleCurrency ?? _izifyCurrency(authState),
+        currency: currency,
         comandaId: original.comandaId,
         attempts: original.attempts ?? (original.reference != null ? 1 : 0));
     var approved = false;
@@ -1473,10 +1471,8 @@ class PaymentBloc extends Cubit<PaymentState> {
         token: session.token, reference: reference);
     await _takeProof(cp, result);
     // A settled outcome replaces what the monitoring had for this charge
-    // (it was left without a verdict). A charge stored before the kiosk kept
-    // the sale's money is summed up in the account's.
-    void reportVerified(String status) =>
-        TransactionSummary.reportPolled(cp..saleCurrency ??= _izifyCurrency(authState), status);
+    // (it was left without a verdict).
+    void reportVerified(String status) => TransactionSummary.reportPolled(cp, status);
 
     Future<void> store(String status, String response) async {
       cp.status = status;
@@ -1533,7 +1529,8 @@ class PaymentBloc extends Cubit<PaymentState> {
     TransactionSummary? tx;
     try {
       emit(state.copyWith(step: 4, status: PaymentStatus.cardProcessing));
-      tx = _beginTx(TxMethod.card, authState, currency: izify ? _izifyCurrency(authState) : null);
+      tx = _beginTx(TxMethod.card, authState,
+          currency: ChargedCurrency.ofCard(izify: izify, linkser: linkser));
 
       PaymentAttemptDto newPayment = PaymentAttemptDto(
         uuid: state.paymentObj?.uuid ?? "",
@@ -1662,7 +1659,8 @@ class PaymentBloc extends Cubit<PaymentState> {
     TransactionSummary? tx;
     try {
       emit(state.copyWith(step: 4, status: PaymentStatus.cardProcessing));
-      tx = _beginTx(TxMethod.card, authState, currency: izify ? _izifyCurrency(authState) : null);
+      tx = _beginTx(TxMethod.card, authState,
+          currency: ChargedCurrency.ofCard(izify: izify, linkser: linkser));
 
       PaymentDto newPayment = _buildPaymentDto(AppConstants.idPaymentMethodPOS);
 

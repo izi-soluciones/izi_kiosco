@@ -19,6 +19,7 @@ import 'package:izi_kiosco/domain/repositories/business_repository.dart';
 import 'package:izi_kiosco/domain/repositories/comanda_repository.dart';
 import 'package:izi_kiosco/domain/repositories/socket_repository.dart';
 import 'package:izi_kiosco/domain/strategies/taxes/impl/taxes_strategy_bo.dart';
+import 'package:izi_kiosco/domain/strategies/taxes/impl/taxes_strategy_co.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../helpers/fake_izify_pos.dart';
@@ -199,6 +200,32 @@ void main() {
       expect(counters[KioskCounters.chargesApproved], 1, reason: 'counted by charge.result only');
     });
 
+    test("Linkser: in the bolivianos it is asked for (cod_moneda 068), whatever the account's country",
+        () async {
+      for (final country in [TaxesStrategyBo(), TaxesStrategyCo()]) {
+        bloc.seed(order());
+        expect(
+            await bloc.makeCardPayment(
+                auth({'ipLinkser': '10.0.0.8'}).copyWith(taxesStrategy: country), linkser: true),
+            isTrue);
+        await paid();
+      }
+      expect([for (final tx in summaries()) tx['currency']], ['BOB', 'BOB']);
+    });
+
+    test('ATC: its request names no money, so neither does the summary', () async {
+      for (final country in [TaxesStrategyBo(), TaxesStrategyCo()]) {
+        bloc.seed(order());
+        expect(
+            await bloc.makeCardPayment(auth({'ipAtc': '10.0.0.9'}).copyWith(taxesStrategy: country),
+                atc: true),
+            isTrue);
+        await paid();
+      }
+      expect(summaries(), hasLength(2));
+      expect([for (final tx in summaries()) tx['currency']], [null, null]);
+    });
+
     test('a failure is an error', () async {
       comandas.cardFailure = 'Rechazada';
       expect(await bloc.makeCardPayment(auth({'ipLinkser': '10.0.0.8'}), linkser: true), isFalse);
@@ -341,6 +368,16 @@ void main() {
       expect(tx['attempts'], 0);
     });
 
+    test('its request to iZi names no money, so neither does the summary', () async {
+      for (final isComanda in [false, true]) {
+        bloc.seed(order(isComanda: isComanda));
+        expect(await bloc.generateQR(auth({}).copyWith(taxesStrategy: TaxesStrategyBo())), isTrue);
+        await paid();
+      }
+      expect(summaries(), hasLength(2));
+      expect([for (final tx in summaries()) tx['currency']], [null, null]);
+    });
+
     test('an order paid by QR', () async {
       bloc.seed(order(isComanda: true));
       expect(await bloc.generateQR(auth({})), isTrue);
@@ -360,6 +397,12 @@ void main() {
       expect(tx['status'], 'approved');
     });
 
+    test('its request to iZi names no money, so neither does the summary', () async {
+      expect(await bloc.generateBREB(auth({}).copyWith(taxesStrategy: TaxesStrategyCo())), isTrue);
+      await paid();
+      expect(summaries().single['currency'], isNull);
+    });
+
     test('the customer cancelled it', () async {
       await bloc.generateBREB(auth({}));
       bloc.cancelBREB(auth({}));
@@ -376,6 +419,11 @@ void main() {
       expect(tx['comandaId'], 'venta-1');
       expect(counters[KioskCounters.chargesStarted], 0, reason: 'nothing is charged here');
       expect(counters[KioskCounters.orders], 1);
+    });
+
+    test('nothing is charged here, so no money is named', () async {
+      await bloc.selectPayment(PaymentType.cashRegister, auth({}).copyWith(taxesStrategy: TaxesStrategyBo()));
+      expect(summaries().single['currency'], isNull);
     });
 
     test('iZi could not take it', () async {
@@ -428,21 +476,34 @@ void main() {
       expect(tx['facturaId'], 'factura-4');
     });
 
-    test("in the account's money, Colombian pesos when it does not say", () async {
-      expect(await bloc.makeCardPayment(izify.copyWith(taxesStrategy: TaxesStrategyBo()), izify: true),
-          isTrue);
-      await paid();
-      bloc.seed(order(isComanda: true));
-      expect(await bloc.makeCardPayment(izify.copyWith(taxesStrategy: TaxesStrategyBo()), izify: true),
-          isTrue);
-      await paid();
-      bloc.seed(order());
-      expect(await bloc.makeCardPayment(izify, izify: true), isTrue, reason: 'no country');
+    test('in the money the terminal is asked for, whatever the account\'s country', () async {
+      for (final country in [TaxesStrategyBo(), TaxesStrategyCo(), null]) {
+        for (final isComanda in [false, true]) {
+          bloc.seed(order(isComanda: isComanda));
+          final account = country == null ? izify : izify.copyWith(taxesStrategy: country);
+          expect(await bloc.makeCardPayment(account, izify: true), isTrue);
+          await paid();
+        }
+      }
+      // An order's summary waits for iZi's word on it; the page leaving ends it.
+      await bloc.close();
+
+      expect([for (final c in pos.charges) c['currency']], List.filled(6, 'COP'),
+          reason: 'what the terminal is asked to charge does not change');
+      expect([for (final tx in summaries()) tx['currency']], [for (final c in pos.charges) c['currency']],
+          reason: 'each summary says what its charge asked for');
+    });
+
+    test('a retry from the error screen: sent and summed up in the same money', () async {
+      pos.outcome = 'ERROR';
+      final bolivia = izify.copyWith(taxesStrategy: TaxesStrategyBo());
+      expect(await bloc.makeCardPayment(bolivia, izify: true), isFalse);
+      pos.outcome = 'SUCCESS';
+      expect(await bloc.retryLastCardCharge(bolivia), isTrue);
       await paid();
 
-      expect([for (final tx in summaries()) tx['currency']], ['BOB', 'BOB', 'COP']);
-      expect([for (final c in pos.charges) c['currency']], ['COP', 'COP', 'COP'],
-          reason: 'what the terminal is asked to charge does not change');
+      expect([for (final c in pos.charges) c['currency']], ['COP', 'COP']);
+      expect([for (final tx in summaries()) tx['currency']], ['COP', 'COP']);
     });
 
     test('declined by the acquirer', () async {
