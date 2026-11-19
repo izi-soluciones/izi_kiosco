@@ -607,7 +607,7 @@ void main() {
       expect(summaries(), isEmpty);
     });
 
-    group("a Bolivian account's charge, which the terminal charges in pesos", () {
+    group("a Bolivian account's charge: summed up in the pesos the terminal charged", () {
       late AuthState bolivia;
 
       setUp(() => bolivia = auth.copyWith(taxesStrategy: TaxesStrategyBo()));
@@ -618,25 +618,24 @@ void main() {
         expect(await bloc.retryCardPayment(bolivia, declined()), isFalse);
         final row = (await rows()).single;
         expect(row.currency, 'COP', reason: 'what the terminal was asked to charge');
-        expect(row.saleCurrency, 'BOB');
+        expect(pos.charges.single['currency'], 'COP');
         return row;
       }
 
-      test('verified later: its outcome keeps the account\'s money', () async {
+      test('left pending and verified later: both outcomes in what was charged', () async {
         final row = await leftPending();
         pos.settle(row.reference!, 'SUCCESS');
 
-        // From a page that does not know the country: the stored charge says.
-        await bloc.verifyCardPayment(auth, row);
+        await bloc.verifyCardPayment(bolivia, row);
 
         final txs = summaries();
         expect([for (final tx in txs) tx['status']], ['timeout', 'approved']);
-        expect([for (final tx in txs) tx['currency']], ['BOB', 'BOB']);
+        expect([for (final tx in txs) tx['currency']], ['COP', 'COP']);
         expect(pos.charges.single['currency'], 'COP');
         expect(comandas.proofs.single!['moneda'], 'COP', reason: 'iZi is told what the terminal charged');
       });
 
-      test('cut off by a reload: the recovery reports it in the account\'s money', () async {
+      test('cut off by a reload: the recovery reports it in what was charged', () async {
         final row = await leftPending();
         // As a reload leaves it: sent, and the page gone before the verdict.
         await LocalStorageCardErrors.updateByReference(
@@ -649,22 +648,66 @@ void main() {
         final tx = summaries().single;
         expect(tx['status'], 'approved');
         expect(tx['verdictVia'], 'poll');
-        expect(tx['currency'], 'BOB');
+        expect(tx['currency'], 'COP');
         expect(comandas.proofs.single!['moneda'], 'COP');
       });
 
-      test('a pending charge stored before the kiosk kept its money: the account\'s', () async {
+      /// A row as the build before this one stored it: the account's money
+      /// beside what was charged.
+      Future<CardPayment> storedByAnOlderBuild(String reference, {String status = 'PENDING'}) async {
+        final json = (original(status: status, reference: reference)..chargeId = 'CHG-$reference').toJson()
+          ..['monedaVenta'] = 'BOB';
+        await LocalStorageCardErrors.saveCardErrors(jsonEncode(json));
+        pos.accepted.add(reference);
+        pos.settle(reference, 'SUCCESS');
+        return (await rows()).firstWhere((r) => r.reference == reference);
+      }
+
+      test("a row of an older build with the account's money, verified: what was charged", () async {
         await bloc.retryCardPayment(bolivia, original(reference: 'SETUP'));
         Telemetry.install(Telemetry());
-        final cp = original(status: 'PENDING', reference: 'KOS-PEND-BO');
-        await LocalStorageCardErrors.saveCardErrors(jsonEncode(cp.toJson()));
-        pos.accepted.add('KOS-PEND-BO');
-        pos.settle('KOS-PEND-BO', 'SUCCESS');
+        final cp = await storedByAnOlderBuild('KOS-PEND-BO');
 
         await bloc.verifyCardPayment(bolivia, cp);
 
-        expect(summaries().single['currency'], 'BOB');
+        expect(summaries().single['currency'], 'COP');
+        final stored = jsonDecode((await LocalStorageCardErrors.getErrors())
+            .firstWhere((e) => e.contains('KOS-PEND-BO'))) as Map;
+        expect(stored['moneda'], 'COP');
       });
+
+      test("a row of an older build with the account's money, recovered: what was charged", () async {
+        await bloc.retryCardPayment(bolivia, original(reference: 'SETUP'));
+        Telemetry.install(Telemetry());
+        await storedByAnOlderBuild('KOS-LOST-BO', status: 'IN_PROGRESS');
+
+        await CardChargeRecovery(repository: comandas).run(auth.currentDevice);
+
+        final tx = summaries().single;
+        expect(tx['chargeId'], 'CHG-KOS-LOST-BO');
+        expect(tx['currency'], 'COP');
+      });
+
+      test('retrying a row of an older build sends and sums up what it was charged in', () async {
+        final cp = await storedByAnOlderBuild('KOS-RETRY-BO', status: 'ERROR');
+        Telemetry.install(Telemetry());
+
+        expect(await bloc.retryCardPayment(bolivia, cp), isTrue);
+
+        expect(pos.charges.single['currency'], 'COP');
+        expect(summaries().single['currency'], 'COP');
+      });
+    });
+
+    test('a retry of a row without its money sends COP, as it always did, and sums up COP', () async {
+      final cp = CardPayment.fromJsonStorage(
+          (original()..chargeId = 'CHG-NOMONEY').toJson()..remove('moneda'));
+      expect(cp.currency, isNull);
+
+      expect(await bloc.retryCardPayment(auth, cp), isTrue);
+
+      expect(pos.charges.single['currency'], 'COP');
+      expect(summaries().single['currency'], 'COP');
     });
 
     group('the recovery after a reload', () {

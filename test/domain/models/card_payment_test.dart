@@ -50,20 +50,31 @@ void main() {
       expect(json['respuesta'], 'x');
     });
 
-    test("keeps the sale's money apart from the terminal's, and iZi gets the terminal's", () {
+    test("a row of an older build with the account's money: what was charged is what counts", () {
       final cp = CardPayment.fromJsonStorage({
         'respuesta': 'En curso',
         'tarjeta': '****',
         'fecha': '2026-11-18',
         'hora': '10:00',
+        'referencia': 'KOS-OLD',
         'moneda': 'COP',
         'monedaVenta': 'BOB',
       });
       expect(cp.currency, 'COP');
-      expect(cp.saleCurrency, 'BOB');
-      expect(cp.toJson()['monedaVenta'], 'BOB');
+      expect(cp.chargedCurrency, 'COP');
+      expect(cp.toJson().containsKey('monedaVenta'), isFalse,
+          reason: 'stored again, it keeps only the money it was charged in');
+      expect(cp.toJson()['moneda'], 'COP');
       expect(cp.terminalData('APROBADA')['moneda'], 'COP');
-      expect(cp.terminalData('APROBADA').containsKey('monedaVenta'), isFalse);
+    });
+
+    test('charged in: the money stored with it, COP for an Izify row from before it was stored', () {
+      CardPayment row({String? reference, String? currency}) => CardPayment(
+          response: 'x', cardNumber: '****', date: 'd', hour: 'h', reference: reference, currency: currency);
+      expect(row(reference: 'KOS-1', currency: 'COP').chargedCurrency, 'COP');
+      expect(row(reference: 'KOS-1').chargedCurrency, 'COP',
+          reason: 'an Izify POS has only ever been asked for pesos');
+      expect(row().chargedCurrency, isNull, reason: 'an ATC / Linkser row says nothing of its money');
     });
   });
 

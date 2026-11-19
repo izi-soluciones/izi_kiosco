@@ -1,3 +1,5 @@
+import 'package:izi_kiosco/domain/models/charged_currency.dart';
+
 /// Outcome classification for a stored card transaction, used to decide
 /// whether a retry may be offered and whether a safety warning is required.
 enum CardPaymentStatus {
@@ -27,12 +29,9 @@ class CardPayment{
   String? reference;
   /// Amount string exactly as sent to the POS (e.g. "12.50"). Needed to retry.
   String? amount;
-  /// Currency sent to the POS (e.g. "COP"). Needed to retry.
+  /// Currency sent to the POS (e.g. "COP"). Needed to retry, and what the
+  /// monitoring says was charged ([chargedCurrency]).
   String? currency;
-  /// ISO 4217 of the sale as the account counts it, for the monitoring
-  /// (`tx.summary`): the terminal is asked in [currency], which may differ
-  /// (an Izify POS charges in COP whatever the account's country).
-  String? saleCurrency;
   /// Transaction id reported by the POS, when known. Opaque string.
   String? transactionId;
   /// Explicit status persisted at save time (SUCCESS/ERROR/CANCELLED/PENDING/
@@ -87,6 +86,13 @@ class CardPayment{
   /// Transient: when this attempt was sent to the terminal, to time it.
   DateTime? sentAt;
 
+  /// The money the terminal was asked to charge, for the monitoring
+  /// (`tx.summary`): [currency]. An Izify POS charge (one with a
+  /// [reference]) stored before the kiosk kept it was sent in
+  /// [ChargedCurrency.izify], the only money that terminal is asked for.
+  String? get chargedCurrency =>
+      reference != null ? ChargedCurrency.ofStoredIzify(currency) : currency;
+
   CardPayment({
     required this.response,
     required this.cardNumber,
@@ -95,7 +101,6 @@ class CardPayment{
     this.reference,
     this.amount,
     this.currency,
-    this.saleCurrency,
     this.transactionId,
     this.status,
     this.markUuid,
@@ -132,8 +137,9 @@ class CardPayment{
       hour: json["hora"],
       reference: json["referencia"],
       amount: json["monto"],
+      // Rows of older builds may also carry "monedaVenta" (the account's
+      // money): what was charged is "moneda", so it is left aside.
       currency: json["moneda"],
-      saleCurrency: json["monedaVenta"] is String ? json["monedaVenta"] : null,
       transactionId: json["transactionId"],
       status: json["estado"],
       markUuid: json["cobroUuid"],
@@ -158,7 +164,6 @@ class CardPayment{
     if (reference != null) "referencia": reference,
     if (amount != null) "monto": amount,
     if (currency != null) "moneda": currency,
-    if (saleCurrency != null) "monedaVenta": saleCurrency,
     if (transactionId != null) "transactionId": transactionId,
     if (status != null) "estado": status,
     if (markUuid != null) "cobroUuid": markUuid,

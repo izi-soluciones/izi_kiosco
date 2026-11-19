@@ -1,5 +1,6 @@
 import 'package:izi_kiosco/data/telemetry/telemetry.dart';
 import 'package:izi_kiosco/domain/models/card_payment.dart';
+import 'package:izi_kiosco/domain/models/charged_currency.dart';
 
 /// The values of `tx.summary.method` (contracts §5.1).
 class TxMethod {
@@ -79,7 +80,8 @@ class TransactionSummary {
   String? reference;
   num? amount;
 
-  /// ISO 4217, when known.
+  /// ISO 4217 of what the payment rail was asked to charge (see
+  /// [ChargedCurrency]); null when its request names none.
   String? currency;
 
   /// The iZi order paid (its uuid).
@@ -119,9 +121,8 @@ class TransactionSummary {
           chargeId: cp.chargeId,
           reference: cp.reference,
           amount: num.tryParse(cp.amount ?? ''),
-          // The sale's money; the terminal's only for a charge stored before
-          // the kiosk kept it.
-          currency: cp.saleCurrency ?? cp.currency,
+          // What the terminal was asked to charge (contracts §5.1).
+          currency: cp.chargedCurrency,
           comandaId: cp.comandaId,
           attempts: cp.attempts ?? (cp.reference != null ? 1 : 0),
           now: now);
@@ -137,13 +138,6 @@ class TransactionSummary {
       return false;
     }
   }
-
-  /// ISO 4217 of the money of [countryCode] (`BO`, `CO`), when known.
-  static String? currencyOf(String? countryCode) => switch (countryCode?.toUpperCase()) {
-        'BO' => 'BOB',
-        'CO' => 'COP',
-        _ => null,
-      };
 
   /// Already reported: nothing changes it any more.
   bool get reported => _reported;
