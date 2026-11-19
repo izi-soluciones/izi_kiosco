@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'dart:typed_data';
+
 import 'package:dio/dio.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:izi_kiosco/data/core/dio_client.dart';
@@ -47,6 +50,33 @@ Response<dynamic> dioResponse(dynamic data, {int statusCode = 200, String path =
       statusCode: statusCode,
       data: data,
     );
+
+/// The gateway behind a real [Dio] ([client]): answers every request with
+/// [status] and [body] as JSON, or throws [error], and remembers each one.
+class FakeGateway implements HttpClientAdapter {
+  final List<RequestOptions> requests = [];
+  int status = 200;
+  Object? body = const {'ok': true};
+
+  /// Thrown instead of answering, when set.
+  Object? error;
+
+  /// A [Dio] that talks to this gateway.
+  Dio get client => Dio(BaseOptions(baseUrl: 'http://gateway.test'))..httpClientAdapter = this;
+
+  @override
+  Future<ResponseBody> fetch(
+      RequestOptions options, Stream<Uint8List>? requestStream, Future<void>? cancelFuture) async {
+    requests.add(options);
+    if (error != null) throw error!;
+    return ResponseBody.fromString(jsonEncode(body), status, headers: {
+      Headers.contentTypeHeader: [Headers.jsonContentType],
+    });
+  }
+
+  @override
+  void close({bool force = false}) {}
+}
 
 /// Convenience builder for an open/closed cash register.
 CashRegister buildCashRegister({int id = 1, bool abierta = true}) =>

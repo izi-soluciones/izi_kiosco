@@ -1,3 +1,5 @@
+import 'package:izi_kiosco/domain/models/charged_currency.dart';
+
 /// Outcome classification for a stored card transaction, used to decide
 /// whether a retry may be offered and whether a safety warning is required.
 enum CardPaymentStatus {
@@ -27,7 +29,8 @@ class CardPayment{
   String? reference;
   /// Amount string exactly as sent to the POS (e.g. "12.50"). Needed to retry.
   String? amount;
-  /// Currency sent to the POS (e.g. "COP"). Needed to retry.
+  /// Currency sent to the POS (e.g. "COP"). Needed to retry, and what the
+  /// monitoring says was charged ([chargedCurrency]).
   String? currency;
   /// Transaction id reported by the POS, when known. Opaque string.
   String? transactionId;
@@ -73,8 +76,22 @@ class CardPayment{
   /// takes a new [reference]. Sent to the terminal so both logs carry it.
   String? chargeId;
 
+  /// Times the charge was sent to a terminal, this attempt included: a retry
+  /// adds one to the attempt it replaces. For the monitoring (`tx.summary`).
+  int? attempts;
+
+  /// The iZi order the charge pays (its uuid), for the monitoring.
+  String? comandaId;
+
   /// Transient: when this attempt was sent to the terminal, to time it.
   DateTime? sentAt;
+
+  /// The money the terminal was asked to charge, for the monitoring
+  /// (`tx.summary`): [currency]. An Izify POS charge (one with a
+  /// [reference]) stored before the kiosk kept it was sent in
+  /// [ChargedCurrency.izify], the only money that terminal is asked for.
+  String? get chargedCurrency =>
+      reference != null ? ChargedCurrency.ofStoredIzify(currency) : currency;
 
   CardPayment({
     required this.response,
@@ -98,6 +115,8 @@ class CardPayment{
     this.cardType,
     this.quotas,
     this.chargeId,
+    this.attempts,
+    this.comandaId,
 });
 
   factory CardPayment.fromJson(Map json)=>CardPayment(
@@ -118,6 +137,8 @@ class CardPayment{
       hour: json["hora"],
       reference: json["referencia"],
       amount: json["monto"],
+      // Rows of older builds may also carry "monedaVenta" (the account's
+      // money): what was charged is "moneda", so it is left aside.
       currency: json["moneda"],
       transactionId: json["transactionId"],
       status: json["estado"],
@@ -131,7 +152,9 @@ class CardPayment{
       terminalName: json["datafono"],
       cardType: json["tipoTarjeta"],
       quotas: json["cuotas"] is int ? json["cuotas"] : null,
-      chargeId: json["cobroId"]);
+      chargeId: json["cobroId"],
+      attempts: json["intentos"] is int ? json["intentos"] : null,
+      comandaId: json["comandaUuid"] is String ? json["comandaUuid"] : null);
 
   Map toJson()=>{
     "respuesta": response,
@@ -154,6 +177,8 @@ class CardPayment{
     if (cardType != null) "tipoTarjeta": cardType,
     if (quotas != null) "cuotas": quotas,
     if (chargeId != null) "cobroId": chargeId,
+    if (attempts != null) "intentos": attempts,
+    if (comandaId != null) "comandaUuid": comandaId,
   };
 
   /// What iZi stores for this charge (`custom.datosTerminal`). [estado] is

@@ -781,7 +781,22 @@
       "empty": "Sin eventos registrados",
       "notPaired": "Este kiosko no tiene un datáfono emparejado.",
       "unsupported": "Esta versión de PayPOS no ofrece diagnóstico. Actualícela a la 1.28 o superior.",
-      "unreachable": "No se pudo consultar el datáfono: {}"
+      "unreachable": "No se pudo consultar el datáfono: {}",
+      "heartbeatStopped": "Heartbeat: sin enviar (el kiosco no está enrolado)",
+      "heartbeatPending": "Heartbeat: primer envío a las {}",
+      "heartbeatOk": "Heartbeat: último aceptado a las {} · próximo a las {}",
+      "heartbeatFailing": "Heartbeat: falla ({}), {} seguidos · próximo a las {}"
+    },
+    "monitoring": {
+      "title": "Monitoreo",
+      "enrolled": "Enrolado",
+      "pending": "Pendiente",
+      "enrolling": "Enrolando...",
+      "error": "Error ({})",
+      "stopped": "Inactivo",
+      "device": "Dispositivo {}",
+      "nextAttempt": "Reintento a las {}",
+      "retry": "Reintentar enrolamiento"
     }
   },
   "errorPayment": {

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io' show SocketException;
 
 import 'package:http/http.dart' as http;
+import 'package:izi_kiosco/data/monitoring/pos_link_health.dart';
 import 'package:izi_kiosco/data/pos/izify_pos_client.dart';
 import 'package:izi_kiosco/data/telemetry/platform_signals.dart';
 import 'package:izi_kiosco/data/telemetry/telemetry.dart';
@@ -79,16 +80,21 @@ Map<String, Object?> kioskSnapshot() => {
 /// [sampleEvery]: a terminal left off all night must not fill the log with
 /// the same line. The recovery says how long it was down and how many
 /// checks failed meanwhile.
+///
+/// Every check also reaches [PosLinkHealth], which the monitoring heartbeat
+/// reports.
 class PosLinkTracker {
   static const int detailedFailures = 10;
   static const int sampleEvery = 10;
 
   final String source;
+  final PosLinkHealth Function() _link;
   int _failures = 0;
   DateTime? _downSince;
   String? _notReady;
 
-  PosLinkTracker(this.source);
+  PosLinkTracker(this.source, {PosLinkHealth Function()? link})
+      : _link = link ?? (() => PosLinkHealth.instance);
 
   int get consecutiveFailures => _failures;
 
@@ -100,8 +106,12 @@ class PosLinkTracker {
       required Object error}) async {
     _failures++;
     _downSince ??= DateTime.now();
+    final link = _link();
+    link.failed(address: address.hostPort, cause: posFailureCause(error));
     if (_failures > detailedFailures && _failures % sampleEvery != 0) return;
     final details = await probePosFailure(error, address);
+    final refined = details['cause'];
+    if (refined is String) link.refineCause(refined);
     Telemetry.event('pos.health_failed',
         level: TelemetryLevel.warning,
         data: {
@@ -116,12 +126,15 @@ class PosLinkTracker {
   }
 
   /// The terminal answered in [ms]. [notReadyReason] is why it cannot
-  /// charge, when it cannot.
+  /// charge, when it cannot; [health] is what it reported.
   void answered(
       {required IzifyPosAddress address,
       int? ms,
       String? notReadyReason,
-      String? appVersion}) {
+      String? appVersion,
+      IzifyPosHealth? health}) {
+    _link().answered(
+        address: address.hostPort, ms: ms, notReadyReason: notReadyReason, terminal: health);
     if (_failures > 0) {
       Telemetry.event('pos.health_recovered', data: {
         'source': source,

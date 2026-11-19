@@ -20,6 +20,15 @@ import 'package:izi_kiosco/app/values/routes.dart';
 import 'package:izi_kiosco/app/values/routes_keys.dart';
 import 'package:izi_kiosco/data/repositories/auth/auth_repository_http.dart';
 import 'package:izi_kiosco/data/repositories/business/business_repository_http.dart';
+import 'package:izi_kiosco/data/monitoring/agent_link.dart';
+import 'package:izi_kiosco/data/monitoring/kiosk_activity.dart';
+import 'package:izi_kiosco/data/monitoring/kiosk_commands.dart';
+import 'package:izi_kiosco/data/monitoring/kiosk_health_collector.dart';
+import 'package:izi_kiosco/data/monitoring/monitoring_commands.dart';
+import 'package:izi_kiosco/data/monitoring/monitoring_heartbeat.dart';
+import 'package:izi_kiosco/data/monitoring/monitoring_service.dart';
+import 'package:izi_kiosco/data/monitoring/monitoring_telemetry_sink.dart';
+import 'package:izi_kiosco/data/monitoring/terminal_enrollment.dart';
 import 'package:izi_kiosco/data/repositories/comanda/comanda_repository_http.dart';
 import 'package:izi_kiosco/data/telemetry/kiosk_telemetry.dart';
 import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
@@ -69,6 +78,43 @@ class MyApp extends StatelessWidget {
   final AuthBloc _auth =
       AuthBloc(AuthRepositoryHttp(), BusinessRepositoryHttp());
 
+  /// Keeps the monitoring told of the screen on display (the route
+  /// template, never its ids) and of a login that failed.
+  void _followActivity() {
+    final activity = KioskActivity.instance;
+    void screen() {
+      try {
+        activity.screenChanged(route.routerDelegate.currentConfiguration.fullPath);
+      } catch (_) {}
+    }
+
+    route.routerDelegate.addListener(screen);
+    screen();
+    activity.authErrorChanged(_auth.state.status == AuthStatus.errorAuth);
+    _auth.stream.listen(
+        (state) => activity.authErrorChanged(state.status == AuthStatus.errorAuth));
+  }
+
+  /// Starts the monitoring set up in `main`. Runs while the login bloc is
+  /// created: nothing here may keep the kiosk from loading.
+  void _startMonitoring() {
+    try {
+      MonitoringService.instance.followAuth(_auth);
+      _followActivity();
+      MonitoringHeartbeat.instance?.start();
+      MonitoringTelemetrySink.instance?.start();
+      MonitoringCommandRunner.instance?.start();
+      TerminalEnrollment.instance?.start();
+      AgentLink.instance?.start();
+      // `reload_app` outside the browser: back home, loading the kiosk
+      // again as the error screen's "reload" button does.
+      KioskCommands.instance?.restartApp = () {
+        route.go(RoutesKeys.homeLink);
+        _auth.verify();
+      };
+    } catch (_) {}
+  }
+
   MyApp({Key? key}) : super(key: key);
   @override
   Widget build(BuildContext context) {
@@ -77,6 +123,7 @@ class MyApp extends StatelessWidget {
         BlocProvider(
           create: (context) {
             KioskTelemetry.followAuth(_auth);
+            _startMonitoring();
             return _auth..verify();
           },
         ),
@@ -88,7 +135,15 @@ class MyApp extends StatelessWidget {
                 ComandaRepositoryHttp(),
                 BusinessRepositoryHttp())),
         BlocProvider(
-          create: (context) => PosConfigBloc(context.read<AuthBloc>()),
+          create: (context) {
+            final posConfig = PosConfigBloc(context.read<AuthBloc>());
+            try {
+              KioskHealthCollector.instance.attach(auth: _auth, posConfig: posConfig);
+              KioskCommands.instance?.attach(auth: _auth, posConfig: posConfig);
+              TerminalEnrollment.instance?.attach(auth: _auth, posConfig: posConfig);
+            } catch (_) {}
+            return posConfig;
+          },
           lazy: false,
         ),
       ],

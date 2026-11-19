@@ -169,6 +169,28 @@ class IzifyPosHealth {
   }
 }
 
+/// What the terminal says about its own enrollment in iZi's monitoring
+/// (`GET /monitoring/status`, PayPOS with monitoring).
+class IzifyPosMonitoringStatus {
+  final bool enrolled;
+
+  /// The terminal lost its device token (revoked, or unreadable) and waits
+  /// for a new code.
+  final bool reenrollRequired;
+  final String? deviceId;
+  final String? applianceId;
+
+  const IzifyPosMonitoringStatus(
+      {required this.enrolled, this.reenrollRequired = false, this.deviceId, this.applianceId});
+
+  factory IzifyPosMonitoringStatus.fromJson(Map json) => IzifyPosMonitoringStatus(
+        enrolled: json['enrolled'] == true,
+        reenrollRequired: json['reenrollRequired'] == true,
+        deviceId: json['deviceId']?.toString(),
+        applianceId: json['applianceId']?.toString(),
+      );
+}
+
 /// A call to the terminal that failed.
 ///
 /// [charged] says what the kiosk may assume about the card:
@@ -196,14 +218,17 @@ class IzifyPosException implements Exception {
 }
 
 /// HTTP client for the PayPOS kiosk API (`/health`, `/pair`, `/pay`,
-/// `/payment-status/{reference}`, `/unpair`). See the PayPOS repo README for
-/// the contract. Every call has a deadline: the kiosk UI must never hang on a
-/// terminal that went away.
+/// `/payment-status/{reference}`, `/unpair`, `/diagnostics`, `/monitoring/*`).
+/// See the PayPOS repo README for the contract. Every call has a deadline:
+/// the kiosk UI must never hang on a terminal that went away.
 class IzifyPosClient {
   static const Duration healthTimeout = Duration(seconds: 4);
   static const Duration pairTimeout = Duration(seconds: 8);
   static const Duration payTimeout = Duration(seconds: 10);
   static const Duration statusTimeout = Duration(seconds: 5);
+
+  /// The terminal redeems the code against the gateway before answering.
+  static const Duration monitoringEnrollTimeout = Duration(seconds: 40);
 
   final http.Client _http;
 
@@ -523,6 +548,59 @@ class IzifyPosClient {
           statusCode: res.statusCode);
     }
     return data;
+  }
+
+  /// The terminal's own enrollment in the monitoring (contracts §3.3). Null
+  /// when the terminal is too old to report to it (404). Throws
+  /// [IzifyPosException] when it cannot be asked.
+  Future<IzifyPosMonitoringStatus?> monitoringStatus(IzifyPosAddress address,
+      {required String token}) async {
+    final http.Response res;
+    try {
+      res = await _http.get(address.http('/monitoring/status'),
+          headers: {'Authorization': 'Bearer $token'}).timeout(statusTimeout);
+    } catch (e) {
+      throw IzifyPosException(_unreachable(address), code: 'UNREACHABLE', cause: e);
+    }
+    if (res.statusCode == 404) return null;
+    final data = _decode(res.body);
+    if (res.statusCode != 200 || data is! Map) {
+      throw IzifyPosException('El datáfono respondió ${res.statusCode}.',
+          code: data is Map ? data['code']?.toString() : null, statusCode: res.statusCode);
+    }
+    return IzifyPosMonitoringStatus.fromJson(data);
+  }
+
+  /// Hands the terminal a one-time [code] to enroll in the monitoring
+  /// through [apiBaseUrl] (contracts §3.3). Throws [IzifyPosException] with
+  /// the terminal's `code`: `BUSY` (charging, try later),
+  /// `ENROLLMENT_CODE_INVALID`, `API_NOT_ALLOWED`, `INVALID_BODY`,
+  /// `ENROLL_FAILED`, or `UNSUPPORTED` for a terminal without the route.
+  Future<void> monitoringEnroll(IzifyPosAddress address,
+      {required String token, required String code, required String apiBaseUrl}) async {
+    final http.Response res;
+    try {
+      res = await _http
+          .post(
+            address.http('/monitoring/enroll'),
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $token',
+            },
+            body: jsonEncode({'code': code, 'apiBaseUrl': apiBaseUrl}),
+          )
+          .timeout(monitoringEnrollTimeout);
+    } catch (e) {
+      throw IzifyPosException(_unreachable(address), code: 'UNREACHABLE', cause: e);
+    }
+    final data = _decode(res.body);
+    if (res.statusCode == 200 && data is Map && data['enrolled'] == true) return;
+    throw IzifyPosException(
+        _message(data) ?? 'El datáfono respondió ${res.statusCode}.',
+        code: res.statusCode == 404
+            ? 'UNSUPPORTED'
+            : (data is Map ? data['code']?.toString() : null),
+        statusCode: res.statusCode);
   }
 
   /// Whether [token] still opens the terminal at [address]: `false` when it
