@@ -348,7 +348,7 @@ class BmService {
         'online': bmOnline(),
         'visibility': bmVisibility(),
         'chargeInProgress': _activity.charging,
-        'pos': atc?.posState(provider: ctx.provider) ?? {'provider': 'none', 'status': 'not_configured', 'consecutiveFailures': 0},
+        'pos': atc?.posState(provider: ctx.provider) ?? {'provider': ctx.provider, 'status': 'not_configured', 'consecutiveFailures': 0},
         'agent': agent?.agentState(),
       },
       'counters': {
@@ -376,7 +376,7 @@ class BmService {
     if (!_isWeb || !_alive(gen)) return;
     final store = _store!;
     final api = _api!;
-    if (ctx.provider != 'none') {
+    if (ctx.provider == 'atc') {
       final atc = _atc = _atcFactory(ctx);
       _atcFirst = _atcCycle(atc, store, gen);
     }

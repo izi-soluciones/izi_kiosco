@@ -560,6 +560,17 @@ void main() {
     expect(state['pos']['status'], 'not_configured');
   });
 
+  test('con proveedor linkser no hay chequeo ATC y pos es not_configured con su proveedor', () async {
+    final h = _H();
+    await h.init(web: true, prefs: {'bm.deviceToken': 'izd_existenteexistente1', 'bm.owner': '1:2'});
+    h.service.start(_ctx(provider: 'linkser'));
+    await _settle();
+    expect(h.atc.checkCalls, 0);
+    expect(h.api.calls, ['heartbeat']);
+    final state = (h.api.heartbeatArgs.single['body'] as Map)['state'] as Map;
+    expect(state['pos'], {'provider': 'linkser', 'status': 'not_configured', 'consecutiveFailures': 0});
+  });
+
   test('el primer heartbeat espera al primer chequeo ATC y suma sus contadores', () async {
     final h = _H();
     await h.init(web: true, prefs: {'bm.deviceToken': 'izd_existenteexistente1', 'bm.owner': '1:2'});

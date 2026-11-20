@@ -150,7 +150,7 @@ void main() {
       version: '0.0.0-e2e+1',
       platform: 'web',
       country: 'BO',
-      provider: 'paypos',
+      provider: 'atc',
       apiUrl: _apiUrl,
       atcServerUrl: 'http://127.0.0.1:${atcStub.port}',
     );
@@ -198,7 +198,7 @@ void main() {
     print('DISPOSITIVO ${jsonEncode(detail)}');
     final state = (detail as Map)['latestState'] as Map;
     expect((detail['health'] as Map)['status'], 'online');
-    expect((state['pos'] as Map)['provider'], 'paypos');
+    expect((state['pos'] as Map)['provider'], 'atc');
     expect((state['pos'] as Map)['status'], 'ok');
     expect(state['agent'], isA<Map>());
     // El primer heartbeat sale antes del primer tick del enlace con el agente: reachable puede ser false.
