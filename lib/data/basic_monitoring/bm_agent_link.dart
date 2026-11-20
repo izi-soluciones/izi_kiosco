@@ -23,6 +23,7 @@ class BmAgentLink {
 
   static const _baseUrl = 'http://127.0.0.1:47800';
   static const _timeout = Duration(seconds: 3);
+  static const _issueCodeTimeout = Duration(seconds: 30);
   static const _hold = Duration(minutes: 30);
   static const _minBackoff = Duration(seconds: 30);
   static const _maxBackoff = Duration(minutes: 30);
@@ -80,7 +81,7 @@ class BmAgentLink {
 
     String? code;
     try {
-      code = await _issueCode();
+      code = await _issueCode().timeout(_issueCodeTimeout);
     } catch (_) {
       _failEnroll();
       return;

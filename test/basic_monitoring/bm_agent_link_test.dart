@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
+import 'package:fake_async/fake_async.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:izi_kiosco/data/basic_monitoring/bm_agent_link.dart';
 
@@ -184,6 +185,32 @@ void main() {
     await link.tick();
     expect(issued, 1);
     expect(adapter.enrolls, isEmpty);
+  });
+
+  test('issueCode que nunca responde: el timeout libera el enlace y no hay /enroll', () {
+    FakeAsync().run((async) {
+      link = BmAgentLink(
+        dio: dio,
+        apiBaseUrl: 'https://api.izify.app',
+        issueCode: () {
+          issued++;
+          return Completer<String?>().future;
+        },
+        now: () => clock,
+        backoff: (failures) => const Duration(seconds: 30),
+      );
+      link.tick();
+      async.flushMicrotasks();
+      async.elapse(const Duration(seconds: 31));
+      expect(issued, 1);
+      clock = clock.add(const Duration(seconds: 31));
+      final before = adapter.requests.length;
+      link.tick();
+      async.elapse(const Duration(seconds: 1));
+      expect(adapter.requests.length, before + 1);
+      expect(adapter.enrolls, isEmpty);
+      expect(issued, 2);
+    });
   });
 
   test('tick mientras otro está en vuelo no hace una segunda petición', () async {
