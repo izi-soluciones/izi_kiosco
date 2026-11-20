@@ -8,6 +8,8 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:izi_kiosco/app/values/app_constants.dart';
+import 'package:izi_kiosco/data/basic_monitoring/bm_activity.dart';
+import 'package:izi_kiosco/data/basic_monitoring/bm_payment_busy.dart';
 import 'package:izi_kiosco/data/local/local_storage_card_errors.dart';
 import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
 import 'package:izi_kiosco/domain/dto/new_order_dto.dart';
@@ -43,6 +45,17 @@ class PaymentBloc extends Cubit<PaymentState> {
   PaymentBloc(
       this._comandaRepository, this._businessRepository, this._socketRepository)
       : super(PaymentState.init());
+
+  @visibleForTesting
+  static BmActivity Function() bmActivity = () => BmActivity.instance;
+
+  @override
+  void onChange(Change<PaymentState> change) {
+    super.onChange(change);
+    try {
+      bmActivity().paymentChanged(this, bmIsCharging(change.nextState));
+    } catch (_) {}
+  }
 
   initOrder(
       {required PaymentObj paymentObj, required AuthState authState}) async {
@@ -339,7 +352,10 @@ class PaymentBloc extends Cubit<PaymentState> {
     qrStream?.cancel();
     qrStream = null;
     timerSuccess?.cancel();
-    return super.close();
+    await super.close();
+    try {
+      bmActivity().paymentClosed(this);
+    } catch (_) {}
   }
 
   Future<bool> _makeCardRetailPayment(AuthState authState,
