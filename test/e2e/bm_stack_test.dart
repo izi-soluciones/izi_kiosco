@@ -100,6 +100,11 @@ Future<void> _sh(String cmd) async {
   if (r.exitCode != 0) throw TestFailure('comando falló (${r.exitCode}): ${r.stderr}');
 }
 
+Dio withOrigin(Dio dio) => dio..interceptors.add(InterceptorsWrapper(onRequest: (o, h) {
+      o.headers['Origin'] = 'http://localhost';
+      h.next(o);
+    }));
+
 void main() {
   final enabled = _apiUrl.isNotEmpty && _publicToken.isNotEmpty;
   final hasMs = _msUrl.isNotEmpty && _serviceKey.isNotEmpty;
@@ -112,6 +117,8 @@ void main() {
   late BmService service;
   late BmContext ctx;
   var logsAttached = false;
+  Timer? agentPoll;
+  final agentSeen = <String>[];
 
   Future<Map<String, dynamic>?> findKiosk() async {
     final res = await ms.get('/staff/flota?contribuyente=${ctx.contribuyente}');
@@ -161,10 +168,8 @@ void main() {
       isWeb: true,
       timer: (d, cb) => Timer(Duration(milliseconds: d.inMilliseconds ~/ _timeScale), cb),
       agentFactory: (c, issueCode) => BmAgentLink(
-        dio: Dio()..interceptors.add(InterceptorsWrapper(onRequest: (o, h) {
-              o.headers['Origin'] = 'http://localhost';
-              h.next(o);
-            })),
+        dio: withOrigin(Dio()),
+        enrollDio: withOrigin(Dio()),
         issueCode: issueCode,
         apiBaseUrl: c.apiUrl,
         backoff: (f) => Duration(milliseconds: 30000 ~/ _timeScale),
@@ -282,6 +287,14 @@ void main() {
   test('paso 4c: dispositivo retirado, el kiosco se registra solo de nuevo', () async {
     final id = deviceId();
     final oldToken = store.deviceToken;
+    if (_withAgent) {
+      agentPoll = Timer.periodic(const Duration(milliseconds: 500), (_) async {
+        try {
+          final r = await Dio().get<dynamic>('http://127.0.0.1:47800/health', options: Options(validateStatus: (_) => true));
+          if (r.data is Map) agentSeen.add('${r.data['status']}/${r.data['enrolled']}');
+        } catch (_) {}
+      });
+    }
     final res = await ms.send('PATCH', '/staff/dispositivos/$id', {'retired': true});
     // ignore: avoid_print
     print('RETIRAR ${res.statusCode} ${jsonEncode(res.data)}');
@@ -295,5 +308,77 @@ void main() {
     // ignore: avoid_print
     print('DISPOSITIVO TRAS REENROLAR ${jsonEncode(after)}');
     expect(jsonEncode(after), isNot(contains('"retired":true')));
+  }, skip: enabled && hasMs ? false : 'requiere BM_E2E_MS_URL y BM_E2E_SERVICE_KEY', timeout: const Timeout(Duration(minutes: 3)));
+
+  test('paso 4d: el agente del PC pasa a token_invalid y el enlace del kiosco lo re-enrola sin reiniciar', () async {
+    final url = Uri.parse('http://127.0.0.1:47800/health');
+    await _until('agente token_invalid visto y enrolado de nuevo', () async {
+      final r = await Dio().getUri<dynamic>(url, options: Options(validateStatus: (_) => true));
+      final back = r.data is Map && r.data['enrolled'] == true && r.data['status'] != 'token_invalid';
+      return back && agentSeen.any((s) => s.startsWith('token_invalid')) ? true : null;
+    }, timeout: const Duration(seconds: 240));
+    agentPoll?.cancel();
+    // ignore: avoid_print
+    print('AGENT /health VISTOS ${jsonEncode(agentSeen.toSet().toList())}');
+    // ignore: avoid_print
+    print('LOG ${jsonEncode(logs.lines)}');
+    final f = await _until('agente vigente en el ms', () async {
+      final r = await findKiosk();
+      final members = ((r?['appliance'] as Map?)?['members'] ?? const []) as List;
+      final agent = members.where((m) => m['kind'] == 'agent').toList();
+      if (agent.isEmpty) return null;
+      final detail = await ms.get('/staff/dispositivos/${agent.first['deviceId']}') as Map;
+      // ignore: avoid_print
+      print('AGENTE TRAS REENROLAR retired=${detail['retired']} enrollmentCount=${detail['enrollmentCount']} lastSeenAt=${detail['lastSeenAt']}');
+      return detail['retired'] == false && (detail['enrollmentCount'] as num) >= 2 ? r : null;
+    }, timeout: const Duration(seconds: 120));
+    expect(f, isNotNull);
+  }, skip: enabled && hasMs && _withAgent ? false : 'requiere BM_E2E_AGENT=1, ms y agente', timeout: const Timeout(Duration(minutes: 8)));
+
+  test('contexto linkser: ninguna petición a /verify-connection y pos not_configured', () async {
+    service.stop();
+    await Future<void>.delayed(const Duration(seconds: 1));
+    var hits = 0;
+    final stub = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+    stub.listen((req) {
+      hits++;
+      req.response
+        ..statusCode = 200
+        ..close();
+    });
+    await prefs.clear();
+    final lctx = BmContext(
+      publicToken: ctx.publicToken,
+      contribuyente: ctx.contribuyente,
+      dispositivo: ctx.dispositivo,
+      sucursal: '1',
+      deviceName: 'E2E-LINKSER',
+      flavor: 'izify',
+      version: '0.0.0-e2e+1',
+      platform: 'web',
+      country: 'BO',
+      provider: 'linkser',
+      apiUrl: _apiUrl,
+      atcServerUrl: 'http://127.0.0.1:${stub.port}',
+    );
+    final before = logs.count('heartbeat aceptado');
+    service.start(lctx);
+    await _until('heartbeat linkser aceptado', () async => logs.count('heartbeat aceptado') > before ? true : null,
+        timeout: const Duration(seconds: 30));
+    final id = deviceId();
+    final first = ((await ms.get('/staff/dispositivos/$id') as Map)['lastHeartbeat'] as Map)['receivedAt'];
+    await _until('segundo heartbeat linkser en el ms', () async {
+      final d = await ms.get('/staff/dispositivos/$id') as Map;
+      return (d['lastHeartbeat'] as Map)['receivedAt'] != first ? true : null;
+    }, timeout: const Duration(seconds: 30));
+    final d = await ms.get('/staff/dispositivos/$id') as Map;
+    final pos = (d['latestState'] as Map)['pos'] as Map;
+    // ignore: avoid_print
+    print('LINKSER pos=${jsonEncode(pos)} hitsAlStub=$hits');
+    service.stop();
+    await stub.close(force: true);
+    expect(hits, 0);
+    expect(pos['status'], 'not_configured');
+    expect(pos['provider'], 'linkser');
   }, skip: enabled && hasMs ? false : 'requiere BM_E2E_MS_URL y BM_E2E_SERVICE_KEY', timeout: const Timeout(Duration(minutes: 3)));
 }
