@@ -9,6 +9,8 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:izi_kiosco/app/values/app_constants.dart';
+import 'package:izi_kiosco/data/basic_monitoring/bm_activity.dart';
+import 'package:izi_kiosco/data/basic_monitoring/bm_payment_busy.dart';
 import 'package:izi_kiosco/data/local/local_storage_atc_pending.dart';
 import 'package:izi_kiosco/data/local/local_storage_card_errors.dart';
 import 'package:izi_kiosco/domain/blocs/auth/auth_bloc.dart';
@@ -73,6 +75,8 @@ class PaymentBloc extends Cubit<PaymentState> {
   final Duration atcPollInterval;
   final Duration atcVerifyTimeout;
   AtcPendingPayment? _atcUncertainPending;
+  @visibleForTesting
+  BmActivity bmActivity = BmActivity.instance;
 
   PaymentBloc(
       this._comandaRepository, this._businessRepository, this._socketRepository,
@@ -424,6 +428,14 @@ class PaymentBloc extends Cubit<PaymentState> {
   }
 
   @override
+  void onChange(Change<PaymentState> change) {
+    super.onChange(change);
+    try {
+      bmActivity.paymentChanged(this, bmIsCharging(change.nextState));
+    } catch (_) {}
+  }
+
+  @override
   Future<void> close() async {
     if (state.status != PaymentStatus.successInvoice &&
         state.status != PaymentStatus.successPayment &&
@@ -440,7 +452,10 @@ class PaymentBloc extends Cubit<PaymentState> {
     qrStream?.cancel();
     qrStream = null;
     timerSuccess?.cancel();
-    return super.close();
+    await super.close();
+    try {
+      bmActivity.paymentClosed(this);
+    } catch (_) {}
   }
 
   Future<bool> _verifyIzifySocket() async {

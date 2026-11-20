@@ -18,6 +18,9 @@ import 'package:izi_kiosco/app/values/env_keys.dart';
 import 'package:izi_kiosco/app/values/locale_keys.g.dart';
 import 'package:izi_kiosco/app/values/routes.dart';
 import 'package:izi_kiosco/app/values/routes_keys.dart';
+import 'package:izi_kiosco/data/basic_monitoring/bm_activity.dart';
+import 'package:izi_kiosco/data/basic_monitoring/bm_auth_context.dart';
+import 'package:izi_kiosco/data/basic_monitoring/bm_service.dart';
 import 'package:izi_kiosco/data/repositories/auth/auth_repository_http.dart';
 import 'package:izi_kiosco/data/repositories/business/business_repository_http.dart';
 import 'package:izi_kiosco/data/repositories/comanda/comanda_repository_http.dart';
@@ -28,6 +31,8 @@ import 'package:izi_kiosco/domain/blocs/pos_config/pos_config_bloc.dart';
 import 'package:izi_kiosco/ui/general/izi_loading.dart';
 import 'package:izi_kiosco/ui/pages/splash_page/splash_page.dart';
 import 'package:izi_kiosco/ui/utils/responsive_utils.dart';
+
+AuthBloc? _bmWatchedAuth;
 
 class MyApp extends StatelessWidget {
   late final route = GoRouter(
@@ -69,12 +74,37 @@ class MyApp extends StatelessWidget {
       AuthBloc(AuthRepositoryHttp(), BusinessRepositoryHttp());
 
   MyApp({Key? key}) : super(key: key);
+
+  void _bmHook() {
+    if (identical(_bmWatchedAuth, _auth)) return;
+    _bmWatchedAuth = _auth;
+    try {
+      _auth.stream.listen((state) {
+        try {
+          if (state.status == AuthStatus.okAuth && state.currentDevice != null) {
+            bmContextFrom(state).then(BmService.instance.start, onError: (_) {});
+          } else if (state.status == AuthStatus.noAuth) {
+            BmService.instance.stop();
+          }
+        } catch (_) {}
+      }, onError: (_) {});
+      route.routerDelegate.addListener(() {
+        try {
+          BmActivity.instance.screenChanged(bmScreenOf(route));
+        } catch (_) {}
+      });
+    } catch (_) {}
+  }
+
   @override
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
         BlocProvider(
-          create: (context) => _auth..verify(),
+          create: (context) {
+            _bmHook();
+            return _auth..verify();
+          },
         ),
         BlocProvider(
           create: (context) => PageUtilsBloc(BusinessRepositoryHttp()),
