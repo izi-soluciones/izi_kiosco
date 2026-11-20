@@ -193,7 +193,7 @@ class BmService {
       await _enroll(ctx, gen);
     } else {
       _startLinks(ctx, gen);
-      await _heartbeat(ctx, gen);
+      await _guarded(gen, () => _heartbeat(ctx, gen));
     }
   }
 
@@ -218,12 +218,19 @@ class BmService {
       if (!_alive(gen)) return;
       final ctx = _ctx;
       if (ctx == null) return;
-      unawaited(action().catchError((Object e) {
-        _logState('cycle_error', 'monitoreo: fallo inesperado (${e.runtimeType})');
-        _failures++;
-        _schedule(gen, bmBackoff(_failures), action);
-      }));
+      unawaited(_guarded(gen, action));
     });
+  }
+
+  Future<void> _guarded(int gen, Future<void> Function() action) async {
+    try {
+      await action();
+    } catch (e) {
+      if (!_alive(gen)) return;
+      _logState('cycle_error', 'monitoreo: fallo inesperado (${e.runtimeType})');
+      _failures++;
+      _schedule(gen, bmBackoff(_failures), action);
+    }
   }
 
   Future<void> _enroll(BmContext ctx, int gen) async {
@@ -250,7 +257,6 @@ class BmService {
         owner: ctx.owner,
       );
       if (!_alive(gen)) return;
-      _failures = 0;
       _logState('enrolled', 'monitoreo: kiosco registrado');
       _startLinks(ctx, gen);
       _schedule(gen, Duration.zero, () => _heartbeat(ctx, gen));
@@ -337,6 +343,7 @@ class BmService {
       'uptimeSec': sentAt.difference(_startedAt).inSeconds,
       'app': {'version': ctx.version, 'flavor': ctx.flavor, 'platform': ctx.platform},
       'state': {
+        'screen': _activity.screen,
         'mode': _activity.mode,
         'online': bmOnline(),
         'visibility': bmVisibility(),

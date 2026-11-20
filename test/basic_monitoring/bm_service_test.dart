@@ -135,6 +135,20 @@ class _FakeCommands extends BmCommands {
   }
 }
 
+class _ThrowOnceStore extends BmStore {
+  _ThrowOnceStore(super.prefs);
+  bool thrown = false;
+
+  @override
+  Map<String, int> pendingCounters() {
+    if (!thrown) {
+      thrown = true;
+      throw StateError('prefs');
+    }
+    return super.pendingCounters();
+  }
+}
+
 class _H {
   late BmStore store;
   final api = _FakeApi();
@@ -638,5 +652,74 @@ void main() {
     }
     h.api.onResult = (_, __) async => throw StateError('x');
     expect(await report('c1', {}), BmReport.retry);
+  });
+
+  test('registro OK seguido de 401 en cada heartbeat: la espera crece, no se queda en 1 min', () async {
+    final h = _H();
+    await h.init();
+    h.api.onHeartbeat = () async => throw BmApiException(BmFailure.tokenInvalid, status: 401, code: 'device_token_invalid');
+    h.service.start(_ctx());
+    await _settle();
+    h.pending.single.fire();
+    await _settle();
+    final waits = <Duration>[h.pending.single.duration];
+    for (var n = 0; n < 6; n++) {
+      h.pending.single.fire();
+      await _settle();
+      h.pending.single.fire();
+      await _settle();
+      waits.add(h.pending.single.duration);
+    }
+    expect(waits.last >= const Duration(minutes: 10), isTrue, reason: '$waits');
+    expect(h.api.calls.where((c) => c == 'enroll').length, greaterThan(6));
+  });
+
+  test('heartbeat 2xx reinicia el conteo de fallos', () async {
+    final h = _H();
+    await h.init(prefs: {'bm.deviceToken': 'izd_existenteexistente1', 'bm.owner': '1:2'});
+    var fail = true;
+    h.api.onHeartbeat = () async {
+      if (fail) throw BmApiException(BmFailure.transient, status: 503);
+      return BmHeartbeatResponse(serverTime: DateTime.utc(2026, 11, 20), nextInSec: 60, commands: []);
+    };
+    h.service.start(_ctx());
+    await _settle();
+    for (var n = 0; n < 5; n++) {
+      h.pending.single.fire();
+      await _settle();
+    }
+    expect(h.pending.single.duration >= const Duration(minutes: 10), isTrue);
+    fail = false;
+    h.pending.single.fire();
+    await _settle();
+    fail = true;
+    h.pending.single.fire();
+    await _settle();
+    expect(h.pending.single.duration <= const Duration(seconds: 72), isTrue);
+  });
+
+  test('el heartbeat lleva state.screen cuando BmActivity lo conoce', () async {
+    final h = _H();
+    await h.init(prefs: {'bm.deviceToken': 'izd_existenteexistente1', 'bm.owner': '1:2'});
+    h.activity.screenChanged('makeOrder');
+    h.service.start(_ctx());
+    await _settle();
+    final state = (h.api.heartbeatArgs.single['body'] as Map)['state'] as Map;
+    expect(state['screen'], 'makeOrder');
+    expect(state['mode'], 'ordering');
+  });
+
+  test('un fallo inesperado en el primer heartbeat con token guardado deja un reintento armado', () async {
+    final h = _H();
+    await h.init(prefs: {'bm.deviceToken': 'izd_existenteexistente1', 'bm.owner': '1:2'});
+    final prefs = await SharedPreferences.getInstance();
+    h.store = _ThrowOnceStore(prefs);
+    h.service.start(_ctx());
+    await _settle();
+    expect(h.api.calls, isEmpty);
+    expect(h.pending.single.duration >= const Duration(seconds: 30), isTrue);
+    h.pending.single.fire();
+    await _settle();
+    expect(h.api.calls, ['heartbeat']);
   });
 }

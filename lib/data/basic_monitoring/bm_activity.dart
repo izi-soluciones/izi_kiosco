@@ -32,6 +32,8 @@ class BmActivity {
     _screen = screen;
   }
 
+  String? get screen => _screen;
+
   bool get charging => _charging.isNotEmpty;
 
   String get mode {
