@@ -44,6 +44,7 @@ Map<String, dynamic> _health(String status, {bool enrolled = false}) => {
 void main() {
   late _FakeAdapter adapter;
   late Dio dio;
+  late Dio enrollDio;
   late DateTime clock;
   late int issued;
   late String? code;
@@ -60,8 +61,10 @@ void main() {
     };
     adapter = _FakeAdapter((o) async => routes[o.uri.path]!());
     dio = Dio()..httpClientAdapter = adapter;
+    enrollDio = Dio()..httpClientAdapter = adapter;
     link = BmAgentLink(
       dio: dio,
+      enrollDio: enrollDio,
       apiBaseUrl: 'https://api.izify.app',
       issueCode: () async {
         issued++;
@@ -91,7 +94,7 @@ void main() {
     expect(o.cancelToken, isNotNull);
   });
 
-  for (final status in ['enrolling', 'token_unreadable', 'starting', 'ok', 'token_invalid']) {
+  for (final status in ['enrolling', 'token_unreadable', 'starting', 'ok', 'degraded']) {
     test('status $status no pide código', () async {
       routes['/health'] = () => _json(_health(status));
       await link.tick();
@@ -99,6 +102,35 @@ void main() {
       expect(adapter.enrolls, isEmpty);
     });
   }
+
+  test('status token_invalid pide un código y hace un POST /enroll', () async {
+    routes['/health'] = () => _json(_health('token_invalid'));
+    await link.tick();
+    expect(issued, 1);
+    expect(adapter.enrolls.length, 1);
+    expect(link.agentState(), {'reachable': true, 'enrolled': true});
+  });
+
+  test('token_invalid repetido con /enroll fallando: backoff, sin tormenta', () async {
+    routes['/health'] = () => _json(_health('token_invalid'));
+    routes['/enroll'] = () => _json({'error': 'upstream_unavailable'}, status: 502);
+    await link.tick();
+    await link.tick();
+    await link.tick();
+    expect(issued, 1);
+    expect(adapter.enrolls.length, 1);
+    clock = clock.add(const Duration(seconds: 31));
+    await link.tick();
+    expect(issued, 2);
+  });
+
+  test('POST /enroll usa un Dio con 40 s y /health sigue en 3 s', () async {
+    await link.tick();
+    expect(enrollDio.options.connectTimeout, const Duration(seconds: 40));
+    expect(enrollDio.options.receiveTimeout, const Duration(seconds: 40));
+    expect(dio.options.connectTimeout, const Duration(seconds: 3));
+    expect(dio.options.receiveTimeout, const Duration(seconds: 3));
+  });
 
   test('enrolled:true no pide código', () async {
     routes['/health'] = () => _json(_health('ok', enrolled: true));
@@ -119,7 +151,7 @@ void main() {
   });
 
   test('apiBaseUrl con barra final no se duplica', () async {
-    link = BmAgentLink(dio: dio, apiBaseUrl: 'https://api.izify.app/', issueCode: () async => 'X');
+    link = BmAgentLink(dio: dio, enrollDio: enrollDio, apiBaseUrl: 'https://api.izify.app/', issueCode: () async => 'X');
     await link.tick();
     expect(adapter.enrolls.single.data['apiBaseUrl'], 'https://api.izify.app/');
   });
@@ -173,6 +205,7 @@ void main() {
   test('issueCode que lanza: backoff y tick no lanza', () async {
     link = BmAgentLink(
       dio: dio,
+      enrollDio: enrollDio,
       apiBaseUrl: 'https://api.izify.app',
       issueCode: () async {
         issued++;
@@ -191,6 +224,7 @@ void main() {
     FakeAsync().run((async) {
       link = BmAgentLink(
         dio: dio,
+        enrollDio: enrollDio,
         apiBaseUrl: 'https://api.izify.app',
         issueCode: () {
           issued++;
@@ -226,7 +260,7 @@ void main() {
   });
 
   test('el backoff por defecto crece de 30 s a 30 min', () async {
-    link = BmAgentLink(dio: dio, apiBaseUrl: 'https://api.izify.app', issueCode: () async => 'X', now: () => clock);
+    link = BmAgentLink(dio: dio, enrollDio: enrollDio, apiBaseUrl: 'https://api.izify.app', issueCode: () async => 'X', now: () => clock);
     routes['/enroll'] = () => _json({'error': 'upstream_unavailable'}, status: 502);
     await link.tick();
     clock = clock.add(const Duration(seconds: 25));
